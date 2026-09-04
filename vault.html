@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>私密空间</title>
+<!-- 独立 manifest：orientation=any 允许横竖屏自由旋转（主系统 manifest 锁横屏，这里不锁） -->
+<link rel="manifest" href="/vault-manifest.webmanifest">
+<meta name="theme-color" content="#16202c">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:#0f1722; color:#e7edf3; }
+  .hidden { display:none !important; }
+
+  /* PIN 弹窗 */
+  .vault-pin-modal { position:fixed; inset:0; background:rgba(10,18,28,.92); display:flex; align-items:center; justify-content:center; z-index:9000; }
+  .vault-pin-box { background:#fff; border-radius:16px; padding:30px 26px; width:340px; max-width:92vw; box-shadow:0 20px 60px rgba(0,0,0,.4); text-align:center; }
+  .vault-pin-title { font-size:20px; font-weight:700; color:#22303f; margin-bottom:6px; }
+  .vault-pin-hint { font-size:13px; color:#7a8a99; margin-bottom:18px; min-height:18px; }
+  .vault-pin-cells { display:flex; gap:14px; justify-content:center; margin-bottom:22px; }
+  .vault-pin-cell { width:48px; height:56px; text-align:center; font-size:26px; font-weight:700; color:#22303f; border:2px solid #d4dbe4; border-radius:10px; background:#f7f9fb; outline:none; }
+  .vault-pin-cell.active { border-color:#e74c3c; background:#fff6f4; box-shadow:0 0 0 3px rgba(231,76,60,.12); }
+  .vault-pin-cell.caret { color:#e8720c; animation:vaultCaret 1s step-start infinite; }
+  @keyframes vaultCaret { 50% { opacity:.2; } }
+  .vault-pin-keys { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .vault-pin-keys button { padding:16px 0; font-size:20px; font-weight:600; color:#22303f; background:#eef1f5; border:1px solid #dde3ea; border-radius:10px; cursor:pointer; user-select:none; }
+  .vault-pin-keys button:active { background:#dfe6ee; }
+  .vault-key-fn { color:#e8720c !important; }
+  .vault-pin-foot { margin-top:16px; }
+  .vault-pin-cancel { background:transparent; border:none; color:#7a8a99; font-size:13px; cursor:pointer; text-decoration:underline; }
+  .vault-ver { margin-top:10px; font-size:11px; color:#a8b4c0; letter-spacing:.3px; }
+  .vault-head-ver { font-size:11px; color:#7a8a99; margin-left:2px; }
+  .vault-ver-refresh { margin-top:8px; background:#e8720c; color:#fff; border:none; padding:7px 14px; border-radius:7px; font-size:12px; cursor:pointer; font-weight:600; }
+  .vault-ver-refresh:hover { background:#c75f00; }
+
+  /* 主面板 */
+  .vault-overlay { position:fixed; inset:0; display:flex; flex-direction:column; z-index:8800; }
+  /* ===== 紧凑顶部（v3：单行 32px，标题前图标 + 归属合并徽章 + 版本号折叠成"ⓘ"） ===== */
+  .vault-head { display:flex; align-items:center; gap:6px; padding:4px 10px; background:#16202c; border-bottom:1px solid #243140; min-height:32px; line-height:1; }
+  .vault-head-back, .vault-close, .vault-orient-btn,
+  .vault-head .vault-head-back, .vault-head .vault-close { padding:4px 8px !important; font-size:11px !important; border-radius:5px !important; }
+  .vault-title { font-size:13px; font-weight:700; display:flex; align-items:center; gap:4px; }
+  .vault-title::before { content:"🔒"; font-size:13px; }
+  /* 归属用单字符徽章折叠（"T" 代表 tom） */
+  .vault-owner { font-size:11px; color:#7fa6c9; background:rgba(127,166,201,.18); padding:2px 6px; border-radius:10px; line-height:1; }
+  /* 版本号默认隐藏，悬停或ⓘ悬停才显示 */
+  .vault-head-ver { display:none; }
+  .vault-ver-info { font-size:11px; color:#7a8a99; cursor:help; padding:2px 4px; border-radius:4px; }
+  .vault-ver-info:hover .vault-head-ver { display:inline; }
+  .vault-ver-info .vault-head-ver { display:inline; }
+  .vault-close { margin-left:auto; background:#e74c3c; color:#fff; border:none; cursor:pointer; font-weight:600; }
+  .vault-close:hover { background:#c0392b; }
+  /* ===== 紧凑工具栏：图标按钮（38x28）+ 计数用 1 行紧凑文字 ===== */
+  .vault-toolbar { display:flex; align-items:center; gap:6px; padding:4px 10px; flex-wrap:wrap; min-height:32px; }
+  .vault-upload-btn { background:#e8720c; color:#fff; border:none; padding:5px 8px; border-radius:5px; cursor:pointer; font-size:11px; font-weight:600; display:inline-flex; align-items:center; gap:3px; line-height:1; }
+  .vault-upload-btn:hover { background:#c75f00; }
+  .vault-folder-btn { background:#3b7dd8; }
+  .vault-folder-btn:hover { background:#2f6bc0; }
+  .vault-back-btn { background:#3b7dd8; color:#fff; border:none; padding:5px 8px; border-radius:5px; cursor:pointer; font-size:11px; font-weight:600; line-height:1; }
+  .vault-count { font-size:11px; color:#9fb0bd; padding:0 4px; }
+  .vault-stat { font-size:11px; color:#7a8a99; }
+  .vault-list { flex:1; overflow:auto; padding:6px 10px 10px; }
+  .vault-crumbs { padding:3px 10px 0; font-size:11px; color:#9fb0bd; min-height:18px; }
+  .vault-empty { padding:30px 10px; color:#7a8a99; font-size:12px; text-align:center; }
+  .vault-item { display:flex; align-items:center; gap:10px; padding:14px 16px; margin-bottom:10px; background:#16202c; border:1px solid #243140; border-radius:10px; cursor:pointer; }
+  .vault-item .vault-cb, .vault-item button, .vault-item a { cursor:pointer; }
+  .vault-item-name { flex:1; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .vault-item-meta { font-size:12px; color:#7a8a99; min-width:170px; }
+  .vault-item-actions { display:flex; gap:10px; align-items:center; }
+  .vault-item-actions button, .vault-item-actions .vault-dl { background:#22303f; color:#cfe0ee; border:1px solid #34465a; padding:7px 14px; border-radius:7px; cursor:pointer; font-size:13px; text-decoration:none; }
+  .vault-item-actions button:hover, .vault-item-actions .vault-dl:hover { background:#2c3d4f; }
+  .vault-empty { padding:60px 22px; text-align:center; color:#7a8a99; }
+  .vault-preview { position:fixed; inset:0; z-index:9500; background:rgba(8,14,22,.96); display:flex; flex-direction:column; }
+  .vault-preview-head { display:flex; align-items:center; gap:14px; padding:12px 20px; background:#16202c; border-bottom:1px solid #243140; font-size:14px; color:#e7edf3; }
+  .vault-preview-head button { margin-left:auto; background:#e74c3c; color:#fff; border:none; width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:16px; }
+  .vault-preview-body { flex:1; overflow:auto; padding:16px; }
+  .vault-loading { color:#9fb0bd; text-align:center; margin-top:40px; }
+  /* 面包屑 / 文件夹 */
+  .vault-crumbs { display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:10px 22px 0; font-size:13px; color:#9fb0bd; }
+  .vault-crumbs a { color:#6db3f2; cursor:pointer; text-decoration:none; }
+  .vault-crumbs a:hover { text-decoration:underline; }
+  .vault-crumbs .vc-sep { color:#55677a; }
+  .vault-crumbs .vc-cur { color:#e7edf3; font-weight:600; }
+  .vault-item.vault-folder { background:#1a2734; }
+  .vault-item.vault-folder .vault-item-name { color:#ffd28a; font-weight:600; }
+  .vault-ficon { width:26px; text-align:center; font-size:18px; }
+  /* 多选 / 批量删除 */
+  .vault-sel-bar { display:flex; align-items:center; gap:12px; margin-left:auto; }
+  .vault-checkall { display:flex; align-items:center; gap:6px; font-size:13px; color:#cfe0ee; cursor:pointer; }
+  .vault-bulk-btn { background:#e8720c; color:#fff; border:none; padding:8px 16px; border-radius:7px; cursor:pointer; font-size:13px; font-weight:600; }
+  .vault-bulk-btn:disabled { background:#7a8a99; cursor:not-allowed; opacity:.7; }
+  .vault-bulk-btn:hover:not(:disabled) { background:#c75f00; }
+  .vault-pick { display:flex; align-items:center; padding:0 12px 0 4px; }
+  .vault-pick input { width:18px; height:18px; cursor:pointer; accent-color:#e8720c; }
+  /* 自定义橙色确认弹窗 */
+  .vault-confirm { position:fixed; inset:0; z-index:9700; background:rgba(10,18,28,.78); display:flex; align-items:center; justify-content:center; }
+  .vault-confirm-box { background:#fff; border-radius:14px; padding:24px 26px; width:380px; max-width:92vw; box-shadow:0 18px 50px rgba(0,0,0,.45); }
+  .vault-confirm-title { font-size:17px; font-weight:700; color:#22303f; margin-bottom:10px; }
+  .vault-confirm-msg { font-size:14px; color:#4a5566; line-height:1.6; margin-bottom:20px; white-space:pre-wrap; word-break:break-all; }
+  .vault-confirm-actions { display:flex; justify-content:flex-end; gap:10px; }
+  .vault-cf-cancel { background:#eef1f5; color:#22303f; border:1px solid #dde3ea; padding:9px 18px; border-radius:8px; cursor:pointer; font-size:14px; }
+  .vault-cf-ok { background:#e8720c; color:#fff; border:none; padding:9px 22px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; }
+  .vault-cf-ok:hover { background:#c75f00; }
+  .vault-cf-cancel:hover { background:#dfe6ee; }
+  .vault-overlay.vault-drag { outline:3px dashed #e8720c; outline-offset:-10px; background:#13202e; }
+  .vault-overlay.vault-drag::after {
+    content:"松开即可上传到私密空间"; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    background:rgba(232,114,12,.92); color:#fff; padding:14px 26px; border-radius:12px; font-size:16px; font-weight:600;
+    pointer-events:none; z-index:1;
+  }
+  /* 上传进度面板（右下角） */
+  .vault-upanel { position:fixed; right:18px; bottom:18px; width:340px; max-width:92vw; z-index:9600;
+    background:#16202c; border:1px solid #2c3d4f; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.5); overflow:hidden; }
+  .vault-upanel-head { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#1a2734; font-size:13px; color:#e7edf3; cursor:pointer; user-select:none; }
+  .vault-upanel-head .vu-arrow { margin-left:auto; color:#7a8a99; font-size:11px; }
+  .vault-upanel-body { max-height:260px; overflow:auto; padding:6px 10px 10px; }
+  .vault-upanel.collapsed .vault-upanel-body { display:none; }
+  .vu-row { padding:7px 6px 4px; }
+  .vu-name { font-size:12px; color:#cfe0ee; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:5px; }
+  .vu-bar { height:6px; background:#0d1520; border-radius:4px; overflow:hidden; }
+  .vu-fill { height:100%; width:0; background:linear-gradient(90deg,#e8720c,#f7a44c); border-radius:4px; transition:width .15s; }
+  .vu-fill.done { background:#2ecc71; }
+  .vu-fill.fail { background:#e74c3c; }
+  .vu-meta { display:flex; justify-content:space-between; font-size:11px; color:#7a8a99; margin-top:3px; }
+  /* Word/Excel 预览容器 */
+  .vault-doc-wrap { background:#fff; color:#222; max-width:860px; margin:0 auto; padding:28px 30px; border-radius:8px; min-height:60%; }
+  .vault-doc-wrap table { border-collapse:collapse; font-size:12px; }
+  .vault-doc-wrap td, .vault-doc-wrap th { border:1px solid #c9d2dc; padding:4px 8px; white-space:nowrap; }
+  .vault-doc-wrap h1, .vault-doc-wrap h2, .vault-doc-wrap h3 { margin:.6em 0 .3em; }
+  /* Word：按文档自身页面设置（A4 + 页边距）1:1 渲染，再整体等比缩放适配屏幕 */
+  .ex-page-box { margin:0 auto; position:relative; }
+  .ex-page-info { font-size:11px; color:#9fb0bd; text-align:center; margin:0 0 8px; }
+  .ex-page-box .vault-doc-wrap.ex-doc { position:absolute; top:0; left:0; transform-origin:0 0; margin:0; }
+  .vault-doc-wrap.ex-doc { width:210mm; min-height:297mm; padding:25.4mm;
+    background:#fff; color:#222; box-sizing:border-box; border-radius:2px;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+    /* 未显式指定字号的段落按 Word 默认（Calibri 11pt）渲染，保证与 A4 页面比例一致 */
+    font-family:Calibri, "Times New Roman", "PingFang SC", "Microsoft YaHei", sans-serif; font-size:11pt; }
+  .vault-doc-wrap.ex-doc p { line-height:1.55; margin:.5em 0; color:#222; }
+  .vault-doc-wrap.ex-doc ul, .vault-doc-wrap.ex-doc ol { margin:.5em 0; padding-left:1.6em; }
+  .vault-doc-wrap.ex-doc li { margin:.25em 0; }
+  .vault-doc-wrap.ex-doc h1, .vault-doc-wrap.ex-doc h2, .vault-doc-wrap.ex-doc h3,
+  .vault-doc-wrap.ex-doc h4 { line-height:1.3; margin:.7em 0 .35em; }
+  .vault-doc-wrap.ex-doc img { max-width:100%; height:auto; }
+  .vault-doc-wrap.ex-doc table { border-collapse:collapse; max-width:100%; }
+  .vault-doc-wrap.ex-doc td, .vault-doc-wrap.ex-doc th { border:1px solid #c9d2dc; padding:4px 6px; white-space:normal; word-break:break-word; }
+  /* ===== Excel 渲染：表格视图（Excel 原貌：行列号 + 真实合并单元格）===== */
+  .vault-doc-wrap .ex-grid-wrap { overflow:auto; -webkit-overflow-scrolling:touch; max-height:70vh; border:1px solid #c9d2dc; border-radius:6px; background:#fff; }
+  .vault-doc-wrap table.ex-grid { border-collapse:separate; border-spacing:0; table-layout:fixed; font-size:12px; background:#fff; width:auto; min-width:100%; }
+  .vault-doc-wrap .ex-grid th, .vault-doc-wrap .ex-grid td { border-right:1px solid #dfe4ea; border-bottom:1px solid #dfe4ea; padding:4px 6px; color:#22303f;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* 列号行 / 行号列（仿 Excel 灰底坐标） */
+  .vault-doc-wrap .ex-grid .ex-ax { background:#eef2f6; color:#8a97a5; font-weight:500; text-align:center; padding:2px 4px; height:22px; line-height:16px; }
+  .vault-doc-wrap .ex-grid thead tr:first-child th { position:sticky; top:0; z-index:4; }
+  .vault-doc-wrap .ex-grid .ex-corner { left:0; z-index:6; }
+  .vault-doc-wrap .ex-grid .ex-rn { position:sticky; left:0; z-index:2; width:42px; }
+  /* 真实表头行（数据首行识别）：粘在列号行下方 */
+  .vault-doc-wrap .ex-grid thead tr.ex-hrow th { position:sticky; top:22px; z-index:3; background:#e8eef4; color:#22303f; font-weight:600;
+    white-space:normal; word-break:break-word; text-align:center; vertical-align:middle; }
+  .vault-doc-wrap .ex-grid thead tr.ex-hrow th.ex-rn { left:0; z-index:5; background:#eef2f6; }
+  /* 大标题行（表头之上的跨列合并行，如报表总标题） */
+  .vault-doc-wrap .ex-grid thead tr.ex-titlerow th { background:#f4f7fa; color:#22303f; font-weight:700;
+    text-align:center; vertical-align:middle; white-space:normal; word-break:break-word; }
+  .vault-doc-wrap .ex-grid thead tr.ex-titlerow th.ex-rn { left:0; z-index:5; background:#eef2f6; font-weight:500; }
+  .vault-doc-wrap .ex-grid tbody tr:nth-child(odd) td { background:#fff; }
+  .vault-doc-wrap .ex-grid tbody tr:nth-child(even) td { background:#f7f9fb; }
+  .vault-doc-wrap .ex-grid tbody td.ex-m { text-align:center; vertical-align:middle; font-weight:600; background:#fbfcfe; }
+  .vault-doc-wrap .ex-grid tbody tr:nth-child(even) td.ex-m { background:#f2f6fa; }
+  .vault-doc-wrap .ex-num { text-align:right; font-variant-numeric:tabular-nums; }
+  /* 单元格自带的背景色/字体色/边框用 inline style 写在 td/th 上，
+     内联样式优先级天然高于上面的斑马纹与居中规则，无需额外覆盖。 */
+  /* 长文本单元格自动换行（更接近 Excel 阅读体验） */
+  .vault-doc-wrap .ex-grid td.ex-wrap { white-space:normal; word-break:break-word; line-height:1.4; }
+  /* ===== Excel 渲染：卡片视图（每条记录一张卡，字段纵向，竖屏看全所有列）===== */
+  .vault-doc-wrap .ex-cards { display:flex; flex-direction:column; gap:10px; }
+  .vault-doc-wrap .ex-card { background:#fff; border:1px solid #dde3ea; border-radius:8px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .vault-doc-wrap .ex-card-h { font-size:12px; font-weight:700; color:#e8720c; margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid #eef1f5; }
+  .vault-doc-wrap .ex-card dl { display:grid; grid-template-columns:auto 1fr; gap:4px 10px; margin:0; font-size:12px; }
+  .vault-doc-wrap .ex-card dt { color:#7a8a99; white-space:nowrap; }
+  .vault-doc-wrap .ex-card dd { margin:0; color:#22303f; word-break:break-word; }
+  /* ===== Excel 渲染：视图切换与提示 ===== */
+  .vault-doc-wrap .ex-viewsw { display:flex; gap:4px; background:#eef1f5; padding:3px; border-radius:7px; }
+  .vault-doc-wrap .ex-viewsw button { background:transparent; color:#5a6a7a; border:none; padding:4px 10px; border-radius:5px; font-size:12px; cursor:pointer; white-space:nowrap; }
+  .vault-doc-wrap .ex-viewsw button.on { background:#e8720c; color:#fff; }
+  .vault-doc-wrap .ex-sheet { margin-bottom:18px; }
+  .vault-doc-wrap .ex-sheet-h { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:12px 0 4px; }
+  .vault-doc-wrap .ex-sheet-h h3 { margin:0; font-size:14px; color:#22303f; }
+  .vault-doc-wrap .ex-meta { font-size:12px; color:#7a8a99; margin-right:2px; }
+  .vault-doc-wrap .ex-note { font-size:12px; color:#a67c00; margin:2px 0 8px; }
+  .vault-doc-wrap .ex-note.err { color:#c0392b; }
+  /* 手机竖屏：文档宽度自适应，整页完整可见（自行决定缩放/横屏） */
+  @media (max-width:640px){
+    .vault-doc-wrap:not(.ex-doc) { width:100%; max-width:100%; padding:14px 10px; box-sizing:border-box; }
+    .vault-doc-wrap:not(.ex-doc) table { width:100%; table-layout:fixed; }
+    .vault-doc-wrap:not(.ex-doc) td, .vault-doc-wrap:not(.ex-doc) th { white-space:normal !important; word-break:break-all; padding:3px 5px; }
+    .vault-doc-wrap img { max-width:100%; height:auto; }
+    .vault-pdf-holder { max-width:100%; }
+    /* 手机：Excel 表格容器自带横滑；卡片视图单列展示最清晰 */
+    .vault-doc-wrap .ex-grid-wrap { max-height:60vh; }
+    .vault-doc-wrap .ex-card dl { grid-template-columns:1fr; gap:2px; }
+    .vault-doc-wrap .ex-card dt { font-weight:600; margin-top:3px; }
+  }
+  /* PDF.js 页面容器 */
+  .vault-pdf-holder { max-width:900px; margin:0 auto; }
+  .vault-pdf-holder canvas { width:100%; margin-bottom:10px; background:#fff; border-radius:4px; box-shadow:0 2px 10px rgba(0,0,0,.35); display:block; }
+  /* 预览缩放：双指捏合 / Ctrl+滚轮 / 双击复位 */
+  .vault-zoom-viewport { width:100%; height:100%; overflow:auto; -webkit-overflow-scrolling:touch; }
+  .vault-zoom { transform-origin:0 0; will-change:transform; }
+  /* 全屏按钮 */
+  .vault-preview-head .vault-fs {
+    margin-left:auto; background:#22303f; color:#cfe0ee; border:1px solid #34465a;
+    width:34px; height:34px; border-radius:8px; cursor:pointer; font-size:16px;
+  }
+  .vault-preview-head .vault-fs:hover { background:#2c3d4f; }
+  /* 工具栏：返回 / 容量 / 视图切换 */
+  .vault-back-btn { background:#3b7dd8; color:#fff; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:600; }
+  .vault-back-btn:hover { background:#2f6bc0; }
+  .vault-stat { font-size:12px; color:#9fb0bd; margin-left:6px; }
+  .vault-view-switch { display:flex; gap:2px; background:#1a2734; padding:2px; border-radius:6px; }
+  .vault-view-switch button { background:transparent; color:#9fb0bd; border:none; padding:6px 10px; border-radius:5px; cursor:pointer; font-size:18px; line-height:1; min-width:36px; min-height:32px; }
+  .vault-view-switch button:hover { color:#e7edf3; }
+  .vault-view-switch button.active { background:#e8720c; color:#fff; }
+  /* 全部文件标签：在视图按钮右侧，自动同步当前目录 */
+  .vault-cwd-tag { font-size:11px; color:#ffd28a; background:rgba(232,114,12,.12); border:1px solid rgba(232,114,12,.35); padding:3px 8px; border-radius:11px; line-height:1; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* 网格视图 */
+  .vault-list.vault-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:14px; padding:8px 22px 22px; }
+  .vault-list.vault-grid .vault-item { flex-direction:column; align-items:flex-start; padding:14px; gap:8px; }
+  .vault-list.vault-grid .vault-item-name { white-space:normal; word-break:break-all; font-size:13px; line-height:1.45; }
+  .vault-list.vault-grid .vault-item-meta { min-width:0; }
+  .vault-list.vault-grid .vault-item-actions { align-self:flex-end; }
+  /* 缩略图视图（大图标 + 文件名，仿 Windows 资源管理器大图标） */
+  .vault-list.vault-thumb { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:18px 12px; padding:14px 22px 22px; align-items:start; }
+  .vault-list.vault-thumb .vault-item { flex-direction:column; align-items:center; text-align:center; padding:12px 6px; gap:8px; cursor:pointer; border:2px solid transparent; border-radius:6px; background:transparent; margin-bottom:0; }
+  .vault-list.vault-thumb .vault-item:hover { background:rgba(255,255,255,.06); border-color:rgba(120,170,230,.4); }
+  .vault-list.vault-thumb .vault-cb { display:none; }
+  .vault-list.vault-thumb .vault-ficon { display:none; }
+  .vault-list.vault-thumb .vault-item-name { white-space:normal; word-break:break-all; font-size:13px; line-height:1.35; max-height:2.7em; overflow:hidden; width:100%; }
+  .vault-list.vault-thumb .vault-item-meta { display:none; }
+  .vault-list.vault-thumb .vault-item-actions { display:none; }
+  .vault-list.vault-thumb .vault-thumb-icon { width:96px; height:96px; border-radius:8px; background:#22303f; display:flex; align-items:center; justify-content:center; font-size:58px; }
+  .vault-list.vault-thumb .vault-folder .vault-thumb-icon { background:transparent; }
+  /* 预览进度 */
+  .vault-progress { margin-left:10px; font-size:12px; color:#9fb0bd; min-width:140px; }
+  /* 文件操作选择弹窗（预览/下载/取消） */
+  .vault-choose { position:fixed; inset:0; z-index:9700; background:rgba(10,18,28,.78); display:flex; align-items:center; justify-content:center; }
+  .vault-choose-box { background:#fff; border-radius:14px; padding:22px 24px; width:360px; max-width:92vw; box-shadow:0 18px 50px rgba(0,0,0,.45); }
+  .vault-choose-title { font-size:15px; font-weight:700; color:#22303f; margin-bottom:4px; word-break:break-all; }
+  .vault-choose-sub { font-size:12px; color:#7a8a99; margin-bottom:18px; }
+  .vault-choose-actions { display:flex; justify-content:center; gap:12px; }
+  .vault-choose-actions button { flex:1; padding:11px 0; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; border:none; }
+  .vault-choose-prev { background:#e8f4fd; color:#1a6db5; border:1px solid #b5dcf7 !important; }
+  .vault-choose-prev:hover { background:#d4ebfb; }
+  .vault-choose-dl { background:#e8720c; color:#fff; }
+  .vault-choose-dl:hover { background:#c75f00; }
+  .vault-choose-close { background:#eef1f5; color:#4a5566; border:1px solid #dde3ea !important; }
+
+  /* 手机两排布局：上排图标+完整文件名（水平），下排按钮 */
+  @media (max-width:640px){
+    .vault-item { flex-wrap:wrap; row-gap:8px; align-items:flex-start; }
+    .vault-item-name {
+      white-space:normal; word-break:break-all; overflow:visible; text-overflow:clip;
+      font-size:14px; line-height:1.5; min-width:0;
+    }
+    .vault-item .vault-item-name  { flex:1 1 calc(100% - 46px); }
+    .vault-folder .vault-item-name { flex:1 1 calc(100% - 76px); }
+    .vault-item-meta { order:5; margin-right:auto; font-size:11px; align-self:center; }
+    .vault-item-actions { order:6; margin-left:auto; }
+  }
+  /* 横屏（旋转后）：压缩留白 */
+  @media (orientation:landscape) and (max-height:520px){
+    .vault-head { padding:8px 14px; }
+    .vault-toolbar { padding:8px 14px; gap:10px; }
+    .vault-crumbs { padding:6px 14px 0; }
+    .vault-item { padding:8px 12px; margin-bottom:6px; }
+    .vault-list { padding:4px 14px 14px; }
+  }
+  /* ===== 屏幕方向：永久交互切换（按钮，随时点随时切）===== */
+  .vault-orient-btn { background:#22303f; color:#cfe0ee; border:1px solid #34465a; padding:7px 12px;
+    border-radius:8px; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .vault-orient-btn:hover { background:#2c3d4f; }
+  .vault-orient-btn.on { background:#e8720c; color:#fff; border-color:#e8720c; }
+  .vault-preview-head .vault-orient-btn { margin-left:0; width:auto; height:34px; padding:0 11px; }
+  /* CSS 兜底旋转：系统/浏览器不允许锁定时，直接把整页转 90° 显示（效果等同竖屏） */
+  body.vault-rot-portrait { position:fixed; top:0; left:0; width:100vh; height:100vw; overflow:hidden;
+    transform-origin:0 0; transform:translateX(100vw) rotate(90deg); }
+  /* 兜底旋转时补上"窄屏"排版（媒体查询按真实视口判断，这里按类名补） */
+  body.vault-rot-portrait .vault-head { padding:10px 14px; gap:10px; flex-wrap:wrap; }
+  body.vault-rot-portrait .vault-toolbar { padding:10px 14px; gap:10px; }
+  body.vault-rot-portrait .vault-crumbs { padding:6px 14px 0; }
+  body.vault-rot-portrait .vault-list { padding:4px 14px 14px; }
+  body.vault-rot-portrait .vault-item { flex-wrap:wrap; row-gap:8px; align-items:flex-start; }
+  body.vault-rot-portrait .vault-item .vault-item-name { flex:1 1 calc(100% - 46px);
+    white-space:normal; word-break:break-all; overflow:visible; text-overflow:clip; font-size:14px; line-height:1.5; min-width:0; }
+  body.vault-rot-portrait .vault-folder .vault-item-name { flex:1 1 calc(100% - 76px); }
+  body.vault-rot-portrait .vault-item-meta { order:5; margin-right:auto; font-size:11px; align-self:center; }
+  body.vault-rot-portrait .vault-item-actions { order:6; margin-left:auto; }
+  body.vault-rot-portrait .vault-doc-wrap:not(.ex-doc) { width:100%; max-width:100%; padding:14px 10px; }
+  body.vault-rot-portrait .vault-doc-wrap:not(.ex-doc) table { width:100%; table-layout:fixed; }
+  body.vault-rot-portrait .vault-doc-wrap:not(.ex-doc) td,
+  body.vault-rot-portrait .vault-doc-wrap:not(.ex-doc) th { white-space:normal !important; word-break:break-all; padding:3px 5px; }
+  /* 竖屏时 A4 文档整体缩放更明显，页面上下留白收紧 */
+  .vault-doc-wrap.ex-doc { transform-origin:0 0; }
+</style>
+</head>
+<body>
+
+<!-- PIN 弹窗 -->
+<div id="vaultPinModal" class="vault-pin-modal hidden">
+  <div class="vault-pin-box">
+    <div class="vault-pin-title">🔒 私密空间</div>
+    <div class="vault-pin-hint" id="vaultPinHint">请输入 4 位密码</div>
+    <div class="vault-pin-cells">
+      <input class="vault-pin-cell" type="password" inputmode="numeric" maxlength="1" readonly />
+      <input class="vault-pin-cell" type="password" inputmode="numeric" maxlength="1" readonly />
+      <input class="vault-pin-cell" type="password" inputmode="numeric" maxlength="1" readonly />
+      <input class="vault-pin-cell" type="password" inputmode="numeric" maxlength="1" readonly />
+    </div>
+    <div class="vault-pin-keys">
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+      <button data-k="clear" class="vault-key-fn">C</button><button data-k="0">0</button><button data-k="del" class="vault-key-fn">⌫</button>
+    </div>
+    <div class="vault-pin-foot">
+      <button class="vault-pin-cancel" onclick="closeVaultPin()">取消</button>
+      <!-- 版本号：用于确认当前加载的是否为最新版本（PWA 缓存时可据此判断） -->
+      <div class="vault-ver" id="vaultVer">V2026.09.02.25</div>
+      <!-- 版本号过时（被缓存）时显示，点击强制拉取最新代码 -->
+      <button class="vault-ver-refresh hidden" id="vaultVerRefresh" onclick="vaultForceReload()">↻ 有新版，点此更新</button>
+    </div>
+  </div>
+</div>
+
+<!-- 主面板 -->
+<div id="vaultOverlay" class="vault-overlay hidden">
+  <div class="vault-head">
+    <button class="vault-head-back" onclick="vaultHeadBack()" title="返回上一级（与系统返回键相同）">⬅</button>
+    <span class="vault-title"></span>
+    <span class="vault-owner" title="tom · 专属">T</span>
+    <span class="vault-ver-info" title="V2026.09.03.07">ⓘ<span class="vault-head-ver" id="vaultHeadVer">V2026.09.03.07</span></span>
+    <button class="vault-orient-btn" id="vaultOrientBtn" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换">🔄</button>
+    <button class="vault-close" onclick="closeVault()" title="关闭">✕</button>
+  </div>
+  <div class="vault-toolbar">
+    <button class="vault-upload-btn" onclick="document.getElementById('vaultFileInput').click()" title="上传文档（Word/Excel/PDF 等）">⬆ 文件</button>
+    <input id="vaultFileInput" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.html,.json,.xml,.apk" style="display:none" onchange="vaultDoUpload(this)" />
+    <button class="vault-upload-btn vault-media-btn" onclick="document.getElementById('vaultMediaInput').click()" title="上传图片 / 视频">🖼 图片视频</button>
+    <input id="vaultMediaInput" type="file" multiple accept="image/*,video/*" style="display:none" onchange="vaultDoUpload(this)" />
+    <button class="vault-upload-btn vault-folder-btn" onclick="document.getElementById('vaultFolderInput').click()" title="上传文件夹">📁 文件夹</button>
+    <input id="vaultFolderInput" type="file" multiple webkitdirectory directory style="display:none" onchange="vaultDoUpload(this)" />
+    <button class="vault-back-btn hidden" id="vaultBackBtn" onclick="vaultGoUp()" title="返回上一级">⬅</button>
+    <span class="vault-count" id="vaultCount"></span>
+    <span class="vault-stat" id="vaultStat"></span>
+    <span class="vault-view-switch">
+      <button data-view="list" class="active" onclick="vaultSetView('list',this)" title="列表">☰</button>
+      <button data-view="thumb" onclick="vaultSetView('thumb',this)" title="缩略图">🖼</button>
+    </span>
+    <span class="vault-cwd-tag" id="vaultCwdTag" title="当前目录">🏠 全部文件</span>
+    <span class="vault-sel-bar hidden" id="vaultSelBar">
+      <label class="vault-checkall"><input type="checkbox" id="vaultCheckAll" onchange="vaultToggleAll(this.checked)" /> 全选</label>
+      <button class="vault-bulk-btn" id="vaultBulkDel" disabled onclick="vaultDelSelected()">删除选中 (0)</button>
+    </span>
+  </div>
+  <div class="vault-crumbs hidden" id="vaultCrumbs"></div>
+  <div class="vault-list" id="vaultList"></div>
+  <div class="vault-empty hidden" id="vaultEmpty">暂无文件，点击「上传文件」添加</div>
+</div>
+
+<!-- 上传进度面板 -->
+<div id="vaultUpPanel" class="vault-upanel hidden">
+  <div class="vault-upanel-head" onclick="document.getElementById('vaultUpPanel').classList.toggle('collapsed')">
+    <span id="vaultUpTitle">上传中…</span><span class="vu-arrow">▾</span>
+  </div>
+  <div class="vault-upanel-body" id="vaultUpBody"></div>
+</div>
+
+<!-- 预览 -->
+<div id="vaultPreview" class="vault-preview hidden">
+  <div class="vault-preview-head">
+    <button class="vault-fs" id="vaultPreviewBack" onclick="closeVaultPreview()" title="返回">⬅ 返回</button>
+    <span id="vaultPreviewName"></span>
+    <span class="vault-progress" id="vaultPreviewProgress">加载中 0%</span>
+    <button class="vault-orient-btn" id="vaultOrientBtn2" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换">🔄 竖屏</button>
+    <button class="vault-fs" id="vaultFsBtn" onclick="vaultToggleFullscreen()" title="全屏/退出全屏">⛶</button>
+    <button onclick="closeVaultPreview()">✕</button>
+  </div>
+  <div class="vault-preview-body" id="vaultPreviewBody"></div>
+</div>
+
+<!-- 自定义确认弹窗 -->
+<div id="vaultConfirm" class="vault-confirm hidden">
+  <div class="vault-confirm-box">
+    <div class="vault-confirm-title" id="vaultConfirmTitle">确认操作</div>
+    <div class="vault-confirm-msg" id="vaultConfirmMsg">是否继续？</div>
+    <div class="vault-confirm-actions">
+      <button class="vault-cf-cancel" id="vaultCfCancel">取消</button>
+      <button class="vault-cf-ok" id="vaultCfOk">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 单击文件后弹出（预览 / 下载 / 取消） -->
+<div id="vaultChoose" class="vault-choose hidden">
+  <div class="vault-choose-box">
+    <div class="vault-choose-title" id="vaultChooseTitle"></div>
+    <div class="vault-choose-sub">选择对文件的操作</div>
+    <div class="vault-choose-actions">
+      <button class="vault-choose-prev" id="vaultChoosePrev">👁 预览</button>
+      <button class="vault-choose-dl" id="vaultChooseDl">⬇ 下载</button>
+      <button class="vault-choose-close" id="vaultChooseClose">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var PIN_LEN = 4;
+  var vaultToken = '';
+  // 独立入口：私密空间固定归属 tom，不依赖主系统登录（PIN 即鉴权）
+  var VAULT_OWNER = 'tom';
+  var pinBuf = '';
+  // 独立页面没有 CLOUD_ONLY 机制，固定连云端 Worker（文件存云端 R2，与 APP/网页版同一空间）
+  var API_BASE = 'https://agi-gs.tomalso911.workers.dev';
+
+  function openVaultPin(){
+    pinBuf = '';
+    document.getElementById('vaultPinModal').classList.remove('hidden');
+    setHint('请输入 4 位密码');
+    renderCells();
+  }
+  function closeVaultPin(){
+    document.getElementById('vaultPinModal').classList.add('hidden');
+  }
+  function setHint(t){ document.getElementById('vaultPinHint').textContent = t; }
+  function renderCells(){
+    var cells = document.querySelectorAll('#vaultPinModal .vault-pin-cell');
+    for (var i=0;i<cells.length;i++){
+      if (i < pinBuf.length) {
+        cells[i].value = '●';
+        cells[i].classList.remove('active','caret');
+      } else if (i === pinBuf.length) {
+        cells[i].value = 'I';
+        cells[i].classList.add('active','caret');
+      } else {
+        cells[i].value = '';
+        cells[i].classList.remove('active','caret');
+      }
+    }
+  }
+  function pinPush(k){
+    if (k === 'clear') { pinBuf=''; renderCells(); return; }
+    if (k === 'del') { pinBuf = pinBuf.slice(0,-1); renderCells(); return; }
+    if (pinBuf.length >= PIN_LEN) return;
+    pinBuf += k; renderCells();
+    if (pinBuf.length === PIN_LEN) setTimeout(vaultTryUnlock, 150);
+  }
+  function vaultTryUnlock(){
+    fetch(API_BASE + '/api/vault/unlock', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username: VAULT_OWNER, pin: pinBuf})
+    }).then(function(r){ return r.json().then(function(d){ return {st:r.status, d:d}; }); })
+      .then(function(o){
+        var d = o.d;
+        if (d.ok) { vaultToken = d.token; closeVaultPin(); openVault(); }
+        else { pinBuf=''; renderCells(); setHint(d.error || '密码错误'); if (d.lock) setTimeout(closeVaultPin, 1200); }
+      }).catch(function(){ setHint('网络错误'); });
+  }
+
+  function openVault(){
+    document.getElementById('vaultOverlay').classList.remove('hidden');
+    loadVaultFiles();
+  }
+  function closeVault(){ document.getElementById('vaultOverlay').classList.add('hidden'); }
+
+  // ===== 系统返回键路由：与头部"⬅ 返回"完全一致（按优先级逐层关闭）=====
+  // 返回 true = 网页已消费返回动作，原生不再处理
+  function vaultCanGoBackInternal(){
+    try {
+      function vis(id){ var e = document.getElementById(id); return !!(e && e.classList && !e.classList.contains('hidden')); }
+      if (vis('vaultPreview')) return true;
+      if (vis('vaultChoose')) return true;
+      if (vis('vaultConfirm')) return true;
+      if (vis('vaultOverlay')) return true;
+      if (vis('vaultPinModal')) return true;
+    } catch (e) {}
+    return false;
+  }
+  var _lastBackState = null;
+  function vaultPushBackState(){
+    var st = vaultCanGoBackInternal() ? '1' : '0';
+    if (st === _lastBackState) return;
+    _lastBackState = st;
+    // 通道A：JS 接口（同步）
+    try {
+      if (window.AndroidBridge && window.AndroidBridge.setBackState) {
+        window.AndroidBridge.setBackState(st);
+      }
+    } catch (e) {}
+    // 通道B：自定义 scheme（shouldOverrideUrlLoading 同步拦截）
+    // 仅在 APP 内使用：普通浏览器未注册该 scheme，导航会报
+    // "scheme does not have a registered handler"，污染控制台。
+    try {
+      if (!window.AndroidBridge) return;
+      var ifr = document.getElementById('__backstateIfr');
+      if (!ifr) {
+        ifr = document.createElement('iframe');
+        ifr.id = '__backstateIfr';
+        ifr.style.display = 'none';
+        document.body.appendChild(ifr);
+      }
+      ifr.src = 'agipm://backstate?s=' + st;
+    } catch (e) {}
+  }
+  // 轻量轮询持续向原生同步标志位（覆盖所有状态变化路径）
+  try { setInterval(vaultPushBackState, 400); } catch (e) {}
+  vaultPushBackState();
+
+  window.__handleBack = function(){
+    try {
+      var pv = document.getElementById('vaultPreview');
+      if (pv && pv.classList && !pv.classList.contains('hidden')) { closeVaultPreview(); return true; }
+      var ch = document.getElementById('vaultChoose');
+      if (ch && ch.classList && !ch.classList.contains('hidden')) { vaultChooseClose(); return true; }
+      var cf = document.getElementById('vaultConfirm');
+      if (cf && cf.classList && !cf.classList.contains('hidden')) { _vaultCloseConfirm(); return true; }
+      var vo = document.getElementById('vaultOverlay');
+      if (vo && vo.classList && !vo.classList.contains('hidden')) {
+        if (typeof vaultCwd !== 'undefined' && vaultCwd && typeof vaultGoUp === 'function') {
+          vaultGoUp();
+          return true;
+        }
+        if (typeof closeVault === 'function') closeVault();
+        return true;
+      }
+      var pm = document.getElementById('vaultPinModal');
+      if (pm && pm.classList && !pm.classList.contains('hidden')) { closeVaultPin(); return true; }
+    } catch (err) { return false; }
+    return false;
+  };
+  // 执行回退后立即同步状态（不等轮询）
+  (function(){
+    var origBack = window.__handleBack;
+    window.__handleBack = function(){
+      var r = false;
+      try { r = origBack(); } catch (e) { r = false; }
+      try { vaultPushBackState(); } catch (e) {}
+      return r;
+    };
+  })();
+
+  // ============================================================
+  // 网页版返回键（与 APP 同规则）
+  //   单击 → 返回上一级（关预览/关弹窗/子目录回上层/关私密空间）
+  //   双击（2 秒内）→ 关闭私密空间回到 PIN 页（对应 APP 的"退出"）
+  // ============================================================
+  var _webBackLast = 0, _webBackBusy = false;
+  function _webPushGuard(){
+    try { history.pushState({ agipmGuard: 1 }, '', location.href); } catch (e) {}
+  }
+  window.__webHandleBack = function(){
+    var now = Date.now();
+    if (now - _webBackLast < 2000) {          // 双击 → 退出私密空间（回 PIN 页）
+      _webBackLast = 0;
+      try { closeVault(); } catch (e) {}
+      return true;
+    }
+    _webBackLast = now;
+    var consumed = false;
+    try { consumed = !!(window.__handleBack && window.__handleBack()); } catch (e) { consumed = false; }
+    if (!consumed) { try { showToast('再按一次返回键退出私密空间'); } catch (e) {} }
+    return consumed;
+  };
+  window.addEventListener('popstate', function(){
+    if (_webBackBusy) return;
+    _webBackBusy = true;
+    try {
+      window.__webHandleBack();
+      _webPushGuard();
+    } catch (e) {}
+    setTimeout(function(){ _webBackBusy = false; }, 120);
+  });
+  try { if (!history.state || !history.state.agipmGuard) _webPushGuard(); } catch (e) {}
+
+  // 头部"⬅ 返回"按钮：与系统返回键逻辑完全一致
+  function vaultHeadBack(){
+    try {
+      if (window.__handleBack && window.__handleBack()) return;
+    } catch (e) {}
+    if (typeof closeVault === 'function') closeVault();
+  }
+  function vaultHeaders(){ return {'X-Vault-Token': vaultToken}; }
+  function setVaultMsg(m){ var e=document.getElementById('vaultEmpty'); e.classList.remove('hidden'); e.textContent=m; }
+  function fmtSize(b){ if(b<1024) return b+' B'; if(b<1024*1024) return (b/1024).toFixed(1)+' KB'; return (b/1024/1024).toFixed(1)+' MB'; }
+  // ===== 视图模式（list/grid/thumb）+ 容量 + 返回 =====
+  var vaultViewMode = (function(){ try { return localStorage.getItem('agipm_vault_view') || 'list'; } catch(e){ return 'list'; } })();
+  function vaultSetView(mode){
+    vaultViewMode = mode;
+    try { localStorage.setItem('agipm_vault_view', mode); } catch(e){}
+    document.querySelectorAll('.vault-view-switch button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-view')===mode);
+    });
+    renderVault();
+  }
+  window.vaultSetView = vaultSetView;
+  function vaultGoUp(){
+    if (!vaultCwd) return;
+    vaultCwd = vaultCwd.replace(/[^/]+\/$/, '');
+    vaultChecked = {};
+    renderVault();
+  }
+  function vaultFolderSummary(folder){
+    var bytes = 0, cnt = 0;
+    var prefix = vaultCwd + folder + '/';
+    vaultAll.forEach(function(f){
+      if (f.name.indexOf(prefix) === 0){ bytes += (f.size||0); cnt++; }
+    });
+    return { count: cnt, size: bytes, label: cnt + ' 个文件 · ' + fmtSize(bytes) };
+  }
+  function vaultStatUpdate(){
+    var el = document.getElementById('vaultStat');
+    if (!el) return;
+    var bytes = 0, cnt = vaultAll.length;
+    vaultAll.forEach(function(f){ bytes += (f.size||0); });
+    el.textContent = cnt ? ('总计 ' + cnt + ' 个 · ' + fmtSize(bytes)) : '';
+  }
+  function fileIcon(name){
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name)) return '🖼';
+    if (/\.(pdf)$/i.test(name)) return '📕';
+    if (/\.(docx?)$/i.test(name)) return '📘';
+    if (/\.(xlsx?)$/i.test(name)) return '📗';
+    if (/\.(pptx?)$/i.test(name)) return '📙';
+    if (/\.(txt|md|log|csv|json)$/i.test(name)) return '📄';
+    if (/\.(mp4|mov|avi)$/i.test(name)) return '🎬';
+    if (/\.(mp3|wav|flac)$/i.test(name)) return '🎵';
+    if (/\.(zip|rar|7z|tar|gz)$/i.test(name)) return '🗜';
+    return '📄';
+  }
+
+  // ===== 文件夹树渲染（与主系统 index.html 相同逻辑） =====
+  // 行点击忽略区：勾选框 / label 包裹区 / 按钮 / 链接
+  function rowTapIgnore(t){
+    if (!t || !t.tagName) return true;
+    if (t.tagName === 'INPUT' || t.tagName === 'BUTTON' || t.tagName === 'A') return true;
+    if (t.closest && t.closest('.vault-pick')) return true;
+    return false;
+  }
+  var vaultAll = [];
+  var vaultCwd = '';
+  var vaultView = [];
+  var vaultChecked = {};
+  function vaultDlUrl(name){
+    return API_BASE + '/api/vault/download/' + name.split('/').map(encodeURIComponent).join('/') + '?vt=' + vaultToken;
+  }
+  function loadVaultFiles(){
+    fetch(API_BASE + '/api/vault/files', {headers: vaultHeaders()})
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d.ok) { setVaultMsg(d.error); return; }
+        vaultAll = d.files || [];
+        renderVault();
+      }).catch(function(){ setVaultMsg('加载失败'); });
+  }
+  function renderCrumbs(){
+    var box = document.getElementById('vaultCrumbs');
+    if (!box) return;
+    box.innerHTML = '';
+    var mk = function(label, dir, isCur){
+      var a = document.createElement(isCur ? 'span' : 'a');
+      a.className = isCur ? 'vc-cur' : '';
+      a.textContent = label;
+      if (!isCur) a.onclick = function(){ vaultCwd = dir; vaultChecked = {}; renderVault(); };
+      box.appendChild(a);
+      if (!isCur) {
+        var sep = document.createElement('span');
+        sep.className = 'vc-sep'; sep.textContent = '›';
+        box.appendChild(sep);
+      }
+    };
+    mk('🏠 全部文件', '', vaultCwd === '');
+    // 同步顶部工具栏的目录徽章（点击 = 回到根）
+    var tag = document.getElementById('vaultCwdTag');
+    if (tag) {
+      tag.textContent = vaultCwd ? ('📂 ' + vaultCwd.replace(/\/$/, '').split('/').pop()) : '🏠 全部文件';
+      tag.onclick = function(){ vaultCwd=''; vaultChecked={}; renderVault(); };
+      tag.style.cursor = 'pointer';
+    }
+    if (vaultCwd) {
+      var segs = vaultCwd.replace(/\/$/, '').split('/');
+      var acc = '';
+      segs.forEach(function(s, i){
+        acc += s + (i < segs.length - 1 ? '/' : '');
+        var isLast = (i === segs.length - 1);
+        mk(s, isLast ? null : acc, isLast);
+      });
+    }
+  }
+  function renderVault(){
+    var list = document.getElementById('vaultList');
+    var empty = document.getElementById('vaultEmpty');
+    var cnt = document.getElementById('vaultCount');
+    if (!list) return;
+    list.innerHTML = '';
+    list.className = 'vault-list' + (vaultViewMode==='thumb' ? ' vault-thumb' : '');
+    vaultView = [];
+    cnt.textContent = vaultAll.length ? ('当前视图 ' + (vaultViewMode==='thumb'?'缩略图':'列表')) : '';
+    vaultStatUpdate();
+    if (!vaultAll.length) {
+      empty.classList.remove('hidden');
+      empty.textContent = '暂无文件，点击「上传文件」添加';
+      vaultUpdateSelBar();
+      return;
+    }
+    empty.classList.add('hidden');
+    renderCrumbs();
+    var back = document.getElementById('vaultBackBtn');
+    if (back) back.classList.toggle('hidden', !vaultCwd);
+    var folders = {}, folderFiles = {};
+    var filesHere = [];
+    vaultAll.forEach(function(f){
+      if (f.name.indexOf(vaultCwd) !== 0) return;
+      var rest = f.name.slice(vaultCwd.length);
+      if (!rest) return;
+      var si = rest.indexOf('/');
+      if (si < 0) filesHere.push(f);
+      else {
+        var d = rest.slice(0, si);
+        folders[d] = (folders[d] || 0) + 1;
+        (folderFiles[d] = folderFiles[d] || []).push(f.name);
+      }
+    });
+    // 文件夹行
+    Object.keys(folders).sort().forEach(function(d){
+      var row = document.createElement('div');
+      row.className = 'vault-item vault-folder';
+      var pick = document.createElement('label');
+      pick.className = 'vault-pick';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'vault-cb';
+      var descs = folderFiles[d] || [];
+      cb.checked = descs.length > 0 && descs.every(function(n){ return vaultChecked[n]; });
+      cb.onchange = function(){
+        descs.forEach(function(n){
+          if (cb.checked) vaultChecked[n] = true; else delete vaultChecked[n];
+        });
+        vaultUpdateSelBar();
+      };
+      pick.appendChild(cb);
+      var icon = document.createElement('span');
+      icon.className = 'vault-ficon'; icon.textContent = '📁';
+      var nm = document.createElement('span');
+      nm.className = 'vault-item-name'; nm.textContent = d;
+      var sum = vaultFolderSummary(d);
+      var meta = document.createElement('span');
+      meta.className = 'vault-item-meta';
+      meta.textContent = sum.label;
+      var acts = document.createElement('span');
+      acts.className = 'vault-item-actions';
+      var openBtn = document.createElement('button');
+      openBtn.textContent = '打开';
+      openBtn.onclick = function(){ vaultCwd = vaultCwd + d + '/'; vaultChecked = {}; renderVault(); };
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '删除';
+      delBtn.onclick = function(){ vaultDelFolder(d, descs.slice()); };
+      acts.appendChild(openBtn); acts.appendChild(delBtn);
+      if (vaultViewMode === 'thumb') {
+        var ic = document.createElement('div');
+        ic.className = 'vault-thumb-icon'; ic.textContent = '📁';
+        row.appendChild(ic);
+      }
+      row.appendChild(pick); row.appendChild(icon); row.appendChild(nm);
+      row.appendChild(meta); row.appendChild(acts);
+      row.addEventListener('click', function(e){
+        if (rowTapIgnore(e.target)) return;
+        vaultCwd = vaultCwd + d + '/'; vaultChecked = {}; renderVault();
+      });
+      list.appendChild(row);
+    });
+    // 文件行
+    filesHere.forEach(function(f){
+      var idx = vaultView.length;
+      vaultView.push(f);
+      var row = document.createElement('div');
+      row.className = 'vault-item';
+      var pick = document.createElement('label');
+      pick.className = 'vault-pick';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.className = 'vault-cb';
+      cb.checked = !!vaultChecked[f.name];
+      cb.onchange = function(){
+        if (cb.checked) vaultChecked[f.name] = true; else delete vaultChecked[f.name];
+        vaultUpdateSelBar();
+      };
+      pick.appendChild(cb);
+      var nm = document.createElement('span');
+      nm.className = 'vault-item-name'; nm.textContent = f.name.split('/').pop(); nm.title = f.name;
+      var meta = document.createElement('span');
+      meta.className = 'vault-item-meta';
+      meta.textContent = f.mtime + ' · ' + fmtSize(f.size);
+      var acts = document.createElement('span');
+      acts.className = 'vault-item-actions';
+      var pvBtn = document.createElement('button');
+      pvBtn.textContent = '预览';
+      pvBtn.onclick = function(){ vaultPreview(idx); };
+      var dl = document.createElement('a');
+      dl.className = 'vault-dl'; dl.textContent = '下载';
+      dl.href = vaultDlUrl(f.name);
+      dl.setAttribute('download', f.name.split('/').pop());
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '删除';
+      delBtn.onclick = function(){ vaultDel(f.name); };
+      acts.appendChild(pvBtn); acts.appendChild(dl); acts.appendChild(delBtn);
+      if (vaultViewMode === 'thumb') {
+        var ic = document.createElement('div');
+        ic.className = 'vault-thumb-icon'; ic.textContent = fileIcon(f.name);
+        row.appendChild(ic);
+      } else if (vaultViewMode === 'grid') {
+        var ico = document.createElement('span');
+        ico.className = 'vault-ficon'; ico.textContent = fileIcon(f.name);
+        row.insertBefore(ico, nm);
+      }
+      row.appendChild(nm); row.appendChild(meta); row.appendChild(acts);
+      row.insertBefore(pick, row.firstChild);
+      // 单击行任意处（除勾选框/按钮/链接）弹出操作选择：预览 / 下载
+      row.addEventListener('click', function(e){
+        if (rowTapIgnore(e.target)) return;
+        vaultChoose(f.name);
+      });
+      list.appendChild(row);
+    });
+    if (!Object.keys(folders).length && !filesHere.length) {
+      empty.classList.remove('hidden');
+      empty.textContent = '此文件夹为空';
+    }
+    vaultUpdateSelBar();
+  }
+  // 选中态工具（vaultChecked：完整文件名集合，跨目录保留）
+  function vaultUpdateSelBar(){
+    var n = Object.keys(vaultChecked).length;
+    var bar = document.getElementById('vaultSelBar');
+    if (!bar) return;
+    if (n > 0) bar.classList.remove('hidden'); else bar.classList.add('hidden');
+    var btn = document.getElementById('vaultBulkDel');
+    if (btn) { btn.disabled = (n === 0); btn.textContent = '删除选中 (' + n + ')'; }
+  }
+  function vaultToggleAll(checked){
+    vaultAll.forEach(function(f){
+      if (f.name.indexOf(vaultCwd) !== 0) return;
+      if (checked) vaultChecked[f.name] = true; else delete vaultChecked[f.name];
+    });
+    renderVault();
+  }
+  function vaultDelSelected(){
+    var names = Object.keys(vaultChecked);
+    if (!names.length) return;
+    vaultConfirm('删除选中文件','确认删除选中的 '+names.length+' 个文件？此操作不可撤销。',function(){
+      fetch(API_BASE + '/api/vault/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Vault-Token':vaultToken},body:JSON.stringify({names:names})})
+        .then(function(r){return r.json();})
+        .then(function(d){ if (d.ok){ vaultChecked = {}; showToast('已删除 ' + d.deleted.length + ' 个文件'); loadVaultFiles(); } else showToast(d.error||'删除失败'); })
+        .catch(function(){ showToast('删除失败'); });
+    });
+  }
+  function vaultDelFolder(dir, descs){
+    if (!descs || !descs.length) { showToast('文件夹为空'); return; }
+    vaultConfirm('删除文件夹','确认删除文件夹「'+dir+'」及其下 '+descs.length+' 个文件？此操作不可撤销。',function(){
+      fetch(API_BASE + '/api/vault/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Vault-Token':vaultToken},body:JSON.stringify({names:descs})})
+        .then(function(r){return r.json();})
+        .then(function(d){ if (d.ok){ showToast('已删除 ' + d.deleted.length + ' 个文件'); loadVaultFiles(); } else showToast(d.error||'删除失败'); })
+        .catch(function(){ showToast('删除失败'); });
+    });
+  }
+  function showToast(msg){
+    // 轻量 toast（独立页面无主系统 showToast）
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#22303f;color:#e7edf3;padding:10px 22px;border-radius:8px;font-size:13px;z-index:9800;box-shadow:0 8px 24px rgba(0,0,0,.5)';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2500);
+  }
+
+  // ===== 上传：XHR 队列逐个 + 真实进度条 =====
+  var upQueue = [], upRunning = false, upDoneOk = 0, upFail = 0;
+  function vaultUploadFiles(files){
+    if (!files || !files.length) return;
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      var rel = f.webkitRelativePath || f.name || '';
+      upQueue.push({ file: f, path: rel });
+    }
+    document.getElementById('vaultUpPanel').classList.remove('hidden');
+    runUpQueue();
+  }
+  function runUpQueue(){
+    if (upRunning) return;
+    upRunning = true; upDoneOk = 0; upFail = 0;
+    nextUp();
+  }
+  function nextUp(){
+    var title = document.getElementById('vaultUpTitle');
+    if (!upQueue.length) {
+      upRunning = false;
+      if (title) title.textContent = '上传完成：' + upDoneOk + ' 成功' + (upFail ? ('，' + upFail + ' 失败') : '');
+      if (!upFail) setTimeout(function(){ document.getElementById('vaultUpPanel').classList.add('hidden'); }, 2500);
+      loadVaultFiles();
+      return;
+    }
+    var job = upQueue[0];
+    if (title) title.textContent = '上传中…（剩余 ' + upQueue.length + ' 个）';
+    var body = document.getElementById('vaultUpBody');
+    var row = document.createElement('div');
+    row.className = 'vu-row';
+    row.innerHTML = '<div class="vu-name"></div>' +
+      '<div class="vu-bar"><div class="vu-fill"></div></div>' +
+      '<div class="vu-meta"><span class="vu-pct">0%</span><span class="vu-st">排队中</span></div>';
+    var nm = job.path.split('/').pop();
+    row.querySelector('.vu-name').textContent =
+      (job.path.indexOf('/') >= 0 ? job.path.slice(0, job.path.lastIndexOf('/') + 1) : '') + nm;
+    body.appendChild(row); body.scrollTop = body.scrollHeight;
+    var fill = row.querySelector('.vu-fill');
+    var pct = row.querySelector('.vu-pct');
+    var st = row.querySelector('.vu-st');
+    var fd = new FormData();
+    fd.append('file', job.file, nm);
+    fd.append('path', job.path);
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', API_BASE + '/api/vault/upload');
+    xhr.setRequestHeader('X-Vault-Token', vaultToken);
+    xhr.upload.onprogress = function(e){
+      if (e.lengthComputable) {
+        var p = Math.round(e.loaded / e.total * 100);
+        fill.style.width = p + '%';
+        pct.textContent = p + '%';
+        st.textContent = '上传中';
+      }
+    };
+    xhr.onload = function(){
+      upQueue.shift();
+      var ok = false, err = '';
+      try { var d = JSON.parse(xhr.responseText); ok = !!d.ok; err = d.error || ''; } catch (e) {}
+      if (ok) { fill.style.width = '100%'; fill.classList.add('done'); pct.textContent = '100%'; st.textContent = '完成'; upDoneOk++; }
+      else { fill.classList.add('fail'); st.textContent = err || '失败'; upFail++; }
+      nextUp();
+    };
+    xhr.onerror = function(){
+      upQueue.shift();
+      fill.classList.add('fail'); st.textContent = '网络错误'; upFail++;
+      nextUp();
+    };
+    xhr.send(fd);
+  }
+  function vaultDoUpload(input){
+    if (input && input.files) vaultUploadFiles(input.files);
+    input.value='';
+  }
+
+  // 拖拽上传
+  function bindVaultDrag(){
+    var zone=document.getElementById('vaultOverlay'); if(!zone) return;
+    var counter=0;
+    var showHint=function(on){ zone.classList.toggle('vault-drag', !!on); };
+    zone.addEventListener('dragenter', function(e){ e.preventDefault(); counter++; showHint(true); });
+    zone.addEventListener('dragover', function(e){ e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
+    zone.addEventListener('dragleave', function(e){ e.preventDefault(); counter--; if(counter<=0){ counter=0; showHint(false); } });
+    zone.addEventListener('drop', function(e){
+      e.preventDefault(); counter=0; showHint(false);
+      var dt=e.dataTransfer;
+      if(!dt) return;
+      if (dt.items && dt.items.length && typeof DataTransferItem!=='undefined' && typeof DataTransferItem.prototype.webkitGetAsEntry==='function'){
+        var entries=[];
+        for(var i=0;i<dt.items.length;i++){
+          var it=dt.items[i];
+          if(it.kind==='file'){
+            var entry=(typeof it.webkitGetAsEntry==='function')?it.webkitGetAsEntry():null;
+            if(entry) entries.push(entry);
+            else if(it.getAsFile){ var f=it.getAsFile(); if(f){ vaultUploadFiles([f]); return; } }
+          }
+        }
+        if(entries.length){
+          collectEntries(entries, [], function(files){ if(files && files.length) vaultUploadFiles(files); });
+          return;
+        }
+      }
+      if (dt.files && dt.files.length) vaultUploadFiles(dt.files);
+    });
+  }
+  function collectEntries(entries, fileList, cb){
+    var pending=entries.length;
+    if(!pending){ cb(fileList); return; }
+    function done(){ pending--; if(pending===0) cb(fileList); }
+    function readDir(dirEntry){
+      var reader=dirEntry.createReader();
+      function step(){
+        reader.readEntries(function(batch){
+          if(!batch.length){ done(); return; }
+          collectEntries(batch, fileList, function(){ step(); });
+        }, function(){ done(); });
+      }
+      step();
+    }
+    function readFile(fileEntry){
+      fileEntry.file(function(f){
+        try{
+          var rel=(fileEntry.fullPath||f.name).replace(/^\//,'');
+          f=new File([f], rel, {type:f.type});
+        }catch(err){}
+        fileList.push(f);
+        done();
+      }, function(){ done(); });
+    }
+    for(var i=0;i<entries.length;i++){
+      var ent=entries[i];
+      if(ent.isFile) readFile(ent);
+      else if(ent.isDirectory) readDir(ent);
+      else done();
+    }
+  }
+  bindVaultDrag();
+
+  // ===== 在线预览（免费开源库随站点本地部署，CDN 兜底）=====
+  //   PDF → PDF.js（Android WebView 不支持 iframe PDF，必须 canvas 渲染）
+  //   Word(.docx) → mammoth.js；Excel(.xlsx/.xls) → SheetJS；图片/文本 → 原生
+  var _libP = {}, _libSrc = {};
+  function ensureLib(key, srcs){
+    if (_libP[key]) return _libP[key];
+    var i = 0;
+    function tryNext(){
+      if (i >= srcs.length) { _libP[key] = null; return Promise.reject(new Error('libs failed')); }
+      var src = srcs[i++];
+      return new Promise(function(res, rej){
+        var s = document.createElement('script');
+        s.src = src;
+        s.onload = function(){ res(src); };
+        s.onerror = function(){ s.remove(); rej(new Error('fail ' + src)); };
+        document.head.appendChild(s);
+      }).then(function(src2){ _libSrc[key] = src2; return src2; })
+        .catch(function(){ return tryNext(); });
+    }
+    _libP[key] = tryNext();
+    return _libP[key];
+  }
+  function vaultPrevUrl(name){
+    return API_BASE + '/api/vault/preview/' + name.split('/').map(encodeURIComponent).join('/') + '?vt=' + vaultToken;
+  }
+  function vaultFallback(body, name, msg){
+    body.innerHTML = '<div class="vault-loading">' + msg +
+      '<div style="margin-top:14px"><a class="vault-dl" style="color:#6db3f2" href="' + vaultDlUrl(name) + '" download>点击下载查看</a></div></div>';
+  }
+  function vaultPdfProgress(text, pct){
+    var p = document.getElementById('vaultPreviewProgress');
+    if (!p) return;
+    p.textContent = text + (typeof pct === 'number' ? ' ' + Math.round(pct) + '%' : '');
+  }
+  function vaultRenderPdf(body, name, url){
+    vaultPdfProgress('加载组件…', 0);
+    ensureLib('pdfjs', ['/vendor/pdf.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'])
+      .then(function(src){
+        pdfjsLib.GlobalWorkerOptions.workerSrc = src.replace('pdf.min.js', 'pdf.worker.min.js');
+        var loadingTask = pdfjsLib.getDocument({ url: url });
+        loadingTask.onProgress = function(d){
+          if (d && d.total){ vaultPdfProgress('下载 PDF…', (d.loaded / d.total) * 50); }
+        };
+        return loadingTask.promise.then(function(pdf){
+          vaultPdfProgress('解析 PDF…', 60);
+          body.innerHTML = '<div class="vault-pdf-holder"></div>';
+          var holder = body.firstChild;
+          var info = document.createElement('div');
+          info.className = 'vault-loading'; info.style.marginTop = '8px';
+          body.insertBefore(info, holder);
+          var dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+          var total = pdf.numPages;
+          var rendered = 0;
+          function next(){
+            if (rendered >= total){
+              info.textContent = '共 ' + total + ' 页';
+              vaultPdfProgress('完成', 100);
+              return;
+            }
+            rendered++;
+            var cur = rendered;
+            vaultPdfProgress('渲染第 ' + cur + ' / ' + total + ' 页', 60 + (cur/total)*40);
+            pdf.getPage(cur).then(function(pg){
+              var w = holder.clientWidth || 600;
+              var cssScale = Math.min(3, Math.max(0.7, w / pg.getViewport({ scale: 1 }).width));
+              var vp = pg.getViewport({ scale: cssScale });
+              var cv = document.createElement('canvas');
+              cv.width = Math.floor(vp.width * dpr);
+              cv.height = Math.floor(vp.height * dpr);
+              cv.style.width = Math.floor(vp.width) + 'px';
+              cv.style.height = Math.floor(vp.height) + 'px';
+              cv.style.marginBottom = '10px';
+              cv.style.background = '#fff';
+              cv.style.borderRadius = '4px';
+              cv.style.boxShadow = '0 2px 10px rgba(0,0,0,.35)';
+              cv.style.display = 'block';
+              var ctx = cv.getContext('2d');
+              ctx.scale(dpr, dpr);
+              holder.appendChild(cv);
+              return pg.render({ canvasContext: ctx, viewport: vp }).promise;
+            }).then(function(){ next(); }).catch(function(){ next(); });
+          }
+          next();
+        });
+      })
+      .catch(function(e){
+        vaultPdfProgress('加载失败', 0);
+        vaultFallback(body, name, 'PDF 加载失败：' + ((e && e.message) || ''));
+      });
+  }
+  // ===== 双指捏合缩放 / 单指平移 / 双击复位 / Ctrl+滚轮（电脑）=====
+  function bindPinchZoom(vp){
+    if (vp.__pinchBound) return; vp.__pinchBound = true;
+    var scale = 1, tx = 0, ty = 0;
+    var st = { d: 0, s: 1 }, pan = null;
+    var wrap = vp.querySelector('.vault-zoom');
+    function dist(t){ var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY; return Math.hypot(dx, dy); }
+    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+    function apply(){ wrap.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')'; }
+    function reset(){ scale = 1; tx = 0; ty = 0; apply(); }
+    vp.addEventListener('touchstart', function(e){
+      if (e.touches.length === 2) {
+        st.d = dist(e.touches); st.s = scale; pan = null;
+        e.preventDefault();
+      } else if (e.touches.length === 1 && scale > 1) {
+        pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: false });
+    vp.addEventListener('touchmove', function(e){
+      if (e.touches.length === 2) {
+        var ns = clamp(st.s * dist(e.touches) / st.d, 0.5, 5);
+        var mx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        var my = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        var r = vp.getBoundingClientRect();
+        var ax = mx - r.left, ay = my - r.top;
+        tx = ax - (ax - tx) * (ns / scale);
+        ty = ay - (ay - ty) * (ns / scale);
+        scale = ns; apply(); e.preventDefault();
+      } else if (e.touches.length === 1 && pan && scale > 1) {
+        tx += e.touches[0].clientX - pan.x;
+        ty += e.touches[0].clientY - pan.y;
+        pan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        apply(); e.preventDefault();
+      }
+    }, { passive: false });
+    vp.addEventListener('touchend', function(e){
+      if (e.touches.length < 2 && scale <= 1.02) reset();
+      if (e.touches.length < 2) pan = null;
+    });
+    vp.addEventListener('dblclick', reset);
+    vp.addEventListener('wheel', function(e){
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      var ns = clamp(scale * (e.deltaY < 0 ? 1.12 : 0.89), 0.5, 5);
+      var r = vp.getBoundingClientRect();
+      var ax = e.clientX - r.left, ay = e.clientY - r.top;
+      tx = ax - (ax - tx) * (ns / scale);
+      ty = ay - (ay - ty) * (ns / scale);
+      scale = ns; apply();
+    }, { passive: false });
+  }
+  // ===== 全屏切换（⛶）=====
+  function vaultToggleFullscreen(){
+    var pv = document.getElementById('vaultPreview');
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else if (pv.requestFullscreen) {
+        pv.requestFullscreen().catch(function(){ showToast('该设备不允许网页全屏'); });
+      } else {
+        showToast('该设备不支持网页全屏');
+      }
+    } catch (e) { showToast('该设备不支持网页全屏'); }
+  }
+  document.addEventListener('fullscreenchange', function(){
+    var b = document.getElementById('vaultFsBtn');
+    if (b) b.textContent = document.fullscreenElement ? '🗗' : '⛶';
+  });
+  // ============================================================
+  // Word：按 docx 自身页面设置（纸张 + 页边距）1:1 渲染成 A4 页面，再整体等比缩放适配屏幕
+  //   直接从 zip 里取出 word/document.xml，读 <w:pgSz> / <w:pgMar>（单位 twips，1 英寸 = 1440 twips）
+  //   读不到（老浏览器无 DecompressionStream / 加密文档）时退回 A4 + 25.4mm 默认页边距
+  // ============================================================
+  function round1(v){ return (Math.round(Number(v) * 10) / 10); }
+  function docxTwipMm(v){ return (parseInt(v, 10) / 1440) * 25.4; }
+  function docxParseSect(xml){
+    var m = {};
+    var sec = xml.match(/<w:sectPr\b[\s\S]*?<\/w:sectPr>/);
+    var s = sec ? sec[0] : '';
+    var ps = s.match(/<w:pgSz[^>]*>/);
+    if (ps){
+      var w = /w:w="(-?\d+)"/.exec(ps[0]), h = /w:h="(-?\d+)"/.exec(ps[0]);
+      if (w) m.pageWmm = docxTwipMm(w[1]);
+      if (h) m.pageHmm = docxTwipMm(h[1]);
+      // 横向纸张：pgSz 里宽高是"旋转前"的值，需要互换
+      if (/w:orient="landscape"/.test(ps[0]) && m.pageWmm && m.pageHmm){
+        var tmp = m.pageWmm; m.pageWmm = m.pageHmm; m.pageHmm = tmp;
+      }
+    }
+    var pm = s.match(/<w:pgMar[^>]*>/);
+    if (pm){
+      var keys = ['top', 'right', 'bottom', 'left'];
+      for (var i = 0; i < keys.length; i++){
+        var r = new RegExp('w:' + keys[i] + '="(-?\\d+)"').exec(pm[0]);
+        if (r) m[keys[i] + 'mm'] = docxTwipMm(r[1]);
+      }
+    }
+    return (m.pageWmm || m.pageHmm || m.topmm != null) ? m : null;
+  }
+  function docxPageMeta(buf){
+    return new Promise(function(resolve){
+      try {
+        var u8 = new Uint8Array(buf), i, eocd = -1;
+        for (i = u8.length - 22; i >= 0 && i > u8.length - 66000; i--){
+          if (u8[i] === 0x50 && u8[i+1] === 0x4b && u8[i+2] === 0x05 && u8[i+3] === 0x06){ eocd = i; break; }
+        }
+        if (eocd < 0) return resolve(null);
+        var cnt = u8[eocd+10] | (u8[eocd+11] << 8);
+        var p = (u8[eocd+16] | (u8[eocd+17] << 8) | (u8[eocd+18] << 16) | (u8[eocd+19] << 24)) >>> 0;
+        for (var n = 0; n < cnt; n++){
+          if (u8[p] !== 0x50 || u8[p+1] !== 0x4b) break;
+          var method = u8[p+10] | (u8[p+11] << 8);
+          var nameLen = u8[p+28] | (u8[p+29] << 8);
+          var extraLen = u8[p+30] | (u8[p+31] << 8);
+          var cmtLen = u8[p+32] | (u8[p+33] << 8);
+          var lho = (u8[p+42] | (u8[p+43] << 8) | (u8[p+44] << 16) | (u8[p+45] << 24)) >>> 0;
+          var nm = '';
+          for (var j = 0; j < nameLen; j++) nm += String.fromCharCode(u8[p+46+j]);
+          if (nm === 'word/document.xml'){
+            var lNameLen = u8[lho+26] | (u8[lho+27] << 8);
+            var lExtraLen = u8[lho+28] | (u8[lho+29] << 8);
+            var off = lho + 30 + lNameLen + lExtraLen;
+            var csize = (u8[lho+18] | (u8[lho+19] << 8) | (u8[lho+20] << 16) | (u8[lho+21] << 24)) >>> 0;
+            var raw = u8.subarray(off, off + csize);
+            if (method === 0){
+              return resolve(docxParseSect(new TextDecoder('utf-8').decode(raw)));
+            }
+            if (typeof DecompressionStream === 'undefined') return resolve(null);
+            var stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+            return new Response(stream).text().then(
+              function(xml){ resolve(docxParseSect(xml)); },
+              function(){ resolve(null); }
+            );
+          }
+          p += 46 + nameLen + extraLen + cmtLen;
+        }
+        resolve(null);
+      } catch(e){ resolve(null); }
+    });
+  }
+  // 整体等比缩放：让"整页宽度"刚好铺满可视区（≤1，不放大；双指可再放大）
+  function vaultFitDocPage(box){
+    if (!box) return;
+    var page = box.querySelector('.vault-doc-wrap.ex-doc');
+    if (!page) return;
+    var vp = box.closest('.vault-zoom-viewport') || box.parentElement || box;
+    var avail = (vp && vp.clientWidth ? vp.clientWidth : (window.innerWidth || 360)) - 20;
+    var info = box.querySelector('.ex-page-info');
+    var infoH = info ? info.offsetHeight : 0;
+    page.style.transform = 'none';
+    var pw = page.offsetWidth || 794;
+    var h = page.offsetHeight || 1123;
+    var k = Math.min(1, avail / pw);
+    page.style.top = infoH + 'px';
+    page.style.transform = 'scale(' + k + ')';
+    box.style.width = Math.round(pw * k) + 'px';
+    box.style.height = (infoH + Math.round(h * k)) + 'px';
+  }
+  function vaultFitAllDocPages(){
+    var list = document.querySelectorAll('.ex-page-box');
+    for (var i = 0; i < list.length; i++) vaultFitDocPage(list[i]);
+  }
+
+  // ============================================================
+  // Excel 渲染引擎（v2 · 忠实还原 Excel 原貌）
+  //   · 按工作表真实区域解析，自动丢弃尾部空白行列 + "整列全空"的无关列
+  //   · 合并单元格按 !merges 精确还原（v1 用绝对坐标算行列表，区域非 A1 起点时全部错位 → 合并丢失）
+  //   · 表格视图：Excel 行列坐标 + 自动识别真实表头 + 冻结表头/行号 + 横滑
+  //   · 卡片视图：每行一张卡，合并标题自动带入，竖屏可看全所有字段
+  // ============================================================
+  var EXCEL_MAXR = 1000, EXCEL_MAXC = 120;
+  var excelViewPref = (function(){ try { return localStorage.getItem('agipm_excel_view') || ''; } catch(e){ return ''; } })();
+  function excelEsc(s){
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function excelLetters(c){
+    var s = ''; var n = c + 1;
+    while (n > 0){ var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+    return s;
+  }
+  function excelTextW(s){
+    s = String(s == null ? '' : s);
+    var w = 0;
+    for (var k = 0; k < s.length; k++) w += s.charCodeAt(k) > 127 ? 2 : 1;
+    return w;
+  }
+  function excelIsNum(v){
+    if (typeof v === 'number') return true;
+    var s = String(v == null ? '' : v).replace(/[,%\s$¥₫]/g, '');
+    if (s === '') return false;
+    return !isNaN(Number(s));
+  }
+  // ============================================================
+  // Excel 视觉样式（背景色 / 字体色 / 粗体 / 边框 / 水平垂直对齐）
+  //   SheetJS 社区版的 cell.s 只给了 {patternType:'none'}，丢失了 fillId/borderId，
+  //   所以这里直接读原始 sheet XML 里的 <c r="C1" s="12">（s = CellXf 索引），
+  //   再用 wb.Styles.CellXf / Fills / Borders / Fonts 解析出 CSS。
+  //   解析只在预览时做一次（结果缓存在 _excelStyleCache），失败则优雅降级（无样式）。
+  // ============================================================
+  var _excelStyleCache = {};
+  function excelArgbToCss(color, Fills, themeColors){
+    if (!color) return null;
+    if (color.rgb){
+      var h = String(color.rgb).replace(/^#/, '');
+      if (h.length === 8) h = h.slice(2);            // ARGB → RGB
+      if (h.length === 6) return '#' + h;
+      return null;
+    }
+    if (color.theme != null && Fills && Fills.theme){
+      var t = Fills.theme[String(color.theme)];
+      if (t) return excelArgbToCss({ rgb: t }, null);
+    }
+    if (color.indexed != null){
+      var IDX = ['000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF',
+                 '000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF',
+                 '800000','008000','000080','808000','800080','008080','C0C0C0','808080',
+                 '9999FF','993366','FFFFCC','CCFFFF','660066','FF8080','0066CC','CCCCFF',
+                 '000080','FF00FF','FFFF00','00FFFF','800080','800000','008080','0000FF',
+                 '00CCFF','CCFFFF','CCFFCC','FFFF99','99CCFF','FF99CC','CC99FF','FFCC99',
+                 '3366FF','33CCCC','99CC00','FFCC00','FF9900','FF6600','666699','969696',
+                 '003366','339966','003300','333300','993300','993366','333399','333333'];
+      var v = IDX[color.indexed];
+      return v ? ('#' + v) : null;
+    }
+    return null;
+  }
+  function excelBorderSide(b){
+    if (!b || !b.style || b.style === 'none') return null;
+    var w = (b.style === 'medium') ? '2px' : (b.style === 'thick' ? '3px' : '1px');
+    var st = (b.style === 'dashed' || b.style === 'dotted' || b.style === 'double') ? b.style : 'solid';
+    var col = excelArgbToCss(b.color) || '#8a97a5';
+    return w + ' ' + st + ' ' + col;
+  }
+  // 把 CellXf 索引转换成 CSS 片段
+  function excelXfToCss(wb, xfIdx){
+    var S = wb.Styles;
+    if (!S || !S.CellXf) return '';
+    var xf = S.CellXf[xfIdx];
+    if (!xf) return '';
+    var out = [];
+    // 背景色
+    var fill = S.Fills && S.Fills[xf.fillId];
+    if (fill && fill.patternType === 'solid'){
+      var bg = excelArgbToCss(fill.fgColor, S.Fills);
+      if (bg) out.push('background:' + bg);
+    } else if (fill && fill.patternType === 'gray125'){
+      out.push('background:#f2f2f2');
+    }
+    // 字体（颜色 / 粗体 / 斜体 / 下划线 / 字号）
+    var font = S.Fonts && S.Fonts[xf.fontId];
+    if (font){
+      var fc = excelArgbToCss(font.color, S.Fills);
+      if (fc && fc.toLowerCase() !== '#000000') out.push('color:' + fc);
+      if (font.b || font.bold) out.push('font-weight:700');
+      if (font.i || font.italic) out.push('font-style:italic');
+      if (font.u || font.underline) out.push('text-decoration:underline');
+      if (font.sz && Number(font.sz) > 0) out.push('font-size:' + Number(font.sz) + 'pt');
+    }
+    // 对齐
+    var al = xf.alignment || {};
+    if (al.horizontal && al.horizontal !== 'general'){
+      out.push('text-align:' + (al.horizontal === 'center' || al.horizontal === 'centerContinuous'
+        ? 'center' : (al.horizontal === 'right' ? 'right' : 'left')));
+    }
+    if (al.vertical && al.vertical !== 'bottom'){
+      out.push('vertical-align:' + (al.vertical === 'center' || al.vertical === 'middle'
+        ? 'middle' : (al.vertical === 'top' ? 'top' : 'bottom')));
+    }
+    if (al.wrapText) out.push('white-space:normal;word-break:break-word');
+    // 边框
+    var bd = S.Borders && S.Borders[xf.borderId];
+    if (bd && typeof bd === 'object'){
+      var sides = { left:'left', right:'right', top:'top', bottom:'bottom' };
+      var bcss = [];
+      for (var k in sides){
+        var one = excelBorderSide(bd[k] || bd[sides[k]]);
+        if (one) bcss.push('border-' + sides[k] + ':' + one);
+      }
+      if (bcss.length) out.push(bcss.join(';'));
+    }
+    return out.join(';');
+  }
+  // 从 xlsx 二进制里解压出指定 sheet 的 XML（用 DecompressionStream，Node 端测试用 zlib 兜底）
+  function excelReadZipEntry(u8, wantName){
+    var i, eocd = -1;
+    for (i = u8.length - 22; i >= 0 && i > u8.length - 66000; i--){
+      if (u8[i] === 0x50 && u8[i+1] === 0x4b && u8[i+2] === 0x05 && u8[i+3] === 0x06){ eocd = i; break; }
+    }
+    if (eocd < 0) return Promise.resolve(null);
+    var cnt = u8[eocd+10] | (u8[eocd+11] << 8);
+    var p = (u8[eocd+16] | (u8[eocd+17] << 8) | (u8[eocd+18] << 16) | (u8[eocd+19] << 24)) >>> 0;
+    for (var n = 0; n < cnt; n++){
+      if (u8[p] !== 0x50 || u8[p+1] !== 0x4b) break;
+      var method = u8[p+10] | (u8[p+11] << 8);
+      var nameLen = u8[p+28] | (u8[p+29] << 8);
+      var extraLen = u8[p+30] | (u8[p+31] << 8);
+      var cmtLen = u8[p+32] | (u8[p+33] << 8);
+      var lho = (u8[p+42] | (u8[p+43] << 8) | (u8[p+44] << 16) | (u8[p+45] << 24)) >>> 0;
+      var nm = '';
+      for (var j = 0; j < nameLen; j++) nm += String.fromCharCode(u8[p+46+j]);
+      if (nm === wantName){
+        var lNameLen = u8[lho+26] | (u8[lho+27] << 8);
+        var lExtraLen = u8[lho+28] | (u8[lho+29] << 8);
+        var off = lho + 30 + lNameLen + lExtraLen;
+        var csize = (u8[lho+18] | (u8[lho+19] << 8) | (u8[lho+20] << 16) | (u8[lho+21] << 24)) >>> 0;
+        var raw = u8.subarray(off, off + csize);
+        if (method === 0) return Promise.resolve(new TextDecoder('utf-8').decode(raw));
+        if (typeof DecompressionStream === 'undefined') return Promise.resolve(null);
+        return new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw')))
+          .text().catch(function(){ return null; });
+      }
+      p += 46 + nameLen + extraLen + cmtLen;
+    }
+    return Promise.resolve(null);
+  }
+  // 建立 该工作表 "单元格地址(如 C1) → CSS 片段" 的映射
+  function excelBuildStyleMap(wb, sn, sheetXmlName, u8){
+    if (_excelStyleCache[sn] !== undefined) return Promise.resolve(_excelStyleCache[sn]);
+    if (!wb.Styles || !wb.Styles.CellXf || !sheetXmlName || !u8){
+      _excelStyleCache[sn] = null; return Promise.resolve(null);
+    }
+    return excelReadZipEntry(u8, sheetXmlName).then(function(xml){
+      if (!xml){ _excelStyleCache[sn] = null; return null; }
+      var map = {}, re = /<c\s+r="([A-Z]+[0-9]+)"([^>]*)>/g, m;
+      while ((m = re.exec(xml)) !== null){
+        var sm = /s="(\d+)"/.exec(m[2]);
+        if (!sm) continue;
+        var css = excelXfToCss(wb, parseInt(sm[1], 10));
+        if (css) map[m[1]] = css;
+      }
+      _excelStyleCache[sn] = map;
+      return map;
+    }).catch(function(){ _excelStyleCache[sn] = null; return null; });
+  }
+  // 通过 workbook.xml.rels + workbook.xml 找到 工作表序号 → sheetXml 文件名
+  function excelSheetXmlNames(u8){
+    return Promise.all([
+      excelReadZipEntry(u8, 'xl/workbook.xml'),
+      excelReadZipEntry(u8, 'xl/_rels/workbook.xml.rels')
+    ]).then(function(r){
+      var wbXml = r[0], relsXml = r[1];
+      if (!wbXml || !relsXml) return null;
+      // rId → target
+      var rels = {}, rm, reR = /<Relationship[^>]*Id="([^"]+)"[^>]*Target="([^"]+)"/g;
+      while ((rm = reR.exec(relsXml)) !== null) rels[rm[1]] = rm[2];
+      // sheet → rId → target（按 workbook 里 <sheet> 出现的顺序，与 wb.SheetNames 一致）
+      // 注意：rels 里的 Target 是"相对 xl/ 目录"的（如 worksheets/sheet1.xml），
+      // 也可能是绝对路径 /xl/worksheets/sheet1.xml，两种都要能拼成 zip 内的真实路径。
+      var out = [], sm, reS = /<sheet[^>]*r:id="([^"]+)"[^>]*>/g;
+      while ((sm = reS.exec(wbXml)) !== null){
+        var t = rels[sm[1]] || '';
+        t = t.replace(/^\//, '');                 // 去掉开头的 /
+        if (t.indexOf('xl/') !== 0) t = 'xl/' + t; // 补上 xl/ 前缀
+        out.push(t);
+      }
+      return out.length ? out : null;
+    }).catch(function(){ return null; });
+  }
+  // 单元格"有效值"：自身为空但属于某个合并区时，取合并区左上角的值
+  function excelCellVal(m, r, c){
+    var v = (m.data[r] || [])[c];
+    if (v != null && String(v).trim() !== '') return v;
+    var mi = m.owner[r + ':' + c];
+    if (mi !== undefined){
+      var mg = m.merges[mi];
+      var av = (m.data[mg.r1] || [])[mg.c1];
+      if (av != null && String(av).trim() !== '') return av;
+    }
+    return v;
+  }
+  // 解析工作表 → 模型（data / 保留列 / 合并区 / 表头行 / 提示）
+  function excelSheetModel(ws){
+    var R;
+    try { R = XLSX.utils.decode_range(ws['!ref'] || 'A1'); }
+    catch(e){ R = { s:{ r:0, c:0 }, e:{ r:0, c:0 } }; }
+    // 极端文件（!ref 被写坏）保护：先把扫描范围压到可控尺寸
+    if (R.e.r - R.s.r > 5000) R.e.r = R.s.r + 5000;
+    if (R.e.c - R.s.c > 300) R.e.c = R.s.c + 300;
+    var nR = R.e.r - R.s.r + 1, nC = R.e.c - R.s.c + 1;
+    var data;
+    try { data = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false, range:R }); }
+    catch(e){ return { err:(e && e.message) || '解析失败' }; }
+    for (var i0 = 0; i0 < nR; i0++) if (!data[i0]) data[i0] = [];
+    // 合并区 → 相对坐标
+    var merges = [], owner = {};
+    (ws['!merges'] || []).forEach(function(m){
+      if (!m || !m.s || !m.e) return;
+      var r1 = m.s.r - R.s.r, c1 = m.s.c - R.s.c, r2 = m.e.r - R.s.r, c2 = m.e.c - R.s.c;
+      if (r2 < 0 || c2 < 0 || r1 >= nR || c1 >= nC) return;
+      if (r1 < 0) r1 = 0;
+      if (c1 < 0) c1 = 0;
+      if (r2 > nR - 1) r2 = nR - 1;
+      if (c2 > nC - 1) c2 = nC - 1;
+      var idx = merges.length;
+      merges.push({ r1:r1, c1:c1, r2:r2, c2:c2 });
+      for (var r = r1; r <= r2; r++){
+        for (var c = c1; c <= c2; c++) owner[r + ':' + c] = idx;
+      }
+    });
+    // 有效区域
+    var lastR = -1, lastC = -1;
+    for (var r = 0; r < nR; r++){
+      var row = data[r] || [];
+      for (var c = 0; c < nC; c++){
+        var v = row[c];
+        if (v != null && String(v).trim() !== ''){ if (r > lastR) lastR = r; if (c > lastC) lastC = c; }
+      }
+    }
+    merges.forEach(function(m){
+      if (m.c1 <= lastC && m.c2 > lastC) lastC = m.c2;
+      if (m.r1 <= lastR && m.r2 > lastR) lastR = m.r2;
+    });
+    if (lastR < 0 || lastC < 0) return { empty:true };
+    var notes = [];
+    var rMax = Math.min(lastR + 1, EXCEL_MAXR);
+    var cMax = Math.min(lastC + 1, EXCEL_MAXC);
+    if (lastR + 1 > rMax) notes.push('行数较多，仅显示前 ' + rMax + ' 行（共 ' + (lastR + 1) + ' 行）');
+    if (lastC + 1 > cMax) notes.push('列数较多，仅显示前 ' + cMax + ' 列（共 ' + (lastC + 1) + ' 列），完整数据请下载查看');
+    // 丢弃"整列全空"的无关列 + Excel 里被隐藏的列（合并区锚点算占用）
+    var colInfo = ws['!cols'] || [];
+    var keep = [], dropped = 0;
+    for (var c0 = 0; c0 < cMax; c0++){
+      if (colInfo[R.s.c + c0] && colInfo[R.s.c + c0].hidden){ dropped++; continue; }
+      var used = false;
+      for (var r0 = 0; r0 < rMax && !used; r0++){
+        var v0 = (data[r0] || [])[c0];
+        if (v0 != null && String(v0).trim() !== ''){ used = true; break; }
+        var mi0 = owner[r0 + ':' + c0];
+        if (mi0 !== undefined){
+          var mm0 = merges[mi0];
+          if (mm0.r1 === r0 && mm0.c1 === c0) used = true;
+        }
+      }
+      if (used) keep.push(c0); else dropped++;
+    }
+    if (!keep.length) return { empty:true };
+    if (dropped > 0) notes.push('已隐藏 ' + dropped + ' 个完全空白的列');
+    // 表头行识别：前 3 行里第一个"非空单元 ≥ 60%"的行（跨列合并的大标题行自然被跳过）
+    var hdrRow = -1;
+    if (keep.length > 1){
+      var scan = Math.min(3, rMax);
+      for (var hr = 0; hr < scan; hr++){
+        var fill = 0;
+        for (var k1 = 0; k1 < keep.length; k1++){
+          var cc = keep[k1], hv = (data[hr] || [])[cc], occ = (hv != null && String(hv).trim() !== '');
+          if (!occ){
+            // 合并区锚点也算"占用"，但被合并覆盖的格子不算
+            // （否则跨列大标题行会被误判成表头）
+            var mi1 = owner[hr + ':' + cc];
+            if (mi1 !== undefined && merges[mi1].r1 === hr && merges[mi1].c1 === cc) occ = true;
+          }
+          if (occ) fill++;
+        }
+        if (fill >= Math.ceil(keep.length * 0.6)) { hdrRow = hr; break; }
+      }
+    }
+    return { data:data, R:R, rMax:rMax, cMax:cMax, keep:keep,
+             merges:merges, owner:owner, notes:notes, hdrRow:hdrRow };
+  }
+  function excelColWidths(ws, m){
+    var cols = (ws && ws['!cols']) || [], w = [];
+    for (var k = 0; k < m.keep.length; k++){
+      var c = m.keep[k], px = 0;
+      var ci = cols[m.R.s.c + c];
+      if (ci && !ci.hidden && ci.wch) px = Math.round(ci.wch * 7 + 14);
+      if (!px){
+        var mx = 0, sample = Math.min(m.rMax, 400);
+        for (var i = 0; i < sample; i++){
+          var tw = excelTextW(excelCellVal(m, i, c));
+          if (tw > mx) mx = tw;
+        }
+        px = Math.round(Math.max(4, Math.min(mx, 32)) * 7 + 16);
+      }
+      w.push(Math.max(46, Math.min(260, px)));
+    }
+    return w;
+  }
+  // 合并区在"保留列"下的 colspan（列被隐藏后需重算）
+  function excelSpanCols(m, mg){
+    var n = 0;
+    for (var q = 0; q < m.keep.length; q++){ if (m.keep[q] >= mg.c1 && m.keep[q] <= mg.c2) n++; }
+    return n < 1 ? 1 : n;
+  }
+  // 取单元格的视觉样式 CSS（R 为工作表原点，用于把数组下标换算回 Excel 地址如 C1）
+  function excelCellCss(m, i, c){
+    var sm = m.styleMap;
+    if (!sm) return '';
+    var addr = excelLetters(m.R.s.c + c) + (m.R.s.r + i + 1);
+    return sm[addr] || '';
+  }
+  // 渲染一行的数据单元格（th=表头/标题行，td=数据行）；合并区按 rowspan/colspan 还原
+  function excelRowCells(m, i, tag){
+    var keep = m.keep, data = m.data, rMax = m.rMax, owner = m.owner, merges = m.merges, h = '';
+    for (var k = 0; k < keep.length; k++){
+      var c = keep[k], mi = owner[i + ':' + c];
+      if (mi !== undefined){
+        var mg = merges[mi];
+        if (mg.r1 !== i || mg.c1 !== c) continue;        // 被合并覆盖 → 不输出
+        var v = data[i] ? data[i][c] : '';
+        var rs = Math.min(mg.r2, rMax - 1) - mg.r1 + 1, cs = excelSpanCols(m, mg);
+        var cls = ((tag === 'td' ? 'ex-m ' : '') + (excelIsNum(v) ? 'ex-num ' : '') +
+                   (excelTextW(v) > 40 ? 'ex-wrap' : '')).trim();
+        var sty = excelCellCss(m, i, c);
+        h += '<' + tag + (cls ? ' class="' + cls + '"' : '') +
+             (sty ? ' style="' + sty + '"' : '') +
+             (rs > 1 ? ' rowspan="' + rs + '"' : '') + (cs > 1 ? ' colspan="' + cs + '"' : '') +
+             '>' + excelEsc(v) + '</' + tag + '>';
+      } else {
+        var v2 = (data[i] || [])[c];
+        var cls2 = ((tag === 'td' && excelIsNum(v2)) ? 'ex-num ' : '') +
+                   (excelTextW(v2) > 40 ? 'ex-wrap' : '');
+        cls2 = cls2.trim();
+        var sty2 = excelCellCss(m, i, c);
+        h += '<' + tag + (cls2 ? ' class="' + cls2 + '"' : '') +
+             (sty2 ? ' style="' + sty2 + '"' : '') + '>' + excelEsc(v2) + '</' + tag + '>';
+      }
+    }
+    return h;
+  }
+  function excelGridHtml(ws, m){
+    var keep = m.keep, R = m.R;
+    var colW = excelColWidths(ws, m);
+    var h = '<div class="ex-grid-wrap"><table class="ex-grid"><colgroup><col style="width:42px">';
+    for (var k = 0; k < keep.length; k++) h += '<col style="width:' + colW[k] + 'px">';
+    h += '</colgroup><thead>';
+    // 列号行（A B C …）
+    h += '<tr><th class="ex-ax ex-corner"></th>';
+    for (var k = 0; k < keep.length; k++) h += '<th class="ex-ax">' + excelLetters(R.s.c + keep[k]) + '</th>';
+    h += '</tr>';
+    // 大标题行（表头之前的合并标题行）
+    if (m.hdrRow > 0){
+      for (var t = 0; t < m.hdrRow; t++){
+        h += '<tr class="ex-titlerow"><th class="ex-ax ex-rn">' + (R.s.r + t + 1) + '</th>' +
+             excelRowCells(m, t, 'th') + '</tr>';
+      }
+    }
+    // 真实表头行（冻结在列号行下方）
+    if (m.hdrRow >= 0){
+      h += '<tr class="ex-hrow"><th class="ex-ax ex-rn">' + (R.s.r + m.hdrRow + 1) + '</th>' +
+           excelRowCells(m, m.hdrRow, 'th') + '</tr>';
+    }
+    h += '</thead><tbody>';
+    var start = (m.hdrRow >= 0) ? (m.hdrRow + 1) : 0;
+    for (var i = start; i < m.rMax; i++){
+      h += '<tr><th class="ex-ax ex-rn">' + (R.s.r + i + 1) + '</th>' + excelRowCells(m, i, 'td') + '</tr>';
+    }
+    return h + '</tbody></table></div>';
+  }
+  function excelCardHtml(m){
+    var keep = m.keep, R = m.R, hdr = (m.hdrRow >= 0) ? (m.data[m.hdrRow] || []) : null;
+    var start = (m.hdrRow >= 0) ? (m.hdrRow + 1) : 0, h = '<div class="ex-cards">', n = 0;
+    for (var i = start; i < m.rMax; i++){
+      var parts = '', any = false;
+      for (var k = 0; k < keep.length; k++){
+        var c = keep[k], v = excelCellVal(m, i, c);
+        if (v == null || String(v).trim() === '') continue;
+        any = true;
+        var lb = (hdr && String(hdr[c] == null ? '' : hdr[c]).trim() !== '') ? hdr[c] : excelLetters(R.s.c + c);
+        parts += '<dt>' + excelEsc(lb) + '</dt><dd>' + excelEsc(v) + '</dd>';
+      }
+      if (!any) continue;
+      n++;
+      h += '<div class="ex-card"><div class="ex-card-h">第 ' + (R.s.r + i + 1) + ' 行</div><dl>' + parts + '</dl></div>';
+    }
+    return n ? (h + '</div>') : '<p class="ex-note">（无数据行）</p>';
+  }
+  window.__excelPostRender = function(){ /* 合并/对齐已在渲染阶段完成，保留兼容入口 */ };
+  // 预加载所有工作表的视觉样式（背景色/边框），结果写入 _excelStyleCache
+  function excelPrepareStyles(wb, u8){
+    _excelStyleCache = {};
+    if (!u8 || !wb.Styles || !wb.Styles.CellXf) return Promise.resolve();
+    if (typeof DecompressionStream === 'undefined') return Promise.resolve();
+    return excelSheetXmlNames(u8).then(function(names){
+      if (!names) return;
+      var jobs = wb.SheetNames.map(function(sn, i){
+        var xn = names[i];
+        if (!xn) return Promise.resolve();
+        return excelBuildStyleMap(wb, sn, xn, u8).catch(function(){ return null; });
+      });
+      return Promise.all(jobs);
+    }).catch(function(){ /* 样式失败不影响渲染 */ });
+  }
+  function buildExcelHtml(wb, preferView){
+    var html = '';
+    wb.SheetNames.forEach(function(sn){
+      var ws = wb.Sheets[sn];
+      if (!ws) return;
+      var m;
+      try { m = excelSheetModel(ws); }
+      catch(e){ m = { err:(e && e.message) || '解析失败' }; }
+      m.styleMap = _excelStyleCache[sn] || null;
+      if (m.err){
+        html += '<div class="ex-sheet"><h3>' + excelEsc(sn) + '</h3><p class="ex-note err">（此工作表无法解析：' + excelEsc(m.err) + '）</p></div>';
+        return;
+      }
+      if (m.empty){
+        html += '<div class="ex-sheet"><h3>' + excelEsc(sn) + '</h3><p class="ex-note">（空工作表）</p></div>';
+        return;
+      }
+      // 默认表格视图（原貌优先）；仅列数很多（>14）且用户没手动选过时用卡片
+      var view = preferView || (m.keep.length > 14 ? 'card' : 'grid');
+      var dataRows = m.rMax - (m.hdrRow >= 0 ? (m.hdrRow + 1) : 0);
+      html += '<div class="ex-sheet">';
+      html += '<div class="ex-sheet-h"><h3>' + excelEsc(sn) + '</h3>' +
+        '<span class="ex-meta">' + dataRows + ' 行 × ' + m.keep.length + ' 列' +
+        (m.merges.length ? ' · ' + m.merges.length + ' 处合并' : '') + '</span>' +
+        '<div class="ex-viewsw">' +
+          '<button data-v="grid" class="' + (view === 'grid' ? 'on' : '') + '" onclick="vaultExcelSetView(\'grid\')">📊 表格</button>' +
+          '<button data-v="card" class="' + (view === 'card' ? 'on' : '') + '" onclick="vaultExcelSetView(\'card\')">🗂 卡片</button>' +
+        '</div></div>';
+      if (m.notes.length) html += '<p class="ex-note">' + m.notes.join('；') + '</p>';
+      html += (view === 'card') ? excelCardHtml(m) : excelGridHtml(ws, m);
+      html += '</div>';
+    });
+    return html || '(空文档)';
+  }
+  var _vaultCurPreviewIdx = -1;
+  function vaultExcelSetView(v){
+    try { localStorage.setItem('agipm_excel_view', v); } catch(e){}
+    excelViewPref = v;
+    if (_vaultCurPreviewIdx >= 0 && typeof vaultPreview === 'function') vaultPreview(_vaultCurPreviewIdx);
+  }
+  var _zoomTipShown = false;
+  function vaultPreview(idx){
+    var f = vaultView[idx]; if (!f) return;
+    _vaultCurPreviewIdx = idx;   // 供 Excel 视图切换后重新渲染
+    var name = f.name, lower = (name || '').toLowerCase();
+    var prev = document.getElementById('vaultPreview');
+    var body = document.getElementById('vaultPreviewBody');
+    document.getElementById('vaultPreviewName').textContent = name;
+    body.innerHTML = '<div class="vault-zoom-viewport"><div class="vault-zoom"><div class="vault-loading">加载中…</div></div></div>';
+    var zoom = body.querySelector('.vault-zoom');
+    bindPinchZoom(body.querySelector('.vault-zoom-viewport'));
+    if (!_zoomTipShown) {
+      _zoomTipShown = true;
+      showToast('提示：右上 ⛶ 全屏 · 双指缩放 · 双击复位');
+    }
+    prev.classList.remove('hidden');
+    var url = vaultPrevUrl(name);
+    function fb(msg){ vaultFallback(zoom, name, msg); }
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(lower)) {
+      zoom.innerHTML = '<div style="text-align:center"><img src="'+url+'" style="max-width:96%;max-height:96%" /></div>';
+    } else if (/\.(txt|log|md|csv|json)$/i.test(lower)) {
+      zoom.innerHTML = '<iframe src="'+url+'" style="width:100%;height:100%;border:0;background:#fff"></iframe>';
+    } else if (/\.pdf$/i.test(lower)) {
+      vaultRenderPdf(zoom, name, url);
+    } else if (/\.docx$/i.test(lower)) {
+      ensureLib('mammoth', ['/vendor/mammoth.browser.min.js',
+                            'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js'])
+        .then(function(){ return fetch(url).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }); })
+        .then(function(buf){
+          return docxPageMeta(buf).then(function(pm){
+            return mammoth.convertToHtml({ arrayBuffer: buf }).then(function(res){
+              return { html: res.value, pm: pm };
+            });
+          });
+        })
+        .then(function(out){
+          var pm = out.pm || {};
+          var wrap = document.createElement('div');
+          wrap.className = 'ex-page-box';
+          var info = document.createElement('div');
+          info.className = 'ex-page-info';
+          var pw = pm.pageWmm || 210, ph = pm.pageHmm || 297;
+          var mg = [pm.topmm, pm.rightmm, pm.bottommm, pm.leftmm];
+          var mgTxt = (mg[0] != null) ? (round1(pm.topmm) + '/' + round1(pm.rightmm) + '/' + round1(pm.bottommm) + '/' + round1(pm.leftmm) + 'mm') : '25.4mm（默认）';
+          info.textContent = '📄 ' + round1(pw) + ' × ' + round1(ph) + ' mm · 页边距 ' + mgTxt +
+                             (pm.pageWmm ? '（取自文档自身设置）' : '（文档未标注，按 A4 默认）');
+          var page = document.createElement('div');
+          page.className = 'vault-doc-wrap ex-doc';
+          page.style.width = pw + 'mm';
+          page.style.minHeight = ph + 'mm';
+          page.style.padding = (pm.topmm != null ? pm.topmm : 25.4) + 'mm ' +
+                               (pm.rightmm != null ? pm.rightmm : 25.4) + 'mm ' +
+                               (pm.bottommm != null ? pm.bottommm : 25.4) + 'mm ' +
+                               (pm.leftmm != null ? pm.leftmm : 25.4) + 'mm';
+          page.innerHTML = out.html || '(空文档)';
+          wrap.appendChild(info);
+          wrap.appendChild(page);
+          zoom.innerHTML = '';
+          zoom.appendChild(wrap);
+          vaultFitDocPage(wrap);
+        })
+        .catch(function(){ fb('Word 预览组件加载失败。'); });
+    } else if (/\.(xlsx|xls)$/i.test(lower)) {
+      ensureLib('xlsx', ['/vendor/xlsx.full.min.js',
+                         'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'])
+        .then(function(){ return fetch(url).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }); })
+        .then(function(buf){
+          var wb = XLSX.read(buf, { type: 'array', cellStyles: true });
+          // 视觉样式（背景色/边框）需要从原始 XML 读，异步进行；失败不影响主体渲染
+          var u8 = new Uint8Array(buf);
+          return excelPrepareStyles(wb, u8).then(function(){
+            zoom.innerHTML = '<div class="vault-doc-wrap">' + buildExcelHtml(wb, excelViewPref) + '</div>';
+            try { window.__excelPostRender && window.__excelPostRender(zoom); } catch (e) {}
+          });
+        })
+        .catch(function(e){
+          var msg = String((e && e.message) || e || '');
+          vaultFallback(body, name, msg.indexOf('HTTP') === 0
+            ? '文件下载失败（' + msg + '）。'
+            : '此 Excel 文件解析失败，可能是格式特殊或已损坏。<br><span style="font-size:12px;color:#888">' + msg.replace(/</g, '&lt;') + '</span>');
+        });
+    } else {
+      fb('该格式暂不支持在线预览。');
+    }
+  }
+  function closeVaultPreview(){
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
+    document.getElementById('vaultPreview').classList.add('hidden');
+    document.getElementById('vaultPreviewBody').innerHTML='';
+  }
+  // ============================================================
+  // 屏幕方向：永久交互切换
+  //   入口：顶部/预览头 🔄 按钮（随时可点）+ 预览标题三击快捷方式
+  //   三级实现：① APK 原生（AndroidBridge.setOrientation，最可靠）
+  //            ② 标准 screen.orientation.lock（浏览器/PWA 全屏下可用）
+  //            ③ CSS 整页旋转兜底（系统不允许锁定时，效果等同竖屏）
+  //   选择写入 localStorage，下次进入自动恢复
+  // ============================================================
+  var VAULT_ORIENT_KEY = 'agipm_vault_orient';
+  var _vaultOrient = (function(){ try { return localStorage.getItem(VAULT_ORIENT_KEY) || ''; } catch(e){ return ''; } })();
+  function vaultCurPortrait(){
+    var so = (window.screen && screen.orientation) || {};
+    var t = so.type || '';
+    if (t) return t.indexOf('portrait') >= 0;
+    return (window.innerHeight || 0) > (window.innerWidth || 0);
+  }
+  function vaultIsPortrait(){
+    return document.body.classList.contains('vault-rot-portrait') || vaultCurPortrait();
+  }
+  function vaultOrientRefreshBtn(){
+    var txt = vaultIsPortrait() ? '🔄 横屏' : '🔄 竖屏';
+    var ids = ['vaultOrientBtn', 'vaultOrientBtn2'];
+    for (var i = 0; i < ids.length; i++){
+      var b = document.getElementById(ids[i]);
+      if (!b) continue;
+      b.textContent = txt;
+      try { b.classList.toggle('on', !!_vaultOrient); } catch(e){}
+    }
+  }
+  function vaultToast(msg){ try { showToast(msg); } catch(e){} }
+  function vaultCssRotate(mode){
+    var need = (mode === 'portrait' && !vaultCurPortrait());
+    document.body.classList.toggle('vault-rot-portrait', need);
+    vaultOrientRefreshBtn();
+    setTimeout(vaultFitAllDocPages, 60);
+    vaultToast(mode === 'portrait'
+      ? (need ? '已竖屏显示（系统不允许锁定，采用页面旋转）' : '已竖屏')
+      : '已横屏');
+  }
+  function vaultApplyOrient(mode, byUser){
+    _vaultOrient = mode;
+    try { localStorage.setItem(VAULT_ORIENT_KEY, mode); } catch(e){}
+    // ① APK 原生
+    try {
+      if (window.AndroidBridge && typeof window.AndroidBridge.setOrientation === 'function') {
+        window.AndroidBridge.setOrientation(mode);
+        document.body.classList.remove('vault-rot-portrait');
+        vaultOrientRefreshBtn();
+        if (byUser) vaultToast(mode === 'portrait' ? '已切换竖屏' : '已切换横屏');
+        return;
+      }
+    } catch(e){}
+    // ② 标准 API
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock(mode).then(function(){
+        document.body.classList.remove('vault-rot-portrait');
+        vaultOrientRefreshBtn();
+        if (byUser) vaultToast(mode === 'portrait' ? '已切换竖屏' : '已切换横屏');
+      }).catch(function(){ vaultCssRotate(mode); });
+      vaultOrientRefreshBtn();
+      return;
+    }
+    // ③ CSS 兜底
+    vaultCssRotate(mode);
+  }
+  function vaultToggleOrient(){
+    vaultApplyOrient(vaultIsPortrait() ? 'landscape' : 'portrait', true);
+  }
+  window.vaultToggleOrient = vaultToggleOrient;
+  // 三击预览标题 = 切屏快捷方式（避开按钮区，防止误触）
+  var _triTapTimes = [];
+  function _triTapRotate(){
+    var now = Date.now();
+    _triTapTimes = _triTapTimes.filter(function(t){ return now - t < 1200; });
+    _triTapTimes.push(now);
+    if (_triTapTimes.length >= 3) { _triTapTimes = []; vaultToggleOrient(); }
+  }
+  function vaultOrientInit(){
+    var title = document.getElementById('vaultPreviewName');
+    if (title) title.addEventListener('click', _triTapRotate);
+    window.addEventListener('orientationchange', function(){
+      document.body.classList.remove('vault-rot-portrait');
+      vaultOrientRefreshBtn();
+      setTimeout(vaultFitAllDocPages, 300);
+    });
+    window.addEventListener('resize', function(){ vaultOrientRefreshBtn(); vaultFitAllDocPages(); });
+    if (_vaultOrient) setTimeout(function(){ vaultApplyOrient(_vaultOrient, false); }, 200);
+    else vaultOrientRefreshBtn();
+  }
+  if (document.readyState !== 'loading') vaultOrientInit();
+  else document.addEventListener('DOMContentLoaded', vaultOrientInit);
+  // 离开页面时把方向还给主系统（主系统为横屏设计）
+  window.addEventListener('pagehide', function(){
+    try { if (window.AndroidBridge && window.AndroidBridge.setOrientation) window.AndroidBridge.setOrientation('landscape'); } catch(e){}
+  });
+
+  // ===== 单击文件 → 选择预览/下载 =====
+  var _chooseName = '';
+  function vaultChoose(name){
+    _chooseName = name;
+    document.getElementById('vaultChooseTitle').textContent = name.split('/').pop();
+    document.getElementById('vaultChoose').classList.remove('hidden');
+  }
+  function vaultChooseClose(){
+    document.getElementById('vaultChoose').classList.add('hidden');
+    _chooseName = '';
+  }
+  // ===== 下载：XHR + 实时速度进度条（复用右下角面板） =====
+  function vaultDownload(name){
+    document.getElementById('vaultUpPanel').classList.remove('hidden');
+    var body = document.getElementById('vaultUpBody');
+    var row = document.createElement('div');
+    row.className = 'vu-row';
+    row.innerHTML = '<div class="vu-name"></div>' +
+      '<div class="vu-bar"><div class="vu-fill"></div></div>' +
+      '<div class="vu-meta"><span class="vu-pct">0%</span><span class="vu-st">连接中</span></div>';
+    row.querySelector('.vu-name').textContent = '下载 · ' + name.split('/').pop();
+    body.appendChild(row); body.scrollTop = body.scrollHeight;
+    var fill = row.querySelector('.vu-fill'), pct = row.querySelector('.vu-pct'), st = row.querySelector('.vu-st');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', vaultDlUrl(name));
+    xhr.responseType = 'blob';
+    var lastLoaded = 0, lastTime = Date.now();
+    xhr.onprogress = function(e){
+      if (!e.lengthComputable) { st.textContent = '已接收 ' + fmtSize(e.loaded); return; }
+      var p = Math.round(e.loaded / e.total * 100);
+      fill.style.width = p + '%'; pct.textContent = p + '%';
+      var now = Date.now(), dt = (now - lastTime) / 1000;
+      if (dt >= 0.3) {
+        var speed = (e.loaded - lastLoaded) / dt;
+        lastLoaded = e.loaded; lastTime = now;
+        st.textContent = fmtSize(speed) + '/s · ' + fmtSize(e.loaded) + ' / ' + fmtSize(e.total);
+      }
+    };
+    xhr.onload = function(){
+      if (xhr.status === 200 && xhr.response) {
+        fill.style.width = '100%'; fill.classList.add('done');
+        pct.textContent = '100%'; st.textContent = '已保存';
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(xhr.response);
+        a.download = name.split('/').pop();
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+        setTimeout(function(){ row.remove(); }, 2500);
+      } else {
+        fill.classList.add('fail');
+        st.textContent = '下载失败 (' + xhr.status + ')';
+      }
+    };
+    xhr.onerror = function(){ fill.classList.add('fail'); st.textContent = '网络错误'; };
+    xhr.send();
+  }
+  // 选择弹窗事件（只绑一次）
+  (function bindVaultChoose(){
+    var modal = document.getElementById('vaultChoose');
+    if (!modal || modal.__bound) return; modal.__bound = true;
+    document.getElementById('vaultChoosePrev').addEventListener('click', function(){
+      var n = _chooseName; vaultChooseClose();
+      var idx = vaultView.findIndex(function(f){ return f.name === n; });
+      if (idx >= 0) vaultPreview(idx); else showToast('文件不在当前文件夹视图');
+    });
+    document.getElementById('vaultChooseDl').addEventListener('click', function(){
+      var n = _chooseName; vaultChooseClose();
+      if (n) vaultDownload(n);
+    });
+    document.getElementById('vaultChooseClose').addEventListener('click', vaultChooseClose);
+    modal.addEventListener('click', function(e){ if (e.target === modal) vaultChooseClose(); });
+  })();
+
+  function vaultDel(name){
+    vaultConfirm('删除文件','确认删除「'+name+'」？此操作不可撤销。',function(){
+      fetch(API_BASE + '/api/vault/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Vault-Token':vaultToken},body:JSON.stringify({names:[name]})})
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(d.ok) { delete vaultChecked[name]; loadVaultFiles(); } else showToast(d.error||'删除失败'); })
+        .catch(function(){ showToast('删除失败'); });
+    });
+  }
+  // === 自定义橙色确认弹窗 ===
+  var _vaultCfOk=null;
+  function vaultConfirm(title,msg,onOk){
+    document.getElementById('vaultConfirmTitle').textContent=title||'确认操作';
+    document.getElementById('vaultConfirmMsg').textContent=msg||'是否继续？';
+    _vaultCfOk=onOk||null;
+    document.getElementById('vaultConfirm').classList.remove('hidden');
+  }
+  function _vaultCloseConfirm(){
+    document.getElementById('vaultConfirm').classList.add('hidden');
+    _vaultCfOk=null;
+  }
+  (function bindVaultConfirm(){
+    var modal=document.getElementById('vaultConfirm');
+    if (!modal || modal.__bound) return; modal.__bound=true;
+    document.getElementById('vaultCfCancel').addEventListener('click',_vaultCloseConfirm);
+    document.getElementById('vaultCfOk').addEventListener('click',function(){ var cb=_vaultCfOk; _vaultCloseConfirm(); if (cb) cb(); });
+    modal.addEventListener('click',function(e){ if (e.target===modal) _vaultCloseConfirm(); });
+    document.addEventListener('keydown',function(e){
+      if (!modal.classList.contains('hidden') && e.key==='Escape') _vaultCloseConfirm();
+    });
+  })();
+
+  // 绑定键盘 + 自动弹 PIN
+  document.querySelectorAll('#vaultPinModal .vault-pin-keys button').forEach(function(b){
+    b.addEventListener('click', function(){ pinPush(b.getAttribute('data-k')); });
+  });
+  // 物理键盘输入：数字 0-9 / Backspace / Delete / Esc / Enter
+  (function(){
+    var modal = document.getElementById('vaultPinModal');
+    if (!modal) return;
+    document.addEventListener('keydown', function(e){
+      var open = !modal.classList.contains('hidden');
+      if (!open) return;
+      var k = e.key;
+      if (/^[0-9]$/.test(k)) { e.preventDefault(); pinPush(k); return; }
+      if (k === 'Backspace' || k === 'Delete') { e.preventDefault(); pinPush('del'); return; }
+      if (k === 'Escape') { e.preventDefault(); closeVaultPin(); return; }
+      if (k === 'Enter') { e.preventDefault(); if (pinBuf.length === PIN_LEN) vaultTryUnlock(); return; }
+    });
+  })();
+  // ===== 版本自检：确认加载的是否为最新版（PWA 缓存时提示更新）=====
+  var VAULT_VER = 'V2026.09.03.07';
+  function vaultForceReload(){
+    // 带随机参数强制绕过一切缓存重新拉取
+    try {
+      if (window.caches && caches.keys) {
+        caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); });
+      }
+    } catch(e){}
+    location.replace(location.pathname + '?fresh=' + Date.now());
+  }
+  function vaultCheckVersion(){
+    // 拉取线上 index.html 的版本号（主系统登录页的版本标签）作为基准
+    fetch('/index.html?vc=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var m = t.match(/loginVer">([^<]+)</);
+        var latest = m ? m[1] : null;
+        if (!latest) return;
+        var btn = document.getElementById('vaultVerRefresh');
+        var headVer = document.getElementById('vaultHeadVer');
+        if (latest !== VAULT_VER) {
+          // 线上版本比本地新 → 提示更新
+          if (btn) btn.classList.remove('hidden');
+          if (headVer) headVer.textContent = VAULT_VER + '（有新版本 ' + latest + '）';
+        } else {
+          if (btn) btn.classList.add('hidden');
+        }
+      })
+      .catch(function(){ /* 版本检查失败不影响使用 */ });
+  }
+
+// 独立入口：打开即弹出 PIN 输入
+  window.addEventListener('load', function(){
+    openVaultPin();
+    try { vaultCheckVersion(); } catch(e){}
+  });
+</script>
+</body>
+</html>

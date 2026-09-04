@@ -1,0 +1,933 @@
+// ============================================================
+// AGI-PM 云端后端（Cloudflare Worker）
+//
+// 阶段 M7：附件上云(R2) + 用户权限管理 + DEMO 演示数据
+//
+// 已实现接口：
+//   M3  POST /api/login            登录（明文密码无感升级为加密）
+//       GET  /api/me               取用户信息
+//       GET  /api/perm-version     权限版本号
+//       POST /api/change-password  修改密码
+//   M5  /api/crm-projects          潜在项目 CRUD + 转失败
+//   M6  /api/won-projects          签约项目 CRUD（含 P345 佣金服务端剥离）
+//       /api/lost-projects         失败项目 CRUD + 转回潜在
+//       /api/approval-requests     审批流（发起/列表/处理/删除）
+//   M7  /api/won-projects/<id>/attachments  附件上传/删除（存 R2）
+//       GET  /api/files/<key>               附件下载/预览
+//       /api/users                          用户增删改（含权限闸门）
+//       /api/managers                       管理员任命
+//       /api/demo/load  /api/demo/clear     演示数据还原/清空
+//   M9  /api/metal-prices   /api/feed-prices  /api/fx-rates
+//       /api/livestock-prices  /api/livestock-farmgate  /api/livestock-retail-raw
+//                                          价格数据（从 R2 读预生成快照，秒开）
+//   公用 GET  /api/health           健康检查
+//       GET  /api/tables           数据表概况
+//       GET  /                     欢迎页
+// ============================================================
+
+import { handleCrm } from "./crm.js";
+import { handleWonLost } from "./wonlost.js";
+import { handleApproval } from "./approval.js";
+import { handleUsers } from "./users.js";
+import { handleFiles } from "./files.js";
+import { handleDemo, DEMO_TABLES } from "./demo.js";
+import { freezeDemo } from "./demo.js";
+import { handlePrices } from "./prices.js";
+import { handleCommission } from "./commission.js";
+import { handleVault } from "./vault.js";
+import { handlePurge } from "./purge.js";
+import { handleTranslateFill } from "./translate_fill.js";
+
+const PBKDF2_ITER = 10000; // 迭代次数：兼顾安全与 Cloudflare Worker 的 CPU 上限
+const HASH_PREFIX = "pbkdf2$";
+
+// ------------------------------------------------------------
+// CORS（跨域许可）
+// 前端部署在 Cloudflare Pages（agi-gs.pages.dev），
+// 后端在 Workers（agi-gs.tomalso911.workers.dev），两者域名不同，
+// 所以必须允许跨域调用。
+//
+// 注意：前端用了 credentials:'include'（携带 cookie），
+// 这种情况 CORS 不能用通配符 *，必须回显具体的来源域名。
+// ------------------------------------------------------------
+function corsHeaders(request) {
+  const origin = request.headers.get("Origin") || "*";
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-User-Name, Authorization, X-Vault-Token",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
+function json(request, data, status = 200, noCache = false) {
+  const headers = {
+    "Content-Type": "application/json; charset=utf-8",
+    ...corsHeaders(request),
+  };
+  // 业务 API（CRM/WON/LOST/用户等）必须禁止浏览器/CDN 缓存，
+  // 否则清空/加载数据后，浏览器仍显示旧响应。
+  if (noCache || isBusinessApi(request)) {
+    headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate";
+    headers["Pragma"] = "no-cache";
+    headers["Expires"] = "0";
+  }
+  return new Response(JSON.stringify(data, null, 2), { status, headers });
+}
+
+function isBusinessApi(request) {
+  const u = new URL(request.url);
+  const p = u.pathname;
+  return p.startsWith("/api/") && !p.startsWith("/api/files/");
+}
+
+// ============================================================
+// 密码工具
+// ============================================================
+
+function toHex(buf) {
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function fromHex(s) {
+  const out = new Uint8Array(s.length / 2);
+  for (let i = 0; i < s.length; i += 2) {
+    out[i / 2] = parseInt(s.substr(i, 2), 16);
+  }
+  return out;
+}
+
+/** 生成加密密码，格式：pbkdf2$<迭代次数>$<盐>$<哈希> */
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: PBKDF2_ITER, hash: "SHA-256" },
+    key,
+    256
+  );
+  return HASH_PREFIX + PBKDF2_ITER + "$" + toHex(salt) + "$" + toHex(bits);
+}
+
+/**
+ * 校验密码。
+ * - 存储值以 pbkdf2$ 开头 → 按加密方式校验
+ * - 否则视为历史明文密码 → 直接比对（调用方会在成功后升级为加密）
+ */
+async function verifyPassword(stored, password) {
+  if (!stored) return false;
+  if (stored.startsWith(HASH_PREFIX)) {
+    try {
+      const parts = stored.split("$");
+      const iter = parseInt(parts[1], 10) || PBKDF2_ITER;
+      const salt = fromHex(parts[2]);
+      const expected = parts[3];
+      const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits"]
+      );
+      const bits = await crypto.subtle.deriveBits(
+        { name: "PBKDF2", salt, iterations: iter, hash: "SHA-256" },
+        key,
+        256
+      );
+      return toHex(bits) === expected;
+    } catch (e) {
+      return false;
+    }
+  }
+  return stored === password;
+}
+
+// ============================================================
+// 会话（Session Token）机制 —— M10 安全加固
+// 登录成功后服务端签发随机 token 并存 D1 sessions 表；
+// 之后所有业务接口必须携带 Authorization: Bearer <token>，
+// 服务端据此核验真实身份，不再信任前端自报的 X-User-Name。
+// 好处：token 可随时在后端 DELETE（强制某人下线），且无法伪造。
+// ============================================================
+
+const SESSION_TTL_HOURS = 12; // token 有效期（小时），超时需重新登录
+
+/** 首次调用时确保 sessions 表存在 */
+async function ensureSessionsTable(env) {
+  if (!env.DB) return;
+  try {
+    await env.DB.prepare(
+      "CREATE TABLE IF NOT EXISTS sessions (" +
+        "token TEXT PRIMARY KEY, " +
+        "username TEXT NOT NULL, " +
+        "created_at TEXT DEFAULT '', " +
+        "expires_at TEXT DEFAULT ''" +
+      ")"
+    ).run();
+  } catch (e) { /* 表已存在则忽略 */ }
+}
+
+/** 生成高强度随机 token */
+function genToken() {
+  const buf = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(buf).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function nowLocalStr() {
+  return new Date().toISOString().replace("T", " ").slice(0, 19);
+}
+
+function expiresLocalStr() {
+  const d = new Date(Date.now() + SESSION_TTL_HOURS * 3600 * 1000);
+  return d.toISOString().replace("T", " ").slice(0, 19);
+}
+
+/**
+ * 校验请求中的 Bearer token，返回真实 username；无效/过期返回 null。
+ * 同时把受信 username 写回请求头 X-User-Name，使下游业务模块零改动即可获得可信身份。
+ */
+async function authenticate(request, env) {
+  if (!env.DB) return null;
+  const auth = request.headers.get("Authorization") || "";
+  const m = /^Bearer\s+(.+)$/i.exec(auth);
+  if (!m) return null;
+  const token = m[1].trim();
+  if (!token) return null;
+  try {
+    const row = await env.DB.prepare(
+      "SELECT username, expires_at FROM sessions WHERE token=?"
+    ).bind(token).first();
+    if (!row) return null;
+    if (row.expires_at) {
+      const exp = Date.parse(row.expires_at.replace(" ", "T") + "Z");
+      if (!isNaN(exp) && Date.now() > exp) {
+        // 过期：顺手清理
+        await env.DB.prepare("DELETE FROM sessions WHERE token=?").bind(token).run();
+        return null;
+      }
+    }
+    return String(row.username || "").trim();
+  } catch (e) {
+    return null;
+  }
+}
+
+// ============================================================
+// 权限处理
+// ============================================================
+
+/** 把审批人列表里的数字 ID 统一换成用户名（兼容历史数据） */
+function normApprovers(approvers, byId, byNameLower) {
+  if (!Array.isArray(approvers)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const v of approvers) {
+    if (v === null || v === undefined) continue;
+    const s = String(v).trim();
+    if (!s) continue;
+    const uname = /^\d+$/.test(s) ? byId[s] : byNameLower[s.toLowerCase()];
+    if (!uname) continue;
+    if (!seen.has(uname)) {
+      seen.add(uname);
+      out.push(uname);
+    }
+  }
+  return out;
+}
+
+/** 规范化用户权限 JSON 中的所有审批人字段 */
+function normUserPerms(perms, users) {
+  if (!perms || typeof perms !== "object") return perms || {};
+  const byId = {};
+  const byNameLower = {};
+  for (const u of users) {
+    byId[String(u.id)] = u.username;
+    byNameLower[String(u.username).toLowerCase()] = u.username;
+  }
+  for (const [bid, p] of Object.entries(perms)) {
+    if (p && typeof p === "object" && Array.isArray(p.approvers)) {
+      p.approvers = normApprovers(p.approvers, byId, byNameLower);
+    }
+  }
+  return perms;
+}
+
+/** 判断是否为管理员：在 managers 表中，或 role 为"管理员" */
+async function isManager(env, username) {
+  if (!username) return false;
+  const m = await env.DB.prepare(
+    "SELECT 1 AS x FROM managers WHERE username=?"
+  )
+    .bind(username)
+    .first();
+  if (m) return true;
+  const u = await env.DB.prepare("SELECT role FROM users WHERE username=?")
+    .bind(username)
+    .first();
+  return !!(u && u.role === "管理员");
+}
+
+/** 权限版本号 +1（前端轮询到变化就刷新缓存） */
+async function bumpPermVersion(env, username) {
+  const key = "permver:" + username;
+  const row = await env.DB.prepare(
+    "SELECT value FROM app_meta WHERE key=?"
+  )
+    .bind(key)
+    .first();
+  const next = row ? (parseInt(row.value, 10) || 0) + 1 : 1;
+  await env.DB.prepare(
+    "INSERT INTO app_meta (key, value, updated_at) VALUES (?, ?, datetime('now','localtime')) " +
+      "ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at"
+  )
+    .bind(key, String(next))
+    .run();
+  return next;
+}
+
+/** 组装返回给前端的用户对象（字段与本地 Python 版保持一致） */
+function buildUser(row, admin, perms) {
+  const c = (k, d = "") => (row[k] === null || row[k] === undefined ? d : row[k]);
+  return {
+    username: c("username"),
+    real_name: c("real_name"),
+    role: c("role"),
+    position: c("position"),
+    is_admin: !!admin,
+    status: c("status", "active"),
+    vis_he_can_see: c("vis_he_can_see", "[]"),
+    vis_can_see_me: c("vis_can_see_me", "[]"),
+    perms: perms,
+  };
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders(request) });
+    }
+
+    const url = new URL(request.url);
+
+    // ========================================================
+    // POST /api/login  登录
+    // ========================================================
+    if (url.pathname === "/api/login" && request.method === "POST") {
+      let body = {};
+      try {
+        body = await request.json();
+      } catch (e) {
+        return json(request, { ok: false, error: "请求格式错误" }, 400);
+      }
+
+      // 统一转小写：手机键盘默认首字母大写，用户很容易输入 "Tom"/"TOM"，
+      // 而数据库存的是小写 "tom"，SQLite 的 = 比较大小写敏感 → 登录失败。
+      // 这里归一化成小写，保证任何大小写输入都能登录成功。
+      const username = String(body.username || "").trim().toLowerCase();
+      const password = String(body.password || "");
+
+      if (!username || !password) {
+        return json(request, { ok: false, error: "请输入用户名和密码" });
+      }
+
+      // ---- 维护锁（暗门）：仅在允许名单内的人可以登录 ----
+      // 配置：wrangler.toml [vars] LOGIN_ONLY_USERS = "tom"（多人用逗号分隔，如 "tom,admin"）
+      // 留空或不设 = 不限制，所有人照常登录。
+      // 用途：tom 调整权限/机密配置时，锁住他人登录，避免刷新页面看到未完成的内容。
+      const only = String(env.LOGIN_ONLY_USERS || "").trim();
+      if (only) {
+        const allow = only.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+        if (!allow.includes(username)) {
+          return json(request, {
+            ok: false,
+            error: "系统维护中：暂时仅管理员可登录，请稍后再试。",
+          }, 403);
+        }
+      }
+
+      const row = await env.DB.prepare("SELECT * FROM users WHERE username=?")
+        .bind(username)
+        .first();
+
+      if (!row) {
+        return json(request, { ok: false, error: "用户名不存在" });
+      }
+      if (row.status !== "active") {
+        return json(request, { ok: false, error: "该账号已被禁用" });
+      }
+
+      const ok = await verifyPassword(row.password, password);
+      if (!ok) {
+        return json(request, { ok: false, error: "密码错误" });
+      }
+
+      // ---- 密码无感升级：老明文密码验证通过后，自动转成加密存储 ----
+      // 用户完全无感知，22 个老账号无需改密码。
+      let upgraded = false;
+      if (!String(row.password).startsWith(HASH_PREFIX)) {
+        try {
+          const hashed = await hashPassword(password);
+          await env.DB.prepare("UPDATE users SET password=? WHERE id=?")
+            .bind(hashed, row.id)
+            .run();
+          upgraded = true;
+        } catch (e) {
+          // 升级失败不影响本次登录，下次会再试
+        }
+      }
+
+      // ---- 记录登录历史 ----
+      try {
+        const ip = request.headers.get("CF-Connecting-IP") || "";
+        const ua = (request.headers.get("User-Agent") || "").slice(0, 200);
+        const now = new Date().toISOString().replace("T", " ").slice(0, 19);
+        try {
+          await env.DB.prepare(
+            "ALTER TABLE login_history ADD COLUMN login_time TEXT DEFAULT ''"
+          ).run();
+        } catch (e) { /* 列已存在则忽略 */ }
+        await env.DB.prepare(
+          "INSERT INTO login_history (username, ip_address, user_agent, login_time) VALUES (?, ?, ?, ?)"
+        )
+          .bind(username, ip, ua, now)
+          .run();
+      } catch (e) {
+        /* 登录历史失败不影响登录 */
+      }
+
+      // ---- 培训模式：登录即清场 ----
+      // AUTO_CLEAR_ON_LOGIN="1"（wrangler.toml [vars]）时，每次【登录成功】自动清空
+      // 4 张业务表（潜在/签约/失败/审批单），用户名录绝不动 —— 登录进来就是空场，
+      // 点 DEMO 才灌入演示数据。正式上线时把该变量改为 "0" 再 deploy 即可关闭。
+      if (env.AUTO_CLEAR_ON_LOGIN === "1") {
+        try {
+          for (const t of DEMO_TABLES) {
+            await env.DB.prepare("DELETE FROM " + t).run();
+          }
+        } catch (e) {
+          /* 清场失败不影响登录 */
+        }
+      }
+
+      // ---- 组装权限 ----
+      let perms = {};
+      try {
+        perms = row.perms ? JSON.parse(row.perms) : {};
+      } catch (e) {
+        perms = {};
+      }
+      const users = await env.DB.prepare(
+        "SELECT id, username FROM users"
+      ).all();
+      perms = normUserPerms(perms, users.results || []);
+      const admin = await isManager(env, username);
+
+      // ---- 签发会话 token（M10 安全加固）----
+      let token = "";
+      try {
+        await ensureSessionsTable(env);
+        token = genToken();
+        await env.DB.prepare(
+          "INSERT INTO sessions (token, username, created_at, expires_at) VALUES (?, ?, ?, ?)"
+        ).bind(token, username, nowLocalStr(), expiresLocalStr()).run();
+      } catch (e) {
+        token = "";
+      }
+
+      return json(request, {
+        ok: true,
+        password_upgraded: upgraded,
+        token: token,
+        user: buildUser(row, admin, perms),
+      });
+    }
+
+    // ========================================================
+    // POST /api/logout  注销（销毁当前会话 token）
+    // ========================================================
+    if (url.pathname === "/api/logout" && request.method === "POST") {
+      const auth = request.headers.get("Authorization") || "";
+      const m = /^Bearer\s+(.+)$/i.exec(auth);
+      if (m && env.DB) {
+        try {
+          await env.DB.prepare("DELETE FROM sessions WHERE token=?")
+            .bind(m[1].trim()).run();
+        } catch (e) { /* ignore */ }
+      }
+      return json(request, { ok: true });
+    }
+
+    // ========================================================
+    // GET /api/session  校验当前 token 是否有效，返回用户
+    // ========================================================
+    if (url.pathname === "/api/session" && request.method === "GET") {
+      const uname = await authenticate(request, env);
+      if (!uname) {
+        return json(request, { ok: false, error: "未登录或会话已过期" }, 401);
+      }
+      const row = await env.DB.prepare(
+        "SELECT * FROM users WHERE username=?"
+      ).bind(uname).first();
+      if (!row) {
+        return json(request, { ok: false, error: "用户不存在" }, 401);
+      }
+      let perms = {};
+      try { perms = row.perms ? JSON.parse(row.perms) : {}; } catch (e) { perms = {}; }
+      const users = await env.DB.prepare("SELECT id, username FROM users").all();
+      perms = normUserPerms(perms, users.results || []);
+      const admin = await isManager(env, uname);
+      return json(request, { ok: true, user: buildUser(row, admin, perms) });
+    }
+
+    // ========================================================
+    // GET /api/login-history  登录记录统计（仪表盘 US-LH 区块）
+    // 前端只需要 userMonthly（当月各用户次数）与 userYearly（当年各用户次数）
+    // D1 不支持 strftime，改用 JS 在 login_time 上分组
+    // ========================================================
+    if (url.pathname === "/api/login-history" && request.method === "GET") {
+      try {
+        await env.DB.prepare(
+          "ALTER TABLE login_history ADD COLUMN login_time TEXT DEFAULT ''"
+        ).run();
+      } catch (e) { /* 列已存在则忽略 */ }
+      const rows = await env.DB.prepare(
+        "SELECT username, login_time FROM login_history"
+      ).all();
+      const now = new Date();
+      const curY = now.getFullYear();
+      const curM = now.getMonth() + 1; // 1-12
+      const monthMap = {};
+      const yearMap = {};
+      for (const r of rows.results || []) {
+        const lt = r.login_time || "";
+        // login_time 形如 2026-09-01 12:34:56
+        const ym = (lt.slice(0, 7) || "").split("-"); // ["2026","09"]
+        const y = parseInt(ym[0], 10);
+        const m = parseInt(ym[1], 10);
+        if (y === curY) {
+          if (m === curM) {
+            monthMap[r.username] = (monthMap[r.username] || 0) + 1;
+          }
+          yearMap[r.username] = (yearMap[r.username] || 0) + 1;
+        }
+      }
+      const userMonthly = Object.keys(monthMap)
+        .map((u) => ({ username: u, count: monthMap[u] }))
+        .sort((a, b) => b.count - a.count || (a.username < b.username ? -1 : 1));
+      const userYearly = Object.keys(yearMap)
+        .map((u) => ({ username: u, count: yearMap[u] }))
+        .sort((a, b) => b.count - a.count || (a.username < b.username ? -1 : 1));
+      return json(request, { ok: true, userMonthly, userYearly });
+    }
+
+    // ========================================================
+    // GET /api/me  取用户信息
+    // ========================================================
+    if (url.pathname === "/api/me") {
+      const username = String(url.searchParams.get("username") || "").trim();
+      if (!username) {
+        return json(request, { ok: false, error: "missing username" }, 400);
+      }
+      // ---- 维护锁（暗门）第二道：已登录的人刷新页面时走这条接口恢复会话，
+      // 若不拦，非白名单用户刷新后仍能进来。这里对非白名单一律拒绝，
+      // 前端收到后会自动退出到登录页，无法看到任何页面内容。
+      const onlyMe = String(env.LOGIN_ONLY_USERS || "").trim();
+      if (onlyMe) {
+        const allowMe = onlyMe.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+        if (!allowMe.includes(username)) {   // username 已在上方统一小写
+          return json(request, { ok: false, error: "系统维护中：暂时仅管理员可登录。" }, 403);
+        }
+      }
+      const row = await env.DB.prepare("SELECT * FROM users WHERE username=?")
+        .bind(username)
+        .first();
+      if (!row) {
+        return json(request, { ok: false, error: "user not found" }, 404);
+      }
+      let perms = {};
+      try {
+        perms = row.perms ? JSON.parse(row.perms) : {};
+      } catch (e) {
+        perms = {};
+      }
+      const users = await env.DB.prepare(
+        "SELECT id, username FROM users"
+      ).all();
+      perms = normUserPerms(perms, users.results || []);
+      const admin = await isManager(env, username);
+      return json(request, { ok: true, user: buildUser(row, admin, perms) });
+    }
+
+    // ========================================================
+    // GET /api/perm-version  权限版本号
+    // ========================================================
+    if (url.pathname === "/api/perm-version") {
+      const username = String(url.searchParams.get("username") || "").trim();
+      if (!username) {
+        return json(request, { ok: false, error: "missing username" }, 400);
+      }
+      let version = 0;
+      try {
+        const row = await env.DB.prepare(
+          "SELECT value FROM app_meta WHERE key=?"
+        )
+          .bind("permver:" + username)
+          .first();
+        version = row ? parseInt(row.value, 10) || 0 : 0;
+      } catch (e) {
+        /* app_meta 表不存在时返回 0 */
+      }
+      return json(request, { ok: true, username, version });
+    }
+
+    // ========================================================
+    // POST /api/change-password  修改密码
+    // ========================================================
+    if (url.pathname === "/api/change-password" && request.method === "POST") {
+      let body = {};
+      try {
+        body = await request.json();
+      } catch (e) {
+        return json(request, { ok: false, error: "请求格式错误" }, 400);
+      }
+      const username = String(body.username || "").trim();
+      const oldPw = String(body.old_password || "");
+      const newPw = String(body.new_password || "");
+
+      if (!username) {
+        return json(request, { ok: false, error: "缺少用户名" }, 400);
+      }
+      if (newPw.length < 6) {
+        return json(request, { ok: false, error: "新密码长度至少 6 位" });
+      }
+
+      const row = await env.DB.prepare("SELECT * FROM users WHERE username=?")
+        .bind(username)
+        .first();
+      if (!row) {
+        return json(request, { ok: false, error: "用户名不存在" }, 404);
+      }
+      const ok = await verifyPassword(row.password, oldPw);
+      if (!ok) {
+        return json(request, { ok: false, error: "旧密码错误" });
+      }
+
+      const hashed = await hashPassword(newPw);
+      await env.DB.prepare("UPDATE users SET password=? WHERE username=?")
+        .bind(hashed, username)
+        .run();
+      await bumpPermVersion(env, username);
+
+      return json(request, { ok: true, message: "密码修改成功" });
+    }
+
+    // ========================================================
+    // DEMO 固化（tom 专属）：POST /api/demo/freeze
+    // 把 D1 当前 CRM/LOST 案例数据整批写入 R2 快照，替换 DEMO 数据源中
+    // crm/lost 两段（WON/审批段保留）。不走登录会话 —— 鉴权用 vault PIN
+    // token（X-Vault-Token 头 或 ?vt= 参数，demo.js 内部 authOk 校验），
+    // 因此必须放在统一会话鉴权【之前】，否则 401。
+    // ========================================================
+    if (url.pathname === "/api/demo/freeze" && request.method === "POST") {
+      const res = await freezeDemo(request, env, url);
+      const status = res.ok ? 200 : (String(res.error || "").indexOf("token") >= 0 ? 401 : 500);
+      return json(request, res, status);
+    }
+
+    // ========================================================
+    // 统一会话鉴权（M10 安全加固）
+    // 所有业务接口（除 login/logout/session/me/change-password/health/files 静态下载）
+    // 必须携带 Authorization: Bearer <token>，否则 401。
+    // 校验通过后，用服务端确认的真实用户名覆盖 X-User-Name，
+    // 使下游 7 个业务模块无需改动即可获得可信身份（不再信任前端伪造）。
+    // ========================================================
+    const PUBLIC_PATHS = new Set([
+      "/api/login", "/api/logout", "/api/session", "/api/me",
+      "/api/change-password", "/api/health", "/api/tables",
+      "/api/perm-version", "/api/translate",
+      "/",
+    ]);
+    // 附件直链（<img src>/<a href>）浏览器无法自动带 Authorization 头，故免鉴权；
+    // 安全性依赖 key 的不可猜测性（UUID）。如未来改为 fetch+blob 预览可再加鉴权。
+    const isPublicFile = url.pathname.startsWith("/api/files/");
+    // 私密空间走独立的 PIN token 体系（vault.js 内部校验 X-Vault-Token / ?vt=），
+    // 且下载/预览是 <a>/<img> 直链带不了会话头，故在会话门外放行。
+    const isVaultPath = url.pathname.startsWith("/api/vault/");
+    if (url.pathname.startsWith("/api/") && !PUBLIC_PATHS.has(url.pathname) && !isPublicFile && !isVaultPath) {
+      const authUser = await authenticate(request, env);
+      if (!authUser) {
+        return json(request,
+          { ok: false, error: "未登录或会话已过期，请重新登录", code: "NO_AUTH" },
+          401);
+      }
+      // 覆盖 X-User-Name 为受信身份（前端自报值被忽略）
+      const newHeaders = new Headers(request.headers);
+      newHeaders.set("X-User-Name", authUser);
+      request = new Request(request, { headers: newHeaders });
+    }
+
+    // ========================================================
+    // 翻译中转（M11）：服务端代调 Google，前端 ptTranslateViaGoogle 优先走此端点。
+    // 目的：翻译与系统其它 API 走同一鉴权/网络路径，绕开浏览器端扩展/证书/网络
+    //      对 translate.googleapis.com 直连的干扰。
+    // GET /api/translate?q=<text>&target=<zh|en|vi>  →  {ok:true, text:"..."}
+    // ========================================================
+    if (url.pathname === "/api/translate" && request.method === "GET") {
+      const q = (url.searchParams.get("q") || "").slice(0, 1000);
+      const target = (url.searchParams.get("target") || "en").toLowerCase();
+      if (!q) return json(request, { ok: false, error: "empty q" }, 400);
+      if (!["zh", "en", "vi"].includes(target)) {
+        return json(request, { ok: false, error: "bad target" }, 400);
+      }
+      // MyMemory 不支持 Autodetect 作为 source，必须给 ISO 源语言码
+      const detectLangMyMemory = (text) => {
+        if (/[\u4e00-\u9fa5]/.test(text)) return "zh-CN";
+        if (/[àáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ]/i.test(text)) return "vi-VN";
+        return "en-US";
+      };
+      const tryMyMemory = async (sourceGuess) => {
+        const tmap = { zh: "zh-CN", en: "en-US", vi: "vi-VN" };
+        const source = sourceGuess || detectLangMyMemory(q);
+        const pair = source + "|" + (tmap[target] || target);
+        const murl = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(q)
+          + "&langpair=" + encodeURIComponent(pair);
+        const mr = await fetch(murl, { headers: { "User-Agent": "Mozilla/5.0" } });
+        if (!mr.ok) throw new Error("mm-" + mr.status);
+        const md = await mr.json();
+        const mt = md && md.responseData && md.responseData.translatedText;
+        if (!mt || (mt || "").toUpperCase() === "NO TRANSLATION") throw new Error("mm-empty");
+        // 如果 MyMemory 报错“INVALID SOURCE”，回退到检测出的源语言再试一次
+        if (String(mt).toUpperCase().indexOf("INVALID SOURCE") !== -1) {
+          if (sourceGuess) throw new Error("mm-invalid-source");
+          return await tryMyMemory(detectLangMyMemory(q));
+        }
+        return mt;
+      };
+      const tryLibre = async (sourceGuess) => {
+        const tmap = { zh: "zh", en: "en", vi: "vi" };
+        const src = sourceGuess || (detectLangMyMemory(q).split("-")[0]);
+        const tgt = tmap[target] || target;
+        const instances = ["https://libretranslate.de", "https://translate.argosopentech.com"];
+        let lastErr = null;
+        for (const base of instances) {
+          try {
+            const lr = await fetch(base + "/translate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ q: q, source: src, target: tgt, format: "text" })
+            });
+            if (!lr.ok) { lastErr = new Error("lt-" + lr.status); continue; }
+            const ld = await lr.json();
+            if (ld && ld.translatedText) return ld.translatedText;
+            lastErr = new Error("lt-empty");
+          } catch (err) { lastErr = err; }
+        }
+        throw lastErr || new Error("lt-fail");
+      };
+
+      try {
+        const gurl = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+          + encodeURIComponent(target) + "&dt=t&q=" + encodeURIComponent(q);
+        const gr = await fetch(gurl, { headers: { "User-Agent": "Mozilla/5.0" } });
+        if (!gr.ok) throw new Error("gt-" + gr.status);
+        const gd = await gr.json();
+        const text = Array.isArray(gd) && gd[0]
+          ? gd[0].map((x) => (x && x[0]) || "").join("") : "";
+        if (!text) throw new Error("gt-empty");
+        return json(request, { ok: true, text });
+      } catch (e) {
+        // Google 被限流时：MyMemory → Libre 兜底；返回 200+ok:false 给前端降级
+        try {
+          const text = await tryMyMemory();
+          return json(request, { ok: true, text });
+        } catch (e2) {
+          try {
+            const text = await tryLibre();
+            return json(request, { ok: true, text });
+          } catch (e3) {
+            return json(request, { ok: false, error: String((e3 && e3.message) || e3 || e2 || e) }, 200);
+          }
+        }
+      }
+    }
+
+    // ========================================================
+    // 备注服务端补翻（M13）：GET /api/translate-remarks?table=...&limit=N
+    // 把缺的 remark_zh/en/vi 在服务端翻译并写回 D1；前端列表加载后 fire 触发。
+    // ========================================================
+    if (url.pathname === "/api/translate-remarks" && request.method === "GET") {
+      const res = await handleTranslateFill(request, env, url);
+      return json(request, res, res.ok ? 200 : 400);
+    }
+
+    // ========================================================
+    // 业务模块（M5 CRM / M6 签约+失败+审批 / M7 附件+用户+DEMO）
+    // 各模块内部自行判断是否接管该路径，未接管则返回 null
+    // ========================================================
+    for (const handler of [
+      handleCrm, handleWonLost, handleApproval,
+      handleUsers, handleFiles, handleDemo, handlePrices,
+      handleCommission, handleVault, handlePurge,
+    ]) {
+      let out = null;
+      try {
+        out = await handler(request, env, url, url.pathname);
+      } catch (e) {
+        return json(request, { error: String((e && e.message) || e) }, 500);
+      }
+      if (out) {
+        // 附件模块直接返回原始 Response（二进制流）
+        // 补 CORS 头：前端预览组件（PDF.js/mammoth/SheetJS）需要用 fetch 读取文件字节，
+        // 跨域读取必须有 Access-Control-Allow-Origin，否则 Word/Excel 预览全部失败
+        if (out.__raw) {
+          try {
+            const cors = corsHeaders(request);
+            for (const k of Object.keys(cors)) {
+              if (!out.__raw.headers.has(k)) out.__raw.headers.set(k, cors[k]);
+            }
+          } catch (e) { /* 补头失败不影响原响应 */ }
+          return out.__raw;
+        }
+        if (out.__err) {
+          return json(request,
+            { error: out.__err, message: out.__msg || out.__err },
+            out.__status || 400);
+        }
+        return json(request, out.body !== undefined ? out.body : out,
+          out.status || 200);
+      }
+    }
+
+    // ========================================================
+    // GET /api/health  健康检查
+    // ========================================================
+    if (url.pathname === "/api/health") {
+      const info = {
+        ok: true,
+        stage: "M3",
+        message: "云端后端运行正常",
+        time: new Date().toISOString(),
+        services: { r2_files: !!env.FILES, d1_database: !!env.DB },
+      };
+      if (env.DB) {
+        try {
+          const tables = [
+            "users", "managers", "crm_projects", "won_projects",
+            "lost_projects", "approval_requests", "login_history",
+            "password_requests",
+          ];
+          const counts = {};
+          for (const t of tables) {
+            const r = await env.DB.prepare(
+              "SELECT COUNT(*) AS n FROM " + t
+            ).first();
+            counts[t] = r ? r.n : 0;
+          }
+          info.tables = counts;
+        } catch (e) {
+          info.dbError = String(e);
+        }
+      }
+      return json(request, info);
+    }
+
+    // ========================================================
+    // GET /api/tables  数据表概况
+    // ========================================================
+    if (url.pathname === "/api/tables") {
+      if (!env.DB) return json(request, { ok: false, error: "数据库未接入" }, 500);
+      try {
+        const meta = await env.DB.prepare(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+        ).all();
+        const names = (meta.results || []).map((r) => r.name);
+        const counts = {};
+        for (const n of names) {
+          const r = await env.DB.prepare(
+            "SELECT COUNT(*) AS c FROM " + n
+          ).first();
+          counts[n] = r ? r.c : 0;
+        }
+        return json(request, { ok: true, tables: counts });
+      } catch (e) {
+        return json(request, { ok: false, error: String(e) }, 500);
+      }
+    }
+
+    // ========================================================
+    // GET /  欢迎页
+    // ========================================================
+    if (url.pathname === "/") {
+      return new Response(welcomePage(url), {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
+    return json(request, { ok: false, error: "接口不存在: " + url.pathname }, 404);
+  },
+};
+
+function welcomePage(url) {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGI-PM 云端后端</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg,#6b5ce7 0%,#8b7cf8 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px; color: #fff;
+  }
+  .card {
+    background: rgba(255,255,255,.15); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.25); border-radius: 20px;
+    padding: 36px 28px; max-width: 480px; width: 100%;
+    box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  .sub { opacity: .85; font-size: 14px; margin-bottom: 24px; }
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; margin-bottom: 10px; border-radius: 12px;
+    background: rgba(255,255,255,.12); font-size: 14px;
+  }
+  .tag { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .on  { background: #10b981; }
+  code {
+    background: rgba(0,0,0,.25); padding: 2px 7px; border-radius: 5px;
+    font-size: 13px; word-break: break-all;
+  }
+  .foot { margin-top: 20px; font-size: 12px; opacity: .75; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>AGI-PM 云端后端已上线</h1>
+  <p class="sub">阶段 M3 · 登录认证已上云</p>
+
+  <div class="row"><span>R2 文件柜（agi-pm-files）</span><span class="tag on">已连接</span></div>
+  <div class="row"><span>D1 数据库（agi-pm-db）</span><span class="tag on">已连接</span></div>
+  <div class="row"><span>登录接口</span><span class="tag on">已启用</span></div>
+  <div class="row"><span>密码加密</span><span class="tag on">登录时自动升级</span></div>
+
+  <p class="foot">
+    健康检查：<code>${url.origin}/api/health</code><br>
+    数据表概况：<code>${url.origin}/api/tables</code><br>
+    当前时间：${new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })}
+  </p>
+</div>
+</body>
+</html>`;
+}

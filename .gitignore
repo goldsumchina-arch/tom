@@ -1,0 +1,40 @@
+# ===== 密钥 / 凭证（绝不入库） =====
+.env
+api_keys.json
+*.token
+
+# ===== 本地数据库 / 备份（数据不入库，仅云端 D1 为源） =====
+*.db
+*.db.bak*
+*.sqlite
+agi_pm_backup*/
+backup*/
+*demo_snapshot*.bak*
+
+# ===== 构建产物 / 依赖 =====
+cloudflare/pages/
+node_modules/
+__pycache__/
+*.pyc
+
+# ===== 本地 R2 文件缓存 / 大二进制 =====
+agi-pm-files/
+*.bin
+
+# ===== 临时 / 调试文件 =====
+_shots/
+__v*/
+__vbig.bin
+_vtest*
+_t2res.txt
+_ctx1.txt
+_fv.txt
+_out*.txt
+_err*.txt
+_deploy_*.txt
+_build_log.txt
+_monthly_refresh.log
+ph_refresh_log.jsonl
+*.pdf
+.DS_Store
+Thumbs.db
