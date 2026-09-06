@@ -1,4 +1,4 @@
-// ⛔ FROZEN (2026-09-06) V2026.09.06.19：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 后端逻辑均正确，仅数据可为演示数据。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 后端逻辑均正确，仅数据可为演示数据。
 import { purgeCrm } from "./purge.js";
 import { migrateProvinceColumn, migrateBuColumn } from "./provinces.js";
 
@@ -579,4 +579,30 @@ export async function handleCrm(request, env, url, pathname) {
   }
 
   return null; // 不是本模块的路由
+}
+
+// ============================================================
+// 看板聚合统计（2026-09-06）：仅返回计数与三币汇总，避免前端全表扫描
+// 金额取值规则复刻前端 _dashSum：优先 q1_<c>，为空则 equip_<c>
+// ============================================================
+function _amtSumSQL(primary, fallback) {
+  return "SUM(CASE WHEN " + primary + " IS NULL THEN COALESCE(CAST(" + fallback + " AS REAL),0) ELSE CAST(" + primary + " AS REAL) END)";
+}
+
+export async function getCrmStats(env, username) {
+  const vs = await visibleScope(env, username, "CRM-L1");
+  let sql = "SELECT COUNT(*) AS cnt, " +
+    _amtSumSQL("q1_rmb", "equip_rmb") + " AS rmb, " +
+    _amtSumSQL("q1_usd", "equip_usd") + " AS usd, " +
+    _amtSumSQL("q1_vnd", "equip_vnd") + " AS vnd " +
+    " FROM crm_projects WHERE (status='active' OR status IS NULL OR status='')";
+  const params = [];
+  if (vs.clause) { sql += " AND (" + vs.clause + ")"; vs.params.forEach((p) => params.push(p)); }
+  const row = await env.DB.prepare(sql).bind(...params).first();
+  return {
+    count: (row && row.cnt) ? row.cnt : 0,
+    rmb: Math.round((row && row.rmb) || 0),
+    usd: Math.round((row && row.usd) || 0),
+    vnd: Math.round((row && row.vnd) || 0),
+  };
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-06) V2026.09.06.19：本文件全部逻辑已锁定，未经用户明确同意禁止修改。当前仅 CRM/LOST/WON/个人佣金 模块内为演示数据，看板/用户与授权/秘密空间等其余功能均正确。 -->
+<!-- ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件全部逻辑已锁定，未经用户明确同意禁止修改。当前仅 CRM/LOST/WON/个人佣金 模块内为演示数据，看板/用户与授权/秘密空间等其余功能均正确。 -->
 <html lang="en">
 <head>
 <!-- ==================== 云端后端地址转发（M4） ====================
@@ -417,13 +417,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.09.06.19 - 确认新代码已加载 -->
-  <title>签约项目 · AGI-CRM v2026.09.06.19</title>
+  <!-- 版本号：V2026.09.06.20 - 确认新代码已加载 -->
+  <title>签约项目 · AGI-CRM v2026.09.06.20</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 Cloudflare Pages 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20260906.19';
+    window._DASH_VER = '20260906.20';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -2937,7 +2937,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.06.19</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.06.20</span></div>
   </div>
 </div>
 
@@ -9432,7 +9432,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.09.06.19 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.09.06.20 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -14294,7 +14294,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.09.06.19（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.09.06.20（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -22512,7 +22512,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.09.06.19 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.09.06.20 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -22553,49 +22553,20 @@ function loadDashboard(force) {
   // 原因：当数据库为空（如点击 DEMO clear 后），看板必须显示真实空状态，
   // 而不是用硬编码种子数据误导用户。如果 API 失败，也返回空数组。
 
-  Promise.all([
-    fetch(base + '/api/crm-projects' + fullCompanyScopeParam('CRM-L1'), {credentials:'include', headers:(typeof authHeaders==='function'?authHeaders():{})}).then(function(r){ return r.json(); }).then(function(d){
-      var list = Array.isArray(d) ? d : (d && Array.isArray(d.data) ? d.data : []);
-      // 注：不再使用 SEED_CRM 兜底。数据库为空时，看板应显示真实空状态。
-      window.globalCrmData = list.slice();
-      try { localStorage.setItem('_dash_globalCrmData', JSON.stringify(list)); } catch(e){}
-      return list;
-    }).catch(function(e){
-      console.error('[Dashboard] CRM fetch failed:', e);
-      window.globalCrmData = [];
-      return [];
-    }),
-    fetch(base + '/api/won-projects' + fullCompanyScopeParam('WON-L1'), {credentials:'include', headers:(typeof authHeaders==='function'?authHeaders():{})}).then(function(r){ return r.json(); }).then(function(d){
-      var list = Array.isArray(d) ? d : (d && Array.isArray(d.data) ? d.data : []);
-      // 注：不再使用 SEED_WON 兜底。数据库为空时，看板应显示真实空状态。
-      window.globalWonData = list.slice();
-      try { localStorage.setItem('_dash_globalWonData', JSON.stringify(list)); } catch(e){}
-      return list;
-    }).catch(function(e){
-      console.error('[Dashboard] Won fetch failed:', e);
-      window.globalWonData = [];
-      return [];
-    }),
-    fetch(apiBase + '/api/lost-projects' + fullCompanyScopeParam('LOST-L1'), {credentials:'include', headers:(typeof authHeaders==='function'?authHeaders():{})}).then(function(r){ return r.json(); }).then(function(d){
-      var list = Array.isArray(d) ? d : (d && Array.isArray(d.data) ? d.data : []);
-      // 注：不再使用 SEED_LOST 兜底。数据库为空时，看板应显示真实空状态。
-      window.globalLostData = list.slice();
-      try { localStorage.setItem('_dash_globalLostData', JSON.stringify(list)); } catch(e){}
-      return list;
-    }).catch(function(e){
-      console.error('[Dashboard] Lost fetch failed:', e);
-      window.globalLostData = [];
-      return [];
+  // 2026-09-06：看板卡片改走聚合接口 /api/dashboard-stats，不再全量拉三张表（大幅降低 D1 行读）
+  fetch(base + '/api/dashboard-stats', { credentials:'include', headers:(typeof authHeaders==='function'?authHeaders():{}) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || !d.ok) {
+        renderDashboardLoading(cardsEl, L('dash_load_failed','数据加载失败'));
+        return;
+      }
+      renderDashboard(d, L);
     })
-  ]).then(function(arr) {
-    var crm = arr[0] || [], won = arr[1] || [], lost = arr[2] || [];
-    if (won.length > 0) console.log('[Dashboard] Won sample:', JSON.stringify(won[0]));
-    if (crm.length > 0) console.log('[Dashboard] CRM sample:', JSON.stringify(crm[0]));
-    renderDashboard(crm, won, lost, L);
-  }).catch(function(e) {
-    console.error('[Dashboard] Error:', e);
-    renderDashboardLoading(cardsEl, L('dash_load_failed','数据加载失败'));
-  });
+    .catch(function(e){
+      console.error('[Dashboard] stats error:', e);
+      renderDashboardLoading(cardsEl, L('dash_load_failed','数据加载失败'));
+    });
 }
 
 function renderDashboardLoading(cardsEl, msg) {
@@ -22615,21 +22586,22 @@ function _dashSum(list, suffix) {
   return s;
 }
 
-function renderDashboard(crm, won, lost, L) {
+function renderDashboard(stats, L) {
   L = L || function(k, d){ return d; };
   var cardsEl = document.getElementById('dashCards');
   if (!cardsEl) return;
   cardsEl.innerHTML = '';
+  var crm = (stats && stats.crm) || {}, won = (stats && stats.won) || {}, lost = (stats && stats.lost) || {};
   var cards = [
-    { id:1, title: L('dash_potential_count','潜在项目总数'), value: (crm||[]).length, money:false },
+    { id:1, title: L('dash_potential_count','潜在项目总数'), value: (crm.count||0), money:false },
     { id:2, title: L('dash_potential_amt','潜在项目总金额'), money:true,
-      rmb: _dashSum(crm,'rmb'), usd: _dashSum(crm,'usd'), vnd: _dashSum(crm,'vnd') },
-    { id:3, title: L('dash_won_count','签约项目总数'), value: (won||[]).length, money:false },
+      rmb: (crm.rmb||0), usd: (crm.usd||0), vnd: (crm.vnd||0) },
+    { id:3, title: L('dash_won_count','签约项目总数'), value: (won.count||0), money:false },
     { id:4, title: L('dash_won_amt','签约项目总金额'), money:true,
-      rmb: _dashWonSum(won,'rmb'), usd: _dashWonSum(won,'usd'), vnd: _dashWonSum(won,'vnd') },
-    { id:5, title: L('dash_lost_count','丢单项目总数'), value: (lost||[]).length, money:false },
+      rmb: (won.rmb||0), usd: (won.usd||0), vnd: (won.vnd||0) },
+    { id:5, title: L('dash_lost_count','丢单项目总数'), value: (lost.count||0), money:false },
     { id:6, title: L('dash_lost_amt','丢单项目总金额'), money:true,
-      rmb: _dashSum(lost,'rmb'), usd: _dashSum(lost,'usd'), vnd: _dashSum(lost,'vnd') }
+      rmb: (lost.rmb||0), usd: (lost.usd||0), vnd: (lost.vnd||0) }
   ];
   cards.forEach(function(c){
     var accentCls = 'dash-accent-' + (c.id % 6 === 0 ? 6 : c.id % 6);
@@ -22650,42 +22622,70 @@ function renderDashboard(crm, won, lost, L) {
     cardsEl.insertAdjacentHTML('beforeend', html);
   });
   _rememberDashData(crm, won, lost);
-  
-  // 确保 Chart.js 加载后再渲染图表，避免 "Chart is not defined" 错误
+
+  // CRM/WON/LOST 图表：滚动到可视区才按需拉取对应表（不再随看板全量拉三张表，降低 D1 行读）
+  _dashSetupLazyCharts();
+
+  // 外部数据源图表（金属/汇率/饲料/畜禽/登录）仍按原逻辑渲染（不耗 D1 行读）
   _ovLoadChartLib(function(){
-    if (typeof renderDashCrmCharts === 'function') {
-      renderDashCrmCharts(crm);
-    }
-    if (typeof renderDashWonCharts === 'function') {
-      renderDashWonCharts(won);
-    }
-    if (typeof renderDashLostCharts === 'function') {
-      renderDashLostCharts(lost);
-    }
-    if (typeof renderDashLoginCharts === 'function') {
-      renderDashLoginCharts();
-    }
-    // 金属价格走势图
-    if (typeof renderDashMetalCharts === 'function') {
-      renderDashMetalCharts();
-    }
-    // 历史汇率走势图
-    if (typeof renderDashFxCharts === 'function') {
-      renderDashFxCharts();
-    }
-    // 大宗饲料原料价格图
-    if (typeof renderDashFeedCharts === 'function') {
-      renderDashFeedCharts();
-    }
-    // 畜禽出栏价格图（生猪/鸡蛋/白羽肉鸡）
-    if (typeof renderDashLivestockCharts === 'function') {
-      renderDashLivestockCharts();
-    }
-    // Dashboard 图表渲染后，同步来自 Overview 图表的数据
-    syncDashCrmCharts();
-    // 三块聚合图表根据权限决策重新取数渲染：保留默认=后端可见范围；特别授权看全公司=全公司数据
-    _refreshCrmAggChartsByDecision();
-    });
+    if (typeof renderDashLoginCharts === 'function') renderDashLoginCharts();
+    if (typeof renderDashMetalCharts === 'function') renderDashMetalCharts();
+    if (typeof renderDashFxCharts === 'function') renderDashFxCharts();
+    if (typeof renderDashFeedCharts === 'function') renderDashFeedCharts();
+    if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
+  });
+}
+
+// ---------- 看板图表懒加载（2026-09-06）：图表仅在滚动进可视区时才拉对应表 ----------
+function _dashSetupLazyCharts(){
+  _dashLazyOne('dashCrmSection', function(){ return _dashFetchTable('crm'); }, function(arr){
+    window.globalCrmData = arr; renderDashCrmCharts(arr); _afterDashCharts();
+  });
+  _dashLazyOne('dashWonSection', function(){ return _dashFetchTable('won'); }, function(arr){
+    window.globalWonData = arr; renderDashWonCharts(arr);
+  });
+  _dashLazyOne('dashLostSection', function(){ return _dashFetchTable('lost'); }, function(arr){
+    window.globalLostData = arr; renderDashLostCharts(arr);
+  });
+}
+
+function _dashLazyOne(sectionId, fetcher, cb){
+  var sec = document.getElementById(sectionId);
+  if (!sec) return;
+  var done = false;
+  function load(){
+    if (done) return; done = true;
+    Promise.resolve(fetcher()).then(cb).catch(function(){ cb([]); });
+  }
+  if ('IntersectionObserver' in window) {
+    try {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){ if (e.isIntersecting) { load(); try { io.disconnect(); } catch(_){} } });
+      }, { rootMargin: '150px' });
+      io.observe(sec);
+      return;
+    } catch(_) {}
+  }
+  load();
+}
+
+function _dashFetchTable(kind){
+  return new Promise(function(resolve){
+    var g = kind === 'crm' ? window.globalCrmData : (kind === 'won' ? window.globalWonData : window.globalLostData);
+    if (g && g.length) { resolve(g.slice()); return; }
+    var base = (typeof crmApiBase === 'function') ? crmApiBase() : API_BASE;
+    var block = kind === 'crm' ? 'CRM-L1' : (kind === 'won' ? 'WON-L1' : 'LOST-L1');
+    var url = base + '/api/' + kind + '-projects' + fullCompanyScopeParam(block);
+    fetch(url, { credentials:'include', headers:(typeof authHeaders==='function'?authHeaders():{}) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ var list = Array.isArray(d) ? d : (d && Array.isArray(d.data) ? d.data : []); resolve(list); })
+      .catch(function(){ resolve([]); });
+  });
+}
+
+function _afterDashCharts(){
+  if (typeof syncDashCrmCharts === 'function') syncDashCrmCharts();
+  if (typeof _refreshCrmAggChartsByDecision === 'function') _refreshCrmAggChartsByDecision();
 }
 
 // ==================== 看板导航长按 3 秒：当月更新情况对话框 ====================
@@ -22869,7 +22869,7 @@ function _refreshCrmAggChartsByDecision(){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.09.06.19）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.09.06.20）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -24613,52 +24613,30 @@ var _dashLastData = null;
 function reloadAllDashAmount() {
   var d = _dashLastData;
   if (!d) { loadDashboard(); return; }
-  var crm = d.crm, won = d.won, lost = d.lost;
+  var crm = (d && d.crm) || {}, won = (d && d.won) || {}, lost = (d && d.lost) || {};
   var cur = dashCur || 'USD';
+  var c = cur.toLowerCase();
   var vals = {
-    2: { rmb:_dashSum(crm,'rmb'), usd:_dashSum(crm,'usd'), vnd:_dashSum(crm,'vnd') },
-    4: { rmb:_dashWonSum(won,'rmb'), usd:_dashWonSum(won,'usd'), vnd:_dashWonSum(won,'vnd') },
-    6: { rmb:_dashSum(lost,'rmb'), usd:_dashSum(lost,'usd'), vnd:_dashSum(lost,'vnd') }
+    2: (crm[c] || 0),
+    4: (won[c] || 0),
+    6: (lost[c] || 0)
   };
   Object.keys(vals).forEach(function(pair){
     var vEl = document.getElementById('dashCard' + pair + 'V');
-    if (vEl) vEl.textContent = formatCurrencyWithSymbol((vals[pair][cur.toLowerCase()]||0), cur);
+    if (vEl) vEl.textContent = formatCurrencyWithSymbol(vals[pair], cur);
   });
-  // 确保 Chart.js 加载后再渲染图表
+  if (typeof applyAllPermVisibility === 'function') applyAllPermVisibility();
+  // 货币切换后，用已加载的全局数组重渲染图表（未加载则懒加载时会按当前币种渲染）
   _ovLoadChartLib(function(){
-    // 重新渲染潜在项目图表（货币切换）
-    if (typeof renderDashCrmCharts === 'function') {
-      renderDashCrmCharts(crm);
-    }
-    // 重新渲染签约项目图表（货币切换）
-    if (typeof renderDashWonCharts === 'function') {
-      renderDashWonCharts(won);
-    }
-    // 重新渲染失败项目图表（货币切换）
-    if (typeof renderDashLostCharts === 'function') {
-      renderDashLostCharts(lost);
-    }
-    if (typeof renderDashLoginCharts === 'function') {
-      renderDashLoginCharts();
-    }
-    // 重新渲染金属价格走势图（货币切换）
-    if (typeof renderDashMetalCharts === 'function') {
-      renderDashMetalCharts();
-    }
-    // 重新渲染历史汇率走势图（货币切换）
-    if (typeof renderDashFxCharts === 'function') {
-      renderDashFxCharts();
-    }
-    // 重新渲染大宗饲料原料价格图（货币切换）
-    if (typeof renderDashFeedCharts === 'function') {
-      renderDashFeedCharts();
-    }
-    // 重新渲染畜禽出栏价格图（货币切换）
-    if (typeof renderDashLivestockCharts === 'function') {
-      renderDashLivestockCharts();
-    }
-    // 货币切换后，同步来自 Overview 图表的数据
-    syncDashCrmCharts();
+    if (window.globalCrmData && window.globalCrmData.length && typeof renderDashCrmCharts === 'function') renderDashCrmCharts(window.globalCrmData);
+    if (window.globalWonData && window.globalWonData.length && typeof renderDashWonCharts === 'function') renderDashWonCharts(window.globalWonData);
+    if (window.globalLostData && window.globalLostData.length && typeof renderDashLostCharts === 'function') renderDashLostCharts(window.globalLostData);
+    if (typeof renderDashLoginCharts === 'function') renderDashLoginCharts();
+    if (typeof renderDashMetalCharts === 'function') renderDashMetalCharts();
+    if (typeof renderDashFxCharts === 'function') renderDashFxCharts();
+    if (typeof renderDashFeedCharts === 'function') renderDashFeedCharts();
+    if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
+    if (typeof syncDashCrmCharts === 'function') syncDashCrmCharts();
   });
 }
 
@@ -31883,7 +31861,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.09.06.19 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.09.06.20 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

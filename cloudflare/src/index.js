@@ -1,4 +1,4 @@
-// ⛔ FROZEN (2026-09-06) V2026.09.06.19：本文件逻辑已锁定，未经用户明确同意禁止修改。云端入口/路由/鉴权逻辑均正确。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。云端入口/路由/鉴权逻辑均正确。
 // ============================================================
 // AGI-PM 云端后端（Cloudflare Worker）
 //
@@ -36,6 +36,7 @@ import { handleCommission } from "./commission.js";
 import { handleVault } from "./vault.js";
 import { handlePurge } from "./purge.js";
 import { handleDashUpdateStatus } from "./dash_update_status.js";
+import { handleDashStats } from "./dash_stats.js";
 import { handleTranslateFill } from "./translate_fill.js";
 import { handleSync } from "./sync.js";
 import { getD1Usage, quotaBlocks } from "./usage.js";
@@ -849,7 +850,7 @@ export default {
       handleSync,
       handleCrm, handleWonLost, handleApproval,
       handleUsers, handleFiles, handlePrices,
-      handleCommission, handleVault, handlePurge, handleDashUpdateStatus,
+      handleCommission, handleVault, handlePurge, handleDashUpdateStatus, handleDashStats,
     ]) {
       let out = null;
       try {

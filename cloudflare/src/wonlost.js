@@ -1,4 +1,4 @@
-// ⛔ FROZEN (2026-09-06) V2026.09.06.19：本文件逻辑已锁定，未经用户明确同意禁止修改。WON/LOST 后端逻辑均正确，仅数据可为演示数据。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。WON/LOST 后端逻辑均正确，仅数据可为演示数据。
 // ============================================================
 // 签约项目（WON）+ 失败项目（LOST）模块（M6）
 // 复刻本地 app.py 逻辑，含 WON-P345 佣金字段服务端硬剥离
@@ -831,3 +831,46 @@ const CRM_NUM = new Set([
   "q7_rmb", "q7_usd", "q7_vnd",
 ]);
 const CRM_AND_LOST_FIELDS = CRM_LIST.concat(["fail_reason", "fail_date"]);
+
+// ============================================================
+// 看板聚合统计（2026-09-06）：仅返回计数与三币汇总，避免前端全表扫描
+// WON 金额规则复刻前端 _dashWonSum：优先 total_ei_<c>，为空则 equip_<c>
+// LOST 金额规则复刻前端 _dashSum：优先 q1_<c>，为空则 equip_<c>
+// ============================================================
+function _amtSumSQL(primary, fallback) {
+  return "SUM(CASE WHEN " + primary + " IS NULL THEN COALESCE(CAST(" + fallback + " AS REAL),0) ELSE CAST(" + primary + " AS REAL) END)";
+}
+
+export async function getWonStats(env, username) {
+  const vs = await visibleScope(env, username, "WON-L1");
+  let sql = "SELECT COUNT(*) AS cnt, " +
+    _amtSumSQL("total_ei_rmb", "equip_rmb") + " AS rmb, " +
+    _amtSumSQL("total_ei_usd", "equip_usd") + " AS usd, " +
+    _amtSumSQL("total_ei_vnd", "equip_vnd") + " AS vnd FROM won_projects";
+  const params = [];
+  if (vs.clause) { sql += " WHERE " + vs.clause; vs.params.forEach((p) => params.push(p)); }
+  const row = await env.DB.prepare(sql).bind(...params).first();
+  return {
+    count: (row && row.cnt) ? row.cnt : 0,
+    rmb: Math.round((row && row.rmb) || 0),
+    usd: Math.round((row && row.usd) || 0),
+    vnd: Math.round((row && row.vnd) || 0),
+  };
+}
+
+export async function getLostStats(env, username) {
+  const vs = await visibleScope(env, username, "LOST-L1");
+  let sql = "SELECT COUNT(*) AS cnt, " +
+    _amtSumSQL("q1_rmb", "equip_rmb") + " AS rmb, " +
+    _amtSumSQL("q1_usd", "equip_usd") + " AS usd, " +
+    _amtSumSQL("q1_vnd", "equip_vnd") + " AS vnd FROM lost_projects";
+  const params = [];
+  if (vs.clause) { sql += " WHERE " + vs.clause; vs.params.forEach((p) => params.push(p)); }
+  const row = await env.DB.prepare(sql).bind(...params).first();
+  return {
+    count: (row && row.cnt) ? row.cnt : 0,
+    rmb: Math.round((row && row.rmb) || 0),
+    usd: Math.round((row && row.usd) || 0),
+    vnd: Math.round((row && row.vnd) || 0),
+  };
+}
