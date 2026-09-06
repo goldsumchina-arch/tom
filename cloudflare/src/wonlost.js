@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。WON/LOST 后端逻辑均正确，仅数据可为演示数据。
 // ============================================================
 // 签约项目（WON）+ 失败项目（LOST）模块（M6）
 // 复刻本地 app.py 逻辑，含 WON-P345 佣金字段服务端硬剥离
@@ -5,7 +6,7 @@
 import { migrateProvinceColumn, migrateBuColumn } from "./provinces.js";
 
 // P3/P4/P5 佣金等敏感字段：隐藏时服务端直接剥离，客户端任何手段都拿不到
-import { purgeWon, purgeLost } from "./purge.js";
+import { purgeWon, purgeLost, purgeCrm, extractKeysFromRow } from "./purge.js";
 
 export const WON_P345_KEYS = [
   "gs_comm_pct", "gs_comm_rmb", "gs_comm_usd", "gs_comm_vnd",
@@ -256,7 +257,9 @@ async function hasFullCompany(env, username, blockId) {
   try { p = JSON.parse(row.perms); } catch (e) { return false; }
   const blk = p && p[blockId];
   if (!blk || typeof blk !== "object") return false;
-  return String(blk.decision || "").trim().toLowerCase() === "all";
+  // 与桌面 app.py 保持一致：decision 为 "all" 或 "company" 均表示“看全公司”
+  const _dec = String(blk.decision || "").trim().toLowerCase();
+  return _dec === "all" || _dec === "company";
 }
 
 async function visibleScope(env, username, blockId) {
@@ -337,6 +340,33 @@ async function ownsRow(env, table, pid, username) {
   return String(row.salesperson || "").trim().toLowerCase() === me;
 }
 
+/**
+ * ★ 写权限（数据范围语义，与权限标签一致，适用于 WON / LOST）：
+ *    行归属者本人，或该行落在用户的可见数据范围内（blockId = WON-L1 / LOST-L1）即可写。
+ *    实际放行仍受对应决策闸（permGate）控制：hide→403；approve→需已通过的单次审批；
+ *    default/company→放行。
+ *    （此前仅限"行归属者本人"，导致数据范围内他人行的按钮不显示/不执行，与标签矛盾）
+ */
+async function canModifyRow(env, table, pid, username, blockId) {
+  if (!username) return true;
+  if (await isManager(env, username)) return true;
+  if (await ownsRow(env, table, pid, username)) return true;
+  const vs = await visibleScope(env, username, blockId);
+  if (!vs.clause) return true; // 看全部（特别授权/管理层）
+  const row = await env.DB.prepare(
+    "SELECT owner_user_id, salesperson FROM " + table + " WHERE id=?"
+  )
+    .bind(pid)
+    .first();
+  if (!row) return false;
+  const list = (vs.params || []).map(function (s) {
+    return String(s).toLowerCase();
+  });
+  const owner = String(row.owner_user_id || "").trim().toLowerCase();
+  const sp = String(row.salesperson || "").trim().toLowerCase();
+  return (owner && list.indexOf(owner) >= 0) || (sp && list.indexOf(sp) >= 0);
+}
+
 async function permGate(env, username, bid, targetId) {
   if (!username) return null;
   if (await isManager(env, username)) return null;
@@ -365,6 +395,28 @@ async function permGate(env, username, bid, targetId) {
 }
 
 // ============================================================
+/** 定位一条 LOST 记录的来源 CRM（status='failed' 僵尸记录）：
+ *  优先用 crm_origin_id（新数据，CRM 转失败时写入）；
+ *  旧数据退化为共享 pdf key 反查；无附件的老 LOST 无法定位，返回 0（不误删）。 */
+async function findOriginCrmId(env, lostRow) {
+  const oid = Number((lostRow && lostRow.crm_origin_id) || 0);
+  if (oid) {
+    const c = await env.DB.prepare("SELECT status FROM crm_projects WHERE id=?").bind(oid).first();
+    return (c && c.status === "failed") ? oid : 0;
+  }
+  try {
+    const keys = extractKeysFromRow("lost_projects", lostRow);
+    if (!keys.length) return 0;
+    const cond = keys.map(() => "pdf_equip=? OR pdf_install=? OR pdf_both=?").join(" OR ");
+    const binds = [];
+    for (const k of keys) binds.push(k, k, k);
+    const rs = await env.DB.prepare(
+      "SELECT id FROM crm_projects WHERE status='failed' AND (" + cond + ") LIMIT 1"
+    ).bind(...binds).first();
+    return rs ? Number(rs.id) : 0;
+  } catch (e) { return 0; }
+}
+
 // 主路由
 // ============================================================
 
@@ -386,6 +438,8 @@ export async function handleWonLost(request, env, url, pathname) {
   try { await migrateProvinceColumn(env, "lost_projects", "Thanh Hóa"); } catch (e) { /* 不阻塞请求 */ }
   // ★ BU 归一化迁移：假数据 BU-X → 随机四场（蛋鸡/猪/肉鸡/蛋鸭）
   try { await migrateBuColumn(env, "lost_projects"); } catch (e) { /* 不阻塞请求 */ }
+  // ★ CRM→LOST 来源关联列（幂等）：删 LOST / 转回 CRM 时据此清理来源 CRM 的 failed 僵尸记录
+  try { await env.DB.prepare("ALTER TABLE lost_projects ADD COLUMN crm_origin_id INTEGER DEFAULT 0").run(); } catch (e) { /* 已存在 */ }
 
   // ================= WON 签约项目 =================
 
@@ -414,6 +468,9 @@ export async function handleWonLost(request, env, url, pathname) {
 
   // POST /api/won-projects
   if (pathname === "/api/won-projects" && request.method === "POST") {
+    // ★ 服务端权限闸（与 LOST 对齐）：新增签约项目受 WON-N1 决策控制
+    const gN1 = await permGate(env, username, "WON-N1", "");
+    if (gN1) return errj(gN1.__msg, gN1.__status || 403);
     let data;
     try { data = await request.json(); } catch (e) { return errj("请求格式错误", 400); }
     packWonRemarks(data);  // 三语备注：_zh/_en/_vi 打包为 JSON 存入 base 列
@@ -461,18 +518,22 @@ export async function handleWonLost(request, env, url, pathname) {
   const wm = /^\/api\/won-projects\/(\d+)\/documents$/.exec(pathname);
   if (wm && request.method === "POST") {
     const wpid = parseInt(wm[1], 10);
-    let f = null, slot = "";
+    let f = null, slot = "", oldfile = "";
     try {
       const form = await request.formData();
       const got = form.get("file");
       if (got && typeof got !== "string") f = got;
       const s = form.get("slot");
       if (s && typeof s === "string") slot = s;
+      const of = form.get("oldfile");
+      if (of && typeof of === "string") oldfile = of;
     } catch (e) { f = null; }
     if (!f) return errj("no file", 400);
     const origName = String(f.name || "");
     if (!/\.pdf$/i.test(origName)) return errj("所选文件不是PDF格式", 400);
-    if (!["doc_equip", "doc_install"].includes(slot)) {
+    // ★ V 补充协议附件：doc_addendum（每协议行独立文件，旧文件由前端以 oldfile 传入）
+    const ADD_SLOTS = ["doc_equip", "doc_install", "doc_addendum"];
+    if (!ADD_SLOTS.includes(slot)) {
       return errj("invalid slot", 400);
     }
     const wExists = await env.DB.prepare("SELECT id FROM won_projects WHERE id=?").bind(wpid).first();
@@ -493,15 +554,22 @@ export async function handleWonLost(request, env, url, pathname) {
     crypto.getRandomValues(wRbuf);
     let wRh = "";
     for (const b of wRbuf) wRh += b.toString(16).padStart(2, "0");
-    const wKey = "won-docs/" + Date.now() + "_" + wRh + "_" + wSafe;
-    // slot 替换：删被替换的旧 R2 对象
-    const wOldRow = await env.DB.prepare(
-      "SELECT " + slot + " AS v FROM won_projects WHERE id=?"
-    ).bind(wpid).first();
-    const wOldV = wOldRow && wOldRow.v ? String(wOldRow.v) : "";
-    const wMo = /^\/api\/files\/(.+)$/.exec(wOldV);
-    if (wMo) {
-      try { await env.FILES.delete(decodeURIComponent(wMo[1])); } catch (e) { /* 忽略 */ }
+    const wKey = (slot === "doc_addendum" ? "won-docs/addm/" : "won-docs/") + Date.now() + "_" + wRh + "_" + wSafe;
+    if (slot === "doc_addendum") {
+      // 补充协议：每行独立文件，旧文件由前端以 oldfile 传入（覆盖=旧版立即删除）
+      if (oldfile) {
+        try { await env.FILES.delete("won-docs/addm/" + oldfile); } catch (e) { /* 忽略 */ }
+      }
+    } else {
+      // slot 替换：删被替换的旧 R2 对象
+      const wOldRow = await env.DB.prepare(
+        "SELECT " + slot + " AS v FROM won_projects WHERE id=?"
+      ).bind(wpid).first();
+      const wOldV = wOldRow && wOldRow.v ? String(wOldRow.v) : "";
+      const wMo = /^\/api\/files\/(.+)$/.exec(wOldV);
+      if (wMo) {
+        try { await env.FILES.delete(decodeURIComponent(wMo[1])); } catch (e) { /* 忽略 */ }
+      }
     }
     await env.FILES.put(wKey, wbuf, { httpMetadata: { contentType: "application/pdf" } });
     return { body: { ok: true, filename: wSafe, url: "/api/files/" + wKey }, status: 200 };
@@ -528,7 +596,10 @@ export async function handleWonLost(request, env, url, pathname) {
       const ex = await env.DB.prepare("SELECT id FROM won_projects WHERE id=?")
         .bind(pid).first();
       if (!ex) return errj("not found", 404);
-      if (!(await ownsRow(env, "won_projects", pid, username))) return errj("forbidden", 403);
+      if (!(await canModifyRow(env, "won_projects", pid, username, "WON-L1"))) return errj("forbidden", 403);
+      // ★ 服务端权限闸：编辑签约项目受 WON-D2 决策控制（hide=403；approve=需已通过的单次审批）
+      const gD2 = await permGate(env, username, "WON-D2", String(pid));
+      if (gD2) return errj(gD2.__msg, gD2.__status || 403);
 
       let data;
       try { data = await request.json(); } catch (e) { return errj("请求格式错误", 400); }
@@ -573,7 +644,10 @@ export async function handleWonLost(request, env, url, pathname) {
       const ex = await env.DB.prepare("SELECT id FROM won_projects WHERE id=?")
         .bind(pid).first();
       if (!ex) return errj("not found", 404);
-      if (!(await ownsRow(env, "won_projects", pid, username))) return errj("forbidden", 403);
+      if (!(await canModifyRow(env, "won_projects", pid, username, "WON-L1"))) return errj("forbidden", 403);
+      // ★ 服务端权限闸：删除签约项目受 WON-D3 决策控制（approve=消耗对应的单次审批）
+      const gD3 = await permGate(env, username, "WON-D3", String(pid));
+      if (gD3) return errj(gD3.__msg, gD3.__status || 403);
       // 彻底删除：R2 附件(won/) + 审批单(WON-*) + 佣金记录 → 主记录
       const rep = await purgeWon(env, pid);
       // V40：顺带清理省份映射
@@ -687,9 +761,16 @@ export async function handleWonLost(request, env, url, pathname) {
       if (!(await ownsRow(env, "lost_projects", pid, username))) return errj("forbidden", 403);
       const gate = await permGate(env, username, "LOST-D3", String(pid));
       if (gate) return gate;
-      // 彻底删除：报价单附件 + 审批单(LOST-*) → 主记录
-      // 注意用引用计数安全删除：CRM 转失败后 CRM 与 LOST 共享同一批 pdf key，
-      // 只要 CRM 那边还在引用，文件就不能删，否则 CRM 的附件会变死链。
+      // 彻底删除：来源 CRM(failed 僵尸记录) + 附件 + 审批单(LOST-*) → 主记录
+      // ★ 用户规则：LOST 100% 由 CRM 转来，删 LOST 时来源 CRM 一并删除——
+      //   先删 CRM（此刻 LOST 仍引用附件 → 文件保留），再删 LOST 本体
+      //   （附件失去全部引用 → R2 文件引用计数删除）。
+      try {
+        const lrow = await env.DB.prepare("SELECT * FROM lost_projects WHERE id=?")
+          .bind(pid).first();
+        const oid = lrow ? await findOriginCrmId(env, lrow) : 0;
+        if (oid) await purgeCrm(env, oid);
+      } catch (e) { /* 来源清理失败不阻塞主删除 */ }
       const rep = await purgeLost(env, pid);
       return { body: { ok: true, purge: rep }, status: 200 };
     }
@@ -718,6 +799,12 @@ export async function handleWonLost(request, env, url, pathname) {
     await env.DB.prepare(
       "INSERT INTO crm_projects (" + cols.join(",") + ") VALUES (" + ph + ")"
     ).bind(...vals).run();
+    // ★ 转回时清掉来源 CRM 的 failed 僵尸记录（历史漏洞：它从未被清理，会留下重复项目）。
+    //   此刻新 CRM 已插入并引用同一批附件 → purgeCrm 只删记录、附件保留，无死链风险。
+    try {
+      const oid = await findOriginCrmId(env, row);
+      if (oid) await purgeCrm(env, oid);
+    } catch (e) { /* 旧记录清理失败不阻塞转回 */ }
     await env.DB.prepare("DELETE FROM lost_projects WHERE id=?").bind(pid).run();
     return { body: { ok: true }, status: 200 };
   }

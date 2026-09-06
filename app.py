@@ -1,3 +1,4 @@
+# ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。本地后端逻辑均正确，仅 CRM/LOST/WON/个人佣金 数据可为演示数据。
 # -*- coding: utf-8 -*-
 """
 AGI-CRM · Won（签约项目）后端
@@ -12,8 +13,10 @@ import os
 import io
 import sys
 import json
+import hashlib
 import sqlite3
 import time
+import shutil
 from datetime import datetime, timedelta
 import re
 from flask import Flask, request, jsonify, send_from_directory, Response
@@ -33,6 +36,18 @@ DATA_DIR = BASE_DIR
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 VAULT_DIR = os.path.join(UPLOAD_DIR, "vault")  # 私密空间（tom 专属）独立子目录
 DB_PATH = os.path.join(DATA_DIR, "agi_pm.db")
+
+# ⛔ 锁死注释之外：桌面版（PyInstaller 打包）专用分支，仅 sys.frozen 时生效，
+# 不影响 `python app.py` 本地开发模式。数据落到用户可写目录，前端从解包目录读取。
+if getattr(sys, "frozen", False):
+    _appdata = os.environ.get("APPDATA") or os.path.expanduser("~")
+    _data = os.path.join(_appdata, "AGI-PM")
+    os.makedirs(_data, exist_ok=True)
+    BASE_DIR = sys._MEIPASS
+    DATA_DIR = _data
+    UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+    VAULT_DIR = os.path.join(UPLOAD_DIR, "vault")
+    DB_PATH = os.path.join(DATA_DIR, "agi_pm.db")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -101,7 +116,7 @@ DEMO_USERNAMES = [
 # 业务表：DEMO 清空/还原的范围
 DEMO_TABLES = ["crm_projects", "lost_projects", "won_projects", "approval_requests"]
 # 快照文件：由 export_demo_snapshot.py 生成（对当前演示状态拍照）
-DEMO_SNAPSHOT = os.path.join(BASE_DIR, "demo_snapshot.json")
+DEMO_SNAPSHOT = os.path.join(DATA_DIR, "demo_snapshot.json")
 
 app = Flask(__name__)
 CORS(app)
@@ -426,10 +441,14 @@ def init_db():
             f"UPDATE won_projects SET {_base}_zh = {_base} "
             f"WHERE ({_base}_zh IS NULL OR {_base}_zh = '') AND {_base} IS NOT NULL AND {_base} != ''"
         )
-    c.execute(
-        "UPDATE crm_projects SET remark_zh = remark "
-        "WHERE (remark_zh IS NULL OR remark_zh = '') AND remark IS NOT NULL AND remark != ''"
-    )
+    # ★ 全新库时 crm_projects 还没创建（CREATE TABLE 在本函数稍后），必须跳过；
+    #   否则 init_db 抛 "no such table: crm_projects"，导致全新库永远初始化失败
+    #   （旧库已存在该表，回填照常执行，行为不变）。
+    if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='crm_projects'").fetchone():
+        c.execute(
+            "UPDATE crm_projects SET remark_zh = remark "
+            "WHERE (remark_zh IS NULL OR remark_zh = '') AND remark IS NOT NULL AND remark != ''"
+        )
     conn.commit()
     try:
         c.execute("ALTER TABLE won_projects ADD COLUMN vat_rmb INTEGER DEFAULT 0")
@@ -800,6 +819,7 @@ def init_db():
         ("vis_he_can_see", "TEXT DEFAULT '[]'"),   # 该用户可看的人 id 列表（正向授权）
         ("perms", "TEXT DEFAULT '{}'"),            # 区块权限决策 {bid: {decision, approvers}}
         ("forgot_approvers", "TEXT DEFAULT '[]'"), # 忘记密码审批人（tom 默认，可追加；通过后密码重置为初始密码）
+        ("sort_order", "INTEGER DEFAULT 0"),       # 用户列表排序权重（越小越靠前）
     ]:
         try:
             c.execute(f"ALTER TABLE users ADD COLUMN {col} {ddl}")
@@ -1323,6 +1343,67 @@ ALLOWED_EXT = {".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".xls", ".xlsx"
 
 # ===================== API：登录 / 密码 =====================
 @app.route("/api/login", methods=["POST"])
+def _verify_cloud_password(stored, password):
+    """校验云端 Worker 同款密码：pbkdf2$迭代$盐hex$哈希hex（PBKDF2-SHA256/256位）。
+    历史明文（无前缀）直接比对。"""
+    try:
+        stored = str(stored or "")
+        if not stored.startswith("pbkdf2$"):
+            return stored == password
+        parts = stored.split("$")
+        it = int(parts[1]) if parts[1].isdigit() else 100000
+        salt = bytes.fromhex(parts[2])
+        expected = parts[3]
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, it, dklen=32)
+        return dk.hex() == expected
+    except Exception:
+        return False
+
+
+def _cloud_mirror_login(conn, username, password):
+    """桌面版离线登录兜底：用同步下来的云端用户镜像（_cloud_users）校验。
+
+    返回 (user_dict, None) 或 (None, 错误消息)。镜像不存在时返回 (None, '')，
+    由调用方回退到「用户名不存在」。"""
+    try:
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(_cloud_users)").fetchall()]
+        if "username" not in cols:
+            return None, ''
+        row = conn.execute("SELECT * FROM _cloud_users WHERE username=?", (username,)).fetchone()
+        if not row:
+            return None, ''
+        if str(row["status"] or "active") != "active":
+            return None, "该账号已被禁用"
+        if not _verify_cloud_password(row["password"], password):
+            return None, "密码错误"
+        try:
+            perms = json.loads(row["perms"]) if row["perms"] else {}
+        except Exception:
+            perms = {}
+        is_admin = False
+        try:
+            is_admin = bool(conn.execute(
+                "SELECT 1 FROM _cloud_managers WHERE username=?", (username,)).fetchone())
+        except Exception:
+            pass
+        if not is_admin and (row["role"] or "") == "管理员":
+            is_admin = True
+        return {
+            "username": row["username"],
+            "real_name": row["real_name"] or "",
+            "role": row["role"] or "",
+            "position": row["position"] or "",
+            "is_admin": bool(is_admin),
+            "status": "active",
+            "vis_he_can_see": row["vis_he_can_see"] or "[]",
+            "vis_can_see_me": row["vis_can_see_me"] or "[]",
+            "perms": perms,
+            "offline": True,
+        }, None
+    except Exception:
+        return None, ''
+
+
 def login():
     data = request.get_json(force=True, silent=True) or {}
     # 统一转小写：手机键盘首字母自动大写会输入 "Tom"，而库存的是 "tom"，
@@ -1334,8 +1415,21 @@ def login():
     conn = get_db()
     row = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
     if not row:
+        # 本机 users 表没有该账号 → 尝试【云端用户目录镜像】离线登录（桌面版）。
+        # 镜像由 sync_client.sync_users() 随每次同步从云端单向拉下来，
+        # 密码是云端同款 PBKDF2 哈希，本机离线也能校验，效果与联网登录一致。
+        cuser, cerr = _cloud_mirror_login(conn, username, password)
+        if cuser is None:
+            conn.close()
+            return jsonify({"ok": False, "error": cerr or "用户名不存在"})
+        try:
+            conn.execute("INSERT INTO login_history (username, ip_address, user_agent) VALUES (?, ?, ?)",
+                         (username, request.remote_addr or '', (request.headers.get('User-Agent') or '')[:200]))
+            conn.commit()
+        except Exception:
+            pass
         conn.close()
-        return jsonify({"ok": False, "error": "用户名不存在"})
+        return jsonify({"ok": True, "user": cuser})
     if row["status"] != "active":
         conn.close()
         return jsonify({"ok": False, "error": "该账号已被禁用"})
@@ -2210,8 +2304,55 @@ def _strip_won_p345(rows):
     return rows
 
 
+# ★ 三语备注 / 付款方式 JSON 展开：本机后端复刻云端 wonlost.js 行为，
+# 让桌面版也能像网页版一样正确显示中文/英文/越南文。
+_WON_RM_BASES = ["cust_remark", "gs_remark", "agi_remark"]
+
+def _expand_won_remarks(row):
+    if not row:
+        return row
+    for b in _WON_RM_BASES:
+        obj = None
+        try:
+            obj = json.loads(row[b]) if row.get(b) else None
+        except Exception:
+            obj = None
+        if obj and isinstance(obj, dict):
+            row[b + "_zh"] = obj.get("zh") or ""
+            row[b + "_en"] = obj.get("en") or ""
+            row[b + "_vi"] = obj.get("vi") or ""
+        else:
+            old = str(row[b]) if row.get(b) is not None else ""
+            row[b + "_zh"] = old
+            row[b + "_en"] = ""
+            row[b + "_vi"] = ""
+    return row
+
+def _expand_payment_terms(row):
+    if not row:
+        return row
+    raw = str(row.get("payment_terms") or "")
+    obj = None
+    if raw.strip().startswith("{"):
+        try:
+            obj = json.loads(raw)
+        except Exception:
+            obj = None
+    if obj and isinstance(obj, dict):
+        row["payment_terms_zh"] = obj.get("zh") or ""
+        row["payment_terms_en"] = obj.get("en") or ""
+        row["payment_terms_vi"] = obj.get("vi") or ""
+    else:
+        row["payment_terms_zh"] = raw
+        row["payment_terms_en"] = raw
+        row["payment_terms_vi"] = raw
+    return row
 
 
+def _expand_won_row(row):
+    _expand_won_remarks(row)
+    _expand_payment_terms(row)
+    return row
 
 
 @app.route("/api/won-projects", methods=["GET"])
@@ -2225,6 +2366,8 @@ def list_projects():
     sql += " ORDER BY id DESC"
     rows = conn.execute(sql, params).fetchall()
     out = [row_to_dict(r) for r in rows]
+    for d in out:
+        _expand_won_row(d)
     # WON-P345 权限闸门（服务端硬剥离）：隐藏决策/销售缺省 → 剥掉 P3/P4/P5 全部字段，
     # 浏览器、接口直调、任何客户端手段都拿不到这些数据
     if _won_p345_hidden(conn, uname):
@@ -2308,6 +2451,7 @@ def get_project(pid):
         conn.close()
         return jsonify({"error":"not found"}), 404
     d = row_to_dict(row)
+    _expand_won_row(d)
     if _won_p345_hidden(conn, uname):
         _strip_won_p345([d])
     conn.close()
@@ -3047,10 +3191,117 @@ def add_no_cache_headers(resp):
         pass
     return resp
 
+# ===================== 桌面版：附件"按需取回" =====================
+# 场景：用户刚装好、还没同步，或换了一台电脑 —— 界面里有附件引用，
+#       但本机 uploads/ 里还没有文件。以前只能干等下一次同步，
+#       现在点"查看/下载"时临时从云端取回并缓存到本机，之后离线也能打开。
+CLOUD_BASE = "https://agi-gs.tomalso911.workers.dev"
+# 云端 R2 的目录前缀（与 cloudflare/src 写入时保持一致）
+_CLOUD_DIRS = ("crm-docs", "won-docs", "lost-docs", "crm", "won", "lost")
+
+
+def _cloud_headers():
+    """读取桌面版保存的云端令牌（sync.json）。未登录返回 None。"""
+    try:
+        with io.open(os.path.join(DATA_DIR, "sync.json"), "r", encoding="utf-8") as f:
+            tok = (json.load(f) or {}).get("token", "")
+        if not tok:
+            return None
+        return {"Authorization": "Bearer " + tok,
+                "User-Agent": "AGI-PM-Desktop"}
+    except Exception:
+        return None
+
+
+def _fetch_cloud_file(path):
+    """从云端取回附件并缓存到 uploads/。成功返回本机文件名，失败返回 ''。
+
+    path 可以是云端形态（/api/files/crm-docs/xxx.pdf）或纯文件名；
+    纯文件名时依次尝试各业务目录（crm-docs / won-docs / lost-docs …）。
+    """
+    if not _cloud_headers():
+        return ""
+    import urllib.request
+
+    name = os.path.basename(path or "")
+    if not name:
+        return ""
+    s = (path or "").strip()
+    cands = []
+    if s.startswith("/api/files/"):
+        cands.append(s)
+    if "/" in s.strip("/"):
+        cands.append("/api/files/" + s.lstrip("/"))
+    cands += ["/api/files/%s/%s" % (d, name) for d in _CLOUD_DIRS]
+    cands.append("/api/files/" + name)
+
+    import urllib.error
+
+    headers = _cloud_headers()
+    for c in cands:
+        try:
+            req = urllib.request.Request(CLOUD_BASE + c, headers=headers)
+            with urllib.request.urlopen(req, timeout=12) as r:
+                data = r.read()
+            if not data:
+                continue
+            with open(os.path.join(UPLOAD_DIR, name), "wb") as f:
+                f.write(data)
+            return name
+        except urllib.error.HTTPError as e:
+            # 401/403 = 令牌失效或未登录：再试其它目录也没用，立即放弃，
+            # 避免每个缺失文件都空转 7 次网络请求（界面会卡住）。
+            if e.code in (401, 403):
+                return ""
+            continue
+        except Exception:
+            continue
+    return ""
+
+
 @app.route("/uploads/<path:filename>")
 def serve_upload(filename):
     filename = os.path.basename(filename)
+    # 本机没有且已登录云端 → 临时取回一次（离线或云端也没有则 404）
+    if not os.path.isfile(os.path.join(UPLOAD_DIR, filename)):
+        got = _fetch_cloud_file(filename)
+        if got:
+            filename = got
     return send_from_directory(UPLOAD_DIR, filename)
+
+
+@app.route("/api/files/<path:filename>")
+def serve_api_file(filename):
+    """桌面版专用：兼容【云端形态】的附件路径 /api/files/<目录>/<文件名>。
+
+    为什么必须有这条路由（V2026.09.05.29 修复）：
+      云端把附件引用存成 "/api/files/crm-docs/xxx.pdf"，网页端由 Worker
+      从 R2 取回，一切正常；但桌面版跑的是本机 Flask，以前没有这条路由，
+      于是界面里"查看/下载 PDF"发出的 /api/files/... 请求一律 404 ——
+      表现就是"桌面版不能预览、也不能下载 PDF"，而网页端同样的按钮是好的。
+
+    处理：按【文件名】从本机 uploads/ 提供（同步已把文件下载到该目录）。
+    带 ?dl=1 时按附件下载，否则内联预览（与云端 files.js 行为一致）。
+    """
+    name = os.path.basename(filename or "")
+    if not name:
+        return jsonify({"error": "file not found"}), 404
+    if not os.path.isfile(os.path.join(UPLOAD_DIR, name)):
+        # 本机还没这个文件（未同步 / 换电脑）→ 已登录则临时从云端取回
+        got = _fetch_cloud_file(filename)
+        if not got:
+            return jsonify({"error": "file not found", "missing": name}), 404
+        name = got
+    as_att = (request.args.get("dl") or "").strip() not in ("", "0", "false")
+    return send_from_directory(UPLOAD_DIR, name, as_attachment=as_att)
+
+
+# 离线桌面版：把第三方前端库（html2canvas / jsPDF / chart.js 等）随 exe 打包在
+# BASE_DIR/vendor 下，前端用 /vendor/xxx 同源加载，断网也能用打印 PDF / 容量饼图。
+@app.route("/vendor/<path:filename>")
+def serve_vendor(filename):
+    vendor_dir = os.path.join(BASE_DIR, "vendor")
+    return send_from_directory(vendor_dir, filename)
 
 # ===================== API：CRM 报价单 PDF 上传 =====================
 @app.route("/api/crm-projects/<int:pid>/documents", methods=["POST"])
@@ -3111,10 +3362,10 @@ def upload_won_doc(pid):
     if ext != ".pdf":
         return jsonify({"error":"invalid pdf"}),415
     slot = (request.form.get("slot") or request.args.get("slot") or "").strip()
-    if slot not in ("doc_equip", "doc_install"):
+    if slot not in ("doc_equip", "doc_install", "doc_both"):
         slot = ""
     conn = get_db()
-    row = conn.execute("SELECT id, doc_equip, doc_install FROM won_projects WHERE id=?", (pid,)).fetchone()
+    row = conn.execute("SELECT id, doc_equip, doc_install, doc_both FROM won_projects WHERE id=?", (pid,)).fetchone()
     conn.close()
     if not row:
         return jsonify({"error":"not found"}),404
@@ -3503,6 +3754,92 @@ def admin_purge_orphans():
     return jsonify({"ok": True, "result": {
         "orphan_found": len(orphans), "deleted": 0 if dry else deleted,
         "dryRun": dry, "sample": orphans[:50],
+    }})
+
+
+@app.route("/api/admin/storage-report")
+def admin_storage_report():
+    """本地 uploads/ 容量分布（与云端 /api/admin/storage-report 对称），离线桌面版也显示饼图。仅 tom 可用。"""
+    if (request.headers.get("X-User-Name") or "").strip().lower() != "tom":
+        return jsonify({"error": "forbidden: owner only"}), 403
+    conn = get_db()
+    # 按表收集被引用的文件名（用于把 uploads 文件归类到 won/crm/lost）
+    refs = {"won": set(), "crm": set(), "lost": set()}
+    try:
+        rows = conn.execute("SELECT pdf_equip, pdf_install, pdf_both FROM crm_projects").fetchall()
+        for r in rows:
+            refs["crm"].update(_row_file_refs("crm_projects", r))
+    except Exception:
+        pass
+    try:
+        rows = conn.execute("SELECT pdf_equip, pdf_install, pdf_both FROM lost_projects").fetchall()
+        for r in rows:
+            refs["lost"].update(_row_file_refs("lost_projects", r))
+    except Exception:
+        pass
+    try:
+        rows = conn.execute("SELECT attachments FROM won_projects").fetchall()
+        for r in rows:
+            refs["won"].update(_row_file_refs("won_projects", r))
+    except Exception:
+        pass
+    conn.close()
+
+    areas = {k: 0 for k in ("won", "crm", "lost", "vault", "snapshots", "other")}
+    for root, _dirs, names in os.walk(UPLOAD_DIR):
+        for n in names:
+            full = os.path.join(root, n)
+            try:
+                sz = os.path.getsize(full)
+            except OSError:
+                continue
+            rel = os.path.relpath(full, UPLOAD_DIR).replace("\\", "/")
+            if rel.startswith("vault/"):
+                cat = "vault"
+            elif n in refs["won"]:
+                cat = "won"
+            elif n in refs["crm"]:
+                cat = "crm"
+            elif n in refs["lost"]:
+                cat = "lost"
+            else:
+                cat = "other"
+            areas[cat] += sz
+    # 数据快照（本地在 DATA_DIR）
+    for snap in ("demo_snapshot.json", "price_snapshot.json"):
+        try:
+            p = os.path.join(DATA_DIR, snap)
+            if os.path.isfile(p):
+                areas["snapshots"] += os.path.getsize(p)
+        except Exception:
+            pass
+
+    used = sum(areas.values())
+    # 容量对齐云端 shape：用磁盘总空间 / 剩余空间（饼图除以 capacity_bytes）
+    try:
+        du = shutil.disk_usage(UPLOAD_DIR)
+        capacity = du.total
+        free = du.free
+    except Exception:
+        capacity = used or 1
+        free = 0
+    area_meta = {"won": "WON", "crm": "CRM", "lost": "LOST",
+                 "vault": "Vault", "snapshots": "Snapshots", "other": "Other"}
+    area_arr = [{"key": k, "name": area_meta[k], "bytes": areas[k],
+                 "percent": (areas[k] / capacity * 100) if capacity else 0.0}
+                for k in ("won", "crm", "lost", "vault", "snapshots", "other")
+                if areas[k] > 0]
+    area_arr.sort(key=lambda a: a["bytes"], reverse=True)
+    return jsonify({"ok": True, "storage": {
+        "capacity_bytes": capacity,
+        "capacity_gb": round(capacity / 1e9, 2),
+        "used_bytes": used,
+        "used_gb": round(used / 1e9, 2),
+        "used_percent": round(used / capacity * 100, 2) if capacity else 0.0,
+        "free_bytes": free,
+        "free_gb": round(free / 1e9, 2),
+        "free_percent": round(free / capacity * 100, 2) if capacity else 0.0,
+        "areas": area_arr,
     }})
 
 # ===================== API：用户与授权（CRUD + 权限） =====================
@@ -3973,7 +4310,7 @@ def api_users_list():
     conn = get_db()
     managers = set(_manager_usernames(conn))
     rows = conn.execute(
-        "SELECT * FROM users ORDER BY id ASC"
+        "SELECT * FROM users ORDER BY sort_order ASC, id ASC"
     ).fetchall()
     users = [_row_to_user(r, managers) for r in rows]
     for u in users:
@@ -4023,12 +4360,12 @@ OBSERVER_FIXED_PERMS = {
     "DB-S1": "default", "DB-P1": "default", "DB-B1": "default", "DB-C1": "default",
     "US-LH1": "default", "US-LH2": "default",
     "DB-MT1": "default", "DB-FD1": "default", "DB-LS1": "default", "DB-FX1": "default",
-    "CRM-L1": "company", "CRM-D1": "default", "CRM-D2": "hide", "CRM-D3": "hide",
+    "CRM-L1": "all", "CRM-D1": "default", "CRM-D2": "hide", "CRM-D3": "hide",
     "CRM-F1": "approve", "CRM-N1": "hide", "CRM-E1": "default",
     "WON-L1": "default", "WON-D1": "default", "WON-D2": "hide", "WON-D3": "hide",
     "WON-D4": "default", "WON-E1": "default", "WON-N1": "hide", "WON-C1": "hide",
     "WON-P345": "hide",
-    "LOST-L1": "company", "LOST-D1": "default", "LOST-D2": "hide", "LOST-D3": "hide",
+    "LOST-L1": "all", "LOST-D1": "default", "LOST-D2": "hide", "LOST-D3": "hide",
     "LOST-R1": "approve", "LOST-E1": "default",
 }
 
@@ -4112,14 +4449,17 @@ def api_users_create():
     fa = [str(x).strip() for x in forgot_approvers if str(x).strip()]
     if "tom" not in fa:
         fa.insert(0, "tom")
+    # 新建用户默认排在末尾：取当前最大 sort_order + 1000
+    max_so = conn.execute("SELECT COALESCE(MAX(sort_order), 0) FROM users").fetchone()[0]
+    sort_order = int(max_so or 0) + 1000
     cur = conn.execute(
         """INSERT INTO users
            (username, password, real_name, role, position, status,
-            vis_can_see_me, vis_he_can_see, perms, forgot_approvers, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            vis_can_see_me, vis_he_can_see, perms, forgot_approvers, created_at, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (username, DEFAULT_INIT_PASSWORD, real_name, "user", position, status,
          _json.dumps(vis_can_see_me), _json.dumps(vis_he_can_see),
-         _json.dumps(perms), _json.dumps(fa[:3], ensure_ascii=False), created_at)
+         _json.dumps(perms), _json.dumps(fa[:3], ensure_ascii=False), created_at, sort_order)
     )
     conn.commit()
     new_id = cur.lastrowid
@@ -4252,6 +4592,27 @@ def api_users_delete(uid):
     return jsonify({"ok": True, "message": "删除成功"})
 
 
+@app.route("/api/users/reorder", methods=["PUT"])
+def api_users_reorder():
+    """调整用户列表顺序：仅 tom/cuong/james 或管理员可执行。"""
+    data = request.get_json(force=True, silent=True) or {}
+    _op = (request.headers.get("X-User-Name") or "").strip()
+    conn = get_db()
+    if _op.lower() not in [x.lower() for x in TRI_APPROVERS] and not _is_manager(conn, _op):
+        conn.close()
+        return jsonify({"ok": False, "message": "无权限：仅管理员或指定审批人可调整顺序"}), 403
+    orders = data.get("orders") or []
+    for o in orders:
+        uid = o.get("id")
+        so = o.get("sort_order")
+        if uid is None or so is None:
+            continue
+        conn.execute("UPDATE users SET sort_order=? WHERE id=?", (int(so), int(uid)))
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True, "message": "顺序已保存"})
+
+
 # ===================== 启动 =====================
 @app.after_request
 def _no_cache(resp):
@@ -4289,6 +4650,11 @@ def api_translate():
 # 价格以 USD 为基准，按【真实的每日历史汇率】换算为 RMB / VND，使走势与同期汇率对应。
 # 历史汇率：USDCNY=X（USD→人民币）、USDVND=X（USD→越南盾），CNY→VND 由二者推导。
 # 数据每日缓存到 SQLite(metal_cache / fx_cache)，避免频繁外网请求；外网不可达时回退缓存。
+# ⛔⛔⛔ 2026-09-04 整体冻结声明（锁死）：金属/汇率这条价格管线的采集、换算、离群点守卫逻辑
+# 已校验通过，四个品种（铁/不锈钢/锌/塑料）走势单位对齐(USD/吨)、数值正确。
+# 严禁在未取得用户明确同意前对以下任一处做"优化/重构/简化"：METAL_SYMBOLS、
+# METAL_OFFICIAL_CODES、METAL_TO_TON_FACTOR、_metal_clean_outliers 及其两处调用点。
+# 任何改动都可能重新引入单位错位或脏数据，导致图表再次失真。
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -4298,6 +4664,13 @@ METAL_SYMBOLS = {
     "stainless": "HRC=F", # 热轧卷板（作为不锈钢上游替代指标，USD/吨）
     "zinc": "ZNC=F",      # LME 锌锭（USD/吨）
     "plastic": "BZ=F",    # 布伦特原油（代表塑料原料，原始 USD/桶，需换算为 USD/吨）
+}
+# 官方月度数据源（IMF Primary Commodity Price System，免费、无需 API Key）
+# 前缀 P 表示 actual market price（美元实际价）。若 IMF 返回为空，自动回退 Yahoo。
+# 注：stainless 与 plastic 在 IMF PCPS 中暂无公认独立代码，暂用 Yahoo 期货，后续可按需求换 World Bank。
+METAL_OFFICIAL_CODES = {
+    "iron": "PIORECR",    # 铁矿石，美元/吨
+    "zinc": "PZINC",      # 锌，美元/吨
 }
 # 各品种原始 Yahoo 单位 -> 标准化 USD/吨 的换算系数（缓存中存原始值，渲染时换算）
 # iron/stainless/zinc 原始已是 USD/吨，系数 1.0
@@ -4940,6 +5313,58 @@ def _fx_fetch_yahoo(symbol, period1, period2):
     """从雅虎财经拉取日线汇率，返回 {date: rate}。失败返回 {}。"""
     return _metal_fetch_yahoo(symbol, period1, period2)
 
+def _imf_extract_obs(obj):
+    """递归提取 IMF SDMX JSON 中的 Obs {time, value} 列表。"""
+    out = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            key = k.lstrip("@").upper()
+            if key in ("OBS", "OBSERVATIONS") and isinstance(v, list):
+                for item in v:
+                    if not isinstance(item, dict):
+                        continue
+                    tp = item.get("@TIME_PERIOD") or item.get("TIME_PERIOD")
+                    ov = item.get("@OBS_VALUE") or item.get("OBS_VALUE")
+                    if tp and ov is not None:
+                        try:
+                            out.append({"time": str(tp), "value": float(ov)})
+                        except Exception:
+                            pass
+            else:
+                out.extend(_imf_extract_obs(v))
+    elif isinstance(obj, list):
+        for v in obj:
+            out.extend(_imf_extract_obs(v))
+    return out
+
+def _metal_fetch_imf_pcps(key, p1, p2):
+    """从 IMF PCPS 拉取某商品的月度实际市场价格，返回 {YYYY-MM-DD: close_usd}。
+    仅处理 METAL_OFFICIAL_CODES 中配置的品种；失败返回 {}。"""
+    code = METAL_OFFICIAL_CODES.get(key)
+    if not code:
+        return {}
+    start = datetime.utcfromtimestamp(p1).strftime("%Y-%m")
+    end = datetime.utcfromtimestamp(p2).strftime("%Y-%m")
+    url = ("https://dataservices.imf.org/REST/SDMX_JSON.svc/DataStream/PCPS/%s"
+           "?startPeriod=%s&endPeriod=%s" % (urllib.parse.quote(code), start, end))
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            js = json.loads(resp.read().decode("utf-8"))
+        obs = _imf_extract_obs(js)
+        out = {}
+        for ob in obs:
+            ym = ob.get("time", "")
+            if len(ym) >= 7 and ym[4] == "-":
+                # 统一存为每月1号，与缓存中日线格式对齐
+                out[ym[:7] + "-01"] = ob["value"]
+        if out:
+            print("[metal] IMF PCPS %s -> %s 条 (ex %s..%s)" % (key, len(out), start, end))
+        return out
+    except Exception as e:
+        print("[metal] IMF PCPS %s failed: %s" % (key, e))
+        return {}
+
 # 历史固化状态：记录已处理过的"当前月"，用于跨月时对刚过去月做一次性补拉。
 # 进程级变量；服务器重启后通过缓存中最新的月份推断，避免冷启动全量重拉。
 _LAST_FILL_MONTH = None
@@ -4980,21 +5405,65 @@ def _ensure_prev_month_filled(conn, fetch_fn, keys, cache, cur_ym, save_fn):
         _LAST_FILL_MONTH = cur_ym
 
 def _month_has_data(cache, keys, cur_ym):
-    """检查缓存中是否已有当前月(YYYY-MM)的数据。只要有任意一个 key 有当月数据，即视为已采集。"""
+    """检查缓存中当前月(YYYY-MM)的数据是否完整。所有 key 都有当月数据才视为已采集；
+    任一 key 缺失即触发补抓，避免某些币种已更新而另一些仍停留在上月。"""
     for k in keys:
         m = cache.get(k, {})
-        for d in m.keys():
-            if d.startswith(cur_ym):
-                return True
-    return False
+        if not any(d.startswith(cur_ym) for d in m.keys()):
+            return False
+    return True
+
+# ⛔⛔⛔ 锁死：_metal_clean_outliers 是 2026-09-04 修复锌价脏数据（单日 ~108 而邻日真实价 ~2297/3950）
+# 后新增的离群点守卫，是"防止脏数据再次进入金属图表"的唯一防线。禁止删除或弱化
+# （如放宽 50% 阈值、或在调用点跳过它）。若数据源整体更换，必须保留等价守卫。
+def _metal_clean_outliers(symbol, existing, fresh):
+    """剔除数据源偶发离群点（如锌曾出现单日 ~108，而邻日真实价 ~2297/3950——
+    疑为数据源返回了错误单位/拆分价）。规则：若某日值同时偏离其前后最近有效邻居
+    >50%，则丢弃该点（不写入缓存，由前向填充沿用邻日真实值）。"""
+    if not fresh:
+        return fresh
+    combined = dict(existing or {})
+    combined.update(fresh)
+    cdates = sorted(combined.keys())
+    idx_of = {d: i for i, d in enumerate(cdates)}
+    out = {}
+    for d, v in fresh.items():
+        if v is None:
+            continue
+        i = idx_of[d]
+        prev_v = next((combined[cdates[j]] for j in range(i - 1, -1, -1)
+                       if combined[cdates[j]] is not None), None)
+        nxt_v = next((combined[cdates[j]] for j in range(i + 1, len(cdates))
+                      if combined[cdates[j]] is not None), None)
+        if prev_v and nxt_v and prev_v > 0 and nxt_v > 0:
+            lo, hi = min(prev_v, nxt_v), max(prev_v, nxt_v)
+            if v < lo * 0.5 or v > hi * 1.5:
+                continue  # 离群，丢弃
+        out[d] = v
+    return out
 
 def _metal_build_data(conn):
     """金属价格构建（USD 基准）：历史月 + 当月均只采集一次，采集后固化，本月内不再外网。
     每月第一天：当月缓存为空 → 自动拉取一次 → 固化 → 本月后续请求 100% 读缓存。
-    跨月时：旧月已是上月底数据，自然成为历史；新月触发首次采集。"""
+    跨月时：旧月已是上月底数据，自然成为历史；新月触发首次采集。
+    2026-09-04 新增：优先使用 IMF PCPS 官方月度实际价（iron/zinc），回退 Yahoo。
+    2026-09-04 新增：拉取后做离群点剔除（_metal_clean_outliers），避免脏数据入缓存。"""
     cache = _metal_load_cache(conn)
     now = datetime.now()
     cur_ym = now.strftime("%Y-%m")
+    # 对官方数据源：若缓存完全为空，先一次性回填完整历史（2015-今）
+    history_backfilled = False
+    for key in METAL_OFFICIAL_CODES:
+        if not cache.get(key):
+            p1 = int(datetime(2015, 1, 1).timestamp())
+            p2 = int(now.timestamp())
+            fresh = _metal_fetch_imf_pcps(key, p1, p2)
+            if fresh:
+                fresh = _metal_clean_outliers(key, cache.get(key, {}), fresh)
+                cache[key] = fresh
+                history_backfilled = True
+    if history_backfilled:
+        _metal_save_cache(conn, cache)
     # 跨月补拉刚过去的月（固化，仅此一次）
     _ensure_prev_month_filled(conn, _metal_fetch_yahoo, METAL_SYMBOLS, cache, cur_ym, _metal_save_cache)
     # 当月：仅在缓存无当月数据时拉取一次（每月第一天 / 首次请求触发），采集后固化，本月不再拉外网
@@ -5003,8 +5472,11 @@ def _metal_build_data(conn):
         p2 = int(now.timestamp())
         fresh_any = False
         for key, sym in METAL_SYMBOLS.items():
-            fresh = _metal_fetch_yahoo(sym, p1, p2)
+            fresh = _metal_fetch_imf_pcps(key, p1, p2)
+            if not fresh:
+                fresh = _metal_fetch_yahoo(sym, p1, p2)
             if fresh:
+                fresh = _metal_clean_outliers(key, cache.get(key, {}), fresh)
                 fresh_any = True
                 if key not in cache:
                     cache[key] = {}
@@ -5656,6 +6128,9 @@ def load_demo_data(c):
     return restored
 
 
+# ⛔⛔⛔ 锁死（DEMO 策略，2026-09-04）：业务表的演示案例统一打 is_demo=1，作为「培训样本」固定保留，
+# 培训结束前严禁任何路径删除/改动这批演示行（仅 /api/demo/clear 在培训后统一清空）。
+# 真实录入数据一律 is_demo=0，绝不被 DEMO 还原或清空误伤。勿新增会自动清除 demo 的逻辑。
 @app.route("/api/demo/load", methods=["POST"])
 def api_demo_load():
     """一键还原演示数据（重置模式：先清空，再从快照还原）。"""

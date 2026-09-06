@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。用户与授权模块逻辑均正确。
 // ============================================================
 // 用户与权限管理模块（M7）
 // 复刻本地 app.py 的 /api/users 与 /api/managers
@@ -14,12 +15,12 @@ const OBSERVER_FIXED_PERMS = {
   "DB-S1": "default", "DB-P1": "default", "DB-B1": "default", "DB-C1": "default",
   "US-LH1": "default", "US-LH2": "default",
   "DB-MT1": "default", "DB-FD1": "default", "DB-LS1": "default", "DB-FX1": "default",
-  "CRM-L1": "company", "CRM-D1": "default", "CRM-D2": "hide", "CRM-D3": "hide",
+  "CRM-L1": "all", "CRM-D1": "default", "CRM-D2": "hide", "CRM-D3": "hide",
   "CRM-F1": "approve", "CRM-N1": "hide", "CRM-E1": "default",
   "WON-L1": "default", "WON-D1": "default", "WON-D2": "hide", "WON-D3": "hide",
   "WON-D4": "default", "WON-E1": "default", "WON-N1": "hide", "WON-C1": "hide",
   "WON-P345": "hide",
-  "LOST-L1": "company", "LOST-D1": "default", "LOST-D2": "hide", "LOST-D3": "hide",
+  "LOST-L1": "all", "LOST-D1": "default", "LOST-D2": "hide", "LOST-D3": "hide",
   "LOST-R1": "approve", "LOST-E1": "default",
 };
 
@@ -140,7 +141,7 @@ export async function handleUsers(request, env, url, pathname) {
   if (pathname === "/api/users" && request.method === "GET") {
     const managers = await managerUsernames(env);
     const mgrSet = new Set(managers);
-    const rs = (await env.DB.prepare("SELECT * FROM users ORDER BY id ASC").all()).results || [];
+    const rs = (await env.DB.prepare("SELECT * FROM users ORDER BY sort_order ASC, id ASC").all()).results || [];
     const users = [];
     for (const r of rs) {
       let perms = {};
@@ -206,14 +207,18 @@ export async function handleUsers(request, env, url, pathname) {
     if (!fa.includes("tom")) fa.unshift("tom");
     fa = fa.slice(0, 3);
 
+    // 新建用户默认排在末尾：取当前最大 sort_order + 1000
+    const maxRow = await env.DB.prepare("SELECT COALESCE(MAX(sort_order), 0) AS m FROM users").first();
+    const sortOrder = (maxRow && Number(maxRow.m) || 0) + 1000;
+
     const ins = await env.DB.prepare(
       "INSERT INTO users (username, password, real_name, role, position, status, " +
-      "vis_can_see_me, vis_he_can_see, perms, forgot_approvers, created_at) " +
-      "VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+      "vis_can_see_me, vis_he_can_see, perms, forgot_approvers, created_at, sort_order) " +
+      "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
     ).bind(
       username, DEFAULT_INIT_PASSWORD, realName, "user", position, status,
       JSON.stringify(visMe), JSON.stringify(visHe), JSON.stringify(perms),
-      JSON.stringify(fa), nowStr()
+      JSON.stringify(fa), nowStr(), sortOrder
     ).run();
 
     return { body: { ok: true, id: ins.meta && ins.meta.last_row_id, message: "保存成功" }, status: 200 };
@@ -333,6 +338,25 @@ export async function handleUsers(request, env, url, pathname) {
       }
       return { body: { ok: true, message: "删除成功" }, status: 200 };
     }
+  }
+
+  // ================= PUT /api/users/reorder  调整用户顺序 =================
+  if (pathname === "/api/users/reorder" && request.method === "PUT") {
+    let data;
+    try { data = await request.json(); } catch (e) { return errj("请求格式错误", 400); }
+
+    // 仅 tom/cuong/james 或管理员可调整顺序
+    const direct = TRI_APPROVERS.some((x) => x.toLowerCase() === op.toLowerCase()) || await isManager(env, op);
+    if (!direct) return errj("无权限：仅管理员或指定审批人可调整顺序", 403);
+
+    const orders = data.orders || [];
+    for (const o of orders) {
+      const uid = o.id;
+      const so = o.sort_order;
+      if (uid == null || so == null) continue;
+      await env.DB.prepare("UPDATE users SET sort_order=? WHERE id=?").bind(Number(so), Number(uid)).run();
+    }
+    return { body: { ok: true, message: "顺序已保存" }, status: 200 };
   }
 
   return null;

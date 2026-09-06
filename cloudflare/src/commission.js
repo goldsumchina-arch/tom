@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。个人佣金后端逻辑均正确，仅数据可为演示数据。
 // ============================================================
 // 个人佣金 · 修改金额审批模块
 //
@@ -297,35 +298,6 @@ export async function handleCommission(request, env, url, pathname) {
     }
     return { body: { ok: true, id: rid, saved: bens.length }, status: 200 };
   }
-
-  // ---------- 清除全部 DEMO 案例（is_demo=1），真实数据保留 ----------
-  if (
-    pathname === "/api/commission/records/demo" &&
-    request.method === "DELETE"
-  ) {
-    await ensureTable(env);
-    const ids = await env.DB.prepare(
-      "SELECT id FROM commission_records WHERE is_demo=1"
-    ).all();
-    const list = (ids.results || []).map((r) => r.id);
-    let cleared = 0;
-    if (list.length) {
-      const ph = list.map(() => "?").join(",");
-      await env.DB.prepare(
-        `DELETE FROM commission_beneficiaries WHERE record_id IN (${ph})`
-      )
-        .bind(...list)
-        .run();
-      const res = await env.DB.prepare(
-        `DELETE FROM commission_records WHERE id IN (${ph})`
-      )
-        .bind(...list)
-        .run();
-      cleared = res.meta && res.meta.changes ? res.meta.changes : list.length;
-    }
-    return { body: { ok: true, cleared }, status: 200 };
-  }
-
 
   // ---------- 列表 ----------
   if (pathname === base && request.method === "GET") {

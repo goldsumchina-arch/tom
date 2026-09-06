@@ -44,7 +44,7 @@
   AGI-PM Cloudflare 开发环境
 ============================================
 
-  当前目录: C:\Users\tomal\OneDrive\Desktop\gs-project\cloudflare
+  当前目录: C:\gs-project\cloudflare
 
 v22.22.2
   npm  : 10.9.7

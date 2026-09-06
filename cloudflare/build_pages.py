@@ -52,10 +52,19 @@ ASSETS = [
     "icon-192.png",
     "icon-512.png",
     "icon-512-maskable.png",
+    "apple-touch-icon.png",   # iOS 主屏幕（index.html 引用，漏了会 404）
 ]
 
 
 def main():
+    # ---- 版本号自动同步：网页版本标记跟着 build.gradle.kts 走，不再手改 ----
+    sys.path.insert(0, os.path.abspath(ROOT))
+    try:
+        from version_sync import sync_index_version
+        sync_index_version(os.path.abspath(ROOT))
+    except Exception as e:
+        print("  [WARN] 版本同步失败（继续部署，网页版本可能落后）: %s" % e)
+
     if os.path.isdir(DIST):
         shutil.rmtree(DIST)
     os.makedirs(DIST, exist_ok=True)

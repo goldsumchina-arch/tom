@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。彻底删除模块逻辑均正确。
 // ============================================================
 // 彻底删除（Purge）模块 · Cloudflare Worker + D1 + R2
 //
@@ -29,6 +30,9 @@ const MANAGED_PREFIXES = ["won/", "crm", "lost/", "vault/"];
 const FILE_FIELDS = {
   crm_projects: ["pdf_equip", "pdf_install", "pdf_both"],
   lost_projects: ["pdf_equip", "pdf_install", "pdf_both"],
+  // V45 新增：WON 设备合同 / 安装合同 PDF（R2 前缀 won-docs/），
+  // 与 attachments(JSON 数组) 并存，两者都要纳入引用计数与级联删除。
+  won_projects: ["doc_equip", "doc_install"],
 };
 
 function errj(msg, status, extra) {
@@ -60,6 +64,11 @@ export function extractKeysFromRow(table, row) {
 
   // WON：attachments 是 JSON 数组，元素形如 {filename, original, ext, url}
   if (table === "won_projects") {
+    // V45 设备/安装合同：直接存在 doc_equip / doc_install 两个文本列里
+    for (const f of FILE_FIELDS.won_projects || []) {
+      const k = parseFileRef(row[f]);
+      if (k) out.push(k);
+    }
     let atts = [];
     try { atts = row.attachments ? JSON.parse(row.attachments) : []; } catch (e) { atts = []; }
     if (Array.isArray(atts)) {

@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
 // ==================== CRM 潜在项目表格 (Potential Projects) ====================
 // CRM columns: 48 total
 // 0-11: 基本信息, 12-16: 日期, 17-19: 汇率/贸易, 20-40: 报价Q1-Q7, 41: 安装费, 42-44: PDF, 45-46: 销售, 47: 操作
@@ -118,6 +119,8 @@ function applyCrmSort() {
   }
   var tb = document.getElementById('crmTbody');
   if (tb) tb.innerHTML = renderCrmData(data);
+  // 兜底：渲染包装器已处理，但排序后再显式确保行内按钮按权限隐藏
+  if (typeof applyCrmRowPerms === 'function') applyCrmRowPerms();
   updateCrmSortIndicators();
 }
 
@@ -163,6 +166,8 @@ function sortCrmTable(colIndex, ev) {
   if (crmSortState.length === 0) {
     var tb0 = document.getElementById('crmTbody');
     if (tb0) tb0.innerHTML = renderCrmData(originalCrmData.slice());
+    // 兜底：取消排序后显式按权限隐藏行内按钮
+    if (typeof applyCrmRowPerms === 'function') applyCrmRowPerms();
     updateCrmSortIndicators();
     return;
   }
@@ -500,13 +505,13 @@ function renderCrmData(list) {
         case 46: cls='won-blue'; val=esc(typeof rmLangVal==='function' ? rmLangVal(p, 'remark') : val); break;
         case 47: {
           var viewBtn='<button class="btn-sm btn-view" onclick="viewCrm('+p.id+')">'+(t.crm_view||'View')+'</button>';
-          // 数据范围授权仅只读：非本人(且非管理员)的行隐藏 编辑/删除/转到失败 按钮
-          var writable = (typeof canWriteRow==='function') ? canWriteRow(p) : true;
-          var writeBtns = writable
-            ? ' <button class="btn-sm btn-edit" onclick="openCrmModal('+p.id+')">'+(t.crm_edit||'Edit')+'</button>'
+          // ★ 编辑/删除/转到失败 按钮的显隐完全由 CRM-D2/D3/F1 权限决策控制
+          //   （渲染后由 applyCrmRowPerms 按 permVisible 处理），
+          //   数据范围内的行都可操作 —— 与权限标签"可编辑数据范围内的CRM项目"一致；
+          //   服务端按 可见范围 + 决策闸（permGate）双重校验。
+          var writeBtns = ' <button class="btn-sm btn-edit" onclick="openCrmModal('+p.id+')">'+(t.crm_edit||'Edit')+'</button>'
               +' <button class="btn-sm btn-del" onclick="deleteCrm('+p.id+')">'+(t.crm_del||'Del')+'</button>'
-              +' <button class="btn-sm btn-fail" onclick="moveCrmToFailed('+p.id+')">'+(t.crm_failed||'Failed')+'</button>'
-            : '';
+              +' <button class="btn-sm btn-fail" onclick="moveCrmToFailed('+p.id+')">'+(t.crm_failed||'Failed')+'</button>';
           html+='<td class="won-action-yellow col-never-hide"'+dc+'>'+viewBtn+writeBtns+'</td>';
           continue;
         }
@@ -874,6 +879,15 @@ function viewCrm(id) {
 // 移动到失败项目：打开失败原因弹窗
 var _mtlPendingId = null;
 function moveCrmToFailed(id) {
+  // 入口先按「转到失败项目 CRM-F1」拦截隐藏决策（按钮本身已被隐藏，此处防其它路径进入）；
+  // approve 决策放行到确认回调，由 singleUseGuard 走单次审批
+  if (typeof permVisible === 'function' && !permVisible('CRM-F1')) {
+    try {
+      var _tt = (typeof T === 'function') ? T() : {};
+      showToast(_tt.usr_perm_no_right || 'No permission: this item is not open to you');
+    } catch (e) {}
+    return;
+  }
   _mtlPendingId = id;
   _bindMtlEvents();   // 兜底：确保按钮事件已绑定（本文件为动态注入加载，见下方说明）
   var t = T();
@@ -1150,7 +1164,7 @@ function openCrmReport(id) {
   sub.innerText = (row.project_name || '') + ' — ' + (row.quote_no || '');
   el('crmReportCurLabel').innerText = (t.crm_report_currency || 'Currency');
   el('crmReportBtnClose').innerText = t.crm_report_close || 'Close';
-  el('crmReportBtnExport').innerText = t.crm_report_export || 'Export PDF';
+  el('crmReportBtnExport').innerText = '🖨 ' + (t.btn_print || '打印');
   _crmReportRender();
   _ovLoadChartLib(function(){ _crmReportCharts(); });
 }
@@ -1166,8 +1180,16 @@ function closeCrmReport() {
   CRM_REPORT_CHARTS = [];
 }
 
-// 导出报告为 PDF（普通清晰度，使用 html2canvas + jsPDF）
+// 打印报告（与「客户付款智能报告」一致：直接调系统打印，不再走 html2canvas + jsPDF 导出）
+// ⚠️ index.html 内联脚本里也有同名函数，但【本文件是后加载的外部脚本，会覆盖内联定义】，
+//    所以这一份才是真正生效的实现——两处必须保持同一行为，改一处要同步改另一处。
 function exportCrmReportPDF(){
+  if (typeof printModalById === 'function') printModalById('crmReportModal');
+  else window.print();
+}
+
+// ↓ 旧版 html2canvas + jsPDF 导出实现：已停用，改名后无任何调用方（保留作历史参考）
+function _legacyExportCrmReportPDF(){
   var t=T();
   var body=document.getElementById('crmReportBody');
   var btn=document.getElementById('crmReportBtnExport');
@@ -1252,7 +1274,7 @@ function refreshCrmReport() {
   el('crmReportTitle').innerText = t.crm_report_title || 'Project Report';
   el('crmReportCurLabel').innerText = (t.crm_report_currency || 'Currency');
   el('crmReportBtnClose').innerText = t.crm_report_close || 'Close';
-  el('crmReportBtnExport').innerText = t.crm_report_export || 'Export PDF';
+  el('crmReportBtnExport').innerText = '🖨 ' + (t.btn_print || '打印');
   _crmReportRender();
   if (typeof Chart !== 'undefined') _crmReportCharts();
 }
@@ -1456,6 +1478,9 @@ function _crmReportCharts() {
     //   是确定性的判断依据（供 applyCrmLang 的语言守卫使用）。
     try { window.__crmRenderLang = (typeof CUR_LANG !== 'undefined') ? CUR_LANG : 'vi'; } catch(e) {}
     if (typeof syncCrmColVisibility === 'function') setTimeout(syncCrmColVisibility, 0);
+    // ★ 权限兜底：任何 tbody 再生（加载/排序/搜索/语言切换/清空）后都按权限重新隐藏行内按钮，
+    //   否则初始 loadCrm 隐藏掉的「编辑/删除/转到失败项目」会因排序/搜索等再渲染而重新出现。
+    if (typeof applyCrmRowPerms === 'function') setTimeout(applyCrmRowPerms, 0);
     return html;
   };
 })();

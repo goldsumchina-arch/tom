@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。云端入口/路由/鉴权逻辑均正确。
 // ============================================================
 // AGI-PM 云端后端（Cloudflare Worker）
 //
@@ -30,13 +31,14 @@ import { handleWonLost } from "./wonlost.js";
 import { handleApproval } from "./approval.js";
 import { handleUsers } from "./users.js";
 import { handleFiles } from "./files.js";
-import { handleDemo, DEMO_TABLES } from "./demo.js";
-import { freezeDemo } from "./demo.js";
 import { handlePrices } from "./prices.js";
 import { handleCommission } from "./commission.js";
 import { handleVault } from "./vault.js";
 import { handlePurge } from "./purge.js";
+import { handleDashUpdateStatus } from "./dash_update_status.js";
 import { handleTranslateFill } from "./translate_fill.js";
+import { handleSync } from "./sync.js";
+import { getD1Usage, quotaBlocks } from "./usage.js";
 
 const PBKDF2_ITER = 10000; // 迭代次数：兼顾安全与 Cloudflare Worker 的 CPU 上限
 const HASH_PREFIX = "pbkdf2$";
@@ -353,6 +355,17 @@ export default {
         }
       }
 
+      // ---- D1 每日读额度 95% 熔断：超额后禁止非 tom 登录 ----
+      const quotaLockLogin = await quotaBlocks(env, username);
+      if (quotaLockLogin) {
+        return json(request, {
+          ok: false,
+          code: "D1_QUOTA_LOCKED",
+          error: "今日云端额度已用尽（D1 免费套餐 500 万行读/天），系统已临时限制：仅管理员可继续使用，请稍后再试。",
+          usage: quotaLockLogin,
+        }, 403);
+      }
+
       const row = await env.DB.prepare("SELECT * FROM users WHERE username=?")
         .bind(username)
         .first();
@@ -401,20 +414,6 @@ export default {
           .run();
       } catch (e) {
         /* 登录历史失败不影响登录 */
-      }
-
-      // ---- 培训模式：登录即清场 ----
-      // AUTO_CLEAR_ON_LOGIN="1"（wrangler.toml [vars]）时，每次【登录成功】自动清空
-      // 4 张业务表（潜在/签约/失败/审批单），用户名录绝不动 —— 登录进来就是空场，
-      // 点 DEMO 才灌入演示数据。正式上线时把该变量改为 "0" 再 deploy 即可关闭。
-      if (env.AUTO_CLEAR_ON_LOGIN === "1") {
-        try {
-          for (const t of DEMO_TABLES) {
-            await env.DB.prepare("DELETE FROM " + t).run();
-          }
-        } catch (e) {
-          /* 清场失败不影响登录 */
-        }
       }
 
       // ---- 组装权限 ----
@@ -630,19 +629,6 @@ export default {
     }
 
     // ========================================================
-    // DEMO 固化（tom 专属）：POST /api/demo/freeze
-    // 把 D1 当前 CRM/LOST 案例数据整批写入 R2 快照，替换 DEMO 数据源中
-    // crm/lost 两段（WON/审批段保留）。不走登录会话 —— 鉴权用 vault PIN
-    // token（X-Vault-Token 头 或 ?vt= 参数，demo.js 内部 authOk 校验），
-    // 因此必须放在统一会话鉴权【之前】，否则 401。
-    // ========================================================
-    if (url.pathname === "/api/demo/freeze" && request.method === "POST") {
-      const res = await freezeDemo(request, env, url);
-      const status = res.ok ? 200 : (String(res.error || "").indexOf("token") >= 0 ? 401 : 500);
-      return json(request, res, status);
-    }
-
-    // ========================================================
     // 统一会话鉴权（M10 安全加固）
     // 所有业务接口（除 login/logout/session/me/change-password/health/files 静态下载）
     // 必须携带 Authorization: Bearer <token>，否则 401。
@@ -672,6 +658,44 @@ export default {
       const newHeaders = new Headers(request.headers);
       newHeaders.set("X-User-Name", authUser);
       request = new Request(request, { headers: newHeaders });
+
+      // ---- D1 每日读额度 95% 熔断 ----
+      // 官方统计显示当日行读已达 95% 时，只放行 tom，其余人全部拒绝，
+      // 避免把最后一点额度用光导致连管理员都进不去。
+      // 注意：用量来自 Cloudflare 官方分析 API，不消耗 D1 额度。
+      const quotaLock = await quotaBlocks(env, authUser);
+      if (quotaLock) {
+        return json(request, {
+          ok: false,
+          code: "D1_QUOTA_LOCKED",
+          error: "今日云端额度已用尽（D1 免费套餐 500 万行读/天），系统已临时限制：仅管理员可继续使用，请稍后再试。",
+          usage: quotaLock,
+        }, 403);
+      }
+
+      // ---- tom 专属：D1 用量报告（长按头像 3 秒打开）----
+      // GET /api/d1-usage?refresh=1
+      if (url.pathname === "/api/d1-usage" && request.method === "GET") {
+        if (String(authUser).toLowerCase() !== "tom") {
+          return json(request, {
+            ok: false,
+            error: "仅管理员可查看用量报告",
+            code: "FORBIDDEN",
+          }, 403);
+        }
+        const usage = await getD1Usage(env, url.searchParams.get("refresh") === "1");
+        return json(request, {
+          ok: true,
+          usage: usage,
+          username: authUser,
+          // 诊断信息（仅 tom 可见，不含任何密钥内容）
+          debug: {
+            tokenLen: String(env.CF_ANALYTICS_TOKEN || "").length,
+            hasAcct: !!env.CF_ACCOUNT_ID,
+            hasDbId: !!env.CF_D1_DATABASE_ID,
+          },
+        });
+      }
     }
 
     // ========================================================
@@ -693,12 +717,36 @@ export default {
         if (/[àáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ]/i.test(text)) return "vi-VN";
         return "en-US";
       };
+      // ★ 主后端：Workers AI 多语翻译模型，运行在 Cloudflare 网络内，
+      //   不受 Google 对 Cloudflare 出口 IP 的自动化封锁影响，也无外部配额限制。
+      const tryWorkersAI = async () => {
+        if (!env || !env.AI) throw new Error("ai-no-binding");
+        const aiSrc = { "zh-CN": "zh", "vi-VN": "vi", "en-US": "en" };
+        const source = aiSrc[detectLangMyMemory(q)] || "en";
+        const tgt = { zh: "zh", en: "en", vi: "vi" }[target] || "en";
+        let lastErr = null;
+        // 冷启动偶发失败：最多重试 2 次，平滑首调抖动
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            const res = await env.AI.run("@cf/meta/m2m100-1.2b", {
+              text: q,
+              source_lang: source,
+              target_lang: tgt
+            });
+            const text = (res && (res.translated_text || res.text)) || "";
+            if (!text) { lastErr = new Error("ai-empty"); continue; }
+            return text;
+          } catch (e) { lastErr = e; }
+        }
+        throw lastErr || new Error("ai-fail");
+      };
       const tryMyMemory = async (sourceGuess) => {
         const tmap = { zh: "zh-CN", en: "en-US", vi: "vi-VN" };
         const source = sourceGuess || detectLangMyMemory(q);
         const pair = source + "|" + (tmap[target] || target);
         const murl = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(q)
-          + "&langpair=" + encodeURIComponent(pair);
+          + "&langpair=" + encodeURIComponent(pair)
+          + "&de=translate@agi-pm.app";
         const mr = await fetch(murl, { headers: { "User-Agent": "Mozilla/5.0" } });
         if (!mr.ok) throw new Error("mm-" + mr.status);
         const md = await mr.json();
@@ -733,27 +781,52 @@ export default {
         throw lastErr || new Error("lt-fail");
       };
 
-      try {
-        const gurl = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+      // 翻译后端链（按可用性排序）：
+      //   1) Workers AI（Cloudflare 网络内，主用，无外部配额限制）
+      //   2) clients5.google.com（Chrome 词典扩展端点，抗 Google 自动化封锁）
+      //   3) translate.googleapis.com（gtx）
+      //   4) MyMemory（带邮箱提额）
+      //   5) Libre 公共实例（最后兜底）
+      const tryGoogleChrome = async () => {
+        const gurl = "https://clients5.google.com/translate_a/t?client=dict-chrome-ext&sl=auto&tl="
           + encodeURIComponent(target) + "&dt=t&q=" + encodeURIComponent(q);
         const gr = await fetch(gurl, { headers: { "User-Agent": "Mozilla/5.0" } });
-        if (!gr.ok) throw new Error("gt-" + gr.status);
+        if (!gr.ok) throw new Error("gc-" + gr.status);
         const gd = await gr.json();
-        const text = Array.isArray(gd) && gd[0]
-          ? gd[0].map((x) => (x && x[0]) || "").join("") : "";
-        if (!text) throw new Error("gt-empty");
+        const arr = (gd && gd.value) || [];
+        const text = arr.slice(0, -1).join("") || (arr[0] || "");
+        if (!text) throw new Error("gc-empty");
+        return text;
+      };
+      try {
+        const text = await tryWorkersAI();
         return json(request, { ok: true, text });
       } catch (e) {
-        // Google 被限流时：MyMemory → Libre 兜底；返回 200+ok:false 给前端降级
         try {
-          const text = await tryMyMemory();
+          const text = await tryGoogleChrome();
           return json(request, { ok: true, text });
         } catch (e2) {
           try {
-            const text = await tryLibre();
+            const gurl = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+              + encodeURIComponent(target) + "&dt=t&q=" + encodeURIComponent(q);
+            const gr = await fetch(gurl, { headers: { "User-Agent": "Mozilla/5.0" } });
+            if (!gr.ok) throw new Error("gt-" + gr.status);
+            const gd = await gr.json();
+            const text = Array.isArray(gd) && gd[0] ? gd[0].map((x) => (x && x[0]) || "").join("") : "";
+            if (!text) throw new Error("gt-empty");
             return json(request, { ok: true, text });
           } catch (e3) {
-            return json(request, { ok: false, error: String((e3 && e3.message) || e3 || e2 || e) }, 200);
+            try {
+              const text = await tryMyMemory();
+              return json(request, { ok: true, text });
+            } catch (e4) {
+              try {
+                const text = await tryLibre();
+                return json(request, { ok: true, text });
+              } catch (e5) {
+                return json(request, { ok: false, error: String((e5 && e5.message) || e5 || e4 || e3 || e2 || e) }, 200);
+              }
+            }
           }
         }
       }
@@ -773,9 +846,10 @@ export default {
     // 各模块内部自行判断是否接管该路径，未接管则返回 null
     // ========================================================
     for (const handler of [
+      handleSync,
       handleCrm, handleWonLost, handleApproval,
-      handleUsers, handleFiles, handleDemo, handlePrices,
-      handleCommission, handleVault, handlePurge,
+      handleUsers, handleFiles, handlePrices,
+      handleCommission, handleVault, handlePurge, handleDashUpdateStatus,
     ]) {
       let out = null;
       try {

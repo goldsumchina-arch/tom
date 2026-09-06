@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件全部逻辑已锁定，未经用户明确同意禁止修改。秘密空间功能已正确，请勿改动。 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8" />
@@ -106,7 +107,7 @@
   .vault-cf-cancel:hover { background:#dfe6ee; }
   .vault-overlay.vault-drag { outline:3px dashed #e8720c; outline-offset:-10px; background:#13202e; }
   .vault-overlay.vault-drag::after {
-    content:"松开即可上传到私密空间"; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    content: attr(data-drop-hint); position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
     background:rgba(232,114,12,.92); color:#fff; padding:14px 26px; border-radius:12px; font-size:16px; font-weight:600;
     pointer-events:none; z-index:1;
   }
@@ -326,7 +327,7 @@
     <div class="vault-pin-foot">
       <button class="vault-pin-cancel" onclick="closeVaultPin()">取消</button>
       <!-- 版本号：用于确认当前加载的是否为最新版本（PWA 缓存时可据此判断） -->
-      <div class="vault-ver" id="vaultVer">V2026.09.02.25</div>
+      <div class="vault-ver" id="vaultVer">V2026.09.06.17</div>
       <!-- 版本号过时（被缓存）时显示，点击强制拉取最新代码 -->
       <button class="vault-ver-refresh hidden" id="vaultVerRefresh" onclick="vaultForceReload()">↻ 有新版，点此更新</button>
     </div>
@@ -334,44 +335,44 @@
 </div>
 
 <!-- 主面板 -->
-<div id="vaultOverlay" class="vault-overlay hidden">
+<div id="vaultOverlay" class="vault-overlay hidden" data-drop-hint="松开即可上传到私密空间" data-vi18n-attr="data-drop-hint:common_drop_to_upload">
   <div class="vault-head">
-    <button class="vault-head-back" onclick="vaultHeadBack()" title="返回上一级（与系统返回键相同）">⬅</button>
+    <button class="vault-head-back" onclick="vaultHeadBack()" title="返回上一级（与系统返回键相同）" data-vi18n-attr="title:common_back"><span class="vault-btn-icon">⬅</span></button>
     <span class="vault-title"></span>
     <span class="vault-owner" title="tom · 专属">T</span>
-    <span class="vault-ver-info" title="V2026.09.03.07">ⓘ<span class="vault-head-ver" id="vaultHeadVer">V2026.09.03.07</span></span>
-    <button class="vault-orient-btn" id="vaultOrientBtn" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换">🔄</button>
-    <button class="vault-close" onclick="closeVault()" title="关闭">✕</button>
+    <span class="vault-ver-info" title="V2026.09.06.17">ⓘ<span class="vault-head-ver" id="vaultHeadVer">V2026.09.06.17</span></span>
+    <button class="vault-orient-btn" id="vaultOrientBtn" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换" data-vi18n-attr="title:common_orient_title">🔄</button>
+    <button class="vault-close" onclick="closeVault()" title="关闭" data-vi18n-attr="title:common_close">✕</button>
   </div>
   <div class="vault-toolbar">
-    <button class="vault-upload-btn" onclick="document.getElementById('vaultFileInput').click()" title="上传文档（Word/Excel/PDF 等）">⬆ 文件</button>
+    <button class="vault-upload-btn" onclick="document.getElementById('vaultFileInput').click()" title="上传文档（Word/Excel/PDF 等）" data-vi18n-attr="title:common_upload_file"><span class="vault-btn-icon">⬆</span> <span data-vi18n="common_upload_file">上传文件</span></button>
     <input id="vaultFileInput" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar,.7z,.html,.json,.xml,.apk" style="display:none" onchange="vaultDoUpload(this)" />
-    <button class="vault-upload-btn vault-media-btn" onclick="document.getElementById('vaultMediaInput').click()" title="上传图片 / 视频">🖼 图片视频</button>
+    <button class="vault-upload-btn vault-media-btn" onclick="document.getElementById('vaultMediaInput').click()" title="上传图片 / 视频" data-vi18n-attr="title:common_upload_media"><span class="vault-btn-icon">🖼</span> <span data-vi18n="common_upload_media">图片视频</span></button>
     <input id="vaultMediaInput" type="file" multiple accept="image/*,video/*" style="display:none" onchange="vaultDoUpload(this)" />
-    <button class="vault-upload-btn vault-folder-btn" onclick="document.getElementById('vaultFolderInput').click()" title="上传文件夹">📁 文件夹</button>
+    <button class="vault-upload-btn vault-folder-btn" onclick="document.getElementById('vaultFolderInput').click()" title="上传文件夹" data-vi18n-attr="title:common_upload_folder"><span class="vault-btn-icon">📁</span> <span data-vi18n="common_upload_folder">文件夹</span></button>
     <input id="vaultFolderInput" type="file" multiple webkitdirectory directory style="display:none" onchange="vaultDoUpload(this)" />
-    <button class="vault-back-btn hidden" id="vaultBackBtn" onclick="vaultGoUp()" title="返回上一级">⬅</button>
+    <button class="vault-back-btn hidden" id="vaultBackBtn" onclick="vaultGoUp()" title="返回上一级" data-vi18n-attr="title:common_back"><span class="vault-btn-icon">⬅</span></button>
     <span class="vault-count" id="vaultCount"></span>
     <span class="vault-stat" id="vaultStat"></span>
     <span class="vault-view-switch">
-      <button data-view="list" class="active" onclick="vaultSetView('list',this)" title="列表">☰</button>
-      <button data-view="thumb" onclick="vaultSetView('thumb',this)" title="缩略图">🖼</button>
+      <button data-view="list" class="active" onclick="vaultSetView('list',this)" title="列表" data-vi18n-attr="title:common_list">☰</button>
+      <button data-view="thumb" onclick="vaultSetView('thumb',this)" title="缩略图" data-vi18n-attr="title:common_thumb">🖼</button>
     </span>
-    <span class="vault-cwd-tag" id="vaultCwdTag" title="当前目录">🏠 全部文件</span>
+    <span class="vault-cwd-tag" id="vaultCwdTag" title="当前目录" data-vi18n-attr="title:common_current_dir"><span class="vault-btn-icon">🏠</span> <span data-vi18n="common_all_files">全部文件</span></span>
     <span class="vault-sel-bar hidden" id="vaultSelBar">
-      <label class="vault-checkall"><input type="checkbox" id="vaultCheckAll" onchange="vaultToggleAll(this.checked)" /> 全选</label>
+      <label class="vault-checkall"><input type="checkbox" id="vaultCheckAll" onchange="vaultToggleAll(this.checked)" /> <span data-vi18n="common_select_all">全选</span></label>
       <button class="vault-bulk-btn" id="vaultBulkDel" disabled onclick="vaultDelSelected()">删除选中 (0)</button>
     </span>
   </div>
   <div class="vault-crumbs hidden" id="vaultCrumbs"></div>
   <div class="vault-list" id="vaultList"></div>
-  <div class="vault-empty hidden" id="vaultEmpty">暂无文件，点击「上传文件」添加</div>
+  <div class="vault-empty hidden" id="vaultEmpty" data-vi18n="common_empty_no_files">暂无文件</div>
 </div>
 
 <!-- 上传进度面板 -->
 <div id="vaultUpPanel" class="vault-upanel hidden">
   <div class="vault-upanel-head" onclick="document.getElementById('vaultUpPanel').classList.toggle('collapsed')">
-    <span id="vaultUpTitle">上传中…</span><span class="vu-arrow">▾</span>
+    <span id="vaultUpTitle" data-vi18n="common_uploading">上传中…</span><span class="vu-arrow">▾</span>
   </div>
   <div class="vault-upanel-body" id="vaultUpBody"></div>
 </div>
@@ -379,12 +380,12 @@
 <!-- 预览 -->
 <div id="vaultPreview" class="vault-preview hidden">
   <div class="vault-preview-head">
-    <button class="vault-fs" id="vaultPreviewBack" onclick="closeVaultPreview()" title="返回">⬅ 返回</button>
+    <button class="vault-fs" id="vaultPreviewBack" onclick="closeVaultPreview()" title="返回" data-vi18n-attr="title:common_back"><span class="vault-btn-icon">⬅</span> <span data-vi18n="common_back">返回</span></button>
     <span id="vaultPreviewName"></span>
-    <span class="vault-progress" id="vaultPreviewProgress">加载中 0%</span>
-    <button class="vault-orient-btn" id="vaultOrientBtn2" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换">🔄 竖屏</button>
+    <span class="vault-progress" id="vaultPreviewProgress" data-vi18n="common_loading">加载中…</span>
+    <button class="vault-orient-btn" id="vaultOrientBtn2" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换" data-vi18n-attr="title:common_orient_title"><span class="vault-btn-icon">🔄</span> <span data-vi18n="common_orient_portrait">竖屏</span></button>
     <button class="vault-fs" id="vaultFsBtn" onclick="vaultToggleFullscreen()" title="全屏/退出全屏">⛶</button>
-    <button onclick="closeVaultPreview()">✕</button>
+    <button onclick="closeVaultPreview()" data-vi18n="common_close">✕</button>
   </div>
   <div class="vault-preview-body" id="vaultPreviewBody"></div>
 </div>
@@ -392,11 +393,11 @@
 <!-- 自定义确认弹窗 -->
 <div id="vaultConfirm" class="vault-confirm hidden">
   <div class="vault-confirm-box">
-    <div class="vault-confirm-title" id="vaultConfirmTitle">确认操作</div>
+    <div class="vault-confirm-title" id="vaultConfirmTitle" data-vi18n="common_confirm">确认操作</div>
     <div class="vault-confirm-msg" id="vaultConfirmMsg">是否继续？</div>
     <div class="vault-confirm-actions">
-      <button class="vault-cf-cancel" id="vaultCfCancel">取消</button>
-      <button class="vault-cf-ok" id="vaultCfOk">确认</button>
+      <button class="vault-cf-cancel" id="vaultCfCancel" data-vi18n="common_cancel">取消</button>
+      <button class="vault-cf-ok" id="vaultCfOk" data-vi18n="common_confirm">确认</button>
     </div>
   </div>
 </div>
@@ -405,16 +406,117 @@
 <div id="vaultChoose" class="vault-choose hidden">
   <div class="vault-choose-box">
     <div class="vault-choose-title" id="vaultChooseTitle"></div>
-    <div class="vault-choose-sub">选择对文件的操作</div>
+    <div class="vault-choose-sub" data-vi18n="common_choose_action">选择对文件的操作</div>
     <div class="vault-choose-actions">
-      <button class="vault-choose-prev" id="vaultChoosePrev">👁 预览</button>
-      <button class="vault-choose-dl" id="vaultChooseDl">⬇ 下载</button>
-      <button class="vault-choose-close" id="vaultChooseClose">取消</button>
+      <button class="vault-choose-prev" id="vaultChoosePrev"><span class="vault-btn-icon">👁</span> <span data-vi18n="common_preview">预览</span></button>
+      <button class="vault-choose-dl" id="vaultChooseDl"><span class="vault-btn-icon">⬇</span> <span data-vi18n="common_download">下载</span></button>
+      <button class="vault-choose-close" id="vaultChooseClose" data-vi18n="common_cancel">取消</button>
     </div>
   </div>
 </div>
 
 <script>
+  // ==================== I18N ====================
+  var VAULT_I18N = {
+    zh: {
+      common_uploading:"上传中…", common_upload_done:"完成", common_upload_fail:"失败", common_network_error:"网络错误",
+      common_upload_complete:"上传完成：{ok} 成功{failText}", common_uploading_remaining:"上传中…（剩余 {n} 个）", common_queued:"排队中",
+      common_connecting:"连接中", common_received:"已接收 {size}", common_downloading_speed:"{speed}/s · {loaded} / {total}",
+      common_saved:"已保存", common_download_failed:"下载失败 ({status})",
+      common_loading:"加载中…", common_loading_pct:"加载中 {pct}%", common_loading_component:"加载组件…",
+      common_loading_pdf:"下载 PDF…", common_parsing_pdf:"解析 PDF…", common_rendering_page:"渲染第 {cur} / {total} 页",
+      common_page_total:"共 {total} 页", common_done:"完成",
+      common_click_download_view:"点击下载查看", common_pdf_load_failed:"PDF 加载失败：{msg}",
+      common_file_download_failed:"文件下载失败（{msg}）。", common_excel_parse_failed:"此 Excel 文件解析失败，可能是格式特殊或已损坏。", common_preview_unsupported:"该格式暂不支持在线预览。",
+      common_word_preview_failed:"Word 预览组件加载失败。",
+      common_upload_file:"上传文件", common_upload_media:"图片视频", common_upload_folder:"文件夹",
+      common_back:"返回", common_close:"关闭", common_drop_to_upload:"松开即可上传到私密空间", common_empty_no_files:"暂无文件",
+      common_loading_failed:"加载失败", common_pwd_error:"密码错误",
+      common_preview:"预览", common_download:"下载", common_cancel:"取消", common_confirm:"确认", common_choose_action:"选择对文件的操作",
+      common_orient_portrait:"竖屏", common_orient_landscape:"横屏", common_orient_title:"竖屏 / 横屏 切换",
+      common_orient_applied_landscape:"已横屏", common_orient_applied_portrait:"已竖屏", common_orient_applied_portrait_fallback:"已竖屏显示（系统不允许锁定，采用页面旋转）",
+      common_list:"列表", common_thumb:"缩略图", common_current_dir:"当前目录", common_select_all:"全选",
+      common_current_view:"当前视图 {mode}", common_all_files:"全部文件",
+      common_delete_selected:"删除选中 ({n})", common_delete:"删除",
+      common_delete_selected_title:"删除选中文件", common_delete_selected_msg:"确认删除选中的 {n} 个文件？此操作不可撤销。",
+      common_delete_folder_msg:"确认删除文件夹「{dir}」及其下 {n} 个文件？此操作不可撤销。",
+      common_delete_file_title:"删除文件", common_delete_file_msg:"确认删除「{name}」？此操作不可撤销。",
+      common_file_not_in_view:"文件不在当前文件夹视图",
+      common_folder_empty:"文件夹为空", common_toast_deleted:"已删除 {n} 个文件", common_toast_delete_failed:"删除失败"
+    },
+    en: {
+      common_uploading:"Uploading…", common_upload_done:"Done", common_upload_fail:"Failed", common_network_error:"Network error",
+      common_upload_complete:"Upload complete: {ok} successful{failText}", common_uploading_remaining:"Uploading… ({n} remaining)", common_queued:"Queued",
+      common_connecting:"Connecting", common_received:"Received {size}", common_downloading_speed:"{speed}/s · {loaded} / {total}",
+      common_saved:"Saved", common_download_failed:"Download failed ({status})",
+      common_loading:"Loading…", common_loading_pct:"Loading {pct}%", common_loading_component:"Loading components…",
+      common_loading_pdf:"Downloading PDF…", common_parsing_pdf:"Parsing PDF…", common_rendering_page:"Rendering page {cur} / {total}",
+      common_page_total:"{total} pages", common_done:"Done",
+      common_click_download_view:"Click to download and view", common_pdf_load_failed:"PDF loading failed: {msg}",
+      common_file_download_failed:"File download failed ({msg}).", common_excel_parse_failed:"Failed to parse this Excel file. It may be in a special format or corrupted.", common_preview_unsupported:"This format does not support online preview.",
+      common_word_preview_failed:"Word preview component failed to load.",
+      common_upload_file:"Upload File", common_upload_media:"Images/Videos", common_upload_folder:"Folder",
+      common_back:"Back", common_close:"Close", common_drop_to_upload:"Release to upload to secure space", common_empty_no_files:"No files yet",
+      common_loading_failed:"Loading failed", common_pwd_error:"Password error",
+      common_preview:"Preview", common_download:"Download", common_cancel:"Cancel", common_confirm:"Confirm", common_choose_action:"Choose an action for the file",
+      common_orient_portrait:"Portrait", common_orient_landscape:"Landscape", common_orient_title:"Portrait / Landscape toggle",
+      common_orient_applied_landscape:"Landscape applied", common_orient_applied_portrait:"Portrait applied", common_orient_applied_portrait_fallback:"Portrait applied (page rotated because system lock unavailable)",
+      common_list:"List", common_thumb:"Thumbnails", common_current_dir:"Current folder", common_select_all:"Select all",
+      common_current_view:"Current view {mode}", common_all_files:"All files",
+      common_delete_selected:"Delete selected ({n})", common_delete:"Delete",
+      common_delete_selected_title:"Delete selected files", common_delete_selected_msg:"Confirm delete {n} selected files? This cannot be undone.",
+      common_delete_folder_msg:"Confirm delete folder 「{dir}」 and its {n} files? This cannot be undone.",
+      common_delete_file_title:"Delete file", common_delete_file_msg:"Confirm delete 「{name}」? This cannot be undone.",
+      common_file_not_in_view:"File not in current folder view",
+      common_folder_empty:"Folder is empty", common_toast_deleted:"Deleted {n} files", common_toast_delete_failed:"Delete failed"
+    },
+    vi: {
+      common_uploading:"Đang tải lên…", common_upload_done:"Hoàn thành", common_upload_fail:"Thất bại", common_network_error:"Lỗi mạng",
+      common_upload_complete:"Hoàn thành tải lên: {ok} thành công{failText}", common_uploading_remaining:"Đang tải lên… (còn {n} tệp)", common_queued:"Đang xếp hàng",
+      common_connecting:"Đang kết nối", common_received:"Đã nhận {size}", common_downloading_speed:"{speed}/s · {loaded} / {total}",
+      common_saved:"Đã lưu", common_download_failed:"Tải xuống thất bại ({status})",
+      common_loading:"Đang tải…", common_loading_pct:"Đang tải {pct}%", common_loading_component:"Đang tải thành phần…",
+      common_loading_pdf:"Đang tải PDF…", common_parsing_pdf:"Đang phân tích PDF…", common_rendering_page:"Đang kết xuất trang {cur} / {total}",
+      common_page_total:"{total} trang", common_done:"Hoàn thành",
+      common_click_download_view:"Nhấn để tải xuống xem", common_pdf_load_failed:"Tải PDF thất bại: {msg}",
+      common_file_download_failed:"Tải tệp thất bại ({msg}).", common_excel_parse_failed:"Không thể phân tích tệp Excel này, có thể do định dạng đặc biệt hoặc bị hỏng.", common_preview_unsupported:"Định dạng này không hỗ trợ xem trước trực tuyến.",
+      common_word_preview_failed:"Tải thành phần xem trước Word thất bại.",
+      common_upload_file:"Tải lên tệp", common_upload_media:"Ảnh/Video", common_upload_folder:"Thư mục",
+      common_back:"Quay lại", common_close:"Đóng", common_drop_to_upload:"Thả để tải lên không gian bảo mật", common_empty_no_files:"Chưa có tệp",
+      common_loading_failed:"Tải thất bại", common_pwd_error:"Mật khẩu sai",
+      common_preview:"Xem trước", common_download:"Tải xuống", common_cancel:"Hủy", common_confirm:"Xác nhận", common_choose_action:"Chọn thao tác cho tệp",
+      common_orient_portrait:"Dọc", common_orient_landscape:"Ngang", common_orient_title:"Chuyển dọc / ngang",
+      common_orient_applied_landscape:"Đã chuyển ngang", common_orient_applied_portrait:"Đã chuyển dọc", common_orient_applied_portrait_fallback:"Đã chuyển dọc (xoay trang vì hệ thống không cho khóa)",
+      common_list:"Danh sách", common_thumb:"Hình thu nhỏ", common_current_dir:"Thư mục hiện tại", common_select_all:"Chọn tất cả",
+      common_current_view:"Chế độ xem hiện tại {mode}", common_all_files:"Tất cả tệp",
+      common_delete_selected:"Xóa đã chọn ({n})", common_delete:"Xóa",
+      common_delete_selected_title:"Xóa tệp đã chọn", common_delete_selected_msg:"Xác nhận xóa {n} tệp đã chọn? Thao tác này không thể hoàn tác.",
+      common_delete_folder_msg:"Xác nhận xóa thư mục 「{dir}」 và {n} tệp bên trong? Thao tác này không thể hoàn tác.",
+      common_delete_file_title:"Xóa tệp", common_delete_file_msg:"Xác nhận xóa 「{name}」? Thao tác này không thể hoàn tác.",
+      common_file_not_in_view:"Tệp không có trong thư mục hiện tại",
+      common_folder_empty:"Thư mục trống", common_toast_deleted:"Đã xóa {n} tệp", common_toast_delete_failed:"Xóa thất bại"
+    }
+  };
+  function vaultT(){
+    var lang = 'zh';
+    try { lang = localStorage.getItem('won_lang') || 'zh'; } catch(e){}
+    if (lang !== 'zh' && lang !== 'en' && lang !== 'vi') lang = 'zh';
+    return VAULT_I18N[lang];
+  }
+  function vaultApplyLang(){
+    var t = vaultT();
+    document.querySelectorAll('[data-vi18n]').forEach(function(el){
+      var k = el.getAttribute('data-vi18n'); if (t[k] !== undefined) el.textContent = t[k];
+    });
+    document.querySelectorAll('[data-vi18n-attr]').forEach(function(el){
+      var spec = el.getAttribute('data-vi18n-attr') || '';
+      spec.split(';').forEach(function(pair){
+        var parts = pair.split(':');
+        if (parts.length === 2 && t[parts[1]] !== undefined) el.setAttribute(parts[0], t[parts[1]]);
+      });
+    });
+  }
+  // ==================== /I18N ====================
   var PIN_LEN = 4;
   var vaultToken = '';
   // 独立入口：私密空间固定归属 tom，不依赖主系统登录（PIN 即鉴权）
@@ -463,8 +565,8 @@
       .then(function(o){
         var d = o.d;
         if (d.ok) { vaultToken = d.token; closeVaultPin(); openVault(); }
-        else { pinBuf=''; renderCells(); setHint(d.error || '密码错误'); if (d.lock) setTimeout(closeVaultPin, 1200); }
-      }).catch(function(){ setHint('网络错误'); });
+        else { pinBuf=''; renderCells(); var tx=vaultT(); setHint(d.error || (tx.common_pwd_error || '密码错误')); if (d.lock) setTimeout(closeVaultPin, 1200); }
+      }).catch(function(){ var tx=vaultT(); setHint(tx.common_network_error || '网络错误'); });
   }
 
   function openVault(){
@@ -615,14 +717,16 @@
     vaultAll.forEach(function(f){
       if (f.name.indexOf(prefix) === 0){ bytes += (f.size||0); cnt++; }
     });
-    return { count: cnt, size: bytes, label: cnt + ' 个文件 · ' + fmtSize(bytes) };
+    var t = vaultT();
+    return { count: cnt, size: bytes, label: cnt + ' ' + (t.common_uploading_remaining ? '个文件' : '个文件') + ' · ' + fmtSize(bytes) };
   }
   function vaultStatUpdate(){
     var el = document.getElementById('vaultStat');
     if (!el) return;
     var bytes = 0, cnt = vaultAll.length;
     vaultAll.forEach(function(f){ bytes += (f.size||0); });
-    el.textContent = cnt ? ('总计 ' + cnt + ' 个 · ' + fmtSize(bytes)) : '';
+    var t = vaultT();
+    el.textContent = cnt ? (t.common_status_total || '总计 {n} 个 · {size}').replace('{n}', cnt).replace('{size}', fmtSize(bytes)) : '';
   }
   function fileIcon(name){
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name)) return '🖼';
@@ -659,7 +763,7 @@
         if (!d.ok) { setVaultMsg(d.error); return; }
         vaultAll = d.files || [];
         renderVault();
-      }).catch(function(){ setVaultMsg('加载失败'); });
+      }).catch(function(){ var t=vaultT(); setVaultMsg(t.common_loading_failed || '加载失败'); });
   }
   function renderCrumbs(){
     var box = document.getElementById('vaultCrumbs');
@@ -703,7 +807,8 @@
     list.innerHTML = '';
     list.className = 'vault-list' + (vaultViewMode==='thumb' ? ' vault-thumb' : '');
     vaultView = [];
-    cnt.textContent = vaultAll.length ? ('当前视图 ' + (vaultViewMode==='thumb'?'缩略图':'列表')) : '';
+    var t = vaultT();
+    cnt.textContent = vaultAll.length ? (t.common_current_view || '当前视图 {mode}').replace('{mode}', vaultViewMode==='thumb' ? (t.common_thumb || '缩略图') : (t.common_list || '列表')) : '';
     vaultStatUpdate();
     if (!vaultAll.length) {
       empty.classList.remove('hidden');
@@ -840,8 +945,9 @@
     var bar = document.getElementById('vaultSelBar');
     if (!bar) return;
     if (n > 0) bar.classList.remove('hidden'); else bar.classList.add('hidden');
+    var t = vaultT();
     var btn = document.getElementById('vaultBulkDel');
-    if (btn) { btn.disabled = (n === 0); btn.textContent = '删除选中 (' + n + ')'; }
+    if (btn) { btn.disabled = (n === 0); btn.textContent = (t.common_delete_selected || '删除选中 ({n})').replace('{n}', n); }
   }
   function vaultToggleAll(checked){
     vaultAll.forEach(function(f){
@@ -851,22 +957,24 @@
     renderVault();
   }
   function vaultDelSelected(){
+    var t = vaultT();
     var names = Object.keys(vaultChecked);
     if (!names.length) return;
-    vaultConfirm('删除选中文件','确认删除选中的 '+names.length+' 个文件？此操作不可撤销。',function(){
+    vaultConfirm(t.common_delete_selected_title || '删除选中文件', (t.common_delete_selected_msg || '确认删除选中的 {n} 个文件？此操作不可撤销。').replace('{n}', names.length), function(){
       fetch(API_BASE + '/api/vault/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Vault-Token':vaultToken},body:JSON.stringify({names:names})})
         .then(function(r){return r.json();})
-        .then(function(d){ if (d.ok){ vaultChecked = {}; showToast('已删除 ' + d.deleted.length + ' 个文件'); loadVaultFiles(); } else showToast(d.error||'删除失败'); })
-        .catch(function(){ showToast('删除失败'); });
+        .then(function(d){ if (d.ok){ vaultChecked = {}; showToast((t.common_toast_deleted || '已删除 {n} 个文件').replace('{n}', d.deleted.length)); loadVaultFiles(); } else showToast(d.error || (t.common_toast_delete_failed || '删除失败')); })
+        .catch(function(){ showToast(t.common_toast_delete_failed || '删除失败'); });
     });
   }
   function vaultDelFolder(dir, descs){
-    if (!descs || !descs.length) { showToast('文件夹为空'); return; }
-    vaultConfirm('删除文件夹','确认删除文件夹「'+dir+'」及其下 '+descs.length+' 个文件？此操作不可撤销。',function(){
+    var t = vaultT();
+    if (!descs || !descs.length) { showToast(t.common_folder_empty || '文件夹为空'); return; }
+    vaultConfirm(t.common_delete || '删除文件夹', (t.common_delete_folder_msg || '确认删除文件夹「{dir}」及其下 {n} 个文件？此操作不可撤销。').replace('{dir}', dir).replace('{n}', descs.length), function(){
       fetch(API_BASE + '/api/vault/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Vault-Token':vaultToken},body:JSON.stringify({names:descs})})
         .then(function(r){return r.json();})
-        .then(function(d){ if (d.ok){ showToast('已删除 ' + d.deleted.length + ' 个文件'); loadVaultFiles(); } else showToast(d.error||'删除失败'); })
-        .catch(function(){ showToast('删除失败'); });
+        .then(function(d){ if (d.ok){ showToast((t.common_toast_deleted || '已删除 {n} 个文件').replace('{n}', d.deleted.length)); loadVaultFiles(); } else showToast(d.error || (t.common_toast_delete_failed || '删除失败')); })
+        .catch(function(){ showToast(t.common_toast_delete_failed || '删除失败'); });
     });
   }
   function showToast(msg){
@@ -896,22 +1004,23 @@
     nextUp();
   }
   function nextUp(){
+    var t = vaultT();
     var title = document.getElementById('vaultUpTitle');
     if (!upQueue.length) {
       upRunning = false;
-      if (title) title.textContent = '上传完成：' + upDoneOk + ' 成功' + (upFail ? ('，' + upFail + ' 失败') : '');
+      if (title) title.textContent = (t.common_upload_complete || '上传完成：{ok} 成功{failText}').replace('{ok}', upDoneOk).replace('{failText}', upFail ? ('，' + upFail + ' ' + (t.common_upload_fail || '失败')) : '');
       if (!upFail) setTimeout(function(){ document.getElementById('vaultUpPanel').classList.add('hidden'); }, 2500);
       loadVaultFiles();
       return;
     }
     var job = upQueue[0];
-    if (title) title.textContent = '上传中…（剩余 ' + upQueue.length + ' 个）';
+    if (title) title.textContent = (t.common_uploading_remaining || '上传中…（剩余 {n} 个）').replace('{n}', upQueue.length);
     var body = document.getElementById('vaultUpBody');
     var row = document.createElement('div');
     row.className = 'vu-row';
     row.innerHTML = '<div class="vu-name"></div>' +
       '<div class="vu-bar"><div class="vu-fill"></div></div>' +
-      '<div class="vu-meta"><span class="vu-pct">0%</span><span class="vu-st">排队中</span></div>';
+      '<div class="vu-meta"><span class="vu-pct">0%</span><span class="vu-st">' + (t.common_queued || '排队中') + '</span></div>';
     var nm = job.path.split('/').pop();
     row.querySelector('.vu-name').textContent =
       (job.path.indexOf('/') >= 0 ? job.path.slice(0, job.path.lastIndexOf('/') + 1) : '') + nm;
@@ -930,20 +1039,20 @@
         var p = Math.round(e.loaded / e.total * 100);
         fill.style.width = p + '%';
         pct.textContent = p + '%';
-        st.textContent = '上传中';
+        st.textContent = t.common_uploading || '上传中';
       }
     };
     xhr.onload = function(){
       upQueue.shift();
       var ok = false, err = '';
       try { var d = JSON.parse(xhr.responseText); ok = !!d.ok; err = d.error || ''; } catch (e) {}
-      if (ok) { fill.style.width = '100%'; fill.classList.add('done'); pct.textContent = '100%'; st.textContent = '完成'; upDoneOk++; }
-      else { fill.classList.add('fail'); st.textContent = err || '失败'; upFail++; }
+      if (ok) { fill.style.width = '100%'; fill.classList.add('done'); pct.textContent = '100%'; st.textContent = t.common_upload_done || '完成'; upDoneOk++; }
+      else { fill.classList.add('fail'); st.textContent = err || (t.common_upload_fail || '失败'); upFail++; }
       nextUp();
     };
     xhr.onerror = function(){
       upQueue.shift();
-      fill.classList.add('fail'); st.textContent = '网络错误'; upFail++;
+      fill.classList.add('fail'); st.textContent = t.common_network_error || '网络错误'; upFail++;
       nextUp();
     };
     xhr.send(fd);
@@ -1015,6 +1124,7 @@
     }
   }
   bindVaultDrag();
+  vaultApplyLang();
 
   // ===== 在线预览（免费开源库随站点本地部署，CDN 兜底）=====
   //   PDF → PDF.js（Android WebView 不支持 iframe PDF，必须 canvas 渲染）
@@ -1042,8 +1152,9 @@
     return API_BASE + '/api/vault/preview/' + name.split('/').map(encodeURIComponent).join('/') + '?vt=' + vaultToken;
   }
   function vaultFallback(body, name, msg){
+    var t = vaultT();
     body.innerHTML = '<div class="vault-loading">' + msg +
-      '<div style="margin-top:14px"><a class="vault-dl" style="color:#6db3f2" href="' + vaultDlUrl(name) + '" download>点击下载查看</a></div></div>';
+      '<div style="margin-top:14px"><a class="vault-dl" style="color:#6db3f2" href="' + vaultDlUrl(name) + '" download>' + (t.common_click_download_view || '点击下载查看') + '</a></div></div>';
   }
   function vaultPdfProgress(text, pct){
     var p = document.getElementById('vaultPreviewProgress');
@@ -1051,17 +1162,18 @@
     p.textContent = text + (typeof pct === 'number' ? ' ' + Math.round(pct) + '%' : '');
   }
   function vaultRenderPdf(body, name, url){
-    vaultPdfProgress('加载组件…', 0);
+    var t = vaultT();
+    vaultPdfProgress(t.common_loading_component || '加载组件…', 0);
     ensureLib('pdfjs', ['/vendor/pdf.min.js',
                         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'])
       .then(function(src){
         pdfjsLib.GlobalWorkerOptions.workerSrc = src.replace('pdf.min.js', 'pdf.worker.min.js');
         var loadingTask = pdfjsLib.getDocument({ url: url });
         loadingTask.onProgress = function(d){
-          if (d && d.total){ vaultPdfProgress('下载 PDF…', (d.loaded / d.total) * 50); }
+          if (d && d.total){ vaultPdfProgress(t.common_loading_pdf || '下载 PDF…', (d.loaded / d.total) * 50); }
         };
         return loadingTask.promise.then(function(pdf){
-          vaultPdfProgress('解析 PDF…', 60);
+          vaultPdfProgress(t.common_parsing_pdf || '解析 PDF…', 60);
           body.innerHTML = '<div class="vault-pdf-holder"></div>';
           var holder = body.firstChild;
           var info = document.createElement('div');
@@ -1072,13 +1184,13 @@
           var rendered = 0;
           function next(){
             if (rendered >= total){
-              info.textContent = '共 ' + total + ' 页';
-              vaultPdfProgress('完成', 100);
+              info.textContent = (t.common_page_total || '共 {total} 页').replace('{total}', total);
+              vaultPdfProgress(t.common_done || '完成', 100);
               return;
             }
             rendered++;
             var cur = rendered;
-            vaultPdfProgress('渲染第 ' + cur + ' / ' + total + ' 页', 60 + (cur/total)*40);
+            vaultPdfProgress((t.common_rendering_page || '渲染第 {cur} / {total} 页').replace('{cur}', cur).replace('{total}', total), 60 + (cur/total)*40);
             pdf.getPage(cur).then(function(pg){
               var w = holder.clientWidth || 600;
               var cssScale = Math.min(3, Math.max(0.7, w / pg.getViewport({ scale: 1 }).width));
@@ -1103,8 +1215,8 @@
         });
       })
       .catch(function(e){
-        vaultPdfProgress('加载失败', 0);
-        vaultFallback(body, name, 'PDF 加载失败：' + ((e && e.message) || ''));
+        vaultPdfProgress(t.common_loading_failed || '加载失败', 0);
+        vaultFallback(body, name, (t.common_pdf_load_failed || 'PDF 加载失败：{msg}').replace('{msg}', (e && e.message) || ''));
       });
   }
   // ===== 双指捏合缩放 / 单指平移 / 双击复位 / Ctrl+滚轮（电脑）=====
@@ -1731,13 +1843,14 @@
   }
   var _zoomTipShown = false;
   function vaultPreview(idx){
+    var t = vaultT();
     var f = vaultView[idx]; if (!f) return;
     _vaultCurPreviewIdx = idx;   // 供 Excel 视图切换后重新渲染
     var name = f.name, lower = (name || '').toLowerCase();
     var prev = document.getElementById('vaultPreview');
     var body = document.getElementById('vaultPreviewBody');
     document.getElementById('vaultPreviewName').textContent = name;
-    body.innerHTML = '<div class="vault-zoom-viewport"><div class="vault-zoom"><div class="vault-loading">加载中…</div></div></div>';
+    body.innerHTML = '<div class="vault-zoom-viewport"><div class="vault-zoom"><div class="vault-loading">' + (t.common_loading || '加载中…') + '</div></div></div>';
     var zoom = body.querySelector('.vault-zoom');
     bindPinchZoom(body.querySelector('.vault-zoom-viewport'));
     if (!_zoomTipShown) {
@@ -1790,7 +1903,7 @@
           zoom.appendChild(wrap);
           vaultFitDocPage(wrap);
         })
-        .catch(function(){ fb('Word 预览组件加载失败。'); });
+        .catch(function(){ fb(t.common_word_preview_failed || 'Word 预览组件加载失败。'); });
     } else if (/\.(xlsx|xls)$/i.test(lower)) {
       ensureLib('xlsx', ['/vendor/xlsx.full.min.js',
                          'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'])
@@ -1807,11 +1920,11 @@
         .catch(function(e){
           var msg = String((e && e.message) || e || '');
           vaultFallback(body, name, msg.indexOf('HTTP') === 0
-            ? '文件下载失败（' + msg + '）。'
-            : '此 Excel 文件解析失败，可能是格式特殊或已损坏。<br><span style="font-size:12px;color:#888">' + msg.replace(/</g, '&lt;') + '</span>');
+            ? ((t.common_file_download_failed || '文件下载失败（{msg}）。').replace('{msg}', msg))
+            : (t.common_excel_parse_failed || '此 Excel 文件解析失败，可能是格式特殊或已损坏。') + '<br><span style="font-size:12px;color:#888">' + msg.replace(/</g, '&lt;') + '</span>');
         });
     } else {
-      fb('该格式暂不支持在线预览。');
+      fb(t.common_preview_unsupported || '该格式暂不支持在线预览。');
     }
   }
   function closeVaultPreview(){
@@ -1839,7 +1952,8 @@
     return document.body.classList.contains('vault-rot-portrait') || vaultCurPortrait();
   }
   function vaultOrientRefreshBtn(){
-    var txt = vaultIsPortrait() ? '🔄 横屏' : '🔄 竖屏';
+    var t = vaultT();
+    var txt = (vaultIsPortrait() ? '🔄 ' + (t.common_orient_landscape || '横屏') : '🔄 ' + (t.common_orient_portrait || '竖屏'));
     var ids = ['vaultOrientBtn', 'vaultOrientBtn2'];
     for (var i = 0; i < ids.length; i++){
       var b = document.getElementById(ids[i]);
@@ -1854,9 +1968,10 @@
     document.body.classList.toggle('vault-rot-portrait', need);
     vaultOrientRefreshBtn();
     setTimeout(vaultFitAllDocPages, 60);
+    var t = vaultT();
     vaultToast(mode === 'portrait'
-      ? (need ? '已竖屏显示（系统不允许锁定，采用页面旋转）' : '已竖屏')
-      : '已横屏');
+      ? (need ? (t.common_orient_applied_portrait_fallback || '已竖屏显示（系统不允许锁定，采用页面旋转）') : (t.common_orient_applied_portrait || '已竖屏'))
+      : (t.common_orient_applied_landscape || '已横屏'));
   }
   function vaultApplyOrient(mode, byUser){
     _vaultOrient = mode;
@@ -1928,14 +2043,15 @@
   }
   // ===== 下载：XHR + 实时速度进度条（复用右下角面板） =====
   function vaultDownload(name){
+    var t = vaultT();
     document.getElementById('vaultUpPanel').classList.remove('hidden');
     var body = document.getElementById('vaultUpBody');
     var row = document.createElement('div');
     row.className = 'vu-row';
     row.innerHTML = '<div class="vu-name"></div>' +
       '<div class="vu-bar"><div class="vu-fill"></div></div>' +
-      '<div class="vu-meta"><span class="vu-pct">0%</span><span class="vu-st">连接中</span></div>';
-    row.querySelector('.vu-name').textContent = '下载 · ' + name.split('/').pop();
+      '<div class="vu-meta"><span class="vu-pct">0%</span><span class="vu-st">' + (t.common_connecting || '连接中') + '</span></div>';
+    row.querySelector('.vu-name').textContent = (t.crm_download || '下载') + ' · ' + name.split('/').pop();
     body.appendChild(row); body.scrollTop = body.scrollHeight;
     var fill = row.querySelector('.vu-fill'), pct = row.querySelector('.vu-pct'), st = row.querySelector('.vu-st');
     var xhr = new XMLHttpRequest();
@@ -1943,20 +2059,20 @@
     xhr.responseType = 'blob';
     var lastLoaded = 0, lastTime = Date.now();
     xhr.onprogress = function(e){
-      if (!e.lengthComputable) { st.textContent = '已接收 ' + fmtSize(e.loaded); return; }
+      if (!e.lengthComputable) { st.textContent = (t.common_received || '已接收 {size}').replace('{size}', fmtSize(e.loaded)); return; }
       var p = Math.round(e.loaded / e.total * 100);
       fill.style.width = p + '%'; pct.textContent = p + '%';
       var now = Date.now(), dt = (now - lastTime) / 1000;
       if (dt >= 0.3) {
         var speed = (e.loaded - lastLoaded) / dt;
         lastLoaded = e.loaded; lastTime = now;
-        st.textContent = fmtSize(speed) + '/s · ' + fmtSize(e.loaded) + ' / ' + fmtSize(e.total);
+        st.textContent = (t.common_downloading_speed || '{speed}/s · {loaded} / {total}').replace('{speed}', fmtSize(speed)).replace('{loaded}', fmtSize(e.loaded)).replace('{total}', fmtSize(e.total));
       }
     };
     xhr.onload = function(){
       if (xhr.status === 200 && xhr.response) {
         fill.style.width = '100%'; fill.classList.add('done');
-        pct.textContent = '100%'; st.textContent = '已保存';
+        pct.textContent = '100%'; st.textContent = t.common_saved || '已保存';
         var a = document.createElement('a');
         a.href = URL.createObjectURL(xhr.response);
         a.download = name.split('/').pop();
@@ -1965,10 +2081,10 @@
         setTimeout(function(){ row.remove(); }, 2500);
       } else {
         fill.classList.add('fail');
-        st.textContent = '下载失败 (' + xhr.status + ')';
+        st.textContent = (t.common_download_failed || '下载失败 ({status})').replace('{status}', xhr.status);
       }
     };
-    xhr.onerror = function(){ fill.classList.add('fail'); st.textContent = '网络错误'; };
+    xhr.onerror = function(){ fill.classList.add('fail'); st.textContent = t.common_network_error || '网络错误'; };
     xhr.send();
   }
   // 选择弹窗事件（只绑一次）
@@ -1978,7 +2094,8 @@
     document.getElementById('vaultChoosePrev').addEventListener('click', function(){
       var n = _chooseName; vaultChooseClose();
       var idx = vaultView.findIndex(function(f){ return f.name === n; });
-      if (idx >= 0) vaultPreview(idx); else showToast('文件不在当前文件夹视图');
+      var t = vaultT();
+      if (idx >= 0) vaultPreview(idx); else showToast(t.common_file_not_in_view || '文件不在当前文件夹视图');
     });
     document.getElementById('vaultChooseDl').addEventListener('click', function(){
       var n = _chooseName; vaultChooseClose();
@@ -1989,18 +2106,20 @@
   })();
 
   function vaultDel(name){
-    vaultConfirm('删除文件','确认删除「'+name+'」？此操作不可撤销。',function(){
+    var t = vaultT();
+    vaultConfirm(t.common_delete_file_title || '删除文件', (t.common_delete_file_msg || '确认删除「{name}」？此操作不可撤销。').replace('{name}', name), function(){
       fetch(API_BASE + '/api/vault/delete',{method:'POST',headers:{'Content-Type':'application/json','X-Vault-Token':vaultToken},body:JSON.stringify({names:[name]})})
         .then(function(r){ return r.json(); })
-        .then(function(d){ if(d.ok) { delete vaultChecked[name]; loadVaultFiles(); } else showToast(d.error||'删除失败'); })
-        .catch(function(){ showToast('删除失败'); });
+        .then(function(d){ if(d.ok) { delete vaultChecked[name]; loadVaultFiles(); } else showToast(d.error || (t.common_toast_delete_failed || '删除失败')); })
+        .catch(function(){ showToast(t.common_toast_delete_failed || '删除失败'); });
     });
   }
   // === 自定义橙色确认弹窗 ===
   var _vaultCfOk=null;
   function vaultConfirm(title,msg,onOk){
-    document.getElementById('vaultConfirmTitle').textContent=title||'确认操作';
-    document.getElementById('vaultConfirmMsg').textContent=msg||'是否继续？';
+    var t = vaultT();
+    document.getElementById('vaultConfirmTitle').textContent=title || (t.common_confirm || '确认操作');
+    document.getElementById('vaultConfirmMsg').textContent=msg || (t.common_confirm || '是否继续？');
     _vaultCfOk=onOk||null;
     document.getElementById('vaultConfirm').classList.remove('hidden');
   }
@@ -2038,7 +2157,7 @@
     });
   })();
   // ===== 版本自检：确认加载的是否为最新版（PWA 缓存时提示更新）=====
-  var VAULT_VER = 'V2026.09.03.07';
+  var VAULT_VER = 'V2026.09.06.17';
   function vaultForceReload(){
     // 带随机参数强制绕过一切缓存重新拉取
     try {

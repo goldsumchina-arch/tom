@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。LOST 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
 /* ============================================================
  * 失败项目（Lost）表格逻辑 —— 完整复刻 潜在项目(crm_table.js)
  * 列结构：CRM 48 列（0-46 相同）+ 失败原因(47) + 操作(48) = 49 列
@@ -388,13 +389,11 @@ function renderLostData(list) {
         case 47: cls='won-pink'; val=esc(getFailReasonDisplay(val)); break; // 失败原因（按语言切换）
         case 48: {
           var viewBtn='<button class="btn-sm btn-view" onclick="viewLost('+p.id+')">'+(t.crm_view||t.lostView||'View')+'</button>';
-          // 数据范围授权仅只读：非本人(且非管理员)的行隐藏 删除/转回潜在 按钮
-          // 注：编辑按钮及其整套编辑模态框已移除（业务需求：失败项目不支持编辑）
-          var writable = (typeof canWriteRow==='function') ? canWriteRow(p) : true;
-          var writeBtns = writable
-            ? ' <button class="btn-sm btn-del" onclick="deleteLost('+p.id+')">'+(t.crm_del||'Delete')+'</button>'
-              +' <button class="btn-sm btn-restore" onclick="restoreLost('+p.id+')">'+(t.lostRestore||'Restore')+'</button>'
-            : '';
+          // 失败项目操作按钮统一全部渲染；显隐完全由 LOST-D3 / LOST-R1 权限决策控制
+          // （applyLostRowPerms 兜底隐藏），不再按 canWriteRow 在行生成阶段阉割。
+          // 实际删除/转回仍由服务端 canModifyRow + permGate 守卫。
+          var writeBtns = ' <button class="btn-sm btn-del" onclick="deleteLost('+p.id+')">'+(t.crm_del||'Delete')+'</button>'
+              +' <button class="btn-sm btn-restore" onclick="restoreLost('+p.id+')">'+(t.lostRestore||'Restore')+'</button>';
           html+='<td class="won-action-yellow col-never-hide"'+dc+'>'+viewBtn+writeBtns+'</td>';
           continue;
         }
@@ -440,6 +439,8 @@ function applyLostSort() {
   }
   var tb = document.getElementById('lostTbody');
   if (tb) tb.innerHTML = renderLostData(data);
+  // 兜底：渲染包装器已处理，但排序后再显式确保行内按钮按权限隐藏
+  if (typeof applyLostRowPerms === 'function') applyLostRowPerms();
   updateLostSortIndicators();
 }
 
@@ -485,6 +486,8 @@ function sortLostTable(col, ev) {
   if (lostSortState.length === 0) {
     var tb0 = document.getElementById('lostTbody');
     if (tb0) tb0.innerHTML = renderLostData(originalLostData.slice());
+    // 兜底：取消排序后显式按权限隐藏行内按钮
+    if (typeof applyLostRowPerms === 'function') applyLostRowPerms();
     updateLostSortIndicators();
     return;
   }
@@ -978,7 +981,7 @@ function openLostReport(id) {
   sub.innerText = (row.project_name || '') + ' — ' + (row.quote_no || '');
   el('lostReportCurLabel').innerText = t.crm_report_currency || 'Currency';
   el('lostReportBtnClose').innerText = t.crm_report_close || 'Close';
-  el('lostReportBtnExport').innerText = t.crm_report_export || 'Export PDF';
+  el('lostReportBtnExport').innerText = '🖨 ' + (t.btn_print || '打印');
   _lostReportRender();
   _ovLoadChartLib(function() { _lostReportCharts(); });
 }
@@ -993,7 +996,16 @@ function closeLostReport() {
   LOST_REPORT_CHARTS = [];
 }
 
-function exportLostReportPDF() {
+// 打印报告（与「客户付款智能报告」一致：直接调系统打印，不再走 html2canvas + jsPDF 导出）
+// ⚠️ index.html 内联脚本里也有同名函数，但【本文件是后加载的外部脚本，会覆盖内联定义】，
+//    所以这一份才是真正生效的实现——两处必须保持同一行为，改一处要同步改另一处。
+function exportLostReportPDF(){
+  if (typeof printModalById === 'function') printModalById('lostReportModal');
+  else window.print();
+}
+
+// ↓ 旧版 html2canvas + jsPDF 导出实现：已停用，改名后无任何调用方（保留作历史参考）
+function _legacyExportLostReportPDF() {
   var t = T();
   var body = document.getElementById('lostReportBody');
   var btn = document.getElementById('lostReportBtnExport');
@@ -1070,7 +1082,7 @@ function refreshLostReport() {
   el('lostReportTitle').innerText = t.lost_report_title || t.crm_report_title || 'Project Report';
   el('lostReportCurLabel').innerText = t.crm_report_currency || 'Currency';
   el('lostReportBtnClose').innerText = t.crm_report_close || 'Close';
-  el('lostReportBtnExport').innerText = t.crm_report_export || 'Export PDF';
+  el('lostReportBtnExport').innerText = '🖨 ' + (t.btn_print || '打印');
   _lostReportRender();
   if (typeof Chart !== 'undefined') _lostReportCharts();
 }
@@ -1252,6 +1264,10 @@ function _lostReportCharts() {
     //   比对此戳即可确定性判断 tbody 是否与当前语言一致。
     try { window.__lostRenderLang = (typeof CUR_LANG !== 'undefined') ? CUR_LANG : 'vi'; } catch(e) {}
     if (typeof syncLostColVisibility === 'function') setTimeout(syncLostColVisibility, 0);
+    // ★ 权限兜底：任何 tbody 再生（加载/排序/搜索/语言切换/清空）后都按权限重新隐藏行内按钮，
+    //   否则初始 loadLost 隐藏掉的「删除/转回」会因排序/搜索等再渲染而重新出现，造成"选了隐藏仍显示"。
+    //   （查看按钮在点击时由 permGuard 实时拦截，故始终有效；行内操作按钮必须在此处兜底。）
+    if (typeof applyLostRowPerms === 'function') setTimeout(applyLostRowPerms, 0);
     return html;
   };
 })();

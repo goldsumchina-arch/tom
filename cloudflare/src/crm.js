@@ -1,3 +1,4 @@
+// ⛔ FROZEN (2026-09-06) V2026.09.06.17：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 后端逻辑均正确，仅数据可为演示数据。
 import { purgeCrm } from "./purge.js";
 import { migrateProvinceColumn, migrateBuColumn } from "./provinces.js";
 
@@ -76,7 +77,9 @@ async function hasFullCompany(env, username, blockId) {
   }
   const blk = perms && perms[blockId];
   if (!blk || typeof blk !== "object") return false;
-  return String(blk.decision || "").trim().toLowerCase() === "all";
+  // 与桌面 app.py 保持一致：decision 为 "all" 或 "company" 均表示“看全公司”
+  const _dec = String(blk.decision || "").trim().toLowerCase();
+  return _dec === "all" || _dec === "company";
 }
 
 /**
@@ -203,6 +206,33 @@ async function ownsRow(env, table, pid, username) {
 }
 
 /**
+ * ★ 写权限（数据范围语义，与权限标签一致）：
+ *    行归属者本人，或该行落在用户的可见数据范围内（CRM-L1）即可写。
+ *    实际放行仍受 CRM-D2/D3/F1 决策闸（permGate）控制：
+ *      hide → 403；approve → 必须有已通过的单次审批；default/company → 放行。
+ *    （此前仅限"行归属者本人"，导致非本人行即使权限放行也不显示/不执行按钮）
+ */
+async function canModifyRow(env, table, pid, username) {
+  if (!username) return true;
+  if (await isManager(env, username)) return true;
+  if (await ownsRow(env, table, pid, username)) return true;
+  const vs = await visibleScope(env, username, "CRM-L1");
+  if (!vs.clause) return true; // 看全部（特别授权/管理层）
+  const row = await env.DB.prepare(
+    "SELECT owner_user_id, salesperson FROM " + table + " WHERE id=?"
+  )
+    .bind(pid)
+    .first();
+  if (!row) return false;
+  const list = (vs.params || []).map(function (s) {
+    return String(s).toLowerCase();
+  });
+  const owner = String(row.owner_user_id || "").trim().toLowerCase();
+  const sp = String(row.salesperson || "").trim().toLowerCase();
+  return (owner && list.indexOf(owner) >= 0) || (sp && list.indexOf(sp) >= 0);
+}
+
+/**
  * 复刻 _perm_gate
  * 返回 null = 放行；返回对象 = 拒绝 { error, message, status }
  */
@@ -321,7 +351,9 @@ export async function handleCrm(request, env, url, pathname) {
     } catch (e) {
       return errj("请求格式错误", 400);
     }
-    const gate = await permGate(env, username, "CRM-D2", "");
+    // ★ 新增受「新增潜在项目 CRM-N1」控制（此前误用 CRM-D2，
+    //   导致 CRM-N1 权限行在服务端完全无效、而"编辑"权限反而管着新增）
+    const gate = await permGate(env, username, "CRM-N1", "");
     if (gate) return gate;
 
     const cols = [];
@@ -378,7 +410,7 @@ export async function handleCrm(request, env, url, pathname) {
         .bind(pid)
         .first();
       if (!exists) return errj("not found", 404);
-      if (!(await ownsRow(env, "crm_projects", pid, username))) {
+      if (!(await canModifyRow(env, "crm_projects", pid, username))) {
         return errj("forbidden", 403);
       }
       const gate = await permGate(env, username, "CRM-D2", String(pid));
@@ -421,7 +453,7 @@ export async function handleCrm(request, env, url, pathname) {
         .bind(pid)
         .first();
       if (!exists) return errj("not found", 404);
-      if (!(await ownsRow(env, "crm_projects", pid, username))) {
+      if (!(await canModifyRow(env, "crm_projects", pid, username))) {
         return errj("forbidden", 403);
       }
       const gate = await permGate(env, username, "CRM-D3", String(pid));
@@ -492,11 +524,13 @@ export async function handleCrm(request, env, url, pathname) {
   m = /^\/api\/crm-projects\/(\d+)\/failed$/.exec(pathname);
   if (m && request.method === "POST") {
     const pid = parseInt(m[1], 10);
+    // 幂等：确保来源关联列存在（下方 vals 映射会写入 crm_origin_id）
+    try { await env.DB.prepare("ALTER TABLE lost_projects ADD COLUMN crm_origin_id INTEGER DEFAULT 0").run(); } catch (e) { /* 已存在 */ }
     const exists = await env.DB.prepare("SELECT id FROM crm_projects WHERE id=?")
       .bind(pid)
       .first();
     if (!exists) return errj("not found", 404);
-    if (!(await ownsRow(env, "crm_projects", pid, username))) {
+    if (!(await canModifyRow(env, "crm_projects", pid, username))) {
       return errj("forbidden", 403);
     }
     const gate = await permGate(env, username, "CRM-F1", String(pid));
@@ -521,6 +555,7 @@ export async function handleCrm(request, env, url, pathname) {
     const today = new Date().toISOString().slice(0, 10);
     const vals = lostCols.map((col) => {
       if (col === "id" || col === "created_at" || col === "updated_at") return null;
+      if (col === "crm_origin_id") return pid;
       if (col === "fail_reason") return failReason;
       if (col === "fail_date") return today;
       if (col === "status") return "failed";
