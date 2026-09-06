@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-06) V2026.09.06.18：本文件全部逻辑已锁定，未经用户明确同意禁止修改。当前仅 CRM/LOST/WON/个人佣金 模块内为演示数据，看板/用户与授权/秘密空间等其余功能均正确。 -->
+<!-- ⛔ FROZEN (2026-09-06) V2026.09.06.19：本文件全部逻辑已锁定，未经用户明确同意禁止修改。当前仅 CRM/LOST/WON/个人佣金 模块内为演示数据，看板/用户与授权/秘密空间等其余功能均正确。 -->
 <html lang="en">
 <head>
 <!-- ==================== 云端后端地址转发（M4） ====================
@@ -417,13 +417,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.09.06.18 - 确认新代码已加载 -->
-  <title>签约项目 · AGI-CRM v2026.09.06.18</title>
+  <!-- 版本号：V2026.09.06.19 - 确认新代码已加载 -->
+  <title>签约项目 · AGI-CRM v2026.09.06.19</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 Cloudflare Pages 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20260906.18';
+    window._DASH_VER = '20260906.19';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -2937,7 +2937,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.06.18</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.06.19</span></div>
   </div>
 </div>
 
@@ -9432,7 +9432,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.09.06.18 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.09.06.19 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -14294,7 +14294,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.09.06.18（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.09.06.19（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -22512,7 +22512,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.09.06.18 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.09.06.19 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -22869,7 +22869,7 @@ function _refreshCrmAggChartsByDecision(){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.09.06.18）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.09.06.19）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -24830,10 +24830,10 @@ function reloadSession(silent){
           var rt = (T().empty && T().empty.role_wrap) || '{name}（{role}）';
           ud.textContent = rt.replace('{name}', authUser.username).replace('{role}', authUser.role || '');
         }
-        // 刷新权限可见性，并重新拉取看板/概况数据，使"特别授权看全公司"立即生效
+        // 刷新权限可见性即可；看板/概况数据改由随后的 switchView(savedView) 按需加载，
+        // 避免会话恢复时无条件 loadDashboard() 与 switchView 重复拉三张全表（2026-09-06）
         if(typeof applyAllPermVisibility === 'function'){ applyAllPermVisibility(); }
         if(typeof applyCommissionTabState === 'function'){ applyCommissionTabState(); }
-        if(typeof loadDashboard === 'function'){ loadDashboard(); }
         var cur = null;
         try { cur = sessionStorage.getItem('won_current_view'); } catch(e){}
         // 关键：重绘当前视图的数据表——行内按钮（查看/编辑/删除/转移/转回）是渲染时按权限生成的，
@@ -24859,28 +24859,22 @@ function reloadSession(silent){
 
 // 启动权限版本轮询：服务端版本号变化时，立即刷新本地会话（被改权限用户实时更新）
 function startPermWatch(intervalMs){
-  if(_permWatchTimer) return;
-  intervalMs = intervalMs || 30000;  // 30 秒轮询一次，避免日志刷屏
+  // 取消定时轮询（2026-09-06）：权限版本改为“页面加载/刷新”时一次性校验，
+  // 不再常驻轮询，避免持续消耗 D1 行读。权限变动需用户刷新或重开页面后生效。
   if(!authUser || !authUser.username) return;
+  if(_permWatchTimer){ clearInterval(_permWatchTimer); _permWatchTimer = null; }
   _lastPermVersion = null;
-  _permWatchTimer = setInterval(function(){
-    if(!authUser || !authUser.username) return;
-    var pvOpts = VAULT_TOKEN
-      ? { headers: { 'Authorization': 'Bearer ' + VAULT_TOKEN } }
-      : { credentials: 'include' };
-    fetch(API_BASE + '/api/perm-version?username=' + encodeURIComponent(authUser.username), pvOpts)
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d && d.ok && typeof d.version === 'number'){
-          if(_lastPermVersion === null){ _lastPermVersion = d.version; return; }
-          if(d.version !== _lastPermVersion){
-            _lastPermVersion = d.version;
-            reloadSession(true);  // silent 刷新，不弹 toast
-          }
-        }
-      })
-      .catch(function(){});
-  }, intervalMs);
+  var pvOpts = VAULT_TOKEN
+    ? { headers: { 'Authorization': 'Bearer ' + VAULT_TOKEN } }
+    : { credentials: 'include' };
+  fetch(API_BASE + '/api/perm-version?username=' + encodeURIComponent(authUser.username), pvOpts)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.ok && typeof d.version === 'number'){
+        _lastPermVersion = d.version;   // 仅记录基准版本，不再触发自动 reloadSession
+      }
+    })
+    .catch(function(){});
 }
 
 // switchView 需调用 loadCrm()/loadWon()，而它们定义在 crm_table.js / lost_table.js 中
@@ -31889,7 +31883,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.09.06.18 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.09.06.19 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

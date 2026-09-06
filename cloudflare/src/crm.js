@@ -1,4 +1,4 @@
-// ⛔ FROZEN (2026-09-06) V2026.09.06.18：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 后端逻辑均正确，仅数据可为演示数据。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.19：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 后端逻辑均正确，仅数据可为演示数据。
 import { purgeCrm } from "./purge.js";
 import { migrateProvinceColumn, migrateBuColumn } from "./provinces.js";
 
