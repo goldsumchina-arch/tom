@@ -161,7 +161,7 @@ async function verifyPassword(stored, password) {
 // 好处：token 可随时在后端 DELETE（强制某人下线），且无法伪造。
 // ============================================================
 
-const SESSION_TTL_HOURS = 12; // token 有效期（小时），超时需重新登录
+const SESSION_TTL_HOURS = 168; // token 有效期（小时），超时需重新登录。默认 7 天，避免每天上班都要重新登录。
 
 /** 首次调用时确保 sessions 表存在 */
 async function ensureSessionsTable(env) {
@@ -299,6 +299,12 @@ async function bumpPermVersion(env, username) {
 /** 组装返回给前端的用户对象（字段与本地 Python 版保持一致） */
 function buildUser(row, admin, perms) {
   const c = (k, d = "") => (row[k] === null || row[k] === undefined ? d : row[k]);
+  const parseIds = (raw) => {
+    try {
+      const v = JSON.parse(raw || "[]");
+      return Array.isArray(v) ? v.map(Number).filter(x => !isNaN(x)) : [];
+    } catch (e) { return []; }
+  };
   return {
     username: c("username"),
     real_name: c("real_name"),
@@ -306,8 +312,8 @@ function buildUser(row, admin, perms) {
     position: c("position"),
     is_admin: !!admin,
     status: c("status", "active"),
-    vis_he_can_see: c("vis_he_can_see", "[]"),
-    vis_can_see_me: c("vis_can_see_me", "[]"),
+    vis_he_can_see: parseIds(c("vis_he_can_see", "[]")),
+    vis_can_see_me: parseIds(c("vis_can_see_me", "[]")),
     perms: perms,
   };
 }
