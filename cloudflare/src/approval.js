@@ -8,6 +8,9 @@ const TRI_APPROVERS = ["tom", "cuong", "james"];
 const USR_BLOCKS = ["USR-L1", "USR-D1", "USR-D2", "USR-D3"];
 const DEFAULT_INIT_PASSWORD = "66668888";
 
+// 复用用户模块的权限归一化逻辑（销售锁死 / 观察者模板 / 审批人 ID->用户名）
+import { normUserPerms, forceSalesLockedPerms, forceObserverPerms } from "./users.js";
+
 function errj(msg, status) {
   return { __err: msg, __status: status };
 }
@@ -297,7 +300,87 @@ export async function handleApproval(request, env, url, pathname) {
       }
       await bumpPermVersion(env, row.requester);
       return { body: { ok: true, status: newStatus }, status: 200 };
+  }
+
+  // ============ 用户与权限管理审批：通过后按 payload 落地 ============
+  // 设计：被授权人（USR-D1/D2/D3=允许）提交后须经 tom/cuong/james 任一人审批，
+  //       审批通过后由本分支真正写入 users 表（此前实现漏掉了这步，导致授权“提交即丢失”）。
+  if (USR_BLOCKS.includes(row.block_id)) {
+    let pl = {};
+    try { pl = row.payload ? JSON.parse(row.payload) : {}; } catch (e) { pl = {}; }
+    if (newStatus === "approved") {
+      if (row.block_id === "USR-D2") {
+        // 新增用户：审批通过后建号（初始密码 66668888）
+        const username = String(pl.login || "").trim().toLowerCase();
+        const realName = String(pl.name || "").trim();
+        if (username && realName) {
+          const exist = await env.DB.prepare("SELECT id FROM users WHERE username=?").bind(username).first();
+          if (!exist) {
+            const maxRow = await env.DB.prepare("SELECT COALESCE(MAX(sort_order), 0) AS m FROM users").first();
+            const sortOrder = (maxRow && Number(maxRow.m) || 0) + 1000;
+            const visMe = Array.isArray(pl.vis_can_see_me) ? pl.vis_can_see_me : [];
+            const visHe = Array.isArray(pl.vis_he_can_see) ? pl.vis_he_can_see : [];
+            let perms = pl.perms || {};
+            perms = forceSalesLockedPerms(perms, pl.position);
+            perms = forceObserverPerms(perms, pl.position);
+            perms = await normUserPerms(env, perms);
+            let forgot = Array.isArray(pl.forgot_approvers) ? pl.forgot_approvers : ["tom"];
+            forgot = forgot.map((x) => String(x).trim()).filter(Boolean);
+            if (!forgot.includes("tom")) forgot.unshift("tom");
+            await env.DB.prepare(
+              "INSERT INTO users (username, password, real_name, role, position, status, " +
+              "vis_can_see_me, vis_he_can_see, perms, forgot_approvers, created_at, sort_order) " +
+              "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+            ).bind(
+              username, DEFAULT_INIT_PASSWORD, realName, "user", pl.position || "", pl.status || "active",
+              JSON.stringify(visMe), JSON.stringify(visHe), JSON.stringify(perms),
+              JSON.stringify(forgot.slice(0, 3)), nowStr(), sortOrder
+            ).run();
+          }
+        }
+      } else if (row.block_id === "USR-D1") {
+        // 编辑用户权限：写 perms + 数据范围（vis_*）+ 基础资料
+        const uid = parseInt(pl.uid, 10);
+        if (uid) {
+          const tgt = await env.DB.prepare("SELECT id, username FROM users WHERE id=?").bind(uid).first();
+          if (tgt) {
+            const visMe = Array.isArray(pl.vis_can_see_me) ? pl.vis_can_see_me : [];
+            const visHe = Array.isArray(pl.vis_he_can_see) ? pl.vis_he_can_see : [];
+            let perms = pl.perms || {};
+            perms = forceSalesLockedPerms(perms, pl.position);
+            perms = forceObserverPerms(perms, pl.position);
+            perms = await normUserPerms(env, perms);
+            const delegateTo = String(pl.delegate_to || "").trim();
+            await env.DB.prepare(
+              "UPDATE users SET real_name=?, position=?, status=?, vis_can_see_me=?, " +
+              "vis_he_can_see=?, perms=?, delegate_to=? WHERE id=?"
+            ).bind(
+              pl.name || "", pl.position || "", pl.status || "active",
+              JSON.stringify(visMe), JSON.stringify(visHe), JSON.stringify(perms), delegateTo, uid
+            ).run();
+          }
+        }
+      } else if (row.block_id === "USR-D3") {
+        // 删除/停用用户：审批通过后物理删除
+        const uid = parseInt(pl.uid, 10);
+        if (uid) {
+          await env.DB.prepare("DELETE FROM users WHERE id=?").bind(uid).run();
+        }
+      }
+      // 同步管理员名单（payload 携带期望名单；仅在有值时覆盖，避免误清空）
+      if (Array.isArray(pl.managers) && pl.managers.length) {
+        const managers = pl.managers.map((s) => String(s).trim().toLowerCase()).filter(Boolean);
+        if (managers.length) {
+          await env.DB.prepare("DELETE FROM managers").run();
+          for (const mg of managers) {
+            await env.DB.prepare("INSERT INTO managers (username) VALUES (?)").bind(mg).run();
+          }
+        }
+      }
     }
+    await bumpPermVersion(env, row.requester);
+    return { body: { ok: true, status: newStatus }, status: 200 };
+  }
 
     await bumpPermVersion(env, row.requester);
     return { body: { ok: true, status: newStatus }, status: 200 };

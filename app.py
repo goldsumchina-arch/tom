@@ -1388,6 +1388,12 @@ def _cloud_mirror_login(conn, username, password):
             pass
         if not is_admin and (row["role"] or "") == "管理员":
             is_admin = True
+        def _ids(raw):
+            try:
+                v = json.loads(raw or "[]")
+                return v if isinstance(v, list) else []
+            except Exception:
+                return []
         return {
             "username": row["username"],
             "real_name": row["real_name"] or "",
@@ -1395,8 +1401,8 @@ def _cloud_mirror_login(conn, username, password):
             "position": row["position"] or "",
             "is_admin": bool(is_admin),
             "status": "active",
-            "vis_he_can_see": row["vis_he_can_see"] or "[]",
-            "vis_can_see_me": row["vis_can_see_me"] or "[]",
+            "vis_he_can_see": _ids(row["vis_he_can_see"]),
+            "vis_can_see_me": _ids(row["vis_can_see_me"]),
             "perms": perms,
             "offline": True,
         }, None
@@ -1460,6 +1466,12 @@ def login():
     except Exception:
         perms = {}
     perms = _norm_user_perms(perms, conn)
+    def _ids(raw):
+        try:
+            v = json.loads(raw or "[]")
+            return v if isinstance(v, list) else []
+        except Exception:
+            return []
     conn.close()
     return jsonify({"ok": True, "user": {
         "username": _col("username"),
@@ -1468,8 +1480,8 @@ def login():
         "position": _col("position"),
         "is_admin": bool(is_admin),
         "status": _col("status", "active"),
-        "vis_he_can_see": _col("vis_he_can_see", "[]"),
-        "vis_can_see_me": _col("vis_can_see_me", "[]"),
+        "vis_he_can_see": _ids(_col("vis_he_can_see", "[]")),
+        "vis_can_see_me": _ids(_col("vis_can_see_me", "[]")),
         # 操作权限决策：{bid: {decision, approvers}}，前端据此做界面拦截
         "perms": perms
     }})
@@ -1516,6 +1528,12 @@ def api_me():
     except Exception:
         perms = {}
     perms = _norm_user_perms(perms, conn)
+    def _ids(raw):
+        try:
+            v = json.loads(raw or "[]")
+            return v if isinstance(v, list) else []
+        except Exception:
+            return []
     conn.close()
     return jsonify({"ok": True, "user": {
         "username": _col("username"),
@@ -1524,10 +1542,65 @@ def api_me():
         "position": _col("position"),
         "is_admin": bool(is_admin),
         "status": _col("status", "active"),
-        "vis_he_can_see": _col("vis_he_can_see", "[]"),
-        "vis_can_see_me": _col("vis_can_see_me", "[]"),
+        "vis_he_can_see": _ids(_col("vis_he_can_see", "[]")),
+        "vis_can_see_me": _ids(_col("vis_can_see_me", "[]")),
         "perms": perms
     }})
+
+# ============================================================
+# 看板聚合统计：复刻云端 /api/dashboard-stats，供桌面版使用
+# ============================================================
+def _dash_sum_with_fallback(primary, fallback, suffix):
+    p = primary + "_" + suffix
+    f = fallback + "_" + suffix
+    return (f"SUM(CASE WHEN {p} IS NULL THEN COALESCE(CAST({f} AS REAL),0) "
+            f"ELSE CAST({p} AS REAL) END)")
+
+
+@app.route("/api/dashboard-stats", methods=["GET"])
+def api_dashboard_stats():
+    """返回 CRM/WON/LOST 的计数与三币汇总，降低前端全量拉表开销。"""
+    username = (request.headers.get("X-User-Name") or "").strip()
+
+    def _stats_for(table, block_id, primary, fallback, status_where=None):
+        vs_clause, vs_params = _visible_scope(username, block_id)
+        where = ["lower(salesperson) <> 'agi-gs internal'"]
+        params = []
+        if status_where:
+            where.append(status_where)
+        if vs_clause:
+            where.append("(" + vs_clause + ")")
+            params.extend(vs_params)
+        where_sql = " WHERE " + " AND ".join(where)
+        sql = (f"SELECT COUNT(*) AS cnt, "
+               f"{_dash_sum_with_fallback(primary, fallback, 'rmb')} AS rmb, "
+               f"{_dash_sum_with_fallback(primary, fallback, 'usd')} AS usd, "
+               f"{_dash_sum_with_fallback(primary, fallback, 'vnd')} AS vnd "
+               f"FROM {table}{where_sql}")
+        conn = get_db()
+        try:
+            row = conn.execute(sql, params).fetchone()
+            return {
+                "count": row["cnt"] or 0,
+                "rmb": round(row["rmb"] or 0),
+                "usd": round(row["usd"] or 0),
+                "vnd": round(row["vnd"] or 0),
+            }
+        finally:
+            conn.close()
+
+    try:
+        # 看板顶部统计卡统一受 DB-S1 数据范围控制，与三模块列表权限独立
+        crm = _stats_for(
+            "crm_projects", "DB-S1", "q1", "0",
+            status_where="(status='active' OR status IS NULL OR status='')"
+        )
+        won = _stats_for("won_projects", "DB-S1", "total_ei", "equip")
+        lost = _stats_for("lost_projects", "DB-S1", "q1", "0")
+        return jsonify({"ok": True, "crm": crm, "won": won, "lost": lost})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 
 # ==================== 个人佣金 · 修改金额审批 ====================
 # 规则（后门三人组专用）：
@@ -2178,10 +2251,11 @@ def _visible_scope(username, block_id=None):
         pass
     conn.close()
     ph = ",".join("?" * len(visible))
-    # 两个分支都必须 lower：owner_user_id 实际存的是用户名字符串（历史列名），
+    # owner_user_id（录入人）或 salesperson（实际销售）任一命中可见集合即可见，
+    # 这样正向/反向授权看某人数据时，其作为销售员的记录也能被正确纳入。
+    # 两个分支都必须 lower：owner_user_id / salesperson 实际存的是用户名字符串，
     # 存量数据大小写混杂（如 'Khoa'），不 lower 会导致“自己的行不可见”
-    clause = (f"(owner_user_id <> '' AND lower(owner_user_id) IN ({ph})) "
-              f"OR (owner_user_id = '' AND lower(salesperson) IN ({ph}))")
+    clause = f"lower(owner_user_id) IN ({ph}) OR lower(salesperson) IN ({ph})"
     return (clause, visible + visible)
 
 
@@ -2360,9 +2434,9 @@ def list_projects():
     conn = get_db()
     uname = request.headers.get("X-User-Name")
     clause, params = _visible_scope(uname, "WON-L1")
-    sql = "SELECT * FROM won_projects"
+    sql = "SELECT * FROM won_projects WHERE lower(salesperson) <> 'agi-gs internal'"
     if clause:
-        sql += " WHERE " + clause
+        sql += " AND (" + clause + ")"
     sql += " ORDER BY id DESC"
     rows = conn.execute(sql, params).fetchall()
     out = [row_to_dict(r) for r in rows]
@@ -2580,6 +2654,12 @@ def _row_file_refs(table, row):
                 n = _norm_file_ref((a or {}).get("filename") or (a or {}).get("url"))
                 if n:
                     out.append(n)
+            # ★ V45/V52：WON 合同/安装合同 PDF 也存成 uploads/ 下的纯文件名，
+            # 必须纳入引用集，否则 purge-orphans 会误删真实合同附件。
+            for f in ("doc_equip", "doc_install", "doc_both"):
+                n = _norm_file_ref(row[f])
+                if n:
+                    out.append(n)
             return out
         for f in ("pdf_equip", "pdf_install", "pdf_both"):
             n = _norm_file_ref(row[f])
@@ -2596,7 +2676,9 @@ def _collect_referenced_files(conn):
     for t in ("crm_projects", "lost_projects", "won_projects"):
         try:
             if t == "won_projects":
-                rows = conn.execute("SELECT attachments FROM won_projects").fetchall()
+                rows = conn.execute(
+                    "SELECT attachments, doc_equip, doc_install, doc_both FROM won_projects"
+                ).fetchall()
                 for r in rows:
                     refs.update(_row_file_refs("won_projects", r))
             else:
@@ -2762,7 +2844,7 @@ def list_crm_projects():
         clause, params = ("", [])
     else:
         clause, params = _visible_scope(username, "CRM-L1")
-    sql = ("SELECT * FROM crm_projects WHERE (%s)" % base)
+    sql = ("SELECT * FROM crm_projects WHERE (%s) AND lower(salesperson) <> 'agi-gs internal'" % base)
     if clause:
         sql += " AND (%s)" % clause
     sql += " ORDER BY id ASC"
@@ -2922,9 +3004,9 @@ LOST_NUM_FIELDS = set(CRM_NUM_FIELDS)
 def list_lost_projects():
     conn = get_db()
     clause, params = _visible_scope(request.headers.get("X-User-Name"), "LOST-L1")
-    sql = "SELECT * FROM lost_projects"
+    sql = "SELECT * FROM lost_projects WHERE lower(salesperson) <> 'agi-gs internal'"
     if clause:
-        sql += " WHERE " + clause
+        sql += " AND (" + clause + ")"
     sql += " ORDER BY id ASC"
     rows = conn.execute(sql, params).fetchall()
     conn.close()
@@ -3046,8 +3128,16 @@ def restore_lost_project(pid):
         return gerr
     d = row_to_dict(row)
     cols = list(CRM_FIELDS)  # 业务字段，不含 status / fail_reason / fail_date
+    # ★ 归属人随流转保留：LOST 行 owner 来自当初 CRM 转失败时保留的归属，
+    #   转回潜在必须延续同一归属人，不得留空（否则退化为按 salesperson 匹配，
+    #   三模块数据授权链在 LOST→CRM 处断裂）。
+    _owner = (row["owner_user_id"] or "").strip().lower() if row["owner_user_id"] else ""
+    if not _owner:
+        _owner = (request.headers.get("X-User-Name") or "").strip().lower()
+    cols.append("owner_user_id")
+    vals = [d.get(c, "") if c not in CRM_NUM_FIELDS else int(d.get(c) or 0) for c in CRM_FIELDS]
+    vals.append(_owner)
     placeholders = ",".join(["?"] * len(cols))
-    vals = [d.get(c, "") if c not in CRM_NUM_FIELDS else int(d.get(c) or 0) for c in cols]
     conn.execute(
         f"INSERT INTO crm_projects ({','.join(cols)}, status) VALUES ({placeholders}, 'active')",
         vals,
@@ -5629,6 +5719,46 @@ def _peak_valley(labels, series):
         assert len(pv_series[k]) == len(pv_labels), f"pv_series[{k}] length {len(pv_series[k])} != pv_labels {len(pv_labels)}"
     return pv_labels, pv_series
 
+# ===================== 锌锭历史冻结覆盖（2026-09-06）=====================
+# 用户提供的 SMM 0# 锌锭月度均价（元/吨，2020-12~2026-08），套算 USD/VND 后锁死。
+# 看板/价格走势对 zinc 的 <=cutoff 月份【直接读取 zinc_frozen.json】，不走实时换算管线；
+# cutoff 之后（2026-09+）仍由实时管线（IMF/Yahoo + 真实汇率）续接，互不干扰。
+# 此为历史数据锁死层，独立于下方⛔金属管线核心常量（METAL_SYMBOLS 等），不改动它们。
+import json as _json
+_ZINC_FROZEN = None
+def _load_zinc_frozen():
+    global _ZINC_FROZEN
+    if _ZINC_FROZEN is not None:
+        return _ZINC_FROZEN
+    p = os.path.join(BASE_DIR, "zinc_frozen.json")
+    if os.path.exists(p):
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                _ZINC_FROZEN = _json.load(f)
+        except Exception as e:
+            print("[zinc_frozen] load failed:", e)
+            _ZINC_FROZEN = False
+    else:
+        _ZINC_FROZEN = False
+    return _ZINC_FROZEN
+
+def _apply_zinc_frozen(month_labels, month_series, cur):
+    """用冻结历史数据覆盖 zinc 的 <=cutoff 月份（按当前币种 cur）。"""
+    frozen = _load_zinc_frozen()
+    if not frozen or "zinc" not in month_series:
+        return
+    key = {"USD": "usd", "RMB": "rmb", "VND": "vnd"}.get(cur)
+    if not key or key not in frozen:
+        return
+    cutoff = frozen.get("cutoff_month", "2026-08")
+    mmap = {}
+    for ym, v in zip(frozen.get("months", []), frozen.get(key, [])):
+        mmap[ym] = v
+    arr = month_series["zinc"]
+    for i, ym in enumerate(month_labels):
+        if ym <= cutoff and ym in mmap:
+            arr[i] = mmap[ym]
+
 @app.route("/api/metal-prices")
 def api_metal_prices():
     cur = (request.args.get("cur") or "USD").upper()
@@ -5682,6 +5812,8 @@ def api_metal_prices():
         series[key] = arr
     # 聚合为月度平均，再提取波峰波谷关键点，降低渲染密集度
     month_labels, month_series = _monthly_avg(labels, series)
+    # 锌锭历史冻结覆盖：<=cutoff 月份直接调用锁死数据（2026-09-06）
+    _apply_zinc_frozen(month_labels, month_series, cur)
     pv_labels, pv_series = _peak_valley(month_labels, month_series)
     resp = {
         "ok": True,

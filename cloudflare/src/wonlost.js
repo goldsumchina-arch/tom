@@ -321,9 +321,10 @@ async function visibleScope(env, username, blockId) {
   } catch (e) { /* ignore */ }
 
   const ph = visible.map(() => "?").join(",");
+  // owner_user_id（录入人）或 salesperson（实际销售）任一命中可见集合即可见，
+  // 这样正向/反向授权看某人数据时，其作为销售员的记录也能被正确纳入。
   const clause =
-    "(owner_user_id <> '' AND lower(owner_user_id) IN (" + ph + ")) " +
-    "OR (owner_user_id = '' AND lower(salesperson) IN (" + ph + "))";
+    "lower(owner_user_id) IN (" + ph + ") OR lower(salesperson) IN (" + ph + ")";
   return { clause, params: visible.concat(visible) };
 }
 
@@ -446,10 +447,10 @@ export async function handleWonLost(request, env, url, pathname) {
   // GET /api/won-projects
   if (pathname === "/api/won-projects" && request.method === "GET") {
     const vs = await visibleScope(env, username, "WON-L1");
-    let sql = "SELECT * FROM won_projects";
+    let sql = "SELECT * FROM won_projects WHERE lower(salesperson) <> 'agi-gs internal'";
     const params = [];
     if (vs.clause) {
-      sql += " WHERE " + vs.clause;
+      sql += " AND (" + vs.clause + ")";
       vs.params.forEach((p) => params.push(p));
     }
     sql += " ORDER BY id DESC";
@@ -676,10 +677,10 @@ export async function handleWonLost(request, env, url, pathname) {
   // GET /api/lost-projects
   if (pathname === "/api/lost-projects" && request.method === "GET") {
     const vs = await visibleScope(env, username, "LOST-L1");
-    let sql = "SELECT * FROM lost_projects";
+    let sql = "SELECT * FROM lost_projects WHERE lower(salesperson) <> 'agi-gs internal'";
     const params = [];
     if (vs.clause) {
-      sql += " WHERE " + vs.clause;
+      sql += " AND (" + vs.clause + ")";
       vs.params.forEach((p) => params.push(p));
     }
     sql += " ORDER BY id ASC";
@@ -793,7 +794,11 @@ export async function handleWonLost(request, env, url, pathname) {
     cols.push("status");
     vals.push("active");
     cols.push("owner_user_id");
-    vals.push(String(username).toLowerCase());
+    // ★ 归属人随流转保留：LOST 行的 owner 来自当初 CRM 转失败时保留的归属，
+    //   转回潜在必须延续同一归属人，不得改写为当前操作人，否则三模块数据授权链在 LOST→CRM 处断裂。
+    vals.push((row.owner_user_id && String(row.owner_user_id).trim() !== "")
+      ? String(row.owner_user_id).toLowerCase()
+      : String(username).toLowerCase());
 
     const ph = cols.map(() => "?").join(",");
     await env.DB.prepare(
@@ -842,13 +847,15 @@ function _amtSumSQL(primary, fallback) {
 }
 
 export async function getWonStats(env, username) {
-  const vs = await visibleScope(env, username, "WON-L1");
+  // 看板顶部统计卡受 DB-S1 数据范围控制，与 WON-L1 列表独立
+  const vs = await visibleScope(env, username, "DB-S1");
   let sql = "SELECT COUNT(*) AS cnt, " +
     _amtSumSQL("total_ei_rmb", "equip_rmb") + " AS rmb, " +
     _amtSumSQL("total_ei_usd", "equip_usd") + " AS usd, " +
-    _amtSumSQL("total_ei_vnd", "equip_vnd") + " AS vnd FROM won_projects";
+    _amtSumSQL("total_ei_vnd", "equip_vnd") + " AS vnd FROM won_projects " +
+    "WHERE lower(salesperson) <> 'agi-gs internal'";
   const params = [];
-  if (vs.clause) { sql += " WHERE " + vs.clause; vs.params.forEach((p) => params.push(p)); }
+  if (vs.clause) { sql += " AND (" + vs.clause + ")"; vs.params.forEach((p) => params.push(p)); }
   const row = await env.DB.prepare(sql).bind(...params).first();
   return {
     count: (row && row.cnt) ? row.cnt : 0,
@@ -859,13 +866,15 @@ export async function getWonStats(env, username) {
 }
 
 export async function getLostStats(env, username) {
-  const vs = await visibleScope(env, username, "LOST-L1");
+  // 看板顶部统计卡受 DB-S1 数据范围控制，与 LOST-L1 列表独立
+  const vs = await visibleScope(env, username, "DB-S1");
   let sql = "SELECT COUNT(*) AS cnt, " +
-    _amtSumSQL("q1_rmb", "equip_rmb") + " AS rmb, " +
-    _amtSumSQL("q1_usd", "equip_usd") + " AS usd, " +
-    _amtSumSQL("q1_vnd", "equip_vnd") + " AS vnd FROM lost_projects";
+    _amtSumSQL("q1_rmb", "0") + " AS rmb, " +
+    _amtSumSQL("q1_usd", "0") + " AS usd, " +
+    _amtSumSQL("q1_vnd", "0") + " AS vnd FROM lost_projects " +
+    "WHERE lower(salesperson) <> 'agi-gs internal'";
   const params = [];
-  if (vs.clause) { sql += " WHERE " + vs.clause; vs.params.forEach((p) => params.push(p)); }
+  if (vs.clause) { sql += " AND (" + vs.clause + ")"; vs.params.forEach((p) => params.push(p)); }
   const row = await env.DB.prepare(sql).bind(...params).first();
   return {
     count: (row && row.cnt) ? row.cnt : 0,

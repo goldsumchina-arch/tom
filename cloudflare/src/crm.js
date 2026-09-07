@@ -178,9 +178,10 @@ async function visibleScope(env, username, blockId) {
   }
 
   const ph = visible.map(() => "?").join(",");
+  // owner_user_id（录入人）或 salesperson（实际销售）任一命中可见集合即可见，
+  // 这样正向/反向授权看某人数据时，其作为销售员的记录也能被正确纳入。
   const clause =
-    "(owner_user_id <> '' AND lower(owner_user_id) IN (" + ph + ")) " +
-    "OR (owner_user_id = '' AND lower(salesperson) IN (" + ph + "))";
+    "lower(owner_user_id) IN (" + ph + ") OR lower(salesperson) IN (" + ph + ")";
   return { clause, params: visible.concat(visible) };
 }
 
@@ -328,8 +329,9 @@ export async function handleCrm(request, env, url, pathname) {
   // ---- GET /api/crm-projects  列表 ----
   if (pathname === "/api/crm-projects" && request.method === "GET") {
     const scope = (url.searchParams.get("scope") || "").trim();
-    // 潜在项目只展示 active（含历史空值）
-    let sql = "SELECT * FROM crm_projects WHERE (status='active' OR status IS NULL OR status='')";
+    // 潜在项目只展示 active（含历史空值），并排除内部占位记录
+    let sql = "SELECT * FROM crm_projects WHERE (status='active' OR status IS NULL OR status='') " +
+      "AND lower(salesperson) <> 'agi-gs internal'";
     const params = [];
     if (scope !== "all") {
       const vs = await visibleScope(env, username, "CRM-L1");
@@ -590,12 +592,14 @@ function _amtSumSQL(primary, fallback) {
 }
 
 export async function getCrmStats(env, username) {
-  const vs = await visibleScope(env, username, "CRM-L1");
+  // 看板顶部统计卡受 DB-S1 数据范围控制，与 CRM-L1 列表独立
+  const vs = await visibleScope(env, username, "DB-S1");
   let sql = "SELECT COUNT(*) AS cnt, " +
-    _amtSumSQL("q1_rmb", "equip_rmb") + " AS rmb, " +
-    _amtSumSQL("q1_usd", "equip_usd") + " AS usd, " +
-    _amtSumSQL("q1_vnd", "equip_vnd") + " AS vnd " +
-    " FROM crm_projects WHERE (status='active' OR status IS NULL OR status='')";
+    _amtSumSQL("q1_rmb", "0") + " AS rmb, " +
+    _amtSumSQL("q1_usd", "0") + " AS usd, " +
+    _amtSumSQL("q1_vnd", "0") + " AS vnd " +
+    " FROM crm_projects WHERE (status='active' OR status IS NULL OR status='') " +
+    "AND lower(salesperson) <> 'agi-gs internal'";
   const params = [];
   if (vs.clause) { sql += " AND (" + vs.clause + ")"; vs.params.forEach((p) => params.push(p)); }
   const row = await env.DB.prepare(sql).bind(...params).first();

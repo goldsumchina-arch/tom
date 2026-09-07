@@ -1,50 +1,17 @@
 <!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件全部逻辑已锁定，未经用户明确同意禁止修改。当前仅 CRM/LOST/WON/个人佣金 模块内为演示数据，看板/用户与授权/秘密空间等其余功能均正确。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.09.07.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
-<!-- ==================== 云端后端地址转发（M4） ====================
-     本页部署在 Cloudflare Pages（agi-gs.pages.dev），
-     后端 API 在 Cloudflare Workers（agi-gs.tomalso911.workers.dev），
-     两者域名不同，所以这里统一把 /api/xxx 的相对请求转发到后端域名。
-     本段放置于最前，确保先于页面其他脚本生效。
+<!-- ==================== 同源后端地址（腾讯云版） ====================
+     本页为腾讯云同源部署：前端与 API 同一进程（node-backend/server.mjs）。
+     所有 /api/xxx 走同源相对路径，不再转发 Cloudflare。
+     CLOUD_ONLY 置为 ['/api/'] 仅用于触发「统一注入会话 token」分支；
+     因 CLOUD_API 为空，实际按同源相对路径请求。
      ============================================================= -->
 <script>
 (function () {
-  // 已上云的模块走云端；未上云的（价格/汇率等）继续走同源
-  var CLOUD_API = 'https://agi-gs.tomalso911.workers.dev';
-  var CLOUD_ONLY = [
-    '/api/login', '/api/me', '/api/perm-version', '/api/change-password',
-    // M5：CRM 潜在项目
-    '/api/crm-projects',
-    // M6：签约项目 / 失败项目 / 审批流
-    '/api/won-projects', '/api/lost-projects', '/api/approval-requests',
-    // M7：用户管理 / 管理员任命 / 附件(R2)
-    '/api/users', '/api/managers', '/api/files/',
-    // M9：价格模块（金属价 / 饲料价 / 汇率 / 畜禽价）
-    '/api/metal-prices', '/api/feed-prices', '/api/fx-rates',
-    '/api/livestock-prices', '/api/livestock-farmgate', '/api/livestock-retail-raw',
-    // ★ 忘记密码：登录页免登录提交，必须走云端，
-    //   否则请求会打到 Pages 静态站（返回 405），表现为"点了没反应/失败"
-    '/api/forget-password',
-    // ★ 个人佣金模块（含记录持久化 + 修改金额审批），必须走云端
-    '/api/commission/',
-    // ★ 私密空间（Vault，tom 专属）：PIN 解锁 + 文件存云端 R2
-    '/api/vault/',
-    // ★ 管理员清理孤儿文件 + 容量统计（Pages 域名下必须转发到 Worker，否则会 405/返回 HTML）
-    '/api/admin/purge-orphans', '/api/admin/purge-report', '/api/admin/purge-vault-junk', '/api/admin/storage-report',
-    // ★ 服务端翻译中转（M11）：Pages 域名下必须转发到 Worker（静态站会 405）
-    '/api/translate',
-    // ★ 服务端备注补翻（M13）：同上，漏配会导致补翻触发在 Pages 域下静默 405，
-    //   表现为"切语言备注要刷新/切标签才变"（V29 根因）
-    '/api/translate-remarks',
-    // ★ 看板「当月更新情况」（长按看板 3 秒）：Pages 静态站没有这个接口，
-    //   不转发的话弹窗会拿到 HTML 错误页，前端显示成一串乱码（V46 根因）
-    '/api/dashboard-update-status',
-    // ★ 看板登录统计柱图（US-LH1/LH2）：同上，不转发在 Pages 域下会拿到 HTML
-    '/api/login-history',
-    // ★ D1 云端用量报告（长按橙色 T 头像 3 秒）：同上，不转发会拿到 HTML 错误页
-    '/api/d1-usage'
-  ];
+  var CLOUD_API = '';
+  var CLOUD_ONLY = ['/api/'];
   window.__CLOUD_API__ = CLOUD_API;
 
   function shouldRoute(u) {
@@ -417,13 +384,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.09.06.20 - 确认新代码已加载 -->
-  <title>签约项目 · AGI-CRM v2026.09.06.20</title>
+  <!-- 版本号：V2026.09.07.05 - 确认新代码已加载 -->
+  <title>签约项目 · AGI-CRM v2026.09.07.05</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 Cloudflare Pages 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20260906.20';
+    window._DASH_VER = '20260907.05';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -2937,7 +2904,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.06.20</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.07.05</span></div>
   </div>
 </div>
 
@@ -3702,8 +3669,9 @@ function _ovLoadChartLib(cb){
     <h3 id="cleanOrphansTitle" data-i18n="clean_title">清理残留文件</h3>
     <p id="cleanOrphansMsg" style="margin:0 0 18px;color:#2c3e50;font-size:13.5px;line-height:1.65;" data-i18n="clean_confirm">确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。</p>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="comm-lock-cancel" id="cleanOrphansCancel" onclick="closeCleanOrphansModal()">取消</button>
-      <button class="comm-lock-ok" id="cleanOrphansConfirm" onclick="confirmCleanOrphans()">确认清除</button>
+      <button class="comm-lock-cancel" id="cleanOrphansBack" onclick="backCleanOrphansToChoose()" style="display:none;" data-i18n="d1u_back">返回上一页</button>
+      <button class="comm-lock-cancel" id="cleanOrphansCancel" onclick="closeCleanOrphansModal()" data-i18n="clean_cancel">取消</button>
+      <button class="comm-lock-ok" id="cleanOrphansConfirm" onclick="confirmCleanOrphans()" data-i18n="clean_ok">确认清除</button>
     </div>
   </div>
 </div>
@@ -3713,10 +3681,10 @@ function _ovLoadChartLib(cb){
   <div class="auth-modal" style="width:540px;max-height:80vh;display:flex;flex-direction:column;">
     <button class="comm-close" onclick="closeCleanReport()" title="Close">×</button>
     <h3 id="cleanReportTitle" style="margin:0 0 10px;">清理报告</h3>
-    <!-- ===== D1 云端用量（长按橙色 T 头像 5 秒打开本报告时显示）=====
-         数据来源是 Cloudflare 官方分析 API，不消耗任何 D1 行读/行写 -->
+    <!-- ===== 腾讯云资源用量（长按橙色 T 头像 5 秒打开本报告时显示）=====
+         数据来源是 /api/tencent-usage（服务器本地磁盘 + 腾讯云流量包），不再依赖 Cloudflare -->
     <div id="d1UsageBlock" style="margin:0 0 12px;padding:12px;border:1px solid #e3e8ee;border-radius:8px;background:#fff;display:none;">
-      <div id="d1UsageTitle" style="font-weight:700;color:#333;margin-bottom:8px;font-size:13px;">D1 云端用量</div>
+      <div id="d1UsageTitle" style="font-weight:700;color:#333;margin-bottom:8px;font-size:13px;">腾讯云资源用量</div>
       <div id="d1UsageSummary" style="font-size:12.5px;color:#2c3e50;margin-bottom:10px;line-height:1.75;"></div>
       <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
         <div id="d1UsagePie" style="flex-shrink:0;"></div>
@@ -3729,7 +3697,7 @@ function _ovLoadChartLib(cb){
     </div>
     <p id="cleanReportSummary" style="margin:0 0 12px;color:#2c3e50;font-size:13.5px;line-height:1.6;"></p>
     <div id="cleanReportStorage" style="margin:0 0 14px;padding:12px;border:1px solid #e3e8ee;border-radius:8px;background:#fff;display:none;">
-      <div id="cleanReportStorageTitle" style="font-weight:700;color:#333;margin-bottom:8px;font-size:13px;">Cloudflare 容量分布</div>
+      <div id="cleanReportStorageTitle" style="font-weight:700;color:#333;margin-bottom:8px;font-size:13px;">腾讯云容量分布</div>
       <div id="cleanReportStorageSummary" style="font-size:12px;color:#555;margin-bottom:10px;"></div>
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div id="cleanReportPie" style="flex-shrink:0;"></div>
@@ -3749,11 +3717,11 @@ function _ovLoadChartLib(cb){
 <div id="d1ChooseOverlay" class="auth-modal-overlay hidden">
   <div class="auth-modal" style="width:360px;">
     <button class="comm-close" onclick="closeD1Choose()" title="Close">×</button>
-    <h3 id="d1ChooseTitle" style="margin:0 0 16px;">云端管理</h3>
+    <h3 id="d1ChooseTitle" style="margin:0 0 16px;" data-i18n="d1u_choose_title">Tencent 用量与监控</h3>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <button class="comm-lock-ok" id="d1ChooseUsage" onclick="chooseD1Usage()">D1 使用情况</button>
-      <button class="comm-lock-cancel" id="d1ChooseClean" onclick="chooseD1Clean()">清理残留文件（含容量报告）</button>
-      <button class="comm-lock-cancel" id="d1ChooseCancel" onclick="closeD1Choose()">取消</button>
+      <button class="comm-lock-ok" id="d1ChooseUsage" onclick="chooseD1Usage()" data-i18n="d1u_choose_usage">查看用量与监控</button>
+      <button class="comm-lock-cancel" id="d1ChooseClean" onclick="chooseD1Clean()" data-i18n="d1u_choose_clean">清理残留文件（含容量报告）</button>
+      <button class="comm-lock-cancel" id="d1ChooseCancel" onclick="closeD1Choose()" data-i18n="d1u_choose_cancel">取消</button>
     </div>
   </div>
 </div>
@@ -4544,6 +4512,7 @@ function _ovLoadChartLib(cb){
 
     <!-- Tab: 数据范围（核心，双向） -->
     <div class="modal-body" id="tab-vis" style="display:none;">
+      <div class="pos-tag" id="visUnifiedHint" data-i18n="user_vis_unified" style="margin-bottom:12px;background:#fff7e6;border-color:#ffd666;color:#ad6800;">本页设置的数据范围对 CRM / WON / LOST 三模块统一生效</div>
       <div class="vis-grid">
         <div class="vis-box">
           <h4 id="visTitleCanSeeMe" data-i18n="user_vis_title_canseeme">① 他的数据可以被谁看（反向授权）</h4>
@@ -5853,8 +5822,8 @@ var I18N = {
     rpt_cashflow_cat:"款项类别",
     rpt_cashflow_plan_date:"预计日期",
     addm_title:"补充协议管理", addm_action:"操作", addm_date:"日期", addm_amt_rmb:"金额(RMB)", addm_amt_usd:"金额(USD)", addm_amt_vnd:"金额(VND)", addm_desc:"说明", addm_file:"附件(PDF)", addm_upload_cnt:"修改次数", addm_add:"＋ 增加补充协议", addm_save:"保存", addm_close:"关闭", addm_del:"删除", addm_clear_desc:"清空三语", addm_no_pdf:"仅支持 PDF 格式", addm_upload_ok:"上传成功", addm_upload_fail:"上传失败", addm_confirm_del:"确定删除该补充协议？", addm_no_data:"暂无补充协议", addm_save_first:"请先保存主表", addm_alert_title:"提示", addm_alert_ok:"确定", addm_count_auto:"（次数自动）", addm_view_title:"查看补充协议", detail_del:"删除",
-    d1u_report_title:"云端用量报告", d1u_title:"D1 云端用量", d1u_plan:"Cloudflare D1 免费套餐", d1u_limit:"每日额度：{limit} 行读", d1u_used:"今日已用", d1u_remain:"今日剩余", d1u_pct:"占比", d1u_written:"今日行写", d1u_date:"统计日期（UTC）", d1u_refresh:"刷新", d1u_loading:"正在读取官方用量…", d1u_unavailable:"暂无法获取官方用量（未配置令牌或接口不可用）", d1u_locked:"已达 95% 上限：已限制其他用户，仅管理员可用", d1u_normal:"用量正常", d1u_cleanup_btn:"清理残留文件", d1u_close:"关闭", d1u_choose_title:"云端管理", d1u_choose_usage:"D1 使用情况", d1u_choose_clean:"清理残留文件（含容量报告）", d1u_choose_cancel:"取消", d1u_back:"返回上一页", d1u_back_lvl:"返回上一级",
-    clean_title:"清理残留文件", clean_confirm:"确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。", clean_ok:"确认清除", clean_cancel:"取消", clean_success:"清理完成", clean_result:"扫描了 {total} 个 R2 对象，发现 {orphans} 个孤儿文件，已删除 {deleted} 个，跳过 {skipped} 个非受管文件。", clean_no_orphans:"未发现孤儿文件。", clean_forbidden:"仅 Tom 可使用此功能。", clean_error:"清理请求失败：", clean_report_title:"清理报告", clean_report_summary:"本次共删除 {deleted} 个垃圾文件（共发现 {total} 个孤儿文件）。", clean_report_where:"删除位置（相对路径）", clean_report_close:"关闭", clean_report_empty:"未发现可删除的垃圾文件，目录已干净。", clean_report_more:"（仅显示前 50 个，实际共 {total} 个）", clean_storage_title:"Cloudflare 容量分布", clean_storage_summary:"总容量 {total}，已用 {used}（{usedPct}），剩余 {free}（{freePct}）", clean_storage_won:"WON 附件", clean_storage_crm:"CRM 附件", clean_storage_lost:"LOST 附件", clean_storage_vault:"私密空间文件", clean_storage_snapshots:"数据快照", clean_storage_other:"其它", clean_storage_free:"剩余空间", clean_storage_loading:"正在统计 Cloudflare 容量…", clean_storage_error:"容量统计失败：",
+    d1u_report_title:"Tencent 用量与监控", d1u_title:"腾讯云资源用量", d1u_plan:"腾讯云轻量应用服务器", d1u_limit:"流量包总额：{limit} GB", d1u_used:"已用流量", d1u_remain:"剩余流量", d1u_pct:"占比", d1u_written:"磁盘已用", d1u_date:"更新时间", d1u_refresh:"刷新", d1u_loading:"正在读取腾讯数据…", d1u_unavailable:"暂无法获取腾讯数据（未配置密钥或接口不可用）", d1u_locked:"已达 95% 上限：已限制其他用户，仅管理员可用", d1u_normal:"用量正常", d1u_cleanup_btn:"清理残留文件", d1u_close:"关闭", d1u_choose_title:"Tencent 用量与监控", d1u_choose_usage:"查看用量与监控", d1u_choose_clean:"清理残留文件（含容量报告）", d1u_choose_cancel:"取消", d1u_back:"返回上一页", d1u_back_lvl:"返回上一级",
+    clean_title:"清理残留文件", clean_confirm:"确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。", clean_ok:"确认清除", clean_cancel:"取消", clean_success:"清理完成", clean_result:"扫描了 {total} 个 R2 对象，发现 {orphans} 个孤儿文件，已删除 {deleted} 个，跳过 {skipped} 个非受管文件。", clean_no_orphans:"未发现孤儿文件。", clean_forbidden:"仅 Tom 可使用此功能。", clean_error:"清理请求失败：", clean_report_title:"清理报告", clean_report_summary:"本次共删除 {deleted} 个垃圾文件（共发现 {total} 个孤儿文件）。", clean_report_where:"删除位置（相对路径）", clean_report_close:"关闭", clean_report_empty:"未发现可删除的垃圾文件，目录已干净。", clean_report_more:"（仅显示前 50 个，实际共 {total} 个）", clean_storage_title:"腾讯云容量分布", clean_storage_summary:"总容量 {total}，已用 {used}（{usedPct}），剩余 {free}（{freePct}）", clean_storage_won:"WON 附件", clean_storage_crm:"CRM 附件", clean_storage_lost:"LOST 附件", clean_storage_vault:"私密空间文件", clean_storage_snapshots:"数据快照", clean_storage_other:"其它", clean_storage_free:"剩余空间", clean_storage_loading:"正在统计腾讯云容量…", clean_storage_error:"容量统计失败：",
     nav: { dashboard:"看板", crm:"潜在项目", won:"签约项目", lost:"失败项目", approvals:"审批", users:"用户与授权", commission:"个人佣金", lang:"语言", logout:"退出登录", role_admin:"(管理员)", export_pdf:"导出PDF", fit:"适应", fit_exit:"还原", fit_tip:"把整张表缩放到一屏宽；双击表格或再点一次还原" },
     /* 手机横屏专用短标签：原名太长会挤掉后面的标签，这里用短名保证 6 个标签一屏可见 */
     nav_short: { dashboard:"看板", crm:"潜在", won:"签约", lost:"失败", approvals:"审批", users:"用户", commission:"佣金" },
@@ -5917,6 +5886,7 @@ var I18N = {
              user_pos_tag5:"tom 为系统默认审批人（锁定不可取消），可追加 1~2 人；该用户点击「忘记密码」时，这些人收到审批请求",
              user_vis_title_canseeme:"他的数据可以被谁看（反向授权）", user_vis_desc_canseeme:"勾选的用户可以查看该用户数据范围内的数据",
              user_vis_title_hecansee:"他可以看谁的数据（正向授权）", user_vis_desc_hecansee:"该用户可以查看被勾选用户的数据",
+             user_vis_unified:"本页设置的数据范围对 CRM / WON / LOST 三模块统一生效",
              user_vis_all:"全部", user_vis_clear:"清空", user_vis_inactive_suffix:"（离职）",
              user_perm_cat:"分类", user_perm_def:"默认保留信息", user_perm_bid:"区块ID", user_perm_name:"区块名称", user_perm_dec:"决策", user_perm_appr:"审批人",
             user_perm_legend:"逐模块勾选/下拉决定：保留默认 / 隐藏该项 / 特别授权看全公司 / 发起审批。选择「发起审批」后须在该行审批人下拉中选择 1~3 人。",
@@ -6604,8 +6574,8 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     rpt_cashflow_cat:"Category",
     rpt_cashflow_plan_date:"Expected Date",
     addm_title:"Addendum Management", addm_action:"Action", addm_date:"Date", addm_amt_rmb:"Amt RMB", addm_amt_usd:"Amt USD", addm_amt_vnd:"Amt VND", addm_desc:"Description", addm_file:"Attachment(PDF)", addm_upload_cnt:"Mod Count", addm_add:"＋ Add Addendum", addm_save:"Save", addm_close:"Close", addm_del:"Delete", addm_clear_desc:"Clear all", addm_no_pdf:"Only PDF is supported", addm_upload_ok:"Upload successful", addm_upload_fail:"Upload failed", addm_confirm_del:"Delete this addendum?", addm_no_data:"No addendum yet", addm_save_first:"Please save the main form first", addm_alert_title:"Notice", addm_alert_ok:"OK", addm_count_auto:"(count auto)", addm_view_title:"View Addendum", detail_del:"Delete",
-    d1u_report_title:"Cloud Usage Report", d1u_title:"D1 Cloud Usage", d1u_plan:"Cloudflare D1 Free Plan", d1u_limit:"Daily limit: {limit} row reads", d1u_used:"Used today", d1u_remain:"Remaining today", d1u_pct:"Percentage", d1u_written:"Rows written today", d1u_date:"Date (UTC)", d1u_refresh:"Refresh", d1u_loading:"Loading official usage…", d1u_unavailable:"Official usage unavailable (token not configured or API error)", d1u_locked:"95% limit reached: other users blocked, admin only", d1u_normal:"Usage is normal", d1u_cleanup_btn:"Clean up leftover files", d1u_close:"Close", d1u_choose_title:"Cloud Management", d1u_choose_usage:"D1 Usage", d1u_choose_clean:"Clean up leftover files (with storage report)", d1u_choose_cancel:"Cancel", d1u_back:"Back to Previous", d1u_back_lvl:"Back",
-    clean_title:"Clean up leftover files", clean_confirm:"Confirm cleanup of invalid files and orphan remnants after deletion? This action cannot be undone.", clean_ok:"Confirm Clean", clean_cancel:"Cancel", clean_success:"Cleanup completed", clean_result:"Scanned {total} R2 objects, found {orphans} orphan files, deleted {deleted}, skipped {skipped} unmanaged files.", clean_no_orphans:"No orphan files found.", clean_forbidden:"Only Tom can use this feature.", clean_error:"Cleanup request failed:", clean_report_title:"Cleanup Report", clean_report_summary:"Deleted {deleted} junk file(s) (found {total} orphan file(s) in total).", clean_report_where:"Deleted location (relative path)", clean_report_close:"Close", clean_report_empty:"No junk files to delete; the directory is already clean.", clean_report_more:"(showing first 50; total {total})", clean_storage_title:"Cloudflare Storage", clean_storage_summary:"Total {total}, Used {used} ({usedPct}), Free {free} ({freePct})", clean_storage_won:"WON attachments", clean_storage_crm:"CRM attachments", clean_storage_lost:"LOST attachments", clean_storage_vault:"Vault files", clean_storage_snapshots:"Data snapshots", clean_storage_other:"Other", clean_storage_free:"Free space", clean_storage_loading:"Counting Cloudflare storage…", clean_storage_error:"Storage count failed: ",
+    d1u_report_title:"Tencent Usage & Monitoring", d1u_title:"Tencent Cloud Usage", d1u_plan:"Tencent Cloud Lighthouse", d1u_limit:"Traffic package: {limit} GB", d1u_used:"Traffic used", d1u_remain:"Traffic remaining", d1u_pct:"Percentage", d1u_written:"Disk used", d1u_date:"Updated", d1u_refresh:"Refresh", d1u_loading:"Loading Tencent data…", d1u_unavailable:"Tencent data unavailable (credentials not configured or API error)", d1u_locked:"95% limit reached: other users blocked, admin only", d1u_normal:"Usage is normal", d1u_cleanup_btn:"Clean up leftover files", d1u_close:"Close", d1u_choose_title:"Tencent Usage & Monitoring", d1u_choose_usage:"View Usage & Monitoring", d1u_choose_clean:"Clean up leftover files (with storage report)", d1u_choose_cancel:"Cancel", d1u_back:"Back to Previous", d1u_back_lvl:"Back",
+    clean_title:"Clean up leftover files", clean_confirm:"Confirm cleanup of invalid files and orphan remnants after deletion? This action cannot be undone.", clean_ok:"Confirm Clean", clean_cancel:"Cancel", clean_success:"Cleanup completed", clean_result:"Scanned {total} R2 objects, found {orphans} orphan files, deleted {deleted}, skipped {skipped} unmanaged files.", clean_no_orphans:"No orphan files found.", clean_forbidden:"Only Tom can use this feature.", clean_error:"Cleanup request failed:", clean_report_title:"Cleanup Report", clean_report_summary:"Deleted {deleted} junk file(s) (found {total} orphan file(s) in total).", clean_report_where:"Deleted location (relative path)", clean_report_close:"Close", clean_report_empty:"No junk files to delete; the directory is already clean.", clean_report_more:"(showing first 50; total {total})", clean_storage_title:"Tencent Cloud Storage", clean_storage_summary:"Total {total}, Used {used} ({usedPct}), Free {free} ({freePct})", clean_storage_won:"WON attachments", clean_storage_crm:"CRM attachments", clean_storage_lost:"LOST attachments", clean_storage_vault:"Vault files", clean_storage_snapshots:"Data snapshots", clean_storage_other:"Other", clean_storage_free:"Free space", clean_storage_loading:"Counting Tencent Cloud storage…", clean_storage_error:"Storage count failed: ",
     nav: { dashboard:"Dashboard", crm:"Potential Projects", won:"Won Projects", lost:"Failed Projects", approvals:"Approvals", users:"User & Authorization", commission:"Personal Commission", lang:"Lang", logout:"Logout", role_admin:"(admin)", export_pdf:"Export PDF", fit:"Fit", fit_exit:"100%", fit_tip:"Fit table to screen width; double-tap the table or tap again to restore" },
     /* Short labels used on phone landscape so all 6 tabs fit on one row */
     nav_short: { dashboard:"Board", crm:"Potential", won:"Won", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm" },
@@ -6670,6 +6640,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
              user_pos_tag5:"tom is the default approver (locked) — add 1~2 more if needed; these people receive the request when the user clicks 'Forgot Password'",
              user_vis_title_canseeme:"Who can view his data (reverse grant)", user_vis_desc_canseeme:"Checked users can view data within this user's data scope",
              user_vis_title_hecansee:"Whose data he can view (forward grant)", user_vis_desc_hecansee:"This user can view data of the checked users",
+             user_vis_unified:"The data range set here applies uniformly to CRM / WON / LOST",
              user_vis_all:"All", user_vis_clear:"Clear", user_vis_inactive_suffix:" (Inactive)",
              user_perm_cat:"Cat", user_perm_def:"Default Retained Info", user_perm_bid:"Block ID", user_perm_name:"Block Name", user_perm_dec:"Decision", user_perm_appr:"Approver",
             user_perm_legend:"Use the per-module dropdown to choose: Keep Default / Hide Block / Grant Company-wide / Initiate Approval. After selecting Initiate Approval, pick 1~3 approvers in the same row.",
@@ -7358,8 +7329,8 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     rpt_cashflow_cat:"Loại khoản",
     rpt_cashflow_plan_date:"Ngày dự kiến",
     addm_title:"Quản lý phụ lục hợp đồng", addm_action:"Thao tác", addm_date:"Ngày", addm_amt_rmb:"Tiền(RMB)", addm_amt_usd:"Tiền(USD)", addm_amt_vnd:"Tiền(VND)", addm_desc:"Mô tả", addm_file:"Tệp(PDF)", addm_upload_cnt:"Số lần sửa", addm_add:"＋ Thêm phụ lục", addm_save:"Lưu", addm_close:"Đóng", addm_del:"Xóa", addm_clear_desc:"Xóa 3 ngôn ngữ", addm_no_pdf:"Chỉ hỗ trợ PDF", addm_upload_ok:"Tải lên thành công", addm_upload_fail:"Tải lên thất bại", addm_confirm_del:"Xóa phụ lục này?", addm_no_data:"Chưa có phụ lục", addm_save_first:"Vui lòng lưu form chính trước", addm_alert_title:"Thông báo", addm_alert_ok:"Đồng ý", addm_count_auto:"(tự động)", addm_view_title:"Xem phụ lục", detail_del:"Xóa",
-    d1u_report_title:"Báo cáo mức sử dụng đám mây", d1u_title:"Mức sử dụng D1", d1u_plan:"Gói miễn phí Cloudflare D1", d1u_limit:"Hạn mức mỗi ngày: {limit} lượt đọc dòng", d1u_used:"Đã dùng hôm nay", d1u_remain:"Còn lại hôm nay", d1u_pct:"Tỷ lệ", d1u_written:"Dòng ghi hôm nay", d1u_date:"Ngày (UTC)", d1u_refresh:"Làm mới", d1u_loading:"Đang tải dữ liệu chính thức…", d1u_unavailable:"Không lấy được dữ liệu chính thức (chưa cấu hình token hoặc lỗi API)", d1u_locked:"Đã đạt 95% giới hạn: người dùng khác bị chặn, chỉ quản trị viên", d1u_normal:"Mức sử dụng bình thường", d1u_cleanup_btn:"Dọn dẹp file thừa", d1u_close:"Đóng", d1u_choose_title:"Quản lý đám mây", d1u_choose_usage:"Mức sử dụng D1", d1u_choose_clean:"Dọn dẹp file thừa (kèm báo cáo dung lượng)", d1u_choose_cancel:"Hủy", d1u_back:"Quay lại trang trước", d1u_back_lvl:"Quay lại",
-    clean_title:"Dọn dẹp file thừa", clean_confirm:"Xác nhận xóa file không hợp lệ và file thừa còn sót sau khi xóa? Thao tác này không thể hoàn tác.", clean_ok:"Xác nhận xóa", clean_cancel:"Hủy", clean_success:"Dọn dẹp hoàn tất", clean_result:"Đã quét {total} đối tượng R2, tìm thấy {orphans} file thừa, đã xóa {deleted}, bỏ qua {skipped} file không được quản lý.", clean_no_orphans:"Không tìm thấy file thừa.", clean_forbidden:"Chỉ Tom mới có thể sử dụng tính năng này.", clean_error:"Yêu cầu dọn dẹp thất bại:", clean_report_title:"Báo cáo dọn dẹp", clean_report_summary:"Đã xóa {deleted} file rác (tìm thấy tổng cộng {total} file thừa).", clean_report_where:"Vị trí đã xóa (đường dẫn tương đối)", clean_report_close:"Đóng", clean_report_empty:"Không tìm thấy file rác để xóa; thư mục đã sạch.", clean_report_more:"(chỉ hiển thị 50 đầu; tổng {total})", clean_storage_title:"Dung lượng Cloudflare", clean_storage_summary:"Tổng {total}, Đã dùng {used} ({usedPct}), Còn trống {free} ({freePct})", clean_storage_won:"Tệp đính kèm WON", clean_storage_crm:"Tệp đính kèm CRM", clean_storage_lost:"Tệp đính kèm LOST", clean_storage_vault:"Tệp Vault", clean_storage_snapshots:"Snapshot dữ liệu", clean_storage_other:"Khác", clean_storage_free:"Còn trống", clean_storage_loading:"Đang thống kê dung lượng Cloudflare…", clean_storage_error:"Thống kê thất bại: ",
+    d1u_report_title:"Tencent Usage & Monitoring", d1u_title:"Mức sử dụng tài nguyên Tencent Cloud", d1u_plan:"Tencent Cloud Lighthouse", d1u_limit:"Gói lưu lượng: {limit} GB", d1u_used:"Lưu lượng đã dùng", d1u_remain:"Lưu lượng còn lại", d1u_pct:"Tỷ lệ", d1u_written:"Đĩa đã dùng", d1u_date:"Cập nhật", d1u_refresh:"Làm mới", d1u_loading:"Đang tải dữ liệu Tencent…", d1u_unavailable:"Không lấy được dữ liệu Tencent (chưa cấu hình khóa hoặc lỗi API)", d1u_locked:"Đã đạt 95% giới hạn: người dùng khác bị chặn, chỉ quản trị viên", d1u_normal:"Mức sử dụng bình thường", d1u_cleanup_btn:"Dọn dẹp file thừa", d1u_close:"Đóng", d1u_choose_title:"Tencent Usage & Monitoring", d1u_choose_usage:"Xem mức sử dụng & giám sát", d1u_choose_clean:"Dọn dẹp file thừa (kèm báo cáo dung lượng)", d1u_choose_cancel:"Hủy", d1u_back:"Quay lại trang trước", d1u_back_lvl:"Quay lại",
+    clean_title:"Dọn dẹp file thừa", clean_confirm:"Xác nhận xóa file không hợp lệ và file thừa còn sót sau khi xóa? Thao tác này không thể hoàn tác.", clean_ok:"Xác nhận xóa", clean_cancel:"Hủy", clean_success:"Dọn dẹp hoàn tất", clean_result:"Đã quét {total} đối tượng R2, tìm thấy {orphans} file thừa, đã xóa {deleted}, bỏ qua {skipped} file không được quản lý.", clean_no_orphans:"Không tìm thấy file thừa.", clean_forbidden:"Chỉ Tom mới có thể sử dụng tính năng này.", clean_error:"Yêu cầu dọn dẹp thất bại:", clean_report_title:"Báo cáo dọn dẹp", clean_report_summary:"Đã xóa {deleted} file rác (tìm thấy tổng cộng {total} file thừa).", clean_report_where:"Vị trí đã xóa (đường dẫn tương đối)", clean_report_close:"Đóng", clean_report_empty:"Không tìm thấy file rác để xóa; thư mục đã sạch.", clean_report_more:"(chỉ hiển thị 50 đầu; tổng {total})", clean_storage_title:"Dung lượng Tencent Cloud", clean_storage_summary:"Tổng {total}, Đã dùng {used} ({usedPct}), Còn trống {free} ({freePct})", clean_storage_won:"Tệp đính kèm WON", clean_storage_crm:"Tệp đính kèm CRM", clean_storage_lost:"Tệp đính kèm LOST", clean_storage_vault:"Tệp Vault", clean_storage_snapshots:"Snapshot dữ liệu", clean_storage_other:"Khác", clean_storage_free:"Còn trống", clean_storage_loading:"Đang thống kê dung lượng Tencent Cloud…", clean_storage_error:"Thống kê thất bại: ",
     nav: { dashboard:"Bảng điều khiển", crm:"Dự án tiềm năng", won:"Dự án Thắng", lost:"Dự án thất bại", approvals:"Phê duyệt", users:"Người dùng & Ủy quyền", commission:"Hoa Hồng Cá Nhân", lang:"Ngôn ngữ", logout:"Đăng xuất", role_admin:"(quản trị)", export_pdf:"Xuất PDF", fit:"Vừa", fit_exit:"100%", fit_tip:"Thu nhỏ bảng vừa màn hình; nhấn đúp vào bảng để trở lại" },
     /* Nhãn ngắn dùng cho màn hình ngang để 6 tab vừa một hàng */
     nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH" },
@@ -7424,6 +7395,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
              user_pos_tag5:"tom là người phê duyệt mặc định (khóa, không thể bỏ chọn), có thể thêm 1~2 người; những người này nhận yêu cầu khi người dùng nhấn 'Quên mật khẩu'",
              user_vis_title_canseeme:"Ai có thể xem dữ liệu của anh ấy (ủy quyền ngược)", user_vis_desc_canseeme:"Người được chọn có thể xem dữ liệu trong phạm vi dữ liệu của người dùng này",
              user_vis_title_hecansee:"Anh ấy có thể xem dữ liệu của ai (ủy quyền thuận)", user_vis_desc_hecansee:"Người dùng này có thể xem dữ liệu của người được chọn",
+             user_vis_unified:"Phạm vi dữ liệu được đặt ở đây áp dụng đồng nhất cho CRM / WON / LOST",
              user_vis_all:"Tất cả", user_vis_clear:"Xóa", user_vis_inactive_suffix:" (Nghỉ việc)",
              user_perm_cat:"Loại", user_perm_def:"Thông tin mặc định giữ lại", user_perm_bid:"ID khối", user_perm_name:"Tên khối", user_perm_dec:"Quyết định", user_perm_appr:"Người phê duyệt",
             user_perm_legend:"Chọn từng mục: Giữ mặc định / Ẩn khối / Cấp toàn công ty / Khởi tạo phê duyệt. Sau khi chọn Khởi tạo phê duyệt, hãy chọn 1~3 người phê duyệt ở cùng hàng.",
@@ -7754,6 +7726,26 @@ function TBuildProxy(lang) {
 }
 // 注：T() 已在 7390 行直接定义为调用 TBuildProxy(CUR_LANG)，调用方一律拿到合并后的代理对象
 function el(id) { return document.getElementById(id); }
+
+// ★ 统一刷新指定容器内的 data-i18n / data-i18n-attr（弹窗专用兜底）
+function sweepI18n(root) {
+  if (!root) return;
+  var t = T();
+  var list = root.querySelectorAll('[data-i18n]');
+  for (var i = 0; i < list.length; i++) {
+    var k = list[i].getAttribute('data-i18n');
+    if (k && t[k] !== undefined) list[i].textContent = t[k];
+  }
+  var alist = root.querySelectorAll('[data-i18n-attr]');
+  for (var j = 0; j < alist.length; j++) {
+    var spec = alist[j].getAttribute('data-i18n-attr') || '';
+    spec.split(';').forEach(function(pair) {
+      var parts = pair.split(':');
+      if (parts.length === 2 && t[parts[1]] !== undefined) alist[j].setAttribute(parts[0], t[parts[1]]);
+    });
+  }
+}
+window.sweepI18n = sweepI18n;
 function fmtMoney(n, c) { var v=Math.round(Number(n)||0); if(c==='RMB'||c==='rmb') return '¥'+v.toLocaleString('en-US'); if(c==='USD'||c==='usd') return '$'+v.toLocaleString('en-US'); if(c==='VND'||c==='vnd') return '₫'+v.toLocaleString('en-US'); return v.toLocaleString('en-US'); }
 function stripToNumber(str) { return parseInt(String(str||'').replace(/[^0-9-]/g,'')||'0',10); }
 
@@ -9432,7 +9424,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.09.06.20 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.09.07.05 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -9451,19 +9443,13 @@ function setLangDebug(lang) {
     });
   } catch(e) {}
 
-  // 语言切换后的视图刷新策略（消除"切标签页数据滞后"的关键）：
-  //  - CRM/LOST：applyCrmLang/applyLostLang 已【无条件】用缓存数据重渲染了表头+行，
-  //    不再标记 dirty —— 否则用户切过去时 needReloadView 命中，白白重新 fetch 一次（手机上体感延迟明显）
-  //  - WON：applyWonLang 仅在视图可见时重渲染行 → 不可见时打轻标 _viewLangStale，
-  //    切过去时用缓存数据直接渲染（switchView 消费），同样跳过 fetch
-  //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低）
+  // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
+  //  - V2026.09.07.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
+  //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
+  //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
   try {
     if (typeof markViewsDirty === 'function') markViewsDirty(['dashboard', 'users', 'approvals']);
-    var _wonSec = document.getElementById('view-won');
-    if (_wonSec && !_wonSec.classList.contains('active')) {
-      window._viewLangStale = window._viewLangStale || {};
-      window._viewLangStale.won = true;
-    }
   } catch(e){}
 
   // 登录页文案随切语言实时刷新（独立于主顶栏，覆盖登录/忘记/重置文案）
@@ -9518,7 +9504,7 @@ function setLangDebug(lang) {
   // 性能优化：表头/按钮/导航/弹窗等"轻量"步骤同步执行（UI 立即反馈）；CRM/LOST/WON
   // 表格行重渲染（涉及 colgroup/thead/tbody 字符串拼接+innerHTML，行数大时单帧 30~80ms）
   // 全部推到下一帧批量执行，避免连续同步重渲染阻塞首屏反馈。
-  var lightSteps = ['applyTopbarLang', 'applyEmptyLang', 'applyUsersLang', 'applyApprovalsLang', 'applyCommissionLang', 'applyDashUpdateLang', 'applyDashboardChartTitles', 'applyLangRefreshers'];
+  var lightSteps = ['applyTopbarLang', 'applyEmptyLang', 'applyUsersLang', 'applyApprovalsLang', 'applyCommissionLang', 'applyDashUpdateLang', 'applyDashboardChartTitles', 'applyLangRefreshers', 'applyCleanD1Lang'];
   var heavySteps = ['applyWonLang', 'applyCrmLang', 'applyLostLang'];
   console.warn('[lang] setLangDebug(' + lang + ') lightSteps start');
   for (var i = 0; i < lightSteps.length; i++) {
@@ -9541,14 +9527,24 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
+  // ★ V2026.09.07.05 新要求：切语言只刷新【当前激活的表格标签】，
+  // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
+  // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
+  var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
   for (var j = 0; j < heavySteps.length; j++) {
     try {
-      if (typeof window[heavySteps[j]] === 'function') {
-        window[heavySteps[j]]();
-        console.warn('[lang] heavy done:', heavySteps[j]);
-      } else {
-        console.warn('[lang] MISSING heavy:', heavySteps[j]);
+      var _fn = heavySteps[j];
+      if (typeof window[_fn] !== 'function') { console.warn('[lang] MISSING heavy:', _fn); continue; }
+      var _vt = _fn === 'applyWonLang' ? 'won' : _fn === 'applyCrmLang' ? 'crm' : _fn === 'applyLostLang' ? 'lost' : null;
+      // 非当前激活表格：只打轻标，切过去时再按新语言用缓存重渲染（绝不 fetch、不读其它标签的行）
+      if (_vt && _vt !== _activeTable) {
+        window._viewLangStale = window._viewLangStale || {};
+        window._viewLangStale[_vt] = true;
+        console.warn('[lang] heavy skip (not active view): ' + _fn + ' -> marked stale');
+        continue;
       }
+      window[_fn]();
+      console.warn('[lang] heavy done:', _fn);
     } catch (e) {
       console.warn('[lang] ' + heavySteps[j] + ' failed:', e);
     }
@@ -9973,9 +9969,15 @@ function applyEmptyLang() {
     if (ce && e[wonChartMap[cid]]) ce.textContent = e[wonChartMap[cid]];
   }
   // 若看板卡片已渲染，切换语言后重新渲染以同步卡片标题/单位
+  // 2026-09-06：仅在看板可见时才重载；停留在其它标签页时不偷刷 D1，
+  // 仅标记脏，下次打开看板再拉取（既保证语言同步，又不在其它页浪费读取行）。
   var dc = document.getElementById('dashCards');
-  if (dc && dc.querySelector('.dash-card') && typeof loadDashboard === 'function') {
-    loadDashboard();
+  if (dc && dc.querySelector('.dash-card')) {
+    if (window.currentView === 'dashboard' && typeof loadDashboard === 'function') {
+      loadDashboard();
+    } else if (typeof markViewsDirty === 'function') {
+      markViewsDirty(['dashboard']);
+    }
   }
   // 金属价格走势图：切换语言后同步标题并重渲染
   if (typeof renderDashMetalCharts === 'function' && document.getElementById('dashMetalSectionTitle')) {
@@ -10059,6 +10061,7 @@ function applyUsersLang() {
   setText('visBtnAllHeCanSee','user_vis_all','全部');
   setText('visBtnClearCanSeeMe','user_vis_clear','清空');
   setText('visBtnClearHeCanSee','user_vis_clear','清空');
+  setText('visUnifiedHint','user_vis_unified','本页设置的数据范围对 CRM / WON / LOST 三模块统一生效');
   setText('visHintCanSeeMe','user_vis_desc_canseeme','勾选的用户可以查看该用户数据范围内的数据');
   setText('visHintHeCanSee','user_vis_desc_hecansee','该用户可以查看被勾选用户的数据');
   // 权限/密码/footer
@@ -10176,7 +10179,7 @@ function deleteUser(id) {
           body: JSON.stringify({ requester:(authUser&&authUser.username)||'', requester_name:(authUser&&authUser.real_name)||'', block_id:'USR-D3', block_name:(t.perm_name_USR_D3||'删除/停用用户'), title:(t.usr_del_card_title||'删除用户申请')+'：'+(u.name||'')+'（'+(u.login||'')+'）', content:'', persist:'persistent', target_id:String(id), approvers:TRI, payload: JSON.stringify({ uid:id, name:u.name||'', login:u.login||'' }) })
         }).then(function(r){ return r.json(); }).then(function(d){
           if (d && d.ok) showAlert(t.usr_send_pending || '已提交审批：tom/cuong/james 任一人处理后生效');
-          else showAlert((d&&d.msg) || (t.toast_op_fail||'操作失败'));
+          else showAlert(usrSaveErr(d, t.toast_op_fail||'操作失败'));
         }).catch(function(){ showAlert(t.toast_op_fail||'操作失败'); });
         return;
       }
@@ -10224,7 +10227,11 @@ function loadUsers(){
           active: (u.status === 'active' || u.active === 1 || u.active === true) ? 1 : 0,
           isAdmin: (u.is_admin === true || u.isAdmin === 1 || u.isAdmin === true || managerLogins.indexOf(u.username || u.login) >= 0) ? 1 : 0,
           delegateTo: u.delegate_to || "",
-          forgotApprovers: (Array.isArray(u.forgot_approvers) && u.forgot_approvers.length) ? u.forgot_approvers : ["tom"]
+          forgotApprovers: (function(){
+            var fa = u.forgot_approvers;
+            if (typeof fa === 'string' && fa.trim().charAt(0) === '[') { try { fa = JSON.parse(fa); } catch(e){ fa = []; } }
+            return Array.isArray(fa) && fa.length ? fa : ["tom"];
+          })()
         };
       });
       // 保存后端返回的原始顺序，排序后仍可「归位」
@@ -10236,8 +10243,15 @@ function loadUsers(){
       PERMS_STATE = {};
       usersData.forEach(function(u){
         const vu = list.find(function(x){ return x.id === u.id; }) || {};
-        VIS[u.id] = Array.isArray(vu.vis_he_can_see) ? vu.vis_he_can_see.map(Number) : [];
-        VIS_ME[u.id] = Array.isArray(vu.vis_can_see_me) ? vu.vis_can_see_me.map(Number) : [];
+        const parseIds = function(raw){
+          var arr;
+          if (Array.isArray(raw)) arr = raw;
+          else if (typeof raw === 'string' && raw.trim().charAt(0) === '[') { try { arr = JSON.parse(raw); } catch(e){ arr = []; } }
+          else arr = [];
+          return Array.isArray(arr) ? arr.map(Number).filter(function(x){ return !isNaN(x); }) : [];
+        };
+        VIS[u.id] = parseIds(vu.vis_he_can_see);
+        VIS_ME[u.id] = parseIds(vu.vis_can_see_me);
         const perms = (vu.perms && typeof vu.perms === 'object') ? vu.perms : {};
         PERMS_STATE[u.id] = perms;
         Object.keys(perms).forEach(function(bid){
@@ -14294,7 +14308,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.09.06.20（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.09.07.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -14528,6 +14542,17 @@ function loginFmtCheck(){
     hideLoginFmtTip();    // 输入已合法 → 自动收起气泡
   }
 }
+// 把后端错误翻译成易读提示（重点：D1 免费额度写爆时给出明确指引，而不是笼统"保存失败"）
+function usrSaveErr(d, def){
+  if (d && d.error) {
+    if (/D1_ERROR|write limit|quota|exceeded/i.test(String(d.error))) {
+      return '保存失败：云端 D1 今日写入额度已用尽，请于 UTC 0:00 后重试或升级 D1 计划';
+    }
+    return String(d.error);
+  }
+  return def || '操作失败';
+}
+
 function saveModal(){
   const t = (T().empty) || T();
   const name=document.getElementById("f-name").value.trim();
@@ -14606,7 +14631,7 @@ function saveModal(){
         if (_o!==_n || _oa!==_na) _changes.push({bid:bid, before:_o, after:_n});
       });
       if (!_changes.length) { showAlert(t.usr_nochange || '没有权限变更'); return; }
-      _pl = { uid:curUid, name:name, login:login, changes:_changes, perms:perms, managers:selectedManagers };
+      _pl = { uid:curUid, name:name, login:login, changes:_changes, perms:perms, vis_can_see_me:selMe, vis_he_can_see:selHe, delegate_to:payload.delegate_to, position:payload.position, status:payload.status, managers:selectedManagers };
     } else {
       _pl = { name:name, login:login, position:payload.position, status:payload.status, perms:perms, vis_can_see_me:selMe, vis_he_can_see:selHe, delegate_to:payload.delegate_to, forgot_approvers:payload.forgot_approvers, managers:selectedManagers };
     }
@@ -14619,7 +14644,7 @@ function saveModal(){
     }).then(function(r){ return r.json(); }).then(function(d){
       // ★ 只提交、不退出：审批提交后弹窗保持打开（重复点击会提示"没有权限变更"，不会重复提交）
       if (d && d.ok) { loadUsers(); showAlert(t.usr_send_pending || '已提交审批：tom/cuong/james 任一人处理后生效'); }
-      else showAlert((d&&d.msg) || (t.toast_op_fail||'操作失败'));
+      else showAlert(usrSaveErr(d, t.toast_op_fail||'操作失败'));
     }).catch(function(){ showAlert(t.toast_op_fail||'操作失败'); });
     return;
   }
@@ -14649,11 +14674,11 @@ function saveModal(){
                 if (!curUid && d && d.id) { curUid = d.id; }
                 loadUsers();
               } else {
-                showToast((d2 && d2.message) || (t.user_admin_save_fail || '管理员名单保存失败'));
+                showToast(usrSaveErr(d2, t.user_admin_save_fail || '管理员名单保存失败'));
               }
             });
         } else {
-          showToast((d&&d.message)||(curUid ? (t.user_save_fail||'保存失败') : (t.user_add_fail||'新增失败')));
+          showToast(usrSaveErr(d, curUid ? (t.user_save_fail||'保存失败') : (t.user_add_fail||'新增失败')));
         }
       })
       .catch(function(){ showToast(curUid ? (t.user_save_fail||'保存失败，请检查网络') : (t.user_add_fail||'新增失败，请检查网络')); });
@@ -15581,10 +15606,6 @@ function applyWonLang() {
   if (typeof applyCprLang === 'function') applyCprLang();
   if (typeof applyAgiLang === 'function') applyAgiLang();
   if (typeof applyAgiRptLang === 'function') applyAgiRptLang();
-  if (typeof applyCleanReportLang === 'function') applyCleanReportLang();
-  if (typeof applyCleanOrphansLang === 'function') applyCleanOrphansLang();
-  // ★ D1 云端用量报告：语言切换时跟随重绘（中/英/越）
-  if (typeof applyD1UsageLang === 'function') applyD1UsageLang();
   // ★ 个人佣金弹窗标题：按「当前是新增还是编辑」重新套用三语，
   //    避免切换语言后被统一的 comm_add_title（新增）覆盖掉「编辑」状态
   if (typeof applyCommAddTitle === 'function') applyCommAddTitle();
@@ -18333,7 +18354,8 @@ function saveCrm() {
   var doSave = function(){
     fetch(url, {
       method: method,
-      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      headers: (typeof authHeaders==='function'?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'}),
       body: JSON.stringify(data)
     }).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok, body: j }; });
@@ -18498,7 +18520,7 @@ function saveWon() { var t=T(); var N=function(id){ return stripToNumber(el(id).
   var id=el('wonModal').dataset.id;
   // 注：原 catch 分支会在网络失败时把数据写进 SEED_WON 本地数组并提示"保存成功"，
   // 造成"存进去了其实没进数据库"的假象。SEED_WON 已删除，改为如实提示保存失败。
-  fetch('/api/won-projects'+(id?'/'+id:''),{ method:id?'PUT':'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)})
+  fetch('/api/won-projects'+(id?'/'+id:''),{ method:id?'PUT':'POST', credentials:'include', headers:(typeof authHeaders==='function'?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'}), body:JSON.stringify(data)})
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.ok||d.pending||d.id){ showSaveOk(d.pending?t.pending:t.saveOk); closeWonModal(); loadWon(); }
@@ -18526,7 +18548,7 @@ function delWon(id){
     singleUseGuard('WON-D3', String(id), t.won_del_action || '删除成功项目', function() {
       // 注：原 catch 分支在网络失败时仍提示"删除成功"（实际只删了本地 SEED_WON），
       // SEED_WON 已删除，改为如实提示失败。
-      fetch('/api/won-projects/'+id,{method:'DELETE', credentials:'include', headers:{'Content-Type':'application/json'}})
+      fetch('/api/won-projects/'+id,{method:'DELETE', credentials:'include', headers:(typeof authHeaders==='function'?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'})})
         .then(function(){ showSaveOk(t.saveOk); loadWon(); })
         .catch(function(){ showSaveOk('删除失败：无法连接服务器'); loadWon(); });
     });
@@ -21935,7 +21957,7 @@ window.agiOnWarrantyAmtInput = agiOnWarrantyAmtInput;
 // ==================== 登录 / 认证 ====================
 // 空字符串 = 同源相对路径：自动适配 本机(127.0.0.1) / 局域网(192.168.x.x) / 域名 三种访问方式，
 // 手机访问时 API 不会再打到手机自己的 127.0.0.1 上（此前硬编码导致手机端全部请求失败）。
-var API_BASE = 'https://agi-gs.tomalso911.workers.dev';
+var API_BASE = '';
 var authUser = null;   // 当前登录用户
 var VAULT_TOKEN = '';  // M10 安全加固：服务端签发的会话 token（仅会话内有效，不持久化到 localStorage）
 
@@ -21947,7 +21969,9 @@ var VAULT_TOKEN = '';  // M10 安全加固：服务端签发的会话 token（�
   window.fetch = function (url, opts) {
     opts = opts || {};
     var u = (typeof url === 'string') ? url : (url && url.url) || '';
-    if (/https?:\/\/[^\/]*\/api\/(won|crm|lost)-projects/.test(u)) {
+    // 同时匹配绝对地址（https://host/api/...）和相对地址（/api/...），
+    // 确保所有 won/crm/lost 项目 API（含后续新增的相对路径 fetch）都自动带上当前登录身份头。
+    if (/^(https?:\/\/[^\/]*)?\/api\/(won|crm|lost)-projects/.test(u)) {
       if (!(opts.headers instanceof Headers)) {
         opts.headers = opts.headers || {};
         var un = (typeof authUser !== 'undefined' && authUser && authUser.username) ? authUser.username : '';
@@ -22407,6 +22431,16 @@ function _ovTickFmt(v, decimals){
 //   filled>0 时回调（重新拉列表渲染）——此后 rmLangVal 三语齐全，切语言即时正确。
 function autoFillRemarks(table, onFilled){
   try {
+    // 防御性守卫：避免服务端持续返回 filled>0 时陷入 loadXxx → autoFillRemarks → loadXxx 的
+    // 无限重渲染递归（典型症状：失败项目/潜在项目 表格整表持续闪烁）。
+    // 每次“非自动重拉”触发的 loadXxx 会把对应表的链计数清零；自动重拉回调传递 isAuto=true，
+    // 链计数累加，超过上限即停止继续重拉（最多补翻 6 轮，约 240 行/表），杜绝无限闪烁。
+    var __chain = (window.__autoFillChain = window.__autoFillChain || {});
+    __chain[table] = (__chain[table] || 0) + 1;
+    if (__chain[table] > 6) {
+      console.warn('[autoFill] 已达自动重拉上限，停止以防止无限重渲染: ' + table);
+      return;
+    }
     fetch('/api/translate-remarks?table=' + table + '&limit=40', {
       credentials: 'include',
       headers: (typeof authHeaders === 'function' ? authHeaders() : {})
@@ -22502,6 +22536,10 @@ function loadDashboard(force) {
   var L = function(k, d){ return t[k] || (t.empty && t.empty[k]) || d; };
   var cardsEl = document.getElementById('dashCards');
   if (!cardsEl) return;
+  // 2026-09-06：仅当看板视图可见时才联网拉取；切到 CRM/WON/LOST/用户与授权/
+  // 个人佣金/审批 等其它标签页时绝不刷新看板数据，省 D1 读取行。
+  // 看板数据只在“转到看板”时（switchView('dashboard') 经 needReloadView 门控）才更新。
+  if (window.currentView !== 'dashboard') return;
 
   // 进入看板视图时，默认强制刷新数据（force 无参时视为 true），避免使用旧缓存。
   // 原因：DEMO clear/reset 后数据库已清空，但 localStorage 里仍可能有旧数据；
@@ -22512,7 +22550,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.09.06.20 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.09.07.05 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -22869,7 +22907,7 @@ function _refreshCrmAggChartsByDecision(){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.09.06.20）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.09.07.05）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -27667,7 +27705,8 @@ function confirmCopyProject() {
   // 通过 API 写入后端（绝对地址，与保存/删除/加载一致）
   fetch('/api/won-projects', {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    headers:(typeof authHeaders==='function'?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'}),
     body: JSON.stringify(copy)
   }).then(function(r){return r.json();}).then(function(d){
     if (d && d.id) {
@@ -29886,8 +29925,10 @@ function _doExportOverviewPDF(){
   var cleanPressTimer = null;
   var longPressed = false;
   var cleanTriggered = false;
+  var cleanFromChooser = false;
 
   function bindChip(){
+
     var chip = document.getElementById('tbUserChip');
     if (!chip) return;
     var reset = function(){
@@ -29951,6 +29992,7 @@ function _doExportOverviewPDF(){
     if (String(me).toLowerCase() !== 'tom') {
       showToast((T().empty || T()).clean_forbidden || 'Only Tom can use this feature.');
       cleanTriggered = false;
+      cleanFromChooser = false;
       return;
     }
     // 若报告弹窗开着，先关掉：避免确认框被压在报告下面（表现为"点了没反应"）
@@ -29963,6 +30005,11 @@ function _doExportOverviewPDF(){
     document.getElementById('cleanOrphansMsg').textContent = t.clean_confirm || '确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。';
     document.getElementById('cleanOrphansCancel').textContent = t.clean_cancel || '取消';
     document.getElementById('cleanOrphansConfirm').textContent = t.clean_ok || '确认清除';
+    var backBtn = document.getElementById('cleanOrphansBack');
+    if (backBtn) {
+      backBtn.style.display = cleanFromChooser ? '' : 'none';
+      backBtn.textContent = t.d1u_back || '返回上一页';
+    }
     var xc2 = document.querySelector('#cleanOrphansOverlay > .auth-modal > .comm-close');
     if (xc2) xc2.setAttribute('title', t.d1u_close || '关闭');
     modal.classList.remove('hidden');
@@ -29971,6 +30018,7 @@ function _doExportOverviewPDF(){
     var modal = document.getElementById('cleanOrphansOverlay');
     if (modal) modal.classList.add('hidden');
     cleanTriggered = false;
+    cleanFromChooser = false;
   }
   function confirmCleanOrphans(){
     closeCleanOrphansModal();
@@ -30176,15 +30224,17 @@ function _doExportOverviewPDF(){
     if (msg) msg.textContent = t.clean_confirm || '确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。';
     if (cancel) cancel.textContent = t.clean_cancel || '取消';
     if (confirm) confirm.textContent = t.clean_ok || '确认清除';
+    var backBtn = document.getElementById('cleanOrphansBack');
+    if (backBtn && backBtn.style.display !== 'none') backBtn.textContent = t.d1u_back || '返回上一页';
   }
 
-  // ---------- D1 云端用量报告（长按橙色 T 头像 5 秒）----------
-  // 数据来自 Cloudflare 官方分析 API（/api/d1-usage），不消耗任何 D1 行读/行写。
+  // ---------- 腾讯云资源用量报告（长按橙色 T 头像 5 秒）----------
+  // 数据来自 /api/tencent-usage（服务器本地磁盘 + 腾讯云流量包），不再依赖 Cloudflare。
   var lastD1Usage = null;   // 最近一次官方用量数据（切换语言时用它重绘，不重新请求）
   function fmtNum(n){
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
-  function donutSvg(used, remain, t){
+  function donutSvg(used, remain, t, sub){
     var total = Number(used) + Number(remain);
     var p = total > 0 ? Number(used) / total : 0;
     var R = 42, C = 2 * Math.PI * R, len = C * p;
@@ -30195,47 +30245,72 @@ function _doExportOverviewPDF(){
       '<circle r="' + R + '" fill="none" stroke="' + color + '" stroke-width="18" stroke-dasharray="' + len + ' ' + (C - len) + '"></circle>' +
       '</g>' +
       '<text x="60" y="57" text-anchor="middle" font-size="16" font-weight="700" fill="#2c3e50">' + Math.round(p * 100) + '%</text>' +
-      '<text x="60" y="73" text-anchor="middle" font-size="10" fill="#7f8c8d">' + (t.d1u_used || '今日已用') + '</text>' +
+      '<text x="60" y="73" text-anchor="middle" font-size="10" fill="#7f8c8d">' + (sub || (t.d1u_pct || 'Used')) + '</text>' +
       '</svg>';
   }
-  function barsHtml(used, remain, limit, t){
-    var max = Number(limit) > 0 ? Number(limit) : (Number(used) + Number(remain));
-    function row(label, val, color){
-      var w = max > 0 ? Math.min(100, Math.max(1, (Number(val) / max) * 100)) : 0;
-      return '<div style="margin-bottom:9px;">' +
+  function barsHtml(rows, t){
+    var html = '';
+    (rows || []).forEach(function(rw){
+      var max = Number(rw.total) > 0 ? Number(rw.total) : (Number(rw.used) + Number(rw.remain));
+      var w = max > 0 ? Math.min(100, Math.max(1, (Number(rw.used) / max) * 100)) : 0;
+      html += '<div style="margin-bottom:9px;">' +
         '<div style="display:flex;justify-content:space-between;font-size:12px;color:#34495e;margin-bottom:3px;">' +
-        '<span>' + label + '</span><span style="font-weight:600;">' + fmtNum(val) + '</span></div>' +
+        '<span>' + rw.label + '</span><span style="font-weight:600;">' + rw.value + '</span></div>' +
         '<div style="height:12px;background:#eef2f6;border-radius:6px;overflow:hidden;">' +
-        '<div style="height:100%;width:' + w + '%;background:' + color + ';border-radius:6px;"></div></div></div>';
-    }
-    return row(t.d1u_used || '今日已用', used, '#ff7a1a') + row(t.d1u_remain || '今日剩余', remain, '#27ae60');
+        '<div style="height:100%;width:' + w + '%;background:' + (rw.color || '#ff7a1a') + ';border-radius:6px;"></div></div></div>';
+    });
+    return html;
   }
   function renderD1Usage(u, t){
-    var limit = Number(u.limit || 0);
-    var used = Number(u.rowsRead || 0);
-    var remain = Number(u.remaining || 0);
-    var pct = Number(u.pct || 0);
+    var metrics = (u && u.metrics) || {};
+    var disk = metrics.disk || {};
+    var traffic = (u && u.traffic) ? u.traffic : null;
+    var diskTotal = Number(disk.total || 0);
+    var diskUsed = Number(disk.used || 0);
+    var diskFree = Number(disk.free || 0);
+    var diskPct = diskTotal > 0 ? Math.round(diskUsed / diskTotal * 100) : 0;
+    var trafficTotal = traffic ? Number(traffic.total || 0) : 0;
+    var trafficUsed = traffic ? Number(traffic.used || 0) : 0;
+    var trafficRemaining = traffic ? Number(traffic.remaining || 0) : 0;
+    var trafficUnit = (traffic && traffic.unit) ? traffic.unit : 'GB';
+    var trafficPct = trafficTotal > 0 ? Math.round(trafficUsed / trafficTotal * 100) : 0;
     var sum = document.getElementById('d1UsageSummary');
     var note = document.getElementById('d1UsageNote');
     var pie = document.getElementById('d1UsagePie');
     var bars = document.getElementById('d1UsageBars');
     if (sum) {
-      sum.innerHTML =
-        '<div>' + (t.d1u_plan || 'Cloudflare D1 免费套餐') + ' · ' +
-          (t.d1u_limit || '每日额度：{limit} 行读').replace('{limit}', fmtNum(limit)) + '</div>' +
-        '<div style="margin-top:4px;">' + (t.d1u_used || '今日已用') + ' <b style="color:#e67e22;">' + fmtNum(used) + '</b> · ' +
-          (t.d1u_remain || '今日剩余') + ' <b style="color:#27ae60;">' + fmtNum(remain) + '</b> · ' +
-          (t.d1u_pct || '占比') + ' <b>' + pct + '%</b></div>' +
-        '<div style="margin-top:4px;color:#7f8c8d;">' + (t.d1u_written || '今日行写') + ' ' + fmtNum(Number(u.rowsWritten || 0)) +
-          ' · ' + (t.d1u_date || '统计日期（UTC）') + ' ' + (u.day || '') + '</div>';
+      var s = '';
+      s += '<div>' + (t.d1u_plan || 'Tencent Cloud Lighthouse') + ' · ' +
+        (t.d1u_limit || 'Traffic package: {limit} GB').replace('{limit}', fmtNum(trafficTotal)) + ' ' + trafficUnit + '</div>';
+      if (traffic) {
+        s += '<div style="margin-top:4px;">' + (t.d1u_used || 'Traffic used') + ' <b style="color:#e67e22;">' + fmtNum(trafficUsed) + ' ' + trafficUnit + '</b> · ' +
+          (t.d1u_remain || 'Traffic remaining') + ' <b style="color:#27ae60;">' + fmtNum(trafficRemaining) + ' ' + trafficUnit + '</b> · ' +
+          (t.d1u_pct || 'Percentage') + ' <b>' + trafficPct + '%</b></div>';
+      } else {
+        s += '<div style="margin-top:4px;color:#c0392b;">' + (t.d1u_unavailable || 'Tencent data unavailable') + '</div>';
+      }
+      s += '<div style="margin-top:4px;">' + (t.d1u_written || 'Disk used') + ' <b style="color:#c0392b;">' + fmtCleanBytes(diskUsed) + '</b> / ' + fmtCleanBytes(diskTotal) +
+        ' · ' + (t.d1u_pct || 'Percentage') + ' <b>' + diskPct + '%</b></div>';
+      if (u && u.updatedAt) s += '<div style="margin-top:4px;color:#7f8c8d;">' + (t.d1u_date || 'Updated') + ' ' + u.updatedAt + '</div>';
+      sum.innerHTML = s;
     }
     if (note) {
-      if (u.stale) { note.textContent = (t.d1u_unavailable || '') + (u.err ? ' [' + u.err + ']' : ''); note.style.color = '#7f8c8d'; note.style.fontWeight = ''; }
-      else if (u.locked) { note.textContent = t.d1u_locked || ''; note.style.color = '#c0392b'; note.style.fontWeight = '700'; }
+      if (traffic && traffic.error) { note.textContent = (t.d1u_unavailable || '') + ' [' + traffic.error + ']'; note.style.color = '#c0392b'; note.style.fontWeight = ''; }
       else { note.textContent = t.d1u_normal || ''; note.style.color = '#27ae60'; note.style.fontWeight = ''; }
     }
-    if (pie) pie.innerHTML = donutSvg(used, remain, t);
-    if (bars) bars.innerHTML = barsHtml(used, remain, limit, t);
+    if (pie) {
+      // 甜甜圈优先显示流量包消耗，无流量数据时显示磁盘占用
+      if (traffic && trafficTotal > 0) pie.innerHTML = donutSvg(trafficUsed, trafficRemaining, t, (t.d1u_pct || 'Used'));
+      else pie.innerHTML = donutSvg(diskUsed, diskFree, t, (t.d1u_written || 'Disk used'));
+    }
+    if (bars) {
+      var rows = [];
+      if (traffic) {
+        rows.push({ label: (t.d1u_used || 'Traffic used') + ' / ' + (t.d1u_remain || 'remaining'), value: fmtNum(trafficUsed) + ' / ' + fmtNum(trafficRemaining) + ' ' + trafficUnit, used: trafficUsed, total: trafficTotal, color: '#ff7a1a' });
+      }
+      rows.push({ label: (t.d1u_written || 'Disk used') + ' / ' + (t.clean_storage_free || 'Free space'), value: fmtCleanBytes(diskUsed) + ' / ' + fmtCleanBytes(diskFree), used: diskUsed, total: diskTotal, color: '#2c5fa8' });
+      bars.innerHTML = barsHtml(rows, t);
+    }
   }
   function loadD1Usage(force){
     var block = document.getElementById('d1UsageBlock');
@@ -30243,41 +30318,32 @@ function _doExportOverviewPDF(){
     var t = T().empty || T();
     block.style.display = '';
     var titleEl = document.getElementById('d1UsageTitle');
-    if (titleEl) titleEl.textContent = t.d1u_title || 'D1 云端用量';
+    if (titleEl) titleEl.textContent = t.d1u_title || '腾讯云资源用量';
     var sum = document.getElementById('d1UsageSummary');
     var pie = document.getElementById('d1UsagePie');
     var bars = document.getElementById('d1UsageBars');
     var note = document.getElementById('d1UsageNote');
     var btn = document.getElementById('d1UsageRefresh');
     if (btn) { btn.textContent = t.d1u_refresh || '刷新'; btn.onclick = function(){ loadD1Usage(true); }; }
-    if (sum) sum.textContent = t.d1u_loading || '正在读取官方用量…';
+    if (sum) sum.textContent = t.d1u_loading || '正在读取腾讯数据…';
     if (pie) pie.innerHTML = '';
     if (bars) bars.innerHTML = '';
     if (note) note.textContent = '';
-    fetch('/api/d1-usage' + (force ? '?refresh=1' : ''), {
+    fetch('/api/tencent-usage' + (force ? '?refresh=1' : ''), {
       credentials: 'same-origin',
       headers: (typeof authHeaders === 'function' ? authHeaders() : {})
     })
     .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
     .then(function(o){
       if (!o.ok || !o.d || !o.d.ok) {
-        if (sum) sum.textContent = (o.d && o.d.error) ? o.d.error : (t.d1u_unavailable || '暂无法获取官方用量');
+        if (sum) sum.textContent = (o.d && o.d.error) ? o.d.error : (t.d1u_unavailable || '暂无法获取腾讯数据');
         return;
       }
-      lastD1Usage = o.d.usage || null;
+      lastD1Usage = o.d.data || null;
       renderD1Usage(lastD1Usage, T().empty || T());
-      // 取不到官方数据时，把诊断信息一并显示（便于定位是令牌/账号/接口哪一环）
-      if (lastD1Usage && lastD1Usage.stale) {
-        var noteEl = document.getElementById('d1UsageNote');
-        if (noteEl) {
-          var dbg = o.d.debug || {};
-          noteEl.textContent += ' [token:' + (dbg.tokenLen || 0) + ' acct:' + (dbg.hasAcct ? 1 : 0) +
-            ' db:' + (dbg.hasDbId ? 1 : 0) + (lastD1Usage.err ? ' | ' + lastD1Usage.err : '') + ']';
-        }
-      }
     })
     .catch(function(e){
-      if (sum) sum.textContent = (t.d1u_unavailable || '暂无法获取官方用量') + ' ' + e;
+      if (sum) sum.textContent = (t.d1u_unavailable || '暂无法获取腾讯数据') + ' ' + e;
     });
   }
   function openD1UsageReport(){
@@ -30292,7 +30358,7 @@ function _doExportOverviewPDF(){
     if (!overlay) return;
     window.__d1UsageMode = true;   // 当前弹窗是"用量报告"模式（语言切换时由 applyD1UsageLang 重绘）
     var titleEl = document.getElementById('cleanReportTitle');
-    if (titleEl) titleEl.textContent = t.d1u_report_title || '云端用量报告';
+    if (titleEl) titleEl.textContent = t.d1u_report_title || 'Tencent 用量与监控';
     // 只看用量：隐藏清理结果相关区块
     ['cleanReportSummary','cleanReportList','cleanReportMore','cleanReportStorage'].forEach(function(id){
       var el = document.getElementById(id);
@@ -30319,7 +30385,7 @@ function _doExportOverviewPDF(){
       el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;';
       el.innerHTML =
         '<div style="background:#fff;border-radius:12px;padding:22px 24px;max-width:430px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3);">' +
-        '<div style="font-size:16px;font-weight:700;color:#c0392b;margin-bottom:10px;">' + (t.d1u_report_title || '云端用量') + '</div>' +
+        '<div style="font-size:16px;font-weight:700;color:#c0392b;margin-bottom:10px;">' + (t.d1u_report_title || 'Tencent 用量与监控') + '</div>' +
         '<div style="font-size:13.5px;color:#2c3e50;line-height:1.75;">' + msg + '</div>' +
         '<div style="margin-top:14px;"><button id="d1QuotaLockClose" style="padding:7px 20px;border:none;border-radius:8px;background:#ff7a1a;color:#fff;font-size:13px;cursor:pointer;">' + (t.d1u_close || '关闭') + '</button></div>' +
         '</div>';
@@ -30338,8 +30404,8 @@ function _doExportOverviewPDF(){
     var chooser = document.getElementById('d1ChooseOverlay');
     if (chooser && !chooser.classList.contains('hidden')) {
       var setc = function(id, k, fb){ var n = document.getElementById(id); if (n) n.textContent = t[k] || fb; };
-      setc('d1ChooseTitle', 'd1u_choose_title', '云端管理');
-      setc('d1ChooseUsage', 'd1u_choose_usage', 'D1 使用情况');
+      setc('d1ChooseTitle', 'd1u_choose_title', 'Tencent 用量与监控');
+      setc('d1ChooseUsage', 'd1u_choose_usage', '查看用量与监控');
       setc('d1ChooseClean', 'd1u_choose_clean', '清理残留文件（含容量报告）');
       setc('d1ChooseCancel', 'd1u_choose_cancel', '取消');
       var xc = document.querySelector('#d1ChooseOverlay > .auth-modal > .comm-close');
@@ -30349,9 +30415,9 @@ function _doExportOverviewPDF(){
     if (!overlay || overlay.classList.contains('hidden')) return;
     if (!window.__d1UsageMode) return;   // 清理报告模式由 applyCleanReportLang 负责
     var titleEl = document.getElementById('cleanReportTitle');
-    if (titleEl) titleEl.textContent = t.d1u_report_title || '云端用量报告';
+    if (titleEl) titleEl.textContent = t.d1u_report_title || 'Tencent 用量与监控';
     var secTitle = document.getElementById('d1UsageTitle');
-    if (secTitle) secTitle.textContent = t.d1u_title || 'D1 云端用量';
+    if (secTitle) secTitle.textContent = t.d1u_title || '腾讯云资源用量';
     var backBtn = document.getElementById('cleanReportBack');
     if (backBtn && backBtn.style.display !== 'none') backBtn.textContent = t.d1u_back || '返回上一页';
     var closeBtn = document.getElementById('cleanReportClose');
@@ -30373,8 +30439,8 @@ function _doExportOverviewPDF(){
     var el = document.getElementById('d1ChooseOverlay');
     if (!el) return;
     var set = function(id, k, fb){ var n = document.getElementById(id); if (n) n.textContent = t[k] || fb; };
-    set('d1ChooseTitle', 'd1u_choose_title', '云端管理');
-    set('d1ChooseUsage', 'd1u_choose_usage', 'D1 使用情况');
+    set('d1ChooseTitle', 'd1u_choose_title', 'Tencent 用量与监控');
+    set('d1ChooseUsage', 'd1u_choose_usage', '查看用量与监控');
     set('d1ChooseClean', 'd1u_choose_clean', '清理残留文件（含容量报告）');
     set('d1ChooseCancel', 'd1u_choose_cancel', '取消');
     var xEl = document.querySelector('#d1ChooseOverlay > .auth-modal > .comm-close');
@@ -30392,6 +30458,7 @@ function _doExportOverviewPDF(){
   }
   function chooseD1Clean(){
     closeD1Choose();
+    cleanFromChooser = true;
     openCleanOrphansModal();
   }
   // 「返回上一页」：D1 用量报告 → 回到「云端管理」选择框
@@ -30401,7 +30468,15 @@ function _doExportOverviewPDF(){
     window.__d1UsageMode = false;
     openD1Choose();
   }
+  // 「返回上一页」：清理确认 → 回到「云端管理」选择框
+  function backCleanOrphansToChoose(){
+    var overlay = document.getElementById('cleanOrphansOverlay');
+    if (overlay) overlay.classList.add('hidden');
+    cleanFromChooser = false;
+    openD1Choose();
+  }
   window.backD1ToChoose = backD1ToChoose;
+  window.backCleanOrphansToChoose = backCleanOrphansToChoose;
   window.closeD1Choose = closeD1Choose;
   window.chooseD1Usage = chooseD1Usage;
   window.chooseD1Clean = chooseD1Clean;
@@ -30412,6 +30487,18 @@ function _doExportOverviewPDF(){
   window.closeCleanReport = closeCleanReport;
   window.applyCleanReportLang = applyCleanReportLang;
   window.applyCleanOrphansLang = applyCleanOrphansLang;
+  // 清理报告 / D1 云端用量 / 清理确认：语言切换时必须始终刷新，不能放在 applyWonLang 里（WON 非当前视图时会被跳过）
+  function applyCleanD1Lang(){
+    if (typeof applyCleanReportLang === 'function') applyCleanReportLang();
+    if (typeof applyCleanOrphansLang === 'function') applyCleanOrphansLang();
+    if (typeof applyD1UsageLang === 'function') applyD1UsageLang();
+    // 统一兜底：对当前打开的弹窗 sweep data-i18n，防止底部按钮等漏刷
+    ['d1ChooseOverlay','cleanOrphansOverlay','cleanReportOverlay'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el && !el.classList.contains('hidden') && typeof sweepI18n === 'function') sweepI18n(el);
+    });
+  }
+  window.applyCleanD1Lang = applyCleanD1Lang;
   // 暴露给 HTML onclick 属性
   window.closeCleanOrphansModal = closeCleanOrphansModal;
   window.confirmCleanOrphans = confirmCleanOrphans;
@@ -31861,7 +31948,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.09.06.20 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.09.07.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

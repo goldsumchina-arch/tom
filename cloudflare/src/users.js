@@ -1,4 +1,6 @@
-// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。用户与授权模块逻辑均正确。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.24：本文件逻辑已锁定，未经用户明确同意禁止修改。
+// 2026-09-06 修复：GET 返回 vis_he_can_see/vis_can_see_me/forgot_approvers 数字数组（兼容旧格式字符串用户名）；
+// 审批落地逻辑在 approval.js 的 resolve 分支实现（USR-D1/D2/D3 经三人组审批后真正写入 users 表）。
 // ============================================================
 // 用户与权限管理模块（M7）
 // 复刻本地 app.py 的 /api/users 与 /api/managers
@@ -51,7 +53,7 @@ async function managerUsernames(env) {
 }
 
 /** 规范化 perms 中的审批人（数字 ID -> 用户名） */
-async function normUserPerms(env, perms) {
+export async function normUserPerms(env, perms) {
   if (!perms || typeof perms !== "object") return perms || {};
   const users = (await env.DB.prepare("SELECT id, username FROM users").all()).results || [];
   const byId = {}, byName = {};
@@ -77,7 +79,7 @@ async function normUserPerms(env, perms) {
 }
 
 /** 销售/销售总监的 WON 权限锁死为 hide */
-function forceSalesLockedPerms(perms, position) {
+export function forceSalesLockedPerms(perms, position) {
   const pos = String(position || "").trim();
   if (pos !== "销售" && pos !== "销售总监") return perms;
   if (!perms || typeof perms !== "object") return perms;
@@ -94,7 +96,7 @@ function forceSalesLockedPerms(perms, position) {
 }
 
 /** 观察者：未配置的区块按模板填初始值（已有配置不动） */
-function forceObserverPerms(perms, position) {
+export function forceObserverPerms(perms, position) {
   if (String(position || "").trim() !== "观察者") return perms;
   if (!perms || typeof perms !== "object") perms = {};
   for (const [bid, dec] of Object.entries(OBSERVER_FIXED_PERMS)) {
@@ -142,11 +144,30 @@ export async function handleUsers(request, env, url, pathname) {
     const managers = await managerUsernames(env);
     const mgrSet = new Set(managers);
     const rs = (await env.DB.prepare("SELECT * FROM users ORDER BY sort_order ASC, id ASC").all()).results || [];
+    // 用户名 -> id 映射，用于把旧格式（存字符串用户名）的数据范围授权归一化为数字 id
+    const nameToId = {};
+    for (const r of rs) nameToId[String(r.username).toLowerCase()] = r.id;
     const users = [];
     for (const r of rs) {
       let perms = {};
       try { perms = r.perms ? JSON.parse(r.perms) : {}; } catch (e) { perms = {}; }
       perms = await normUserPerms(env, perms);
+      const parseIds = (raw) => {
+        try {
+          const v = JSON.parse(raw || "[]");
+          if (!Array.isArray(v)) return [];
+          const out = [];
+          for (const x of v) {
+            if (typeof x === "number" && !isNaN(x)) { out.push(x); }
+            else if (typeof x === "string") {
+              const s = x.trim();
+              if (/^\d+$/.test(s)) { out.push(parseInt(s, 10)); }       // 数字字符串
+              else if (nameToId[s.toLowerCase()] != null) { out.push(nameToId[s.toLowerCase()]); } // 旧格式用户名
+            }
+          }
+          return out;
+        } catch (e) { return []; }
+      };
       users.push({
         id: r.id,
         username: r.username,
@@ -155,11 +176,11 @@ export async function handleUsers(request, env, url, pathname) {
         position: r.position || "",
         status: r.status || "active",
         is_manager: mgrSet.has(r.username),
-        vis_can_see_me: r.vis_can_see_me || "[]",
-        vis_he_can_see: r.vis_he_can_see || "[]",
+        vis_can_see_me: parseIds(r.vis_can_see_me),
+        vis_he_can_see: parseIds(r.vis_he_can_see),
         perms: perms,
         delegate_to: r.delegate_to || "",
-        forgot_approvers: r.forgot_approvers || "[]",
+        forgot_approvers: parseIds(r.forgot_approvers),
         created_at: r.created_at || "",
       });
     }

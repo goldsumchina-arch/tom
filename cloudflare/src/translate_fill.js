@@ -86,17 +86,20 @@ export async function handleTranslateFill(request, env, url) {
     if (results[i].status === 'fulfilled') j.trans = results[i].value;
   });
 
-  // 应用并持久化（按 row+col 去重，一条 UPDATE 写全三语）
-  const stmts = [];
+  // 应用并持久化：
+  // 先汇总每个 job 的翻译结果到 tri（保证同一行需要补翻多语时，三语都被写入），
+  // 再按 row+col 去重构建 UPDATE（只推一条含完整三语的语句）。
+  // 旧实现边设值边去重 push，会导致“需要补翻两种语言”的行只写进第一种，
+  // 另一种永远缺 → 该行持续被判为缺翻 → filled 恒 >0 → 前端陷入无限重渲染（整表闪烁）。
   let filled = 0;
+  for (const j of todo) {
+    if (!j.trans) continue;
+    j.tri[j.lang] = j.trans;
+  }
+  const stmts = [];
   const applied = new Set();
-  let remaining = 0;
-  for (const j of jobs) {
-    const key = j.srcText + '|' + j.lang;
-    let trans = j.trans;
-    if (trans === undefined && MEM_CACHE.has(key)) trans = MEM_CACHE.get(key);
-    if (!trans) { remaining++; continue; }
-    j.tri[j.lang] = trans;
+  for (const j of todo) {
+    if (!j.trans) continue;
     const rk = j.row.id + '|' + j.col;
     if (applied.has(rk)) continue;
     applied.add(rk);
@@ -112,6 +115,12 @@ export async function handleTranslateFill(request, env, url) {
   }
   for (let i = 0; i < stmts.length; i += 50) {
     await env.DB.batch(stmts.slice(i, i + 50));
+  }
+  // remaining：仍缺翻且本轮未处理的任务数（翻译失败/超 limit），仅作信息；循环由 filled 驱动
+  let remaining = 0;
+  for (const j of jobs) {
+    const key = j.srcText + '|' + j.lang;
+    if (!(j.trans || MEM_CACHE.has(key))) remaining++;
   }
   return { ok: true, filled, remaining };
 }

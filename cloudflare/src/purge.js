@@ -31,8 +31,9 @@ const FILE_FIELDS = {
   crm_projects: ["pdf_equip", "pdf_install", "pdf_both"],
   lost_projects: ["pdf_equip", "pdf_install", "pdf_both"],
   // V45 新增：WON 设备合同 / 安装合同 PDF（R2 前缀 won-docs/），
-  // 与 attachments(JSON 数组) 并存，两者都要纳入引用计数与级联删除。
-  won_projects: ["doc_equip", "doc_install"],
+  // 与 attachments(JSON 数组) 并存，三者都要纳入引用计数与级联删除。
+  // doc_both 是历史字段，库中仍可能有数据，必须保留以防误删。
+  won_projects: ["doc_equip", "doc_install", "doc_both"],
 };
 
 function errj(msg, status, extra) {
@@ -111,9 +112,12 @@ export async function collectReferencedKeys(env) {
     }
   }
 
-  // WON 的 attachments
+  // WON：设备/安装合同（doc_equip/doc_install/doc_both）+ attachments JSON 数组
   try {
-    const rs = await env.DB.prepare("SELECT attachments FROM won_projects").all();
+    const wonFields = (FILE_FIELDS.won_projects || []).concat(["attachments"]);
+    const rs = await env.DB.prepare(
+      `SELECT ${wonFields.join(", ")} FROM won_projects`
+    ).all();
     for (const r of rs.results || []) {
       extractKeysFromRow("won_projects", r).forEach(add);
     }

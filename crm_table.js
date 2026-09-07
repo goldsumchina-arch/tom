@@ -534,7 +534,7 @@ function crmApiBase() {
   return (typeof API_BASE !== 'undefined') ? API_BASE : '';
 }
 
-function loadCrm() {
+function loadCrm(isAuto) {
   var cg = document.getElementById('crmColGroup');
   var th = document.getElementById('crmThead');
   var tb = document.getElementById('crmTbody');
@@ -578,7 +578,11 @@ function loadCrm() {
       }
       applyCrmRowPerms();   // 渲染完成后立即按权限隐藏按钮（不依赖外部 setTimeout 猜测延时）
       // V28：服务端补翻缺的三语备注并写库；filled>0 时重拉一次（重拉后 filled=0 即止，无递归）
-      if (typeof autoFillRemarks === 'function') autoFillRemarks('crm_projects', function(){ loadCrm(); });
+      if (typeof autoFillRemarks === 'function') {
+        // 非自动重拉（switchView/reloadSession 直调）清零链计数；自动重拉回调传 true 累加
+        if (!isAuto) { try { (window.__autoFillChain = window.__autoFillChain || {}).crm_projects = 0; } catch(e){} }
+        autoFillRemarks('crm_projects', function(){ loadCrm(true); });
+      }
     })
     .catch(function() {
       tb.innerHTML = emptyRow;
@@ -691,6 +695,8 @@ function _crmFillMissingRemarks(tb) {
   });
 }
 
+// ⛔⛔⛔ 锁死声明（V2026.09.07）：CRM 切语言/表头/数据行渲染历经多次回归修复才稳定，
+// 任何"优化/重构/简化"必须先取得用户明确同意，禁止私自改动！
 function applyCrmLang() {
   var t = T();
   // 更新潜在项目页标题与"+ New CRM / 导出 Excel"按钮（三语跟随系统语言）

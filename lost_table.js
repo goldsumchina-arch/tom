@@ -501,7 +501,7 @@ function lostApiBase() {
   return (typeof API_BASE !== 'undefined') ? API_BASE : '';
 }
 
-function loadLost() {
+function loadLost(isAuto) {
   var cg = document.getElementById('lostColGroup');
   var th = document.getElementById('lostThead');
   var tb = document.getElementById('lostTbody');
@@ -542,7 +542,11 @@ function loadLost() {
       }
       applyLostRowPerms();   // 渲染完成后立即按权限隐藏按钮（不依赖外部 setTimeout 猜测延时）
       // V28：服务端补翻缺的三语备注并写库；filled>0 时重拉一次（重拉后 filled=0 即止，无递归）
-      if (typeof autoFillRemarks === 'function') autoFillRemarks('lost_projects', function(){ loadLost(); });
+      if (typeof autoFillRemarks === 'function') {
+        // 非自动重拉（switchView/reloadSession 直调）清零链计数；自动重拉回调传 true 累加
+        if (!isAuto) { try { (window.__autoFillChain = window.__autoFillChain || {}).lost_projects = 0; } catch(e){} }
+        autoFillRemarks('lost_projects', function(){ loadLost(true); });
+      }
     })
     .catch(function() { tb.innerHTML = emptyRow; });
 }
@@ -644,6 +648,8 @@ function _lostFillMissingRemarks(tb) {
   });
 }
 
+// ⛔⛔⛔ 锁死声明（V2026.09.07）：LOST 切语言/表头/数据行渲染历经多次回归修复才稳定，
+// 任何"优化/重构/简化"必须先取得用户明确同意，禁止私自改动！
 function applyLostLang() {
   var t = T();
   var titleEl = document.getElementById('lostTitle');

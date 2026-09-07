@@ -217,6 +217,13 @@ async function authenticate(request, env) {
         return null;
       }
     }
+    // ★ 滑动续期：每次有效请求都把过期时间延后 SESSION_TTL_HOURS，
+    //   避免活跃用户因“登录后固定 7 天”到点被踢；最长离线时间仍受 TTL 限制。
+    try {
+      await env.DB.prepare(
+        "UPDATE sessions SET expires_at=? WHERE token=?"
+      ).bind(expiresLocalStr(), token).run();
+    } catch (e) { /* 续期失败不影响本次请求 */ }
     return String(row.username || "").trim();
   } catch (e) {
     return null;
@@ -646,6 +653,9 @@ export default {
       "/api/login", "/api/logout", "/api/session", "/api/me",
       "/api/change-password", "/api/health", "/api/tables",
       "/api/perm-version", "/api/translate",
+      // 看板价格/汇率数据只读，不涉敏感信息，允许未登录时直接读取（避免登录页/会话恢复前的 401）
+      "/api/metal-prices", "/api/feed-prices", "/api/livestock-prices",
+      "/api/livestock-farmgate", "/api/fx-rates", "/api/livestock-retail-raw",
       "/",
     ]);
     // 附件直链（<img src>/<a href>）浏览器无法自动带 Authorization 头，故免鉴权；
