@@ -1,0 +1,22 @@
+# Build outputs
+app/build/
+build/
+.gradle/
+**/build/
+
+# Signing keystore & local SDK config (SECRETS - never commit)
+*.keystore
+*.jks
+local.properties
+
+# APK outputs (published via GitHub Releases)
+*.apk
+
+# Logs & scratch helpers
+*.log
+*.err
+_*.py
+
+# Python bytecode cache
+__pycache__/
+*.pyc

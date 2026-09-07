@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AGI-PM</string>
+    <string name="loading">正在加载…</string>
+    <string name="no_network">网络连接不可用，请检查网络后重试</string>
+    <string name="load_failed">无法连接服务器，请检查网络后下拉刷新重试</string>
+    <string name="retry">重试</string>
+    <string name="exit_confirm">再按一次返回键退出</string>
+</resources>

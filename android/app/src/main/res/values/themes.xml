@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      主题：沉浸式全屏（APP 霸占整屏，状态栏/导航栏默认隐藏）。
+      系统栏颜色设为透明/半透明：从屏幕边缘滑动临时唤出时以浮层覆盖在内容上，
+      不挤压页面；透明背景保证浮层与网页视觉连续。
+    -->
+    <style name="Theme.AGIPM" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- 状态栏透明：全屏时不可见；临时唤出时半透明浮层覆盖内容 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- 导航栏半透明黑：临时唤出时盖在内容上，能看清按钮又不过分遮挡 -->
+        <item name="android:navigationBarColor">#B3000000</item>
+        <item name="android:windowTranslucentStatus">false</item>
+
+        <!-- 隐藏标题栏 -->
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+
+        <!-- 主色调 -->
+        <item name="colorPrimary">#6B5CE7</item>
+        <item name="colorPrimaryVariant">#5A4BD6</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#F5872E</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+
+        <!-- 状态栏图标用浅色（网页背景偏浅，白色图标在浮层上更清晰） -->
+        <item name="android:windowLightStatusBar" tools:targetApi="23">false</item>
+
+        <!-- 背景色 -->
+        <item name="android:windowBackground">@color/app_bg</item>
+    </style>
+
+</resources>
