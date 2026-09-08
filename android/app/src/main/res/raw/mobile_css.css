@@ -1,0 +1,67 @@
+/* ============================================================
+   AGI-PM mobile enhancement stylesheet
+   Injected by the APK at runtime -> index.html itself is NEVER modified.
+
+   Section 0 is a HARD GUARD for the hidden-entry (easter egg) carriers.
+   It must stay at the top and must never be relaxed: if any later rule
+   hides one of these elements, its hidden entry is lost forever.
+   ============================================================ */
+
+/* ---------- 0) HARD GUARD: hidden-entry carriers ---------- */
+/*   1) AGI logo        -> tap 5x + hold 3s -> Personal Commission   */
+/*   2) "T" avatar      -> tap 5x + hold 3s -> Vault (private space) */
+/*                         hold 5s          -> cleanup / usage       */
+/*   3) Dashboard item  -> hold 3s          -> monthly update dialog */
+.tb-logo,
+.tb-user-avatar,
+.tb-item[data-view="dashboard"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 1001 !important;
+}
+.tb-logo {
+  display: flex !important;
+  min-width: 84px !important;
+  min-height: 44px !important;
+}
+.tb-user-avatar {
+  display: flex !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+.tb-item[data-view="dashboard"] {
+  display: inline-block !important;
+  min-height: 44px !important;
+}
+
+/* ---------- 1) Portrait: dashboard stat cards -> 2-column grid ---------- */
+@media (orientation: portrait) {
+  #dashCards.dash-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .dash-card {
+    min-width: 0 !important;
+  }
+  .dash-card-title {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+  }
+  .dash-card-value {
+    font-size: 17px !important;
+    word-break: break-word !important;
+  }
+}
+
+/* ---------- 2) Portrait: roomier tap targets (visibility untouched) ---------- */
+@media (orientation: portrait) {
+  .tb-item {
+    padding: 9px 12px !important;
+    font-size: 13px !important;
+  }
+}

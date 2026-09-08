@@ -81,7 +81,33 @@
 
 ---
 
-## 二、保护红线（改 UI 时绝对不能碰）
+## 二、运行时硬保护（自 V2026.09.08.04 起生效）
+
+APP 在每次页面加载完成后，会向页面注入一段样式表
+（`android/app/src/main/res/raw/mobile_css.css`，由 `MainActivity.injectMobileCss()` 注入）。
+
+该样式表**开头**就是对三个暗门载体的强制保护：
+
+```css
+.tb-logo,
+.tb-user-avatar,
+.tb-item[data-view="dashboard"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 1001 !important;
+}
+```
+
+作用：只要这段还在，**任何后续样式都无法隐藏这三个入口**，因此四个暗门不会因 UI 调整而丢失。
+
+同时 APP 会在注入后**自动校验**三个载体是否存在，结果写入日志：
+- `HIDDEN-ENTRY GUARD: OK` → 三者都在
+- `HIDDEN-ENTRY GUARD: FAILED` → 有载体丢失，必须立即回滚
+
+> 注意：`index.html` 本体**仍然零改动**，所有样式都来自 APK 注入，回滚 = 装回旧 APK。
+
+## 三、保护红线（改 UI 时绝对不能碰）
 
 1. **不隐藏、不删除、不缩小 `.tb-logo`**（顶部 AGI-CRM Logo）→ 否则暗门 ① 死
 2. **不隐藏、不删除 `.tb-user-avatar`**（橙色 T 头像）→ 否则暗门 ②③ 死
@@ -89,14 +115,14 @@
 4. **不要在全局禁用长按**（如 `user-select:none` / `-webkit-touch-callout:none` / 屏蔽长按菜单）→ 与 ②③④ 的长按手势直接冲突
 5. 注入 CSS 时，**选择器必须绕开** `.tb-logo`、`.tb-user-avatar`、`.tb-item[data-view="dashboard"]`
 
-## 三、改动流程（每次必做）
+## 四、改动流程（每次必做）
 
 1. 动手前：`git commit` 留还原点；服务器文件先 `cp xxx xxx.bak-时间戳`
 2. 对照本清单，确认本次改动不触碰上述红线
 3. 改完后，按下节「验收清单」**逐条实测**
 4. 任一条不通过 → 立即回滚
 
-## 四、验收清单（每次改 UI 后必须在手机上逐条验证）
+## 五、验收清单（每次改 UI 后必须在手机上逐条验证）
 
 - [ ] ① Logo 连点 5 次 + 按住 3 秒 → 出现「个人佣金」入口
 - [ ] ② T 头像连点 5 次 + 长按 3 秒 → 弹出 PIN 输入框（仅 tom）

@@ -308,6 +308,8 @@ class MainActivity : AppCompatActivity() {
                 errorLayout.visibility = View.GONE
                 // 页面加载完成，收起下拉刷新进度圈
                 swipeRefresh.isRefreshing = false
+                // 注入移动端增强样式（内含暗门载体强制保护），并校验三个暗门载体仍在
+                injectMobileCss()
             }
 
             // 只在主框架加载失败时才显示错误页，子资源（图片/JS）失败不打断
@@ -641,6 +643,50 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient
         webView.viewTreeObserver.addOnScrollChangedListener {
             swipeRefresh.isEnabled = webView.scrollY <= 0
+        }
+    }
+
+    /**
+     * 注入移动端增强样式（res/raw/mobile_css.css）。
+     *
+     * 关键：样式表开头是「暗门载体硬性保护」——用 !important 强制
+     *  .tb-logo / .tb-user-avatar / .tb-item[data-view="dashboard"]
+     * 保持可见、可点击。只要这段在，任何后续样式都藏不掉这三个入口，
+     * 因此四个暗门（个人佣金、私密空间、清理、当月更新）不会丢失。
+     *
+     * 注入后会立即校验三个载体是否真实存在，结果写入日志，便于安装后自查。
+     */
+    private fun injectMobileCss() {
+        val css = try {
+            resources.openRawResource(R.raw.mobile_css).bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            Log.e(TAG, "injectMobileCss: read css failed - ${e.message}")
+            return
+        }
+        val quoted = org.json.JSONObject.quote(css)
+        val injectJs = "(function(){" +
+            "if(document.getElementById('agi-pm-mobile-css'))return;" +
+            "var s=document.createElement('style');" +
+            "s.id='agi-pm-mobile-css';" +
+            "s.textContent=$quoted;" +
+            "document.head.appendChild(s);" +
+            "})()"
+        webView.evaluateJavascript(injectJs, null)
+
+        // 校验三个暗门载体仍然存在（缺失会导致对应暗门永久失效）
+        val guardJs = "(function(){" +
+            "var a=!!document.querySelector('.tb-logo');" +
+            "var b=!!document.querySelector('.tb-user-avatar');" +
+            "var c=!!document.querySelector('.tb-item[data-view=\"dashboard\"]');" +
+            "return a&&b&&c;" +
+            "})()"
+        webView.evaluateJavascript(guardJs) { result ->
+            val ok = result?.trim('"')?.toBooleanStrictOrNull() ?: false
+            if (ok) {
+                Log.i(TAG, "HIDDEN-ENTRY GUARD: OK (logo/avatar/dashboard present)")
+            } else {
+                Log.e(TAG, "HIDDEN-ENTRY GUARD: FAILED - result=$result")
+            }
         }
     }
 
