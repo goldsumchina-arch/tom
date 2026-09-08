@@ -1,0 +1,16 @@
+[Unit]
+Description=AGI-PM Node Backend (同源部署版)
+After=network.target
+
+[Service]
+# 改为你实际上传代码的目录与运行用户
+WorkingDirectory=/opt/agi-pm/node-backend
+ExecStart=/usr/bin/node /opt/agi-pm/node-backend/server.mjs
+Restart=always
+RestartSec=3
+User=ubuntu
+Environment=PORT=3000
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+{
+  "name": "私密空间",
+  "short_name": "私密空间",
+  "description": "tom 专属私密网盘：文件夹、上传进度、文档预览",
+  "start_url": "/vault.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f1722",
+  "theme_color": "#16202c",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "agi-pm-node-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AGI-PM 后端（迁移版）：腾讯云轻量应用服务器 + Node + SQLite，复用原 Cloudflare Worker 业务逻辑",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2",
+    "tencentcloud-sdk-nodejs": "^4.1.10"
+  }
+}
