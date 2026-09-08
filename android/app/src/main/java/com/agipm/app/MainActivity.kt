@@ -55,10 +55,12 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "AGIPM"
 
-        // ★ 系统网址：腾讯云生产前端（node-backend 同端口托管静态页，默认 3000）
-        private const val HOME_URL = "http://124.156.134.135:3000"
+        // ★ 系统网址：腾讯云生产前端（HTTPS 域名，经 nginx 反代 + gzip 压缩，约 589KB）
+        //   域名由服务器上的 duckdns_keepalive.sh 每 25 天自动续期保活，无需人工维护。
+        private const val HOME_URL = "https://agi-goldsum-crm.duckdns.org"
 
-        // ★ 备用网址：与主站相同（腾讯前端）。后续若绑定域名/启用 HTTPS，只改这两处即可。
+        // ★ 备用网址：域名解析或 HTTPS 异常时，直连服务器 IP + 端口兜底
+        //   （约 1.9MB 未压缩，比主地址慢，仅作为冗余备份）
         private const val FALLBACK_URL = "http://124.156.134.135:3000"
 
         // 网页版本号：每次更新网页后调大这个数字，
