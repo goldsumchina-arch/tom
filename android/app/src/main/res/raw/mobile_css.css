@@ -35,6 +35,18 @@
   min-height: 44px !important;
 }
 
+/* ---------- 0.5) Kill the text-selection popup on the top bar ---------- */
+/*   Long-press on the logo / "T" avatar / nav items must fire the easter-egg
+     gestures. Without this, the WebView pops up "Copy / Share / Select all"
+     and steals the gesture. user-select only blocks text selection -
+     pointer events (which drive the hidden-entry timers) still fire.       */
+#topbar,
+#topbar * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
 /* ---------- 1) Portrait: dashboard stat cards -> 2-column grid ---------- */
 @media (orientation: portrait) {
   #dashCards.dash-cards {
