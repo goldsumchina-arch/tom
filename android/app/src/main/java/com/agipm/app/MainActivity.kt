@@ -300,6 +300,9 @@ class MainActivity : AppCompatActivity() {
                 super.onPageStarted(view, url, favicon)
                 progressBar.visibility = View.VISIBLE
                 progressBar.progress = 0
+                // 尽早注入 JS 补丁的 stub 阶段：抢在页面内任何 _ovMakeChart 调用之前
+                // 把 Chart.js 未就绪时的图表创建请求先排队，避免卡片被写成永久 loading。
+                injectMobileJs()
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
@@ -308,8 +311,9 @@ class MainActivity : AppCompatActivity() {
                 errorLayout.visibility = View.GONE
                 // 页面加载完成，收起下拉刷新进度圈
                 swipeRefresh.isRefreshing = false
-                // 注入移动端增强样式与脚本（内含暗门载体强制保护），并校验三个暗门载体仍在
+                // 注入移动端增强样式（内含暗门载体强制保护）并校验三个暗门载体仍在
                 injectMobileCss()
+                // 再次注入 JS 补丁：Phase 2 会接管真正的 _ovMakeChart、补登录版本号、flush 排队图表
                 injectMobileJs()
             }
 
@@ -706,14 +710,12 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "injectMobileJs: read js failed - ${e.message}")
             return
         }
-        val quoted = org.json.JSONObject.quote(js)
-        val inject = "(function(){" +
-            "if(document.getElementById('agi-pm-mobile-js'))return;" +
-            "var s=document.createElement('script');" +
-            "s.id='agi-pm-mobile-js';" +
-            "s.textContent=$quoted;" +
-            "document.head.appendChild(s);" +
-            "})()"
+        // 把 JS 里的版本占位符替换为 APK 真实版本，这样登录页脚才会显示 V2026.09.08.08
+        val jsText = js.replace("__AGI_PM_VERSION__", BuildConfig.VERSION_NAME)
+        val quoted = org.json.JSONObject.quote(jsText)
+        // 直接 IIFE 执行：脚本内部用 phase 标记保证 onPageStarted 只装 stub、
+        // onPageFinished 才执行真正的 wrap/flush/版本补丁，所以不需要 script 标签去重。
+        val inject = "(function(){ $quoted })()"
         webView.evaluateJavascript(inject, null)
     }
 

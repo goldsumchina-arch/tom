@@ -34,8 +34,8 @@ android {
         //
         // Windows 的 build_desktop.py 与本项目的 build_apk.py 都从这里读取，
         // 两边生成的 APK / EXE 文件名永远一致。
-        versionCode = 108
-        versionName = "V2026.09.08.07"
+        versionCode = 109
+        versionName = "V2026.09.08.08"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -65,6 +65,10 @@ android {
             // 关键：release 必须用自签名 keystore 签名，否则无法安装
             signingConfig = signingConfigs.getByName("release")
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {
