@@ -308,8 +308,9 @@ class MainActivity : AppCompatActivity() {
                 errorLayout.visibility = View.GONE
                 // 页面加载完成，收起下拉刷新进度圈
                 swipeRefresh.isRefreshing = false
-                // 注入移动端增强样式（内含暗门载体强制保护），并校验三个暗门载体仍在
+                // 注入移动端增强样式与脚本（内含暗门载体强制保护），并校验三个暗门载体仍在
                 injectMobileCss()
+                injectMobileJs()
             }
 
             // 只在主框架加载失败时才显示错误页，子资源（图片/JS）失败不打断
@@ -688,6 +689,32 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "HIDDEN-ENTRY GUARD: FAILED - result=$result")
             }
         }
+    }
+
+    /**
+     * 注入移动端 JS 补丁（res/raw/mobile_js.js）。
+     *
+     * 作用：
+     *   1) Chart.js 异步加载竞态修复：把 Chart 未就绪时发起的图表创建请求排队，
+     *      等库加载完成后自动重绘，避免卡片永远显示「Loading chart library…」。
+     *   2) 屏幕旋转后主动触发 resize，让 Chart.js 响应式图表重新适应新宽度。
+     */
+    private fun injectMobileJs() {
+        val js = try {
+            resources.openRawResource(R.raw.mobile_js).bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            Log.e(TAG, "injectMobileJs: read js failed - ${e.message}")
+            return
+        }
+        val quoted = org.json.JSONObject.quote(js)
+        val inject = "(function(){" +
+            "if(document.getElementById('agi-pm-mobile-js'))return;" +
+            "var s=document.createElement('script');" +
+            "s.id='agi-pm-mobile-js';" +
+            "s.textContent=$quoted;" +
+            "document.head.appendChild(s);" +
+            "})()"
+        webView.evaluateJavascript(inject, null)
     }
 
     private fun showError(msg: String) {

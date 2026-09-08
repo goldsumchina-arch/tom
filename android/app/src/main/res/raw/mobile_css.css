@@ -47,8 +47,89 @@
   -webkit-touch-callout: none !important;
 }
 
-/* ---------- 1) Portrait: dashboard stat cards -> 2-column grid ---------- */
+/* ============================================================
+   1) PORTRAIT: larger-scale layout optimisation
+   ============================================================ */
 @media (orientation: portrait) {
+
+  /* ===== top bar: fit more nav items without hiding anything ===== */
+  #topbar {
+    height: auto !important;
+    min-height: 52px !important;
+    padding: 6px 8px !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+  }
+  .tb-logo {
+    gap: 4px !important;
+    padding-right: 6px !important;
+  }
+  .tb-logo svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .tb-logo-mark { font-size: 16px !important; }
+  .tb-logo-name { font-size: 12px !important; }
+
+  .tb-menu {
+    gap: 4px !important;
+    padding-bottom: 2px !important;
+  }
+  .tb-item {
+    font-size: 11px !important;
+    padding: 7px 9px !important;
+    border-radius: 7px !important;
+  }
+  /* keep the dark-entry Dashboard button visually prominent */
+  .tb-item[data-view="dashboard"] {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    padding: 8px 11px !important;
+  }
+  .pend-badge {
+    min-width: 14px !important;
+    height: 14px !important;
+    font-size: 9px !important;
+    line-height: 12px !important;
+    top: 0 !important;
+    right: 0 !important;
+  }
+  .tb-right {
+    gap: 6px !important;
+  }
+  .tb-user-name,
+  .tb-user-role,
+  .tb-logout,
+  .lang-switch-label,
+  #tbFitBtn {
+    display: none !important;
+  }
+  .tb-user-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 15px !important;
+  }
+  .lang-switch {
+    padding: 2px 4px !important;
+    gap: 1px !important;
+  }
+  .lang-switch button {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* ===== main page breathing room ===== */
+  .dash-page {
+    padding: 10px !important;
+  }
+  .dash-page .page-header {
+    margin-bottom: 12px !important;
+  }
+  .dash-page .page-header h2 {
+    font-size: 18px !important;
+  }
+
+  /* ===== stat cards: 2-col, bigger values, comfortable touch ===== */
   #dashCards.dash-cards {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -56,24 +137,217 @@
   }
   .dash-card {
     min-width: 0 !important;
+    min-height: 100px !important;
+    padding: 12px 10px 8px !important;
+    border-radius: 12px !important;
   }
   .dash-card-title {
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     line-height: 1.35 !important;
   }
   .dash-card-value {
-    font-size: 17px !important;
+    font-size: 18px !important;
     word-break: break-word !important;
   }
-}
+  .dash-card-cur {
+    font-size: 10px !important;
+    padding-top: 6px !important;
+  }
 
-/* ---------- 2) Portrait: roomier tap targets (visibility untouched) ---------- */
-@media (orientation: portrait) {
-  .tb-item {
-    padding: 9px 12px !important;
+  /* ===== dashboard chart sections: single column in portrait ===== */
+  .dash-crm-section,
+  .dash-won-section,
+  .dash-lost-section,
+  .dash-login-section,
+  .dash-metal-section,
+  .dash-feed-section,
+  .dash-livestock-section,
+  .dash-fx-section {
+    margin-top: 16px !important;
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+  .dash-section-header h3 {
+    font-size: 16px !important;
+  }
+
+  .dash-crm-chart-row,
+  .dash-won-chart-row,
+  .dash-lost-chart-row,
+  .dash-login-chart-row,
+  .dash-metal-chart-row,
+  .dash-feed-chart-row,
+  .dash-fx-chart-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+  .dash-crm-chart-box,
+  .dash-won-chart-box,
+  .dash-lost-chart-box,
+  .dash-login-chart-box,
+  .dash-metal-chart-box,
+  .dash-feed-chart-box,
+  .dash-fx-chart-box {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 260px !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+  .dash-crm-chart-full,
+  .dash-won-chart-full,
+  .dash-lost-chart-full {
+    grid-column: auto !important;
+  }
+  .dash-crm-chart-title,
+  .dash-won-chart-title,
+  .dash-lost-chart-title,
+  .dash-login-chart-title,
+  .dash-metal-chart-title,
+  .dash-feed-chart-title,
+  .dash-fx-chart-title,
+  .dash-livestock-chart-title {
+    font-size: 12px !important;
+    margin-bottom: 6px !important;
+  }
+  .dash-crm-chart-box canvas,
+  .dash-won-chart-box canvas,
+  .dash-lost-chart-box canvas,
+  .dash-login-chart-box canvas,
+  .dash-metal-chart-box canvas,
+  .dash-feed-chart-box canvas,
+  .dash-fx-chart-box canvas,
+  .dash-livestock-chart-card canvas {
+    min-height: 220px !important;
+    max-height: 260px !important;
+  }
+  .dash-livestock-chart-card {
+    padding: 12px !important;
+  }
+
+  /* ===== currency / country pickers ===== */
+  .dash-cur-switch .dash-cur-btn,
+  .dash-feed-country-item,
+  .dash-livestock-country-item {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+  .dash-feed-country-panel,
+  .dash-livestock-country-panel {
+    padding: 10px !important;
+    margin: 8px 0 12px !important;
+  }
+  .dash-feed-country-header strong,
+  .dash-livestock-country-label {
+    font-size: 12px !important;
+  }
+
+  /* ===== lightbox / zoom chart: almost full screen ===== */
+  .dash-chart-lightbox-box {
+    width: 96vw !important;
+    height: 76vh !important;
+    padding: 12px !important;
+  }
+
+  /* ===== tables: smaller padding, horizontal scroll if needed ===== */
+  .table-wrap,
+  .crm-table-wrap,
+  .data-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  table,
+  .crm-table,
+  .users-table,
+  .data-table {
+    font-size: 12px !important;
+  }
+  .crm-table th,
+  .crm-table td,
+  .users-table th,
+  .users-table td,
+  .data-table th,
+  .data-table td {
+    padding: 7px 8px !important;
+  }
+  .btn-action-sm,
+  .btn-edit,
+  .btn-delete {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+    min-width: 48px !important;
+  }
+
+  /* ===== modals: full-width in portrait ===== */
+  .modal-overlay,
+  .modal-mask {
+    padding: 6px !important;
+    align-items: flex-start !important;
+  }
+  .modal,
+  .modal-content,
+  .export-confirm-box,
+  .pt-editor-box,
+  .detail-view-box {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    border-radius: 12px !important;
+  }
+  .modal > h2,
+  .modal-header {
+    padding: 12px 16px !important;
+    font-size: 15px !important;
+  }
+  .modal-body {
+    padding: 12px 14px !important;
     font-size: 13px !important;
+  }
+
+  /* ===== auth / login modal ===== */
+  .auth-modal {
+    width: 92vw !important;
+    max-width: 400px !important;
+    padding: 20px !important;
+  }
+  .auth-modal input {
+    font-size: 16px !important;
+    padding: 10px 12px !important;
+  }
+
+  /* ===== general larger touch targets (but never kill long-press) ===== */
+  button,
+  .btn,
+  .btn-action,
+  .btn-primary,
+  .btn-secondary {
+    min-height: 38px !important;
+    min-width: 38px !important;
+  }
+
+  /* ===== section titles / filters in won/lost/crm pages ===== */
+  .page-header,
+  .section-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .page-header h2,
+  .section-header h3 {
+    font-size: 16px !important;
+  }
+  .filter-bar,
+  .toolbar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .filter-bar input,
+  .filter-bar select,
+  .toolbar input,
+  .toolbar select {
+    font-size: 13px !important;
+    padding: 7px 10px !important;
   }
 }
