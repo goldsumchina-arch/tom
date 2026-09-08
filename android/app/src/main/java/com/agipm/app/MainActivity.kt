@@ -131,8 +131,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 横屏兜底：即便 Manifest 被某些 ROM 忽略，这里再强制一次
-        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        // 竖屏 / 横屏自由切换：跟随传感器（即便 Manifest 被某些 ROM 忽略，这里再兜一次）
+        requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR
 
         // 沉浸式全屏：状态栏/导航栏隐藏，内容铺满整个屏幕
         setupFullScreen()
@@ -722,6 +722,13 @@ class MainActivity : AppCompatActivity() {
         // 系统返回键统一交给 OnBackPressedDispatcher（setupBackPress）处理，
         // 那里会先询问网页 __handleBack；此处不再拦截，否则会绕过网页直接 goBack。
         return super.onKeyDown(keyCode, event)
+    }
+
+    // 旋转屏幕：Manifest 已声明 configChanges，Activity 不会重建、网页不会重新加载，
+    // 这里只需在旋转后重新隐藏系统栏，保持沉浸式全屏。
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        hideSystemBars()
     }
 
     // ============================================================

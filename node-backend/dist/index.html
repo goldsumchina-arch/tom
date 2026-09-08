@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.09.07.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.09.08.03：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
 <!-- ==================== 同源后端地址（腾讯云版） ====================
@@ -384,13 +384,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.09.07.05 - 确认新代码已加载 -->
-  <title>签约项目 · AGI-CRM v2026.09.07.05</title>
+  <!-- 版本号：V2026.09.08.03 - 确认新代码已加载 -->
+  <title>签约项目 · AGI-CRM v2026.09.08.03</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 Cloudflare Pages 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20260907.05';
+    window._DASH_VER = '20260908.03';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -2904,7 +2904,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.07.05</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.08.03</span></div>
   </div>
 </div>
 
@@ -9424,7 +9424,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.09.07.05 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.09.08.03 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -9444,7 +9444,7 @@ function setLangDebug(lang) {
   } catch(e) {}
 
   // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
-  //  - V2026.09.07.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //  - V2026.09.08.03：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
   //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
   //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
   //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
@@ -9527,7 +9527,7 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
-  // ★ V2026.09.07.05 新要求：切语言只刷新【当前激活的表格标签】，
+  // ★ V2026.09.08.03 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
   var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
@@ -14308,7 +14308,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.09.07.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.09.08.03（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -22550,7 +22550,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.09.07.05 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.09.08.03 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -22907,7 +22907,7 @@ function _refreshCrmAggChartsByDecision(){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.09.07.05）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.09.08.03）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -31948,7 +31948,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.09.07.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.09.08.03 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

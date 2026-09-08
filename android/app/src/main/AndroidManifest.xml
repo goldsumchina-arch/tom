@@ -31,9 +31,10 @@
 
         <!--
           MainActivity 关键配置：
-          screenOrientation = sensorLandscape
-              → 系统级强制横屏，跟随传感器（左右横过来都正常显示）
-              这是网页版做不到的：网页只能提示或 CSS 旋转，无法真正锁定
+          screenOrientation = sensor
+              → 跟随传感器自由切换竖屏 / 横屏（转动手机即自动旋转）。
+                注意：私密空间(vault.html)仍可通过 AndroidBridge.setOrientation
+                临时指定 portrait / landscape，离开时恢复为 sensor（自由旋转）。
           configChanges
               → 屏幕旋转等变化时不重建 Activity，避免网页重新加载
         -->
@@ -41,7 +42,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:screenOrientation="sensorLandscape"
+            android:screenOrientation="sensor"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|density|uiMode"
             android:theme="@style/Theme.AGIPM"
             android:keepScreenOn="false"
