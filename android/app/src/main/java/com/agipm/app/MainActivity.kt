@@ -1,4 +1,4 @@
-package com.agipm.app
+﻿package com.agipm.app
 
 import android.annotation.SuppressLint
 import android.app.ActivityManager
@@ -12,6 +12,7 @@ import android.net.NetworkRequest
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.content.ContentValues
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -92,15 +93,27 @@ class MainActivity : AppCompatActivity() {
         // v41：概况弹窗区块标题（签约方/销售分析/佣金统计/AGI-GS统计）三语跟随 +
         //       明细弹窗整体重渲染 + 付款报告可见性判断加固
         // v51：看板聚合接口白名单 + 路由修复（2026-09-06）
-        private const val WEB_VERSION = 84
+        // v52：恢复三语备注锁死逻辑（V2026.09.08.16）
+        // v53：离线只读缓存扩大到用户权限范围内全部数据（V2026.09.08.17）
+        // v54：修复 WebResourceResponse MIME 携带 charset 导致显示源码的 bug（V2026.09.08.18）
+        // v55：修复离线会话注入（putSession 从未调用 → 断网进不去）（V2026.09.08.19）
+        // v95：离线会话改为「原生自动捕获」——在线时拦截 /api/session、/api/me 的响应，
+        //      直接把 token+user 写进离线缓存，不再依赖网页调用 AndroidBridge.saveSession。
+        //      彻底根治"断网进不去"反复出现；并让线上版本实时刷新（proxy 强制 no-cache）。
+        // v96：① 首页版本号自动跟随服务器（从 index.html 的 loginVer 提取缓存）。
+        //      ② 首次/每次联网登录后执行完整数据同步，完成后弹三语橙色居中提示。
+        // ★ 本次改动只涉及 APK 侧（注入脚本 / 原生代码），index.html 未做任何修改，
+        //   因此这里【必须保持 96】。一旦递增，启动时就会触发 clearCache 强制重新
+        //   下载 1.6MB 的 index.html，表现为"点开 APP 白屏好几秒"。
+        //   仅当 index.html 等网页内容真正变更时才递增。
+        private const val WEB_VERSION = 97
 
         private const val PREFS_NAME = "agipm_prefs"
         private const val KEY_LAST_WEB_VERSION = "last_web_version"
 
-        // 指纹登录凭据存储（APK 私有目录，其他应用无法读取；Base64 混淆存放）
-        private const val CREDS_PREFS = "agipm_creds"
-        private const val KEY_CRED_USER = "cu"
-        private const val KEY_CRED_PWD = "cp"
+        // 主站点 host（用于判断 /api 请求是否属于本系统，原生代理只接管自有接口）
+        private const val HOME_HOST = "agi-goldsum-crm.duckdns.org"
+        private const val FALLBACK_HOST = "124.156.134.135"
     }
 
     private lateinit var webView: WebView
@@ -109,6 +122,78 @@ class MainActivity : AppCompatActivity() {
     private lateinit var errorText: TextView
     private lateinit var retryButton: Button
     private lateinit var swipeRefresh: SwipeRefreshLayout
+
+    // 离线只读缓存管理器（加密存储凭据 + 列表记录 + 会话 token）
+    private lateinit var cacheManager: CacheManager
+    // 当前界面语言（由网页推送），用于离线提示三语文案
+    private var curLang: String = "zh"
+
+    // 本次启动已后台刷新过的站点缓存 key（每个 key 只刷一次，避免重复流量）
+    private val siteRefreshKeys = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<String, Boolean>())
+
+    // 启动页（覆盖在 WebView 之上，首屏渲染完成前遮住白屏）
+    private var splashView: View? = null
+
+    /** 显示品牌启动页（AGI-PM 橙色底 + Logo + 加载中） */
+    private fun showSplash() {
+        if (splashView != null) return
+        try {
+            val lay = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                gravity = android.view.Gravity.CENTER
+                setBackgroundColor(android.graphics.Color.parseColor("#F5872E"))
+            }
+            val logo = android.widget.TextView(this).apply {
+                text = "AGI-PM"
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 36f
+                gravity = android.view.Gravity.CENTER
+                setTypeface(null, android.graphics.Typeface.BOLD)
+            }
+            val bar = android.widget.ProgressBar(this).apply {
+                isIndeterminate = true
+            }
+            val tip = android.widget.TextView(this).apply {
+                text = when (curLang) {
+                    "en" -> "Loading…"
+                    "vi" -> "Đang tải…"
+                    else -> "正在加载…"
+                }
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 14f
+                gravity = android.view.Gravity.CENTER
+                setPadding(0, 28, 0, 0)
+            }
+            lay.addView(logo)
+            lay.addView(bar, android.widget.LinearLayout.LayoutParams(-2, -2).apply { topMargin = 24 })
+            lay.addView(tip)
+            addContentView(
+                lay,
+                android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                    android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+            splashView = lay
+            // 保险：极端情况下 onPageFinished 不触发时，10 秒后强制撤掉，
+            // 避免启动页永久遮挡导致 App 看起来"卡死"。
+            backHandler.postDelayed({ hideSplash() }, 10000)
+        } catch (e: Exception) {
+            Log.w(TAG, "showSplash failed", e)
+        }
+    }
+
+    /** 首屏渲染完成后隐藏启动页 */
+    private fun hideSplash() {
+        try {
+            splashView?.let { v ->
+                (v.parent as? android.view.ViewGroup)?.removeView(v)
+                splashView = null
+            }
+        } catch (e: Exception) {
+            splashView = null
+        }
+    }
 
     // 用于文件上传/下载
     private var filePathCallback: android.webkit.ValueCallback<Array<Uri>>? = null
@@ -123,6 +208,25 @@ class MainActivity : AppCompatActivity() {
     private val backHandler by lazy { Handler(Looper.getMainLooper()) }
     private var backSettled = false
 
+    // 完整离线数据同步的节流戳（30s 内不重复同步）
+    private var lastFullSyncTs = 0L
+
+    // 调试/QA 广播（仅 adb 手动触发，用于沙箱内验证离线登录与同步提示链路）：
+    //   adb shell am broadcast -a com.agipm.app.DEBUG_SEED   // 写入调试会话并注入离线登录态
+    //   adb shell am broadcast -a com.agipm.app.DEBUG_TOAST  // 立即弹出三语同步提示
+    private val qaReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: android.content.Context?, i: android.content.Intent?) {
+            when (i?.action) {
+                "com.agipm.app.DEBUG_SEED" -> {
+                    cacheManager.putSession("debug-token-000", "{\"username\":\"tom\",\"ok\":true}")
+                    runOnUiThread { maybeOfflineSession() }
+                }
+                "com.agipm.app.DEBUG_TOAST" -> showSyncToast()
+                // DEBUG_PRINT 已随 APP 打印功能一并移除
+            }
+        }
+    }
+
     // 网页推送的"有内部可返回层级"标志（由 AndroidBridge.setBackState 同步写入）
     @Volatile
     private var webCanGoBack = false
@@ -130,6 +234,9 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 离线只读缓存管理器（加密存储）
+        cacheManager = CacheManager(this)
 
         // 竖屏 / 横屏自由切换：跟随传感器（即便 Manifest 被某些 ROM 忽略，这里再兜一次）
         requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR
@@ -159,6 +266,17 @@ class MainActivity : AppCompatActivity() {
         setupBackPress()
         setupSwipeRefresh()
         registerNetworkCallback()   // 断网恢复后自动重载
+
+        // 注册调试/QA 广播（仅 adb 手动触发，正常使用无影响）
+        try {
+            val qaFilter = android.content.IntentFilter().apply {
+                addAction("com.agipm.app.DEBUG_SEED")
+                addAction("com.agipm.app.DEBUG_TOAST")
+            }
+            registerReceiver(qaReceiver, qaFilter, android.content.Context.RECEIVER_EXPORTED)
+        } catch (e: Exception) {
+            Log.w(TAG, "注册 QA 广播失败", e)
+        }
 
         retryButton.setOnClickListener {
             errorLayout.visibility = View.GONE
@@ -196,6 +314,12 @@ class MainActivity : AppCompatActivity() {
             val last = prefs.getInt(KEY_LAST_WEB_VERSION, 0)
             if (last < WEB_VERSION) {
                 prefs.edit().putInt(KEY_LAST_WEB_VERSION, WEB_VERSION).apply()
+                // 网页版本变化：不仅清 WebView HTTP 缓存，连离线站点静态缓存
+                // （index.html/JS/CSS）也一并清掉，否则老用户会一直吃旧的缓存站点、
+                // 表现为"版本不更新"。数据类 API 缓存保留，不影响离线回放。
+                try { cacheManager.clearSite() } catch (e: Exception) {
+                    Log.w(TAG, "清站点缓存失败", e)
+                }
                 true
             } else {
                 false
@@ -303,18 +427,66 @@ class MainActivity : AppCompatActivity() {
                 // 尽早注入 JS 补丁的 stub 阶段：抢在页面内任何 _ovMakeChart 调用之前
                 // 把 Chart.js 未就绪时的图表创建请求先排队，避免卡片被写成永久 loading。
                 injectMobileJs()
+                // 持久登录（类微信/淘宝）：只要本地有离线会话，主框架一开始加载就抢先注入登录态，
+                // 抢在网页自身启动校验（/api/session）之前，无论联网与否都直接登录，不再弹登录页。
+                if (cacheManager.hasSession()) {
+                    maybeOfflineSession()
+                }
+                // 覆盖登录页写死的版本号（index.html 里 <span id="loginVer"> 是旧值），改成 APK 版本名
+                overrideLoginVer()
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 progressBar.visibility = View.GONE
                 errorLayout.visibility = View.GONE
+                // 首屏已就绪，撤掉启动页（延后一帧，避免与首帧绘制竞争出现闪白）
+                swipeRefresh.postDelayed({ hideSplash() }, 150)
                 // 页面加载完成，收起下拉刷新进度圈
                 swipeRefresh.isRefreshing = false
                 // 注入移动端增强样式（内含暗门载体强制保护）并校验三个暗门载体仍在
                 injectMobileCss()
                 // 再次注入 JS 补丁：Phase 2 会接管真正的 _ovMakeChart、补登录版本号、flush 排队图表
                 injectMobileJs()
+                // 覆盖登录页写死的版本号（保证页脚与 APK 版本同步）
+                overrideLoginVer()
+                // 离线只读：在线时自动登录（免密），离线且有缓存时直接注入会话进入已登录态
+                // 有缓存会话：无论联网与否都直接注入登录态（满足"不管有没有网都直接登录"）；
+                // 联网时顺便后台刷新离线缓存（循环更新）。无会话且联网：走记住密码自动登录。
+                if (cacheManager.hasSession()) {
+                    maybeOfflineSession()
+                    // 联网时执行完整数据同步（后台刷新离线缓存），不弹提示避免打扰。
+                    if (isNetworkAvailable()) syncOfflineData(showToast = false)
+                } else if (isNetworkAvailable()) {
+                    maybeAutoLogin()
+                }
+            }
+
+            // 拦截三类请求（让 APK 在离线时也能完整加载站点）：
+            //  1) /api/   —— 原生代理：在线时转发并加密缓存；离线时返回缓存（只读），
+            //                编辑类请求(POST/PUT/DELETE)离线一律拦截提示"需联网"。
+            //  2) /vendor/ —— 返回 APK 内置本地副本（Chart.js 等不依赖外网）。
+            //  3) 同源 GET 静态资源（index.html / crm_table.js / lost_table.js / css / manifest…）
+            //               —— 在线时原生代理并加密缓存；离线时直接喂本地缓存。
+            //               这样断网后整页（含 CRM/LOST 三语备注框等所有功能）都能渲染，
+            //               离线会话注入(maybeOfflineSession)也才有页面可挂载 → 单机版登录（只读）生效。
+            override fun shouldInterceptRequest(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): WebResourceResponse? {
+                val reqUrl = request?.url ?: return null
+                val url = reqUrl.toString()
+                val host = reqUrl.host ?: return null
+                val rawPath = reqUrl.path ?: ""
+                val path = if (rawPath.isEmpty()) "/" else rawPath
+                val isHome = (host == HOME_HOST || host == FALLBACK_HOST)
+                val method = request.method ?: "GET"
+
+                if (path.startsWith("/api/") && isHome) return handleApi(request, url)
+                if (path.startsWith("/vendor/")) return serveVendor(path)
+                // 仅接管同源 GET 静态资源（主文档 + 外链脚本/样式/清单），其余放行给原生栈
+                if (!isHome || method != "GET") return null
+                return handleSite(request)
             }
 
             // 只在主框架加载失败时才显示错误页，子资源（图片/JS）失败不打断
@@ -341,6 +513,16 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG, "改用备用地址: $FALLBACK_URL")
                     errorLayout.visibility = View.GONE
                     webView.loadUrl(FALLBACK_URL)
+                    return
+                }
+
+                // ★ 离线兜底：主文档已交还 WebView 原生加载（换取首屏速度），
+                //   断网时原生加载会失败，这里用 APK 内置快照渲染，保证离线仍可打开系统。
+                val snap = readSiteSnapshot("/")
+                if (snap != null) {
+                    Log.i(TAG, "主文档加载失败，改用内置快照离线渲染")
+                    errorLayout.visibility = View.GONE
+                    webView.loadDataWithBaseURL(HOME_URL, snap, "text/html", "UTF-8", null)
                     return
                 }
                 val msg = getString(R.string.load_failed) +
@@ -539,9 +721,9 @@ class MainActivity : AppCompatActivity() {
             override fun handleOnBackPressed() {
                 val now = System.currentTimeMillis()
 
-                // ★ 双击（2 秒内第二次）→ 退出 APP
+                // ★ 双击（2 秒内第二次）→ 切回后台（类似微信，APP 仍在运行，下次点图标直接恢复无需登录）
                 if (now - lastBackPressedTime < 2000) {
-                    finish()
+                    moveTaskToBack(true)
                     return
                 }
                 lastBackPressedTime = now
@@ -553,9 +735,14 @@ class MainActivity : AppCompatActivity() {
                 )
 
                 // 若当前确实没有可返回的层级（网页推送的标志位为 false），
-                // 提示"再按一次退出"，避免用户困惑（此时双击即可退出）
+                // 提示"再按一次返回后台"，避免用户困惑（此时双击即最小化）
                 if (!webCanGoBack) {
-                    Toast.makeText(this@MainActivity, R.string.exit_confirm, Toast.LENGTH_SHORT).show()
+                    val msg = when (curLang) {
+                        "en" -> "Press back again to switch to background"
+                        "vi" -> "Nhấn lại để chuyển sang nền"
+                        else -> "再按一次返回键返回后台"
+                    }
+                    Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
                 }
             }
         })
@@ -569,10 +756,15 @@ class MainActivity : AppCompatActivity() {
         }
         val now = System.currentTimeMillis()
         if (now - lastBackPressedTime < 2000) {
-            finish()
+            moveTaskToBack(true)
         } else {
             lastBackPressedTime = now
-            Toast.makeText(this@MainActivity, R.string.exit_confirm, Toast.LENGTH_SHORT).show()
+            val msg = when (curLang) {
+                "en" -> "Press back again to switch to background"
+                "vi" -> "Nhấn lại để chuyển sang nền"
+                else -> "再按一次返回键返回后台"
+            }
+            Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -615,6 +807,10 @@ class MainActivity : AppCompatActivity() {
             cm.registerNetworkCallback(req, object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     runOnUiThread {
+                        // 联网恢复：重新后台预取各模块数据，刷新离线缓存（满足"联网后自动更新再保留"的循环）
+                        prefetchOfflineData()
+                        // 有会话时顺便执行完整离线同步，把离线期间服务器的新变化拉下来。
+                        if (cacheManager.hasSession()) syncOfflineData(showToast = false)
                         // 只在"错误页正显示"或"页面还没加载出来"时才自动重载，
                         // 避免正常浏览时被无谓刷新打断。
                         val need = errorLayout.visibility == View.VISIBLE ||
@@ -710,16 +906,23 @@ class MainActivity : AppCompatActivity() {
             Log.e(TAG, "injectMobileJs: read js failed - ${e.message}")
             return
         }
-        // 把 JS 里的版本占位符替换为 APK 真实版本，这样登录页脚才会显示 V2026.09.08.08
-        val jsText = js.replace("__AGI_PM_VERSION__", BuildConfig.VERSION_NAME)
-        val quoted = org.json.JSONObject.quote(jsText)
-        // 直接 IIFE 执行：脚本内部用 phase 标记保证 onPageStarted 只装 stub、
-        // onPageFinished 才执行真正的 wrap/flush/版本补丁，所以不需要 script 标签去重。
-        val inject = "(function(){ $quoted })()"
+        // 页脚版本号直接采用【APK 的 versionName】（随每次打包递增），
+        // 这样用户装上新 APK 后页脚立刻显示最新版本，不再受服务器 loginVer 滞后影响。
+        val serverVer = BuildConfig.VERSION_NAME
+        val jsText = js.replace("__AGI_PM_VERSION__", serverVer)
+        // ★ 必须【直接执行】脚本内容。
+        //   原实现把整段 JS 用 JSONObject.quote 包成字符串再塞进 IIFE：
+        //       (function(){ "....源码...." })()
+        //   这只会产生一个字符串字面量，代码根本不会运行 —— 导致本文件里所有补丁
+        //   （打印桥接 / 图表竞态修复 / 离线横幅 / PDF 展开辅助）全部静默失效，
+        //   线上表现为"点打印完全没反应"。
+        //   注意与 injectMobileCss 区分：CSS 是用 JS 创建 style 标签注入，那条路径是对的。
+        val inject = "try{ $jsText }catch(e){ console.log('agi-inject-error: '+e); }"
         webView.evaluateJavascript(inject, null)
     }
 
     private fun showError(msg: String) {
+        hideSplash()   // 加载失败也要撤掉启动页，否则会一直卡在启动页
         errorText.text = msg
         errorLayout.visibility = View.VISIBLE
         progressBar.visibility = View.GONE
@@ -732,25 +935,31 @@ class MainActivity : AppCompatActivity() {
         //   在中国大陆、部分越南运营商、企业 Wi-Fi / 私人 DNS 下永远为 false，
         //   手机明明能上网，APP 却判定"无网络"并拒绝加载 —— 这就是
         //   "安装后连不上服务器"的根因。
+        //   但反过来也【不能盲目乐观】：飞行模式/无信号时 activeNetwork 为 null，
+        //   若此时判成"有网"，就会去请求网络→WebView 白屏（ERR_INTERNET_DISCONNECTED），
+        //   离线缓存永远用不上。所以"拿不到网络就判为离线"，宁可走缓存，
+        //   即使误判，系统网络回调 onAvailable 也会在恢复联网时自动重载。
         return try {
             val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val n = cm.activeNetwork
-                if (n == null) {
-                    // activeNetwork 为 null 不等于没网（部分 ROM / 刚开机时），
-                    // 退回旧接口再判一次，判不出来就认为"有网"，交给 WebView 去试。
-                    val info = cm.activeNetworkInfo
-                    info?.isConnected ?: true
+                val caps = if (n != null) cm.getNetworkCapabilities(n) else null
+                if (caps != null) {
+                    // 有 INTERNET 能力即认为可联网（不要求 VALIDATED，见上方说明）
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 } else {
-                    val caps = cm.getNetworkCapabilities(n)
-                    caps == null || caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    // activeNetwork 为 null / 拿不到能力：飞行模式、无信号、刚开机的典型场景。
+                    // 退回旧接口判断真实连接状态；判不出来就【保守判为离线】，
+                    // 走离线缓存，避免 WebView 白屏。恢复联网后网络回调会触发自动重载。
+                    val info = cm.activeNetworkInfo
+                    info?.isConnected ?: false
                 }
             } else {
                 val info = cm.activeNetworkInfo
                 info != null && info.isConnected
             }
         } catch (e: Exception) {
-            true    // 判断出错时乐观处理，让 WebView 自己尝试
+            false   // 判断出错时保守处理，走离线缓存（更安全）
         }
     }
 
@@ -788,6 +997,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        try { unregisterReceiver(qaReceiver) } catch (_: Exception) {}
         webView.destroy()
         super.onDestroy()
     }
@@ -812,27 +1022,722 @@ class MainActivity : AppCompatActivity() {
     // 之后网页点「指纹快速登录」→ 弹指纹对话框 → 验证通过自动登录。
     // ============================================================
 
-    private val credPrefs by lazy {
-        getSharedPreferences(CREDS_PREFS, Context.MODE_PRIVATE)
+    /**
+     * 接管 /api/ 请求：
+     *  - GET：在线时原生转发（带会话头、加密缓存响应）；离线时返回最近缓存（只读）。
+     *  - 非 GET（POST/PUT/DELETE）：离线时一律拦截，返回 412 提示"需联网"。
+     */
+    private fun handleApi(request: WebResourceRequest, url: String): WebResourceResponse? {
+        val user = cacheManager.currentUser()
+        val lower = url.lowercase()
+        // 登出：清除 APK 持久会话，使下次打开回到登录页（持久登录不废掉登出）
+        if (lower.contains("/api/logout")) {
+            cacheManager.clearSession()
+            Log.i(TAG, "logout: cleared APK cached session")
+        }
+        val isCommission = lower.contains("/api/commission")
+        return if (request.method.equals("GET", true)) {
+            // 在线：先试实时；若实时失败（断网/服务器不可达/DNS 解析失败）则回退离线缓存。
+            // 离线：直接回退缓存。这样"不管有没有网"都能拿到数据，不再卡登录/空白。
+            // 先试实时（不依赖 isNetworkAvailable，避免启动时 CM 未就绪误判离线）；
+            // 实时失败（断网/不可达）再回退离线缓存。
+            try {
+                val live = proxyGet(url, request, user, isCommission)
+                if (live != null) return live
+            } catch (e: Exception) {
+                Log.w(TAG, "proxyGet failed, fallback to offline cache: $url", e)
+            }
+            // 离线或实时失败：回退缓存（按当前用户名；兼容旧空用户名会话也兜底）
+            val key = normalizeApiKey(url)
+            val c = cacheManager.getCache(user, key) ?: cacheManager.getCache("", key)
+            if (c != null) {
+                Log.i(TAG, "OFFLINE API cache HIT: $key (user='$user')")
+                buildTextResponse(c.status, c.mime, c.body)
+            } else {
+                Log.w(TAG, "OFFLINE API cache MISS: $key (user='$user')")
+                buildTextResponse(503, "application/json", offlineErrJson("offline_no_cache"))
+            }
+        } else {
+            if (!isNetworkAvailable()) {
+                buildTextResponse(412, "application/json", offlineErrJson("offline_readonly"))
+            } else {
+                null
+            }
+        }
     }
+
+    /**
+     * 原生转发 GET 请求，并加密缓存当前用户权限范围内的 200~299 文本响应
+     * （CRM/LOST/WON/佣金/看板等列表与记录，服务器已按 token 过滤）。
+     */
+    private fun proxyGet(url: String, request: WebResourceRequest, user: String, isCommission: Boolean): WebResourceResponse? {
+        val lower = url.lowercase()
+        val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.connectTimeout = 15000
+        conn.readTimeout = 15000
+        var authToken: String? = null
+        try {
+            val headers = request.requestHeaders
+            for ((k, v) in headers) {
+                val lk = k.lowercase()
+                if (lk == "host" || lk == "connection" || lk == "accept-encoding" || lk == "content-length") continue
+                conn.setRequestProperty(k, v)
+                if (lk == "authorization") authToken = v.removePrefix("Bearer ").trim()
+            }
+            if (authToken.isNullOrEmpty()) {
+                val sess = cacheManager.getSession()
+                if (sess != null) conn.setRequestProperty("Authorization", "Bearer " + sess.first)
+            }
+            // 强制源站返回最新内容，保证线上版本实时刷新。
+            conn.setRequestProperty("Cache-Control", "no-cache")
+            conn.setRequestProperty("Pragma", "no-cache")
+            val status = conn.responseCode
+            val stream = if (status < 400) conn.inputStream else conn.errorStream
+            val bodyBytes = stream?.readBytes() ?: ByteArray(0)
+            val mime = conn.contentType ?: "application/json"
+            val body = String(bodyBytes, Charsets.UTF_8)
+            // 离线数据：缓存当前用户权限范围内的全部 GET /api/ 文本响应（200~299）。
+            // 服务器本就按 token 过滤，缓存即等于“权限范围内数据”；附件类（files/vault/documents）落盘无意义且为二进制，剔除。
+            val isBinary = lower.contains("/api/files") || lower.contains("/api/vault") || lower.contains("/documents")
+            val isText = mime.startsWith("application/json", true) || mime.startsWith("text/", true)
+            val allowCache = status in 200..299 && isText && !isBinary
+            if (allowCache) cacheManager.putCache(user, normalizeApiKey(url), status, mime, body)
+            // ★ 离线会话自动捕获：在线时拦截 /api/session、/api/me 的响应，
+            //   把响应里的 token+user 直接写进离线会话，断网即可注入登录态。
+            //   不依赖网页主动调用 AndroidBridge.saveSession，根治"断网进不去"。
+            if (allowCache) maybeCacheSessionFromResponse(url, authToken, body)
+            return buildTextResponse(status, mime, body)
+        } catch (e: Exception) {
+            Log.w(TAG, "proxyGet error: $url", e)
+            return null
+        } finally {
+            try { conn.disconnect() } catch (e: Exception) { }
+        }
+    }
+
+    /**
+     * 在线时自动从会话类 GET 响应里抓取离线会话（token + user），
+     * 写入 CacheManager，使断网也能注入登录态。
+     * 来源：/api/session、/api/me（都返回 {ok,user}，且请求头带 Bearer token）。
+     * 这样即使网页从不调用 AndroidBridge.saveSession，离线登录依然可用。
+     */
+    private fun maybeCacheSessionFromResponse(url: String, headerToken: String?, body: String) {
+        try {
+            val lower = url.lowercase()
+            if (!lower.contains("/api/session") && !lower.contains("/api/me") && !lower.contains("/api/login")) return
+            val obj = org.json.JSONObject(body)
+            if (!obj.optBoolean("ok", false) || !obj.has("user")) return
+            val user = obj.getJSONObject("user").toString()
+            val token = (headerToken?.takeIf { it.isNotEmpty() }
+                ?: obj.optString("token", "")).takeIf { it.isNotEmpty() } ?: return
+            cacheManager.putSession(token, user)
+            // 会话到手：执行完整离线数据同步。首次登录时 saveSession 可能没被调用，
+            // 这里兜底触发同步+提示，确保断网前数据已经落盘。
+            syncOfflineData(showToast = true)
+        } catch (e: Exception) {
+            Log.w(TAG, "maybeCacheSessionFromResponse failed: $url", e)
+        }
+    }
+
+    // ---- 同源静态资源离线缓存：在线代理并落盘，离线喂缓存 ----
+
+    private fun serveVendor(path: String): WebResourceResponse? {
+        val assetPath = "vendor/" + path.substring("/vendor/".length)
+        return try {
+            val stream = applicationContext.assets.open(assetPath)
+            val mime = when {
+                assetPath.endsWith(".js") -> "application/javascript"
+                assetPath.endsWith(".css") -> "text/css"
+                assetPath.endsWith(".woff") || assetPath.endsWith(".woff2") -> "font/woff2"
+                assetPath.endsWith(".ttf") -> "font/ttf"
+                else -> "application/octet-stream"
+            }
+            WebResourceResponse(mime, "UTF-8", stream)
+        } catch (e: Exception) {
+            Log.w(TAG, "vendor intercept miss: $assetPath", e)
+            null
+        }
+    }
+
+    /**
+     * 同源静态资源（主文档 + 外链脚本/样式/清单）：在线原生代理并加密缓存，
+     * 离线直接喂本地缓存。断网后整页可完整渲染，离线会话注入也才有载体。
+     */
+    private fun handleSite(request: WebResourceRequest): WebResourceResponse? {
+        val reqUrl = request.url ?: return null
+        val host = reqUrl.host ?: return null
+        val rawPath = reqUrl.path ?: ""
+        val normPath = if (rawPath.isEmpty() || rawPath == "/index.html") "/" else rawPath
+        val key = host + normPath
+
+        // ★ 主文档也走本地缓存/快照，在线时同样秒开：
+        //   主文档直接放行会导致每次启动都联网下载 1.9MB HTML，出现进度条/白屏。
+        //   改为由 handleSite 代理：有缓存读缓存，无缓存读 APK 内置快照，均立即返回；
+        //   同时后台静默回源刷新，下次启动自然用到线上最新版。
+
+        // ★ 秒开优化（白屏 3 秒的根治）：本地已有缓存 → 立即喂给 WebView，不再等
+        //   1.6MB 主文档 + 子资源的网络往返；同时后台线程静默回源刷新缓存，
+        //   下次启动自然用到新版本。以前在线时每次都强制回源（no-cache），
+        //   网络稍慢就是数秒白屏。
+        val cached = cacheManager.getSite(key)
+        if (cached != null) {
+            Log.i(TAG, "instant serve cached site: $key (bg refresh scheduled)")
+            refreshSiteInBackground(request, key)
+            return buildTextResponse(200, cached.mime, cached.body)
+        }
+
+        // 首次启动（还没有缓存）：优先用 APK 内置的页面快照立即渲染，
+        // 消除"新装 APP 打开白屏几秒"（1.9MB 主文档不必等网络往返）。
+        val snapshot = readSiteSnapshot(normPath)
+        if (snapshot != null) {
+            Log.i(TAG, "instant serve built-in snapshot: $key (bg refresh scheduled)")
+            refreshSiteInBackground(request, key)
+            // 主文档 URL 没有扩展名，guessMime 会误判为 octet-stream，必须显式指定 text/html
+            val mime = if (normPath == "/" || rawPath.endsWith("/index.html")) "text/html" else guessMime(reqUrl.toString())
+            return buildTextResponse(200, mime, snapshot)
+        }
+
+        // 既无缓存也无快照：走在线代理并落盘
+        return try {
+            proxySite(request, key)
+        } catch (e: Exception) {
+            Log.w(TAG, "proxySite failed, no offline cache for: $key", e)
+            null
+        }
+    }
+
+    /** 读取 APK 内置的同源页面快照（assets/site/...），无则返回 null */
+    private fun readSiteSnapshot(normPath: String): String? {
+        return try {
+            val rel = if (normPath == "/" || normPath.isEmpty()) "/index.html" else normPath
+            val assetName = "site" + rel
+            resources.assets.open(assetName).bufferedReader().use { it.readText() }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /** 后台静默刷新站点缓存（每次启动每个 key 最多刷一次，避免重复流量） */
+    private fun refreshSiteInBackground(request: WebResourceRequest, key: String) {
+        if (!siteRefreshKeys.add(key)) return
+        val url = request.url.toString()
+        val headers = request.requestHeaders ?: emptyMap()
+        Thread {
+            try {
+                proxySiteByUrl(url, headers, key)
+                Log.i(TAG, "bg site refresh done: $key")
+            } catch (e: Exception) {
+                Log.w(TAG, "bg site refresh failed: $key", e)
+            }
+        }.start()
+    }
+
+    /** 原生转发同源静态资源并加密缓存可文本化的响应（html/js/css/json/manifest）。 */
+    private fun proxySite(request: WebResourceRequest, key: String): WebResourceResponse? {
+        return proxySiteByUrl(request.url.toString(), request.requestHeaders ?: emptyMap(), key)
+    }
+
+    private fun proxySiteByUrl(
+        url: String,
+        reqHeaders: Map<String, String>,
+        key: String
+    ): WebResourceResponse? {
+        val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.connectTimeout = 15000
+        conn.readTimeout = 20000
+        conn.instanceFollowRedirects = true
+        try {
+            val headers = reqHeaders
+            for ((k, v) in headers) {
+                val lk = k.lowercase()
+                // 跳过逐跳头与 cookie（本应用用 Bearer token，不依赖 cookie）
+                if (lk in setOf("host", "connection", "accept-encoding", "content-length", "cookie")) continue
+                conn.setRequestProperty(k, v)
+            }
+            // 强制向源站取最新：避免任何中间缓存/CDN 返回旧版，
+            // 解决"网页版本不更新"——线上访问永远拿到最新 index.html/JS。
+            conn.setRequestProperty("Cache-Control", "no-cache")
+            conn.setRequestProperty("Pragma", "no-cache")
+            val status = conn.responseCode
+            val stream = if (status < 400) conn.inputStream else conn.errorStream
+            val bodyBytes = stream?.readBytes() ?: ByteArray(0)
+            val rawMime = conn.contentType ?: guessMime(url)
+            val mime = if (rawMime.contains("charset", true)) rawMime else "$rawMime; charset=utf-8"
+            val body = String(bodyBytes, Charsets.UTF_8)
+            if (status in 200..299 && isCacheableText(mime)) {
+                cacheManager.putSite(key, mime, body)
+                // 从首页 HTML 里提取服务器版本号（loginVer）并缓存，
+                // 这样即使不重新打包 APK，登录页脚也能跟随服务器最新版本。
+                val path = android.net.Uri.parse(url).path ?: "/"
+                if (path == "/" || path == "/index.html" || path.endsWith("/index.html")) {
+                    extractAndCacheVersion(body)
+                }
+            }
+            return buildTextResponse(status, mime, body)
+        } finally {
+            try { conn.disconnect() } catch (e: Exception) { }
+        }
+    }
+
+    private fun guessMime(url: String): String = when {
+        url.endsWith(".js", true) -> "application/javascript"
+        url.endsWith(".css", true) -> "text/css"
+        url.endsWith(".html", true) || url.endsWith(".htm", true) -> "text/html"
+        url.endsWith(".json", true) -> "application/json"
+        url.endsWith(".webmanifest", true) -> "application/manifest+json"
+        else -> "application/octet-stream"
+    }
+
+    private fun isCacheableText(mime: String): Boolean =
+        mime.contains("text") || mime.contains("javascript") || mime.contains("json") ||
+        mime.contains("html") || mime.contains("css") || mime.contains("manifest")
+
+    /**
+     * 从服务器首页 HTML 的 #loginVer 元素提取版本号并缓存。
+     * 这样网页更新后，登录页脚显示的服务器版本会自动同步，无需重新打包 APK。
+     */
+    private fun extractAndCacheVersion(html: String) {
+        try {
+            val re = Regex("""id=["']loginVer["'][^>]*>([^<]+)</""", RegexOption.IGNORE_CASE)
+            val m = re.find(html)
+            val ver = m?.groupValues?.get(1)?.trim()
+            if (!ver.isNullOrEmpty()) {
+                cacheManager.putVersion(ver)
+                Log.i(TAG, "extracted server version: $ver")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "extract server version failed", e)
+        }
+    }
+
+    private fun offlineErrJson(code: String): String {
+        val m = when (code) {
+            "offline_readonly" -> mapOf(
+                "zh" to "当前离线，编辑操作需联网后重试",
+                "en" to "Offline now, edit actions need network",
+                "vi" to "Đang offline, thao tác sửa cần mạng"
+            )
+            "offline_no_cache" -> mapOf(
+                "zh" to "当前离线，且本地无缓存数据",
+                "en" to "Offline and no cached data locally",
+                "vi" to "Đang offline và chưa có dữ liệu cache"
+            )
+            else -> mapOf(
+                "zh" to "离线不可用",
+                "en" to "Unavailable offline",
+                "vi" to "Không dùng được khi offline"
+            )
+        }
+        val msg = m[systemLang()] ?: m["zh"]!!
+        return "{\"ok\":false,\"error\":" + org.json.JSONObject.quote(msg) + "}"
+    }
+
+    private fun buildTextResponse(status: Int, mime: String, body: String): WebResourceResponse {
+        // WebResourceResponse 的 mimeType 参数必须是 "text/html" 这类纯类型，
+        // 不能带 "; charset=..."，否则 WebView 会解析失败并退回到纯文本显示源码。
+        val parts = mime.split(';')
+        val baseMime = parts[0].trim().lowercase()
+        val enc = parts.asSequence()
+            .drop(1)
+            .map { it.trim() }
+            .filter { it.startsWith("charset", true) }
+            .map { it.substringAfter('=', "").trim() }
+            .firstOrNull { it.isNotEmpty() } ?: "UTF-8"
+        val charset = try { java.nio.charset.Charset.forName(enc) } catch (e: Exception) { Charsets.UTF_8 }
+        val stream = java.io.ByteArrayInputStream(body.toByteArray(charset))
+        // ★ 关键：响应必须带 no-store/no-cache，否则 WebView 会把"拦截返回"的
+        //   index.html/JS/CSS 缓存到自己的 HTTP 缓存里，下次启动直接喂旧页面 →
+        //   登录页脚版本号永远不更新（"版本不更新"真凶）。离线缓存由我们自己的
+        //   CacheManager 负责，不依赖 WebView 缓存，所以这里强制不缓存是安全的。
+        val respHeaders = mapOf(
+            "Cache-Control" to "no-store, no-cache, must-revalidate",
+            "Pragma" to "no-cache",
+            "Expires" to "0"
+        )
+        return WebResourceResponse(baseMime, enc, status, statusReason(status), respHeaders, stream)
+    }
+
+    /**
+     * 离线缓存键归一化：去掉前端用于防缓存突击的查询参数（_t/_r/_v/_），
+     * 否则离线时每次请求的 URL 都带新时间戳/随机数，永远命中不了缓存。
+     * 服务器对这些参数本就忽略，所以线上转发仍用原始 URL，只有缓存键用归一化后的。
+     */
+    private fun normalizeApiKey(url: String): String {
+        val q = url.indexOf('?')
+        if (q < 0) return url
+        val base = url.substring(0, q)
+        val kept = url.substring(q + 1).split('&').filter { p ->
+            val k = p.substringBefore('=').lowercase()
+            k != "_t" && k != "_r" && k != "_v" && k != "_"
+        }
+        return if (kept.isEmpty()) base else "$base?${kept.joinToString("&")}"
+    }
+
+    private fun statusReason(status: Int): String {
+        return when (status) {
+            200 -> "OK"
+            201 -> "Created"
+            202 -> "Accepted"
+            203 -> "Non-Authoritative Information"
+            204 -> "No Content"
+            301 -> "Moved Permanently"
+            302 -> "Found"
+            303 -> "See Other"
+            304 -> "Not Modified"
+            400 -> "Bad Request"
+            401 -> "Unauthorized"
+            403 -> "Forbidden"
+            404 -> "Not Found"
+            412 -> "Precondition Failed"
+            500 -> "Internal Server Error"
+            503 -> "Service Unavailable"
+            else -> "Status $status"
+        }
+    }
+
+    /** 在线时尝试免密自动登录（用本地保存的凭据）；离线则交给 maybeOfflineSession 注入缓存会话 */
+    private fun maybeAutoLogin() {
+        if (!cacheManager.hasCreds()) return
+        val s = cacheManager.getSession() ?: return
+        try {
+            val body = org.json.JSONObject(s.second)
+            if (!body.optBoolean("ok", false) || !body.has("user")) return
+            val ju = org.json.JSONObject.quote(body.getJSONObject("user").toString())
+            val jp = org.json.JSONObject.quote(cacheManager.getCreds()?.second ?: "")
+            webView.evaluateJavascript(
+                "(window.VAULT_TOKEN || (function(){try{return sessionStorage.getItem('won_vault_token')}catch(e){return ''}})()) ? '1':'0'"
+            ) { v ->
+                if (v != null && v.contains("'1'")) {
+                    // 已有会话，无需自动登录
+                } else {
+                    webView.evaluateJavascript("window.__fpLogin && window.__fpLogin($ju, $jp);", null)
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "maybeAutoLogin failed", e)
+        }
+    }
+
+    /** 离线且有缓存会话时，直接把 token + user 注入网页，进入"已登录（只读）"态 */
+    private fun maybeOfflineSession() {
+        if (!cacheManager.hasSession()) return
+        val s = cacheManager.getSession() ?: return
+        Log.i(TAG, "maybeOfflineSession: 有缓存会话，开始注入离线登录态")
+        try {
+            // 网页 saveSession 存的是"用户对象本身"（d.user），也可能存完整登录响应（含 ok/user）。
+            // 兼容两种结构，取出 user 对象 JSON。
+            val raw = s.second
+            val userObj = try {
+                val b = org.json.JSONObject(raw)
+                if (b.has("user")) b.getJSONObject("user").toString() else raw
+            } catch (e: Exception) { raw }
+            val token = org.json.JSONObject.quote(s.first)
+            val ju = org.json.JSONObject.quote(userObj)
+            val js = "(function(){try{" +
+                    "VAULT_TOKEN=$token;authUser=JSON.parse($ju);" +
+                    "try{sessionStorage.setItem('won_vault_token',$token);}catch(e){}" +
+                    "try{sessionStorage.setItem('won_auth_user',JSON.stringify(authUser));}catch(e){}" +
+                    "if(typeof showMainContent==='function')showMainContent();" +
+                    "if(typeof window._updateUserChip==='function')window._updateUserChip(authUser);" +
+                    "if(typeof switchView==='function')switchView('dashboard');" +
+                    "}catch(e){console.warn('[offline] inject failed',e);}})();"
+            // 立即注入；再延迟 600ms 注入一次，防止页面启动时的会话校验把登录态覆盖回登录页
+            webView.evaluateJavascript(js, null)
+            webView.postDelayed({ webView.evaluateJavascript(js, null) }, 600)
+        } catch (e: Exception) {
+            Log.w(TAG, "maybeOfflineSession failed", e)
+        }
+    }
+
+    /** 覆盖 index.html 登录页写死的版本号（<span id="loginVer">，旧值 V2026.09.08.19），
+     *  改成 APK 的 versionName，保证页脚版本与构建同步、用户一眼可见。 */
+    private fun overrideLoginVer() {
+        val ver = org.json.JSONObject.quote(BuildConfig.VERSION_NAME)
+        webView.evaluateJavascript(
+            "(function(){try{var e=document.getElementById('loginVer');if(e)e.textContent=$ver;}catch(_){}})();",
+            null
+        )
+    }
+
+    /** 登录成功后（或联网打开且有会话时）后台静默预取各模块列表接口，
+     *  让数据进入离线缓存，断网也能回放。请求经 shouldInterceptRequest 自动落盘。 */
+    private var lastPrefetchTs = 0L
+    private fun prefetchOfflineData() {
+        if (!isNetworkAvailable()) return          // 离线时不预取（否则会把 503 错误写进缓存）
+        if (!cacheManager.hasSession()) return
+        val now = System.currentTimeMillis()
+        if (now - lastPrefetchTs < 20000) return    // 20s 内不重复预取，避免刷屏
+        lastPrefetchTs = now
+        val js = "(function(){" +
+                "try{" +
+                "var base=(typeof API_BASE!=='undefined')?API_BASE:'https://agi-goldsum-crm.duckdns.org';" +
+                "var eps=['/api/crm-projects','/api/lost-projects','/api/won-projects'," +
+                "'/api/commission/records','/api/commission/amount-requests','/api/dashboard-stats'," +
+                "'/api/session','/api/me'];" +
+                "var h=(typeof authHeaders==='function')?authHeaders():{};" +
+                "eps.forEach(function(p){try{fetch(base+p,{credentials:'include',headers:h});}catch(e){}});" +
+                "}catch(e){}" +
+                "})();"
+        // evaluateJavascript 必须在 UI 线程执行（saveSession 桥回调在后台线程）
+        runOnUiThread { webView.evaluateJavascript(js, null) }
+        Log.i(TAG, "prefetchOfflineData: triggered background fetch of 6 endpoints")
+    }
+
+    /**
+     * 完整离线数据同步：首次登录或每次联网登录后，把服务器上当前用户权限范围内的
+     * 关键记录全部拉下来写入 CacheManager。完成后可选弹三语橙色居中提示。
+     */
+    private fun syncOfflineData(showToast: Boolean = false, force: Boolean = false) {
+        if (!isNetworkAvailable()) return
+        if (!cacheManager.hasSession()) return
+        val now = System.currentTimeMillis()
+        if (!force && now - lastFullSyncTs < 30000) return  // 30s 节流，避免重复同步
+        lastFullSyncTs = now
+
+        val sess = cacheManager.getSession() ?: return
+        val token = sess.first
+        // 从缓存的 user 里取 username，用于 /api/me?username= 等接口
+        val username = try {
+            org.json.JSONObject(sess.second).optString("username", "")
+        } catch (e: Exception) { "" }
+        val user = cacheManager.currentUser()
+        val base = HOME_URL
+
+        Thread {
+            var okCount = 0
+            var failCount = 0
+            val endpoints = mutableListOf<String>().apply {
+                add("/api/session")
+                add("/api/me")
+                if (username.isNotEmpty()) add("/api/me?username=${java.net.URLEncoder.encode(username, "UTF-8")}")
+                add("/api/crm-projects")
+                add("/api/lost-projects")
+                add("/api/won-projects")
+                add("/api/commission/records")
+                add("/api/commission/amount-requests")
+                add("/api/dashboard-stats")
+                add("/api/dashboard-update-status")
+                add("/api/login-history")
+                add("/api/users")
+                add("/api/managers")
+                if (username.isNotEmpty()) add("/api/perm-version?username=${java.net.URLEncoder.encode(username, "UTF-8")}")
+                add("/api/metal-prices?cur=USD")
+                add("/api/metal-prices?cur=RMB")
+                add("/api/metal-prices?cur=VND")
+                add("/api/feed-prices")
+                add("/api/livestock-prices")
+                add("/api/fx-rates")
+                // 审批流常用视图
+                if (username.isNotEmpty()) {
+                    add("/api/approval-requests?scope=todo&me=${java.net.URLEncoder.encode(username, "UTF-8")}")
+                    add("/api/approval-requests?scope=mine&me=${java.net.URLEncoder.encode(username, "UTF-8")}")
+                }
+            }
+            for (path in endpoints) {
+                try {
+                    val url = "$base$path"
+                    val conn = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                    conn.requestMethod = "GET"
+                    conn.connectTimeout = 15000
+                    conn.readTimeout = 20000
+                    conn.setRequestProperty("Authorization", "Bearer $token")
+                    conn.setRequestProperty("Accept", "application/json")
+                    conn.setRequestProperty("Cache-Control", "no-cache")
+                    conn.setRequestProperty("Pragma", "no-cache")
+                    val status = conn.responseCode
+                    val stream = if (status < 400) conn.inputStream else conn.errorStream
+                    val bodyBytes = stream?.readBytes() ?: ByteArray(0)
+                    val body = String(bodyBytes, Charsets.UTF_8)
+                    val mime = conn.contentType ?: "application/json"
+                    if (status in 200..299 && (mime.contains("json", true) || mime.contains("text", true))) {
+                        cacheManager.putCache(user, normalizeApiKey(url), status, mime, body)
+                        okCount++
+                    } else {
+                        failCount++
+                    }
+                    conn.disconnect()
+                } catch (e: Exception) {
+                    Log.w(TAG, "syncOfflineData failed: $path", e)
+                    failCount++
+                }
+            }
+            cacheManager.setLastSync(System.currentTimeMillis())
+            Log.i(TAG, "syncOfflineData complete: ok=$okCount fail=$failCount")
+            if (showToast) {
+                runOnUiThread { showSyncToastWithCurrentLang() }
+            }
+        }.start()
+    }
+
+    /**
+     * 当前系统语言（zh/en/vi）：提示文案随【系统】语言切换（不是 App 内部语言）。
+     * 用 Resources.getSystem() 取设备真实系统语言，避免被 App 自身 locale 覆盖。
+     */
+    private fun systemLang(): String {
+        return try {
+            val loc = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                android.content.res.Resources.getSystem().configuration.locales[0]
+            } else {
+                @Suppress("DEPRECATION")
+                android.content.res.Resources.getSystem().configuration.locale
+            }
+            when (loc.language.lowercase()) {
+                "en" -> "en"
+                "vi" -> "vi"
+                else -> "zh"
+            }
+        } catch (e: Exception) { "zh" }
+    }
+
+    /**
+     * 显示同步提示前，先主动从网页读取当前语言。
+     *
+     * 背景（提示语不跟随语言的真实根因）：curLang 由网页每 5 秒轮询推送(setLang)，
+     * 而同步提示在登录成功后【立即】弹出，此时推送往往还没发生，
+     * 于是提示语停留在旧语言；更糟的是网页的 agiLang() 在 CUR_LANG 尚未就绪时
+     * 会用 navigator.language（设备系统语言）推送，导致原生侧被系统语言污染。
+     * 这里在弹出前先查一次真实的 window.CUR_LANG，保证提示语与界面语言一致。
+     */
+    private fun showSyncToastWithCurrentLang() {
+        try {
+            webView.evaluateJavascript(
+                "(function(){try{return String(window.CUR_LANG||'');}catch(e){return '';}})()"
+            ) { v ->
+                val l = v?.trim('"') ?: ""
+                if (l == "zh" || l == "en" || l == "vi") curLang = l
+                showSyncToast()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "read CUR_LANG failed", e)
+            showSyncToast()
+        }
+    }
+
+    /**
+     * 三语同步成功提示：经典橙色背景、屏幕中央、约 1 秒后自动消失。
+     * 用 Window 悬浮层实现 —— API 30+ 已废弃并忽略 Toast.setView，
+     * 自定义橙色背景在 Android 11+ 会被丢弃，故改用 decorView 叠加层。
+     */
+    private fun showSyncToast() {
+        val lang = curLang
+        val msg = when (lang) {
+            "en" -> "Latest records synced with server. You can still use them offline next time."
+            "vi" -> "Dữ liệu mới nhất đã đồng bộ với máy chủ. Lần sau offline vẫn dùng được."
+            else -> "最新记录已经与服务器同步成功，下次离线后仍然可以使用这些数据！"
+        }
+        runOnUiThread {
+            try {
+                val ctx = this
+                val container = android.widget.FrameLayout(ctx).apply {
+                    layoutParams = android.widget.FrameLayout.LayoutParams(
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                        android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                    isClickable = false
+                    isFocusable = false
+                    elevation = 2000f
+                }
+                val tv = android.widget.TextView(ctx).apply {
+                    text = msg
+                    setTextColor(android.graphics.Color.WHITE)
+                    textSize = 14f
+                    setPadding(40, 22, 40, 22)
+                    gravity = android.view.Gravity.CENTER
+                    elevation = 2000f
+                    background = android.graphics.drawable.GradientDrawable().apply {
+                        cornerRadius = 18f
+                        setColor(android.graphics.Color.argb(238, 214, 120, 0)) // 经典橙 #D67800
+                    }
+                }
+                val lp = android.widget.FrameLayout.LayoutParams(
+                    android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                    android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+                ).apply { gravity = android.view.Gravity.CENTER }
+                container.addView(tv, lp)
+                val decor = window.decorView as android.view.ViewGroup
+                decor.addView(container)
+                container.bringToFront()
+                // 约 3 秒后自动消失（用户要求停留更久，便于看清三语文案）
+                backHandler.postDelayed({ try { decor.removeView(container) } catch (_: Exception) {} }, 3000)
+            } catch (e: Exception) {
+                Log.w(TAG, "showSyncToast failed", e)
+                try { android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show() } catch (_: Exception) {}
+            }
+        }
+    }
+
 
     inner class AndroidBridge {
         @android.webkit.JavascriptInterface
         fun saveCredentials(user: String, pwd: String) {
-            credPrefs.edit()
-                .putString(KEY_CRED_USER, android.util.Base64.encodeToString(user.toByteArray(), android.util.Base64.NO_WRAP))
-                .putString(KEY_CRED_PWD, android.util.Base64.encodeToString(pwd.toByteArray(), android.util.Base64.NO_WRAP))
-                .apply()
+            cacheManager.saveCreds(user, pwd)
+        }
+
+        /** 登录成功后由网页调用：保存服务端会话 token + 用户资料，供离线注入会话登录 */
+        @android.webkit.JavascriptInterface
+        fun saveSession(token: String, userJson: String) {
+            cacheManager.putSession(token, userJson)
+            // ★ 登录成功后【不要立即】全量同步：
+            //   它会把服务器上全部关键记录拉下来并写入加密缓存，与首页数据加载
+            //   争抢带宽和 CPU —— 这正是"点登录按钮后进度条要走好几秒"的原因。
+            //   改为延后到首页基本加载完成后再在后台同步，离线能力完全不受影响。
+            backHandler.postDelayed({
+                syncOfflineData(showToast = true, force = true)
+            }, 8000)
         }
 
         @android.webkit.JavascriptInterface
         fun clearCredentials() {
-            credPrefs.edit().clear().apply()
+            cacheManager.clearCreds()
         }
 
         @android.webkit.JavascriptInterface
         fun hasCredentials(): String =
-            if (credPrefs.getString(KEY_CRED_PWD, null).isNullOrEmpty()) "0" else "1"
+            if (cacheManager.hasCreds()) "1" else "0"
+
+        /** 缓存状态：是否离线 + 上次同步时间（网页据此提示） */
+        @android.webkit.JavascriptInterface
+        fun cacheStatus(): String = cacheManager.cacheStatusJson(!isNetworkAvailable())
+
+        /** 当前是否离线：'1' = 离线，'0' = 在线 */
+        @android.webkit.JavascriptInterface
+        fun isOffline(): String = if (isNetworkAvailable()) "0" else "1"
+
+        /** 网页推送当前语言(zh/en/vi)，离线提示文案随之切换 */
+        @android.webkit.JavascriptInterface
+        fun setLang(lang: String) {
+            curLang = when (lang) {
+                "en" -> "en"
+                "vi" -> "vi"
+                else -> "zh"
+            }
+        }
+
+        // ★ 手机 APP 已移除打印功能（用户需求：网页版保留打印，APP 内不需要）。
+        //   这里不再提供 printToPdf 接口：APP 里点"打印"会走网页自身的 window.print()，
+        //   在 WebView 中不产生任何反应、不弹任何提示。
+        //   网页版 index.html 的打印逻辑未做任何改动，浏览器中照常可用。
+
+        /** 离线启动时注入的会话（token + user JSON），仅在断网且有缓存时有效 */
+        @android.webkit.JavascriptInterface
+        fun offlineSession(): String {
+            val s = cacheManager.getSession() ?: return "null"
+            return try {
+                val raw = s.second
+                // 兼容两种存储格式：完整登录响应 {user:...} 或纯 user 对象
+                val userObj = try {
+                    val b = org.json.JSONObject(raw)
+                    if (b.has("user")) b.getJSONObject("user") else b
+                } catch (e: Exception) {
+                    org.json.JSONObject(raw)
+                }
+                org.json.JSONObject().put("token", s.first).put("user", userObj).toString()
+            } catch (e: Exception) {
+                "null"
+            }
+        }
 
         @android.webkit.JavascriptInterface
         fun authenticate() {
@@ -887,13 +1792,9 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "此设备不支持指纹或未录入指纹", Toast.LENGTH_SHORT).show()
             return
         }
-        val b64 = { s: String? ->
-            try {
-                s?.let { String(android.util.Base64.decode(it, android.util.Base64.NO_WRAP)) } ?: ""
-            } catch (e: Exception) { "" }
-        }
-        val user = b64(credPrefs.getString(KEY_CRED_USER, null))
-        val pwd = b64(credPrefs.getString(KEY_CRED_PWD, null))
+        val creds = cacheManager.getCreds()
+        val user = creds?.first ?: ""
+        val pwd = creds?.second ?: ""
         if (pwd.isEmpty()) {
             Toast.makeText(this, "请先登录一次以保存凭据", Toast.LENGTH_SHORT).show()
             return

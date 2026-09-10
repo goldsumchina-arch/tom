@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.09.07.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.09.10.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
 <!-- ==================== 同源后端地址（腾讯云版） ====================
@@ -193,7 +193,7 @@ function _ovLoadChartLib(cb){
 
   /* 竖屏且为手机时显示遮罩 */
   @media screen and (orientation: portrait) and (max-width: 1024px) {
-    #rotate-gate { display: flex; }
+    #rotate-gate { display: none; }
   }
 </style>
 <script>
@@ -252,13 +252,14 @@ function _ovLoadChartLib(cb){
     if (document.body) buildGate();
     else document.addEventListener('DOMContentLoaded', buildGate);
     // 首次用户交互时尝试锁定横屏（浏览器要求必须有用户手势）
-    var once = function () {
-      tryLockLandscape();
-      document.removeEventListener('touchend', once);
-      document.removeEventListener('click', once);
-    };
-    document.addEventListener('touchend', once);
-    document.addEventListener('click', once);
+    // —— 已禁用：用户要求竖屏也能正常使用，不再强制横屏/锁定方向
+    // var once = function () {
+    //   tryLockLandscape();
+    //   document.removeEventListener('touchend', once);
+    //   document.removeEventListener('click', once);
+    // };
+    // document.addEventListener('touchend', once);
+    // document.addEventListener('click', once);
   }
 
   if (document.readyState === 'loading') {
@@ -384,13 +385,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.09.07.05 - 确认新代码已加载 -->
-  <title>签约项目 · AGI-CRM v2026.09.07.05</title>
+  <!-- 版本号：V2026.09.10.05 - 确认新代码已加载 -->
+  <title>签约项目 · AGI-CRM v2026.09.10.05</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 Cloudflare Pages 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20260907.05';
+    window._DASH_VER = '20260910.05';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -2492,19 +2493,21 @@ function _ovLoadChartLib(cb){
   .modal > h2                { margin: -24px -24px 16px !important; padding: 13px 24px !important; border-radius: 13px 13px 0 0 !important; }
   .detail-view-box > .dv-title { margin: -22px -24px 14px !important; padding: 13px 24px !important; border-radius: 13px 13px 0 0 !important; }
   .pt-editor-box > .pt-title  { margin: -24px -26px 16px !important; padding: 13px 26px !important; border-radius: 13px 13px 0 0 !important; text-align:left !important; }
-  .auth-modal > h3            { margin: -28px -30px 18px !important; padding: 13px 30px !important; border-radius: 13px 13px 0 0 !important; }
+  .auth-modal > h3            { margin: -28px -30px 18px !important; padding: 13px 30px !important; border-radius: 13px 13px 0 0 !important; display:flex; justify-content:space-between; align-items:center; }
   /* 关闭按钮在橙色横条上：白色、悬停微亮 */
-  .modal > .close { position:absolute; top:12px; right:16px; float:none; color:#fff !important; z-index:5; margin:0; }
-  .modal > .close:hover { color:#ffe3c8 !important; }
+  .modal .close { position:absolute; top:12px; right:16px; float:none; color:#fff !important; z-index:5; margin:0; }
+  .modal .close:hover { color:#ffe3c8 !important; }
   /* 标题栏 □ 最大化按钮：与关闭按钮并排，位于其左侧 */
   .mmax-btn {
+    display:inline-flex; align-items:center; justify-content:center;
     position:absolute; top:9px; right:46px; z-index:6;
-    width:26px; height:26px; line-height:22px; text-align:center;
+    width:26px; height:26px; line-height:1; text-align:center;
     background:none; border:1px solid rgba(255,255,255,.7); border-radius:5px;
     font-size:15px; cursor:pointer; color:#fff; padding:0; box-sizing:border-box;
   }
   .mmax-btn:hover { color:#ffe3c8 !important; border-color:#ffe3c8 !important; }
-  .modal > .mmax-btn { top:11px; right:48px; }
+  .modal .mmax-btn { top:11px; right:48px; }
+  .modal > h2 { display:flex; justify-content:space-between; align-items:center; }
   /* 浅色标题栏的弹窗（用户/审批等白底模态框）用深色边框，保证可见 */
   .auth-modal > .mmax-btn, .modal-mask .mmax-btn,
   .detail-view-box > .mmax-btn, .pt-editor-box > .mmax-btn { color:#888; border-color:#bbb; }
@@ -2513,14 +2516,14 @@ function _ovLoadChartLib(cb){
   /* ★ 统一 .auth-modal（清理报告 / 云端管理选择框 / 清理确认框）的关闭按钮。
      之前 .comm-close 完全没有定位样式，落在文档流里压在标题上（表现为"错位方块"）；
      这里定位到橙色表头右上角，与 □ 最大化按钮并排。 */
-  .auth-modal > .comm-close {
-    position:absolute; top:6px; right:10px; z-index:7;
+  .auth-modal .comm-close {
+    position:absolute; top:8px; right:12px; z-index:7;
     width:26px; height:26px; line-height:23px; text-align:center;
     background:none; border:1px solid rgba(255,255,255,.75); border-radius:5px;
     font-size:16px; cursor:pointer; color:#fff; padding:0; box-sizing:border-box;
   }
-  .auth-modal > .comm-close:hover { background:rgba(255,255,255,.22); }
-  .auth-modal > .mmax-btn { top:6px; right:44px; }
+  .auth-modal .comm-close:hover { background:rgba(255,255,255,.22); }
+  .auth-modal .mmax-btn { top:8px; right:48px; }
   .detail-view-box > .dv-close { color:#fff !important; }
   .detail-view-box > .dv-close:hover { color:#ffe3c8 !important; }
   .pt-editor-box .pt-close, .cm-head .cm-close, .cpr-head .cpr-close, .gsr-head .gsr-close { color:#fff !important; }
@@ -2904,7 +2907,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.07.05</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.10.05</span></div>
   </div>
 </div>
 
@@ -4181,6 +4184,11 @@ function _ovLoadChartLib(cb){
   .modal-header { background:#ff7a1a; color:#fff; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; cursor:move; user-select:none; }
   .modal-header span { font-size:16px; font-weight:600; }
   .modal-header .close { cursor:pointer; font-size:22px; line-height:1; }
+  /* 编辑用户权限弹窗：最大化/关闭按钮放进同一 flex 容器，确保真正一行、垂直居中 */
+  #mask .modal-header .modal-actions { display:inline-flex; align-items:center; gap:6px; }
+  #mask .modal-header .modal-actions .mmax-btn,
+  #mask .modal-header .modal-actions .close { position:static; top:auto; right:auto; margin:0; }
+  #mask .modal-header .modal-actions .close { width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; font-size:20px; }
   .modal-tabs { display:flex; background:#fafafa; border-bottom:1px solid #eee; }
   .modal-tabs .tab { padding:10px 16px; cursor:pointer; font-size:14px; color:#666; border-bottom:2px solid transparent; }
   .modal-tabs .tab.active { color:#ff7a1a; border-bottom-color:#ff7a1a; background:#fff; font-weight:600; }
@@ -4439,7 +4447,9 @@ function _ovLoadChartLib(cb){
   <div class="modal">
     <div class="modal-header">
       <span id="modalTitle">编辑用户权限</span>
-      <span class="close" onclick="closeModal()">×</span>
+      <span class="modal-actions">
+        <span class="close" onclick="closeModal()">×</span>
+      </span>
     </div>
     <div class="modal-tabs">
       <div class="tab active" id="tabBtnBasic" data-tab="basic" data-i18n="user_tab_basic">基本资料</div>
@@ -8312,7 +8322,8 @@ function ensureCrmSaved(cb) {
     initial_quote_date: SD('c_initial_quote_date'), est_purchase_date: SD('c_est_purchase_date'),
     est_ship_date: SD('c_est_ship_date'), quote_version: S('c_quote_version') || 'V0', last_quote_date: SD('c_last_quote_date'),
     rate_rmb_vnd: String(moneyToNumber(S('c_rate_rmb_vnd'))), rate_usd_vnd: String(moneyToNumber(S('c_rate_usd_vnd'))), incoterm: S('c_incoterm'),
-    install_quoted: S('c_install_quoted'), salesperson: S('c_salesperson'), remark: S('c_remark'),
+    install_quoted: S('c_install_quoted'), salesperson: S('c_salesperson'),
+    remark: S('c_remark_' + (window.CUR_LANG || 'en')) || S('c_remark'),
     remark_zh: S('c_remark_zh'), remark_en: S('c_remark_en'), remark_vi: S('c_remark_vi'),
     pdf_equip: S('c_pdf_equip'), pdf_install: S('c_pdf_install'), pdf_both: S('c_pdf_both')
   };
@@ -9424,7 +9435,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.09.07.05 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.09.10.05 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -9444,7 +9455,7 @@ function setLangDebug(lang) {
   } catch(e) {}
 
   // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
-  //  - V2026.09.07.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //  - V2026.09.10.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
   //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
   //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
   //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
@@ -9527,7 +9538,7 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
-  // ★ V2026.09.07.05 新要求：切语言只刷新【当前激活的表格标签】，
+  // ★ V2026.09.10.05 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
   var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
@@ -14308,7 +14319,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.09.07.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.09.10.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -18329,7 +18340,9 @@ function saveCrm() {
     initial_quote_date: SD('c_initial_quote_date'), est_purchase_date: SD('c_est_purchase_date'),
     est_ship_date: SD('c_est_ship_date'), quote_version: S('c_quote_version') || 'V0', last_quote_date: SD('c_last_quote_date'),
     rate_rmb_vnd: String(moneyToNumber(S('c_rate_rmb_vnd'))), rate_usd_vnd: String(moneyToNumber(S('c_rate_usd_vnd'))), incoterm: S('c_incoterm'),
-    install_quoted: S('c_install_quoted'), salesperson: S('c_salesperson'), remark: S('c_remark'),
+    install_quoted: S('c_install_quoted'), salesperson: S('c_salesperson'),
+    // ★ 保证 base remark 永远同步当前系统语言框的值，避免旧缓存/旧 base 覆盖三语列
+    remark: S('c_remark_' + (window.CUR_LANG || 'en')) || S('c_remark'),
     remark_zh: S('c_remark_zh'), remark_en: S('c_remark_en'), remark_vi: S('c_remark_vi'),
     pdf_equip: S('c_pdf_equip'), pdf_install: S('c_pdf_install'), pdf_both: S('c_pdf_both')
   };
@@ -18704,7 +18717,8 @@ function ptTranslateViaMyMemory(text, target) {
     })
     .then(function(d){
       var t = d && d.responseData && d.responseData.translatedText;
-      if (t && t !== '' && String(t).toUpperCase().indexOf('INVALID SOURCE') === -1) {
+      var up = String(t || '').toUpperCase();
+      if (t && t !== '' && up.indexOf('INVALID SOURCE') === -1 && up.indexOf('PLEASE SELECT') === -1 && up.indexOf('MYMEMORY WARNING') === -1 && up.indexOf('NO TRANSLATION') === -1) {
         try { window.__mmCache = window.__mmCache || {}; window.__mmCache[target + '|' + text] = t; } catch (e) {}
         return t;
       }
@@ -18805,6 +18819,10 @@ function ptBlur(srcLang){
 }
 window.ptBlur = ptBlur;
 
+// ⛔ 已锁定 —— 三语输入逻辑（V2026.09.10.05）：
+// 默认三个输入框全部锁死；点击“清空三语”后仅当前系统语言框可输入；
+// 输入后自动翻译并填充另外两语，翻译结果必须按语言标签落入对应框。
+// 未经用户 Tom 明确同意禁止修改。
 // ===== 三语输入统一控制（V56）：默认仅系统语言可编辑，点击“清空三语”后全部启用并自动互译 =====
 // group 任意字符串；ids = {zh:'id',en:'id',vi:'id'}
 window.__triLangState = window.__triLangState || {};
@@ -19063,6 +19081,10 @@ function crmRemarkSyncBase(lang){
 function crmRemarkInput(lang){
   if (!triLangFocus('crmRemark', lang, {zh:'c_remark_zh', en:'c_remark_en', vi:'c_remark_vi'})) return;
   window.__crmRmFocus.dirty = true;
+  // 输入任一框时，立即把当前系统语言框的值同步到 base hidden，防止保存时 base 落在旧缓存
+  var L = window.CUR_LANG || 'en';
+  var box = el('c_remark_' + L), base = el('c_remark');
+  if (box && base) base.value = box.value;
   if (triLangGetState('crmRemark')) crmRemarkTranslate(lang, false);
   else crmRemarkSyncBase(lang);
 }
@@ -19173,9 +19195,11 @@ function wonRemarkTranslate(base, lang, immediate){
     var src = srcBox.value || '';
     console.warn('[won-remark] translate run', base, lang, src);
     if (!src.trim()) return;
+    var srcDetected = ptDetectLang(src);
     if (!window.__wonRmAuto) window.__wonRmAuto = {};
     ['zh','en','vi'].forEach(function(t){
       if (t === lang) return;
+      if (srcDetected === t) return; // 源语言与目标相同，跳过（避免 MyMemory 报错）
       var tb = el('w_' + base + '_' + t);
       if (!tb) return;
       var cur = (tb.value || '').trim();
@@ -19239,9 +19263,11 @@ function wonRemarkFillAll(base){
     if (v) { srcLang = l; srcText = v; }
   });
   if (!srcLang) return;
+  var srcDetected = ptDetectLang(srcText);
   if (!window.__wonRmAuto) window.__wonRmAuto = {};
   ['zh','en','vi'].forEach(function(t){
     if (t === srcLang) return;
+    if (srcDetected === t) return; // 源语言与目标相同，跳过
     var b = boxes[t];
     if (!b) return;
     var cur = (b.value || '').trim();
@@ -19304,10 +19330,20 @@ function rmFillFromData(base, p){
   var pre = base === RM_CRM_BASE ? 'c_' : 'w_';
   var zh = _tlCleanZero(p[base+'_zh']), en = _tlCleanZero(p[base+'_en']), vi = _tlCleanZero(p[base+'_vi']);
   // 三语扩展字段全空时，base 列可能是 WON JSON 打包值或 CRM 旧单语字符串；
-  // 统一用 tlObj 解析，确保空 JSON 不会作为文本塞进输入框。
+  // ★ CRM 旧单语值按当前系统语言回填（不再无脑当中文）；WON JSON 仍走 tlObj 解析
   if (!zh && !en && !vi) {
-    var o = tlObj(p[base]);
-    zh = o.zh; en = o.en; vi = o.vi;
+    var rawBase = p && p[base];
+    var baseStr = typeof rawBase === 'string' ? rawBase.trim() : '';
+    if (baseStr && baseStr.charAt(0) !== '{') {
+      var L = window.CUR_LANG || 'en';
+      var old = _tlCleanZero(rawBase);
+      if (L === 'zh') zh = old;
+      else if (L === 'vi') vi = old;
+      else en = old;
+    } else {
+      var o = tlObj(rawBase);
+      zh = o.zh; en = o.en; vi = o.vi;
+    }
   }
   var hz = el(pre+base+'_zh'), he = el(pre+base+'_en'), hv = el(pre+base+'_vi');
   if (hz) hz.value = zh; if (he) he.value = en; if (hv) hv.value = vi;
@@ -22550,7 +22586,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.09.07.05 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.09.10.05 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -22907,7 +22943,7 @@ function _refreshCrmAggChartsByDecision(){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.09.07.05）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.09.10.05）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -25108,6 +25144,23 @@ if (document.getElementById('loginUser')) fillSavedLogin();
   } catch(e) { console.warn('[lang] login init:', e); }
 })();
 
+/* 登录错误三语映射：后端返回的错误文案是硬编码中文，同时会附带 errKey 错误码。
+   这里按 errKey 取当前语言文案；无 errKey 时回退显示后端原文（保持兼容）。 */
+function loginErrText(d, tk) {
+  var fallback = (d && d.error) || (tk.login_err_fail || 'Login failed');
+  var key = (d && (d.errKey || d.errkey || d.code)) || '';
+  if (!key) return fallback;
+  var map = {
+    USER_NOT_FOUND:   ['用户名不存在', 'Tên đăng nhập không tồn tại', 'Username does not exist'],
+    ACCOUNT_DISABLED: ['该账号已被禁用', 'Tài khoản này đã bị vô hiệu hóa', 'This account has been disabled'],
+    BAD_PASSWORD:     ['密码错误', 'Sai mật khẩu', 'Wrong password']
+  };
+  var arr = map[key];
+  if (!arr) return fallback;
+  var L = (window.CUR_LANG === 'zh') ? 0 : (window.CUR_LANG === 'vi') ? 1 : 2;
+  return arr[L] || fallback;
+}
+
 function doLogin() {
   var user = document.getElementById('loginUser').value.trim().toLowerCase();
   var pwd = document.getElementById('loginPwd').value;
@@ -25148,6 +25201,13 @@ function doLogin() {
             else window.AndroidBridge.clearCredentials();
           }
         } catch(e){}
+        // 离线会话注入：无论是否"记住密码"，都把 token + 用户资料交给 APK，
+        // 这样断网重开也能直接进入只读态（配合 APK 的 maybeOfflineSession）。
+        try {
+          if (window.AndroidBridge && window.AndroidBridge.saveSession) {
+            window.AndroidBridge.saveSession((d.token || ''), JSON.stringify(d.user || {}));
+          }
+        } catch(e){}
         document.getElementById('loginPage').classList.add('hidden');
         window._updateUserChip(d.user);
       } catch(e) { console.error('[login] post-auth setup err:', e); }
@@ -25170,7 +25230,11 @@ function doLogin() {
         }
       }, 800);
     } else {
-      errEl.textContent = d.error || (tk.login_err_fail || 'Login failed');
+      // 后端返回的错误文案是硬编码中文，这里按错误码翻译为当前界面语言，
+      // 取不到错误码时再回退显示后端原文（保持兼容）。
+      errEl.textContent = (typeof loginErrText === 'function')
+        ? loginErrText(d, tk)
+        : (d.error || (tk.login_err_fail || 'Login failed'));
     }
   }).catch(function(){
     btn.disabled = false;
@@ -29890,8 +29954,33 @@ function _doExportOverviewPDF(){
         e.stopPropagation();
         window.toggleMaximize(box);
       });
-      // 尽量插到关闭按钮左侧，保持视觉一致；否则追加为盒子末子元素
-      // 关闭按钮可能是 .close 或 .comm-close，都要插到它左侧，避免挤走它
+      // 优先把最大化按钮放到标题栏内，与关闭按钮真正并排；
+      // 标题栏可能是 h2/h3 或 .modal-header/.cp-head/.cm-head 等。
+      var head = box.querySelector('h2, h3, .modal-header, .cp-head, .cm-head, .cpr-head, .gsr-head, .addm-head, .drawer-header, .appr-drawer-head, .rpt-head, .dash-chart-lightbox-head');
+      var closeInHead = head && head.querySelector('.close, .comm-close, .cp-close, .cm-close, .cpr-close, .gsr-close, .addm-close, .dv-close, .pt-close');
+      if (head) {
+        if (closeInHead) {
+          // 如果标题栏已有 .modal-actions 容器，把最大化按钮放进去，
+          // 与关闭按钮真正在同一 flex 行内并排、垂直居中。
+          var actions = head.querySelector('.modal-actions');
+          if (actions) {
+            actions.insertBefore(btn, closeInHead);
+          } else {
+            head.insertBefore(btn, closeInHead);
+          }
+        } else {
+          // 关闭按钮在标题栏外时，把它挪进标题栏末尾，确保两个按钮并排
+          var closeInBox = box.querySelector('.close, .comm-close, .cp-close, .cm-close, .cpr-close, .gsr-close, .addm-close, .dv-close, .pt-close');
+          if (closeInBox) {
+            head.appendChild(closeInBox);
+            head.insertBefore(btn, closeInBox);
+          } else {
+            head.appendChild(btn);
+          }
+        }
+        return;
+      }
+      // 旧弹窗：插到关闭按钮左侧，保持视觉一致
       var closeEl = box.querySelector(':scope > .close, :scope > .comm-close');
       if (closeEl) box.insertBefore(btn, closeEl);
       else box.appendChild(btn);
@@ -31948,7 +32037,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.09.07.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.09.10.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

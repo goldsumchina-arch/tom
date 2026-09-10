@@ -384,16 +384,18 @@ export default {
         .bind(username)
         .first();
 
+      // 说明：error 保留中文原文（前端有依赖该文案的判断逻辑，不能改），
+      //      同时附带 errKey 错误码，前端据此显示 中/英/越 对应文案。
       if (!row) {
-        return json(request, { ok: false, error: "用户名不存在" });
+        return json(request, { ok: false, error: "用户名不存在", errKey: "USER_NOT_FOUND" });
       }
       if (row.status !== "active") {
-        return json(request, { ok: false, error: "该账号已被禁用" });
+        return json(request, { ok: false, error: "该账号已被禁用", errKey: "ACCOUNT_DISABLED" });
       }
 
       const ok = await verifyPassword(row.password, password);
       if (!ok) {
-        return json(request, { ok: false, error: "密码错误" });
+        return json(request, { ok: false, error: "密码错误", errKey: "BAD_PASSWORD" });
       }
 
       // ---- 密码无感升级：老明文密码验证通过后，自动转成加密存储 ----
@@ -490,7 +492,7 @@ export default {
         "SELECT * FROM users WHERE username=?"
       ).bind(uname).first();
       if (!row) {
-        return json(request, { ok: false, error: "用户不存在" }, 401);
+        return json(request, { ok: false, error: "用户不存在", errKey: "USER_NOT_FOUND" }, 401);
       }
       let perms = {};
       try { perms = row.perms ? JSON.parse(row.perms) : {}; } catch (e) { perms = {}; }
@@ -768,9 +770,10 @@ export default {
         if (!mr.ok) throw new Error("mm-" + mr.status);
         const md = await mr.json();
         const mt = md && md.responseData && md.responseData.translatedText;
-        if (!mt || (mt || "").toUpperCase() === "NO TRANSLATION") throw new Error("mm-empty");
+        const umt = (mt || "").toUpperCase();
+        if (!mt || umt === "NO TRANSLATION" || umt.indexOf("PLEASE SELECT") !== -1 || umt.indexOf("MYMEMORY WARNING") !== -1) throw new Error("mm-empty");
         // 如果 MyMemory 报错“INVALID SOURCE”，回退到检测出的源语言再试一次
-        if (String(mt).toUpperCase().indexOf("INVALID SOURCE") !== -1) {
+        if (umt.indexOf("INVALID SOURCE") !== -1) {
           if (sourceGuess) throw new Error("mm-invalid-source");
           return await tryMyMemory(detectLangMyMemory(q));
         }
