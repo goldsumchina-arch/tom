@@ -1,7 +1,7 @@
 // ⛔ FROZEN (2026-09-08) V2026.09.07.05：本文件（D1 兼容层）逻辑已锁定，未经用户明确同意禁止修改。
 // ============================================================
 // D1 兼容适配层
-// 把 Cloudflare D1 的接口（prepare().bind().first()/all()/run() 与 batch()）
+// 把 SQLite 的接口（prepare().bind().first()/all()/run() 与 batch()）
 // 映射到 better-sqlite3，使原 Worker 业务代码（src/*.js）无需改动即可运行。
 // ============================================================
 import Database from "better-sqlite3";

@@ -5,7 +5,7 @@ import fs from "node:fs";
 import os from "node:os";
 
 const execAsync = promisify(exec);
-const SESSION_TTL_HOURS = 168; // 与 cloudflare/src/index.js 保持一致
+const SESSION_TTL_HOURS = 168; // 与 node-backend/src/index.js 保持一致
 
 function env(name, fallback = "") {
   return process.env[name] || fallback;

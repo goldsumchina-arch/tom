@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- ⛔ FROZEN (2026-09-08) V2026.09.10.05：本文件（秘密空间 Vault）逻辑已锁定，未经用户明确同意禁止修改。其余一切逻辑均正确并禁止改动。 -->
 <html lang="zh">
 <head>
@@ -1165,7 +1165,7 @@
     var t = vaultT();
     vaultPdfProgress(t.common_loading_component || '加载组件…', 0);
     ensureLib('pdfjs', ['/vendor/pdf.min.js',
-                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'])
+                        '/vendor/pdf.min.js'])
       .then(function(src){
         pdfjsLib.GlobalWorkerOptions.workerSrc = src.replace('pdf.min.js', 'pdf.worker.min.js');
         var loadingTask = pdfjsLib.getDocument({ url: url });
@@ -1868,7 +1868,7 @@
       vaultRenderPdf(zoom, name, url);
     } else if (/\.docx$/i.test(lower)) {
       ensureLib('mammoth', ['/vendor/mammoth.browser.min.js',
-                            'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js'])
+                            '/vendor/mammoth.browser.min.js'])
         .then(function(){ return fetch(url).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }); })
         .then(function(buf){
           return docxPageMeta(buf).then(function(pm){
@@ -1906,7 +1906,7 @@
         .catch(function(){ fb(t.common_word_preview_failed || 'Word 预览组件加载失败。'); });
     } else if (/\.(xlsx|xls)$/i.test(lower)) {
       ensureLib('xlsx', ['/vendor/xlsx.full.min.js',
-                         'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'])
+                         '/vendor/xlsx.full.min.js'])
         .then(function(){ return fetch(url).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); }); })
         .then(function(buf){
           var wb = XLSX.read(buf, { type: 'array', cellStyles: true });

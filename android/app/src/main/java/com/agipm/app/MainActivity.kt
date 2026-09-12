@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
 
     private var lastBackPressedTime = 0L
 
-    // 主站点（pages.dev）加载失败后是否已切换到备用站点（workers.dev）
+    // 主站点（duckdns）加载失败后是否已切换到备用站点（直连 IP）
     private var usedFallback = false
 
     // 返回键处理：避免 evaluateJavascript 异步回调与超时兜底重复执行
@@ -560,8 +560,6 @@ class MainActivity : AppCompatActivity() {
                         Log.d(TAG, "backstate via scheme -> $webCanGoBack")
                         true   // 拦截，不真正导航
                     }
-                    url.startsWith("https://agi-gs.pages.dev") ||
-                    url.startsWith("https://agi-gs.tomalso911.workers.dev") -> false
                     url.startsWith("tel:") || url.startsWith("mailto:") -> {
                         try {
                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))

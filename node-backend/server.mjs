@@ -2,7 +2,7 @@
 // ============================================================
 // AGI-PM 腾讯云版后端入口（腾讯云轻量应用服务器 2C4G / 香港）
 // - Express 托管前端静态资源（node-backend/dist）
-// - 复用业务后端逻辑（./src/index.js 的 fetch，原 Cloudflare Worker 代码已搬入本目录）
+// - 复用业务后端逻辑（./src/index.js 的 fetch，原 后端 代码已搬入本目录）
 // - env 适配：DB→SQLite(D1兼容层)，FILES→本地磁盘(R2兼容层)，AI 留空
 //   （翻译自动回退 Google / MyMemory / Libre，香港出网顺畅）
 // ============================================================
@@ -18,7 +18,7 @@ if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 import { makeD1 } from "./d1shim.mjs";
 import { makeFiles } from "./filesshim.mjs";
-// 复用 ./src 的业务代码（已从 cloudflare/src 搬入，单一源，不复制）
+// 复用 ./src 的业务代码（已从 node-backend/src 搬入，单一源，不复制）
 import worker from "./src/index.js";
 import { authenticateRequest, getTencentUsage, getDiskUsage } from "./tencent-usage.mjs";
 
@@ -78,7 +78,7 @@ const env = {
   // → getD1Usage 取不到数据 → quotaBlocks 永远放行（无每日读额度限制）
 };
 
-// 让清理报告的容量上限基于本机系统盘（默认 10 TB 是 Cloudflare R2 假设，自托管版用实际磁盘）
+// 让清理报告的容量上限基于本机系统盘（默认 10 TB 是 对象存储 假设，自托管版用实际磁盘）
 try {
   const disk = await getDiskUsage();
   if (disk && disk.total > 0) {
@@ -105,7 +105,7 @@ const app = express();
 app.set("trust proxy", true);
 
 // 同源部署版前端：由根目录前端文件构建到 node-backend/dist，CLOUD_API/CLOUD_ONLY/API_BASE 已清空，
-// 所有 /api 请求走本服务器（同源），不再转发 Cloudflare。
+// 所有 /api 请求走本服务器（同源），不再转发 云端。
 const DIST = path.join(ROOT, "dist");
 app.use(express.static(DIST, { extensions: ["html"] }));
 

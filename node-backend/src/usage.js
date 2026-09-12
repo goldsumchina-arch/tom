@@ -1,25 +1,25 @@
 // ⛔ FROZEN (2026-09-08) V2026.09.07.05：本文件逻辑已锁定，未经用户明确同意禁止修改。除 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”（清理演示数据用，仅删数据、不改逻辑）外，其余业务逻辑均正确，禁止改动。
 // ============================================================
-// D1 用量统计（走 Cloudflare 官方 GraphQL Analytics API）
+// D1 用量统计（走 用量分析 API）
 //
-// ★ 关键：查询这个 API 不消耗任何 D1 行读 / 行写（它读的是 Cloudflare
+// ★ 关键：查询这个 API 不消耗任何 D1 行读 / 行写（它读的是 云端
 //   自己的分析数据集，不是我们的业务库），所以对免费额度是【零开销】。
 //   之前考虑过的"自建 usage_daily 计量表"因此完全不需要了。
 //
 // 数据源：d1AnalyticsAdaptiveGroups
 //   sum { rowsRead rowsWritten }  按 date + databaseId 过滤
-//   也就是 Cloudflare 后台 D1 → Metrics 页面显示的那些数字。
+//   也就是 云端 后台 D1 → Metrics 页面显示的那些数字。
 //
 // 免费额度（Workers Free）：500 万行读/天，UTC 00:00 重置。
 // ============================================================
 
-const GRAPHQL_ENDPOINT = "https://api.cloudflare.com/client/v4/graphql";
+const GRAPHQL_ENDPOINT = "";
 
 // Workers Free 的 D1 每日行读上限；可用 env.D1_DAILY_READ_LIMIT 覆盖
 const DEFAULT_DAILY_READ_LIMIT = 5000000;
 // 达到该百分比后熔断：只放行 tom，其余人禁止使用
 const LOCK_PCT = 95;
-// 每个 Worker 实例的缓存时间（毫秒）：避免每请求都打 Cloudflare API
+// 每个 Worker 实例的缓存时间（毫秒）：避免每请求都打 云端 API
 const CACHE_TTL_MS = 60000;
 
 // 每个 Worker 实例独立缓存（无需 KV / D1，零存储依赖）

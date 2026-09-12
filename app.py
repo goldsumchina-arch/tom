@@ -2622,7 +2622,7 @@ def _rm_upload_files(*names):
 
 
 # ===================== 彻底删除（Purge）工具 =====================
-# 与云端 cloudflare/src/purge.js 对称：
+# 与后端 purge 逻辑对称（本地/腾讯云同源）：
 # 本地数据库同样没有外键、没开 PRAGMA foreign_keys，删记录时
 # 必须手写级联，否则审批单 / 佣金记录 / 磁盘文件都会残留。
 #
@@ -3285,9 +3285,8 @@ def add_no_cache_headers(resp):
 # 场景：用户刚装好、还没同步，或换了一台电脑 —— 界面里有附件引用，
 #       但本机 uploads/ 里还没有文件。以前只能干等下一次同步，
 #       现在点"查看/下载"时临时从云端取回并缓存到本机，之后离线也能打开。
-CLOUD_BASE = "https://agi-gs.tomalso911.workers.dev"
-# 云端 R2 的目录前缀（与 cloudflare/src 写入时保持一致）
-_CLOUD_DIRS = ("crm-docs", "won-docs", "lost-docs", "crm", "won", "lost")
+# 云端取回已废弃：系统已迁移腾讯云，不再对接对象存储（腾讯云 COS）。
+# 下方 _fetch_cloud_file 改为空操作，仅保留接口以便调用方不变。
 
 
 def _cloud_headers():
@@ -3322,7 +3321,7 @@ def _fetch_cloud_file(path):
         cands.append(s)
     if "/" in s.strip("/"):
         cands.append("/api/files/" + s.lstrip("/"))
-    cands += ["/api/files/%s/%s" % (d, name) for d in _CLOUD_DIRS]
+    # 云端目录前缀已废弃（迁移腾讯云），不再枚举 R2 目录
     cands.append("/api/files/" + name)
 
     import urllib.error
@@ -3330,7 +3329,7 @@ def _fetch_cloud_file(path):
     headers = _cloud_headers()
     for c in cands:
         try:
-            req = urllib.request.Request(CLOUD_BASE + c, headers=headers)
+            return ""  # 云端取回已废弃（迁移腾讯云），不再请求 对象存储
             with urllib.request.urlopen(req, timeout=12) as r:
                 data = r.read()
             if not data:

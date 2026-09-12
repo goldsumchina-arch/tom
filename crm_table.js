@@ -1,4 +1,4 @@
-// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
+﻿// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
 // ==================== CRM 潜在项目表格 (Potential Projects) ====================
 // CRM columns: 48 total
 // 0-11: 基本信息, 12-16: 日期, 17-19: 汇率/贸易, 20-40: 报价Q1-Q7, 41: 安装费, 42-44: PDF, 45-46: 销售, 47: 操作
@@ -1257,8 +1257,8 @@ function _legacyExportCrmReportPDF(){
     doExport();
   } else {
     var scripts=[
-      {src:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', name:'html2canvas'},
-      {src:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', name:'jsPDF'}
+      {src:'/vendor/html2canvas.min.js', name:'html2canvas'},
+      {src:'/vendor/jspdf.umd.min.js', name:'jsPDF'}
     ];
     var loaded=0;
     scripts.forEach(function(sc){

@@ -12,7 +12,6 @@ backup*/
 *demo_snapshot*.bak*
 
 # ===== 构建产物 / 依赖 =====
-cloudflare/pages/
 node_modules/
 __pycache__/
 *.pyc

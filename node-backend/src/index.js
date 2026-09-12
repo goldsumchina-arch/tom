@@ -1,6 +1,6 @@
 // ⛔ FROZEN (2026-09-08) V2026.09.07.05：本文件逻辑已锁定，未经用户明确同意禁止修改。除 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”（清理演示数据用，仅删数据、不改逻辑）外，其余业务逻辑均正确，禁止改动。
 // ============================================================
-// AGI-PM 云端后端（Cloudflare Worker）
+// AGI-PM 云端后端（后端）
 //
 // 阶段 M7：附件上云(R2) + 用户权限管理 + DEMO 演示数据
 //
@@ -41,13 +41,13 @@ import { handleTranslateFill } from "./translate_fill.js";
 import { handleSync } from "./sync.js";
 import { getD1Usage, quotaBlocks } from "./usage.js";
 
-const PBKDF2_ITER = 10000; // 迭代次数：兼顾安全与 Cloudflare Worker 的 CPU 上限
+const PBKDF2_ITER = 10000; // 迭代次数：兼顾安全与 后端 的 CPU 上限
 const HASH_PREFIX = "pbkdf2$";
 
 // ------------------------------------------------------------
 // CORS（跨域许可）
-// 前端部署在 Cloudflare Pages（agi-gs.pages.dev），
-// 后端在 Workers（agi-gs.tomalso911.workers.dev），两者域名不同，
+// 前端部署在 同源前端（），
+// 后端在 Workers（），两者域名不同，
 // 所以必须允许跨域调用。
 //
 // 注意：前端用了 credentials:'include'（携带 cookie），
@@ -681,7 +681,7 @@ export default {
       // ---- D1 每日读额度 95% 熔断 ----
       // 官方统计显示当日行读已达 95% 时，只放行 tom，其余人全部拒绝，
       // 避免把最后一点额度用光导致连管理员都进不去。
-      // 注意：用量来自 Cloudflare 官方分析 API，不消耗 D1 额度。
+      // 注意：用量来自 云端 官方分析 API，不消耗 D1 额度。
       const quotaLock = await quotaBlocks(env, authUser);
       if (quotaLock) {
         return json(request, {
@@ -736,8 +736,8 @@ export default {
         if (/[àáảãạăắằẳẵặâấầẩẫậđèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ]/i.test(text)) return "vi-VN";
         return "en-US";
       };
-      // ★ 主后端：Workers AI 多语翻译模型，运行在 Cloudflare 网络内，
-      //   不受 Google 对 Cloudflare 出口 IP 的自动化封锁影响，也无外部配额限制。
+      // ★ 主后端：Workers AI 多语翻译模型，运行在 服务器内，
+      //   不受 Google 对 出口 IP 的自动化封锁影响，也无外部配额限制。
       const tryWorkersAI = async () => {
         if (!env || !env.AI) throw new Error("ai-no-binding");
         const aiSrc = { "zh-CN": "zh", "vi-VN": "vi", "en-US": "en" };
@@ -802,7 +802,7 @@ export default {
       };
 
       // 翻译后端链（按可用性排序）：
-      //   1) Workers AI（Cloudflare 网络内，主用，无外部配额限制）
+      //   1) Workers AI（服务器内，主用，无外部配额限制）
       //   2) clients5.google.com（Chrome 词典扩展端点，抗 Google 自动化封锁）
       //   3) translate.googleapis.com（gtx）
       //   4) MyMemory（带邮箱提额）
