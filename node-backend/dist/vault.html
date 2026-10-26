@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.09.10.05：本文件（秘密空间 Vault）逻辑已锁定，未经用户明确同意禁止修改。其余一切逻辑均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.10.26.01：本文件（秘密空间 Vault）逻辑已锁定，未经用户明确同意禁止修改。其余一切逻辑均正确并禁止改动。 -->
 <html lang="zh">
 <head>
 <meta charset="UTF-8" />
@@ -327,7 +327,7 @@
     <div class="vault-pin-foot">
       <button class="vault-pin-cancel" onclick="closeVaultPin()">取消</button>
       <!-- 版本号：用于确认当前加载的是否为最新版本（PWA 缓存时可据此判断） -->
-      <div class="vault-ver" id="vaultVer">V2026.09.10.05</div>
+      <div class="vault-ver" id="vaultVer">V2026.10.26.01</div>
       <!-- 版本号过时（被缓存）时显示，点击强制拉取最新代码 -->
       <button class="vault-ver-refresh hidden" id="vaultVerRefresh" onclick="vaultForceReload()">↻ 有新版，点此更新</button>
     </div>
@@ -340,7 +340,7 @@
     <button class="vault-head-back" onclick="vaultHeadBack()" title="返回上一级（与系统返回键相同）" data-vi18n-attr="title:common_back"><span class="vault-btn-icon">⬅</span></button>
     <span class="vault-title"></span>
     <span class="vault-owner" title="tom · 专属">T</span>
-    <span class="vault-ver-info" title="V2026.09.10.05">ⓘ<span class="vault-head-ver" id="vaultHeadVer">V2026.09.10.05</span></span>
+    <span class="vault-ver-info" title="V2026.10.26.01">ⓘ<span class="vault-head-ver" id="vaultHeadVer">V2026.10.26.01</span></span>
     <button class="vault-orient-btn" id="vaultOrientBtn" onclick="vaultToggleOrient()" title="竖屏 / 横屏 切换" data-vi18n-attr="title:common_orient_title">🔄</button>
     <button class="vault-close" onclick="closeVault()" title="关闭" data-vi18n-attr="title:common_close">✕</button>
   </div>
@@ -2157,7 +2157,7 @@
     });
   })();
   // ===== 版本自检：确认加载的是否为最新版（PWA 缓存时提示更新）=====
-  var VAULT_VER = 'V2026.09.10.05';
+  var VAULT_VER = 'V2026.10.26.01';
   function vaultForceReload(){
     // 带随机参数强制绕过一切缓存重新拉取
     try {

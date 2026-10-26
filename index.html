@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.09.10.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.10.26.01：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
 <!-- ==================== 同源后端地址（腾讯云版） ====================
@@ -385,13 +385,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.09.10.05 - 确认新代码已加载 -->
-  <title>签约项目 · AGI-CRM v2026.09.10.05</title>
+  <!-- 版本号：V2026.10.26.06 - 操作列按钮整排一行 + 列宽按按钮实宽收紧 -->
+  <title>签约项目 · AGI-CRM v2026.10.26.06</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 同源前端 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20260910.05';
+    window._DASH_VER = '20261026.01';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -477,8 +477,18 @@ function _ovLoadChartLib(cb){
     .won-hscroll.show { opacity:1; }
     .won-hscroll .won-hscroll-inner { position:absolute; top:3px; left:0; height:12px; min-width:24px; background:#F5872E; border-radius:6px; cursor:grab; }
     .won-hscroll .won-hscroll-inner:active { cursor:grabbing; }
-    .won-scroll-container table { border-collapse:collapse; min-width:100%; font-size:11px; table-layout:auto; width:max-content; max-width:none; position:relative; }
-    .won-scroll-container th, .won-scroll-container td { border:1px solid #bbb; padding:4px 5px; vertical-align:middle; text-align:center; white-space:nowrap; background:inherit; }
+    /* ★LANG-GEOMETRY-LOCK-20261026★ 列宽由 LG 冻结模块写死（<col>+table-layout:fixed），
+       本规则只保留边框/对齐；表头行高恒定，数据行允许换行（数据内容与语言无关）。 */
+    .won-scroll-container table { border-collapse:collapse; min-width:100%; font-size:11px; table-layout:fixed; width:auto; max-width:none; position:relative; }
+    .won-scroll-container th, .won-scroll-container td { border:1px solid #bbb; padding:4px 5px; vertical-align:middle; text-align:center; background:inherit; }
+    /* ★HEADER-WRAP-20261026★ 表头一律「换行完整显示」，禁止省略号：
+       用户明确要求表头不许出现 “Contract Date …” 这种截断，必须分行看全。
+       高度统一 54px（≈3 行 11px 文字 + 内边距），zh/en/vi 表头高度一致；
+       列宽由 LG 冻结模块写死，换行只影响单元格内部排版，不改变列宽，
+       所以切语言几何仍然零变化。完整文案仍写进 title（悬停可复制）。 */
+    .won-scroll-container th { white-space:normal; overflow-wrap:anywhere; word-break:normal;
+      height:54px; line-height:1.2; padding:3px 4px; overflow:visible; text-overflow:clip; }
+    .won-scroll-container tbody td { white-space:normal; overflow-wrap:anywhere; }
     .won-scroll-container thead th { font-weight:700; border-bottom:none; position:sticky; top:0; z-index:20; }
     .won-scroll-container tbody td { border-top:1px solid #bbb; }
 
@@ -579,6 +589,12 @@ function _ovLoadChartLib(cb){
     .won-scroll-container thead th.won-p5 { background:#FFB6B6 !important; color:#7a2e2e !important; }
     .won-scroll-container thead th.won-bu { background:#C6EFCE !important; color:#1e6b34 !important; }
     .won-scroll-container thead th.won-action-yellow { background:#fff2b2 !important; color:#8a6d3b !important; }
+    /* ★ACTION-ROW-ONELINE-20261026★ 操作列（查看/编辑/删除/转到失败）永远只占一行，不许折行；
+       列宽由 LG 冻结模块按「三语最长按钮文案」算定，所以放宽后不会被裁切。 */
+    .won-scroll-container tbody td.won-action-yellow,
+    .won-scroll-container tbody td.won-action {
+      white-space:nowrap !important; word-break:keep-all; overflow-wrap:normal;
+    }
     
     .won-scroll-container tbody tr.fake-header-row td.won-p1, .won-scroll-container tbody tr.fake-header-row:hover td.won-p1 { background:#90EE90 !important; color:#1a5c1a !important; }
     .won-scroll-container tbody tr.fake-header-row td.won-p2, .won-scroll-container tbody tr.fake-header-row:hover td.won-p2 { background:#FFD700 !important; color:#7a6b00 !important; }
@@ -610,8 +626,8 @@ function _ovLoadChartLib(cb){
     .cur-toggles .cur-pill.on { background:linear-gradient(135deg,#F5872E,#e06d10); border-color:transparent; color:#fff; box-shadow:0 1px 4px rgba(245,135,46,.35); }
     .cur-toggles .cur-pill.on:hover { color:#fff; }
     .cur-toggles .cur-pill.lock { cursor:not-allowed; opacity:.7; }
-    /* 货币收缩组的一级表头：单行不换行，避免长文字在窄列里堆叠撑高表头 */
-    th.hdr-shrink { white-space:nowrap; font-size:11px; }
+    /* ★HEADER-WRAP-20261026★ 货币收缩组的一级表头：改为分行完整显示（不再单行截断） */
+    th.hdr-shrink { white-space:normal; overflow-wrap:anywhere; font-size:11px; line-height:1.2; }
 
     /* User list status tags */
     .tag { display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:12px; font-size:12px; line-height:1.6; border:1px solid transparent; }
@@ -684,7 +700,9 @@ function _ovLoadChartLib(cb){
     .btn-danger:hover { background:#c0392b; }
     .btn-outline { background:white; border:1px solid #ddd; color:#555; }
     .btn-outline:hover { border-color:#F5872E; color:#F5872E; }
-    .btn-sm { font-size:13px; padding:5px 12px; min-width:48px; border-radius:6px; font-weight:500; }
+    /* ★ACTION-ROW-ONELINE-20261026★ 行内操作按钮：整排一行（越南语 "Chuyển đến thất bại" 也放得下） */
+    .btn-sm { font-size:13px; padding:5px 12px; min-width:48px; border-radius:6px; font-weight:500;
+      white-space:nowrap; display:inline-block; vertical-align:middle; }
     .btn-view { background:#e8f4fd; border:1px solid #5dade2; color:#1a5276; cursor:pointer; }
     .btn-view:hover { background:#d6eaf8; }
     .btn-edit { background:#F5872E; border:1px solid #F5872E; color:#fff; cursor:pointer; }
@@ -1010,7 +1028,8 @@ function _ovLoadChartLib(cb){
     .cp-table-wrap { width:100%;overflow-x:auto; }
     .cp-table { min-width:1100px;border-collapse:collapse;font-size:11.5px; }
     .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:4px 6px;vertical-align:middle;white-space:nowrap; }
-    .cp-table thead th { background:#fff5ec;color:#F5872E;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1; }
+    .cp-table thead th { background:#fff5ec;color:#F5872E;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1;
+      white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
     .cp-table tbody tr:nth-child(even) td { background:#fdf8f1; }
     /* 固定前3列：序号、款项类别、用途说明 */
     .cp-table th:nth-child(1), .cp-table td:nth-child(1) { position:sticky;left:0;z-index:2;background:#fff5ec;min-width:36px;max-width:36px; }
@@ -1339,7 +1358,8 @@ function _ovLoadChartLib(cb){
     .gsr-summary-grid .gsr-item .vl{font-weight:700;color:#2c3e50;}
     .gsr-tbl{width:100%;border-collapse:collapse;font-size:11px;}
     .gsr-tbl th,.gsr-tbl td{border:1px solid #e0d4c4;padding:4px 6px;text-align:center;vertical-align:middle;white-space:nowrap;}
-    .gsr-tbl thead th{background:#f3eaff;font-weight:700;color:#5a3a8a;}
+    .gsr-tbl thead th{background:#f3eaff;font-weight:700;color:#5a3a8a;
+      white-space:normal; overflow-wrap:anywhere; line-height:1.2;}   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
     .gsr-tbl tbody tr:nth-child(even){background:#f7f9fc;}
     .gsr-tbl .amt{text-align:right;font-family:'Consolas',monospace;}
     .gsr-prog{height:10px;background:#eee;border-radius:5px;overflow:hidden;flex:1;margin:0 8px;}
@@ -1439,7 +1459,8 @@ function _ovLoadChartLib(cb){
   .addm-body { flex:1; overflow:auto; padding:16px 20px; }
   .addm-table { width:100%; border-collapse:collapse; font-size:11.5px; }
   .addm-table th, .addm-table td { border:1px solid #e5e5e5; padding:5px 6px; vertical-align:middle; text-align:center; }
-  .addm-table thead th { background:#fff5ec; color:#F5872E; font-weight:700; font-size:10.5px; white-space:nowrap; position:sticky; top:0; z-index:2; }
+  .addm-table thead th { background:#fff5ec; color:#F5872E; font-weight:700; font-size:10.5px; position:sticky; top:0; z-index:2;
+    white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示，禁止省略号 */
   .addm-table .ad-col-no { width:34px; }
   .addm-table .ad-col-date { width:200px; }
   .addm-table .ad-col-amt { width:120px; }
@@ -1809,7 +1830,8 @@ function _ovLoadChartLib(cb){
   .det-ben-sum { margin-left:auto; font-size:12px; color:#6b7684; }
   .det-ben-sum b { color:#2c3e50; }
   .det-pay-table { width:100%; border-collapse:collapse; font-size:12.5px; }
-  .det-pay-table thead th { background:#fbe8d4; color:#8a4b00; padding:6px 10px; white-space:nowrap; text-align:left; }
+  .det-pay-table thead th { background:#fbe8d4; color:#8a4b00; padding:6px 10px; text-align:left;
+    white-space:normal; overflow-wrap:anywhere; line-height:1.25; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
   .det-pay-table tbody td { padding:6px 10px; border-top:1px solid #f4ede3; white-space:nowrap; }
   .det-pay-table tbody tr:nth-child(even) td { background:#fdfaf6; }
   .det-status { display:inline-block; min-width:34px; text-align:center; font-size:11px; font-weight:700;
@@ -2091,11 +2113,18 @@ function _ovLoadChartLib(cb){
   body.ui-locked .sort-indicator,
   body.ui-locked .th-label,
   body.ui-locked .th-filter-input { pointer-events:none; }
+  /* ★LANG-GEOMETRY-LOCK-20261026★ 固定盒模型：
+     宽度由 JS 按「该标签三语(zh/en/vi)最长文案」一次性算定后写死（宽窄随文案，与以前一致）；
+     ★TOPBAR-NOJUMP-20261026★ 整排恒为一行（white-space:nowrap），切语言时盒子宽度不变 → 不闪跳。 */
   .tb-item {
     border:none; background:transparent; color:#dbe6f1; cursor:pointer;
-    font-size:15px; font-weight:600; padding:10px 18px; border-radius:8px;
-    white-space:nowrap; transition: background .15s, color .15s;
+    font-size:15px; font-weight:600; border-radius:8px;
+    height:40px; padding:0 8px; box-sizing:border-box;
+    display:inline-flex; align-items:center; justify-content:center;
+    text-align:center; line-height:1; white-space:nowrap; overflow:hidden;
+    transition: background .15s, color .15s;
     position:relative;   /* 供 .pend-badge 绝对定位 */
+    flex:0 0 auto;
   }
   .tb-item:hover { background:rgba(255,255,255,.08); color:#fff; }
   .tb-item.active { background:#e8720c; color:#fff; }
@@ -2139,6 +2168,7 @@ function _ovLoadChartLib(cb){
     border:1px solid rgba(255,255,255,.35); background:transparent; color:#fff;
     font-size:12px; font-weight:600; padding:6px 14px; border-radius:6px; cursor:pointer;
     transition: background .15s, border-color .15s;
+    white-space:nowrap;   /* ★LANG-GEOMETRY-LOCK：绝不能竖排换行（宽度已冻结） */
   }
   .tb-logout:hover { background:rgba(231,76,60,.85); border-color:transparent; }
   /* ===== 「适应屏幕」按钮 =====
@@ -2172,7 +2202,8 @@ function _ovLoadChartLib(cb){
     .tb-logo-mark { font-size: 15px; }
     .tb-logo-name { font-size: 12px; }
     .tb-menu { gap: 6px; }
-    .tb-item { font-size: 12px; padding: 7px 10px; }
+    /* ★LANG-GEOMETRY-LOCK-20261026★ 矮屏横屏：字号固定 12px，盒子 32px 高，宽度同样由 JS 冻结 */
+    .tb-item { font-size: 12px; height: 32px; padding: 0 5px; }
     .pend-badge {
       min-width: 15px; height: 15px; font-size: 9px; line-height: 13px;
       top: 0; right: 0; border-width: 1px; padding: 0 3px;
@@ -2193,8 +2224,80 @@ function _ovLoadChartLib(cb){
     #view-won .won-scroll-wrap,
     #view-lost .won-scroll-wrap { height: calc(100vh - 160px); }
   }
+  /* ===== ★TOPBAR-WRAP-20261026★ 窄视口（≤1180px）：紧凑顶栏 + 强制两行布局 =====
+     用户要求：导航标签必须全部展示、不许出现水平滚动条。
+     400~1100px 宽度下「LOGO + 6 个标签 + 语言胶囊 + 头像 + 退出」一行根本放不下，
+     所以这里改成两行：第一行 LOGO + 右侧信息区，第二行 6 个标签均分整行宽度。
+     标签宽度仍由 JS 按「三语最长文案」一次性冻结 → 切语言几何不变。 */
+  @media (max-width: 1180px) {
+    /* 第一行：LOGO + 右侧；第二行：标签铺满。
+       这里用 grid 而不是 flex-wrap：Android WebView 上 flex-wrap 与 JS 冻结的
+       内联 width/min-width/max-width 一起用时，菜单项的 flex-basis:100% 会被忽略
+       （实测真机仍是单行、只露出一个标签），grid 的两行是硬约束，不依赖 flex 协商。 */
+    #topbar {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-areas: "logo right" "menu menu";
+      align-items: center; height: auto; row-gap: 2px; column-gap: 8px;
+      padding-top: 4px; padding-bottom: 3px;
+    }
+    .tb-logo { grid-area: logo; justify-self: start; }
+    .tb-right { grid-area: right; justify-self: end; }
+    .tb-menu {
+      grid-area: menu; width: 100%; max-width: 100%; min-width: 0;
+      overflow-x: hidden; overflow-y: visible; padding-bottom: 0;
+    }
+    .tb-menu::-webkit-scrollbar { display: none; height: 0; }
+    /* 「佣金暗门」透明热区（72px 宽）在窄屏会把右侧挤出屏幕 → 隐藏；
+       手机端仍可用 LOGO 连点手势解锁佣金标签（那是主入口）。 */
+    #commReviveHotzone { display: none; }
+  }
+  @media (max-width: 1180px) {
+    #topbar { gap: 8px; padding-left: 8px; padding-right: 8px; }
+    .tb-logo { gap: 5px; }
+    .tb-logo svg { width: 22px; height: 22px; }
+    .tb-logo-mark { font-size: 15px; }
+    .tb-logo-name { display: none; }
+    .tb-menu { gap: 4px; }
+    .tb-item { font-size: 12px; height: 34px; padding: 0 5px; }
+    .pend-badge { min-width: 15px; height: 15px; font-size: 9px; line-height: 13px; top: 0; right: 0; border-width: 1px; padding: 0 3px; }
+    .tb-right { gap: 8px; }
+    .lang-switch { padding: 2px 5px; gap: 2px; }
+    .lang-switch-label { display: none; }
+    .lang-switch button { font-size: 10px; padding: 2px 7px; }
+    .tb-user { font-size: 11px; gap: 4px; }
+    .tb-user-avatar { width: 20px; height: 20px; font-size: 11px; }
+    .tb-user-role { display: none; }
+    .tb-logout { font-size: 11px; padding: 5px 8px; }
+    .tb-fit { display: inline-block; font-size: 10px; padding: 4px 6px; }
+  }
+  /* 超窄屏（手机竖屏）：只留头像，隐藏姓名/角色，把宽度让给导航标签。
+     ⚠ 头像（.tb-user-avatar / #tbUserAvatar）是「私密空间」暗门入口，绝不能隐藏。 */
+  @media (max-width: 560px) {
+    .tb-user-name, .tb-user-role { display: none; }
+    .tb-logout { padding: 5px 6px; }
+    #topbar { padding-left: 6px; padding-right: 6px; gap: 6px; }
+    .tb-right { gap: 6px; }
+    .lang-switch button { padding: 2px 5px; }
+  }
+  /* ★TOPBAR-WRAP-20261026★ 超窄屏：标签字号再降一档，
+     保证 6 个短标签在第二行里能全部放下（不许出现横向滚动）。 */
+  @media (max-width: 480px) {
+    .tb-item { font-size: 10px; height: 30px; }
+    .tb-logo svg { width: 20px; height: 20px; }
+    .tb-logo-mark { font-size: 14px; }
+    .lang-switch button { font-size: 9px; padding: 2px 4px; }
+    .tb-logout { font-size: 10px; padding: 4px 5px; }
+    .tb-fit { display: none; }
+  }
+
   /* ===== 主应用区 (Multi-view) ===== */
   .app-body { margin-top:60px; min-height:calc(100vh - 100px); background:#eef1f4; }
+  /* ★TOPBAR-WRAP-20261026★ 必须写在 .app-body 主样式之后才有优先级（同特异性后者生效）：
+     窄屏顶栏是两行（auto 高度），内容区按 --tb-h 实测高度下移，否则第二行标签会盖住内容。 */
+  @media (max-width: 1180px) {
+    .app-body { margin-top: calc(var(--tb-h, 84px) + 4px); }
+  }
   .app-body.hidden { display:none; }
   .view { display:none; }
   .view.active { display:block; }
@@ -2214,7 +2317,8 @@ function _ovLoadChartLib(cb){
   .users-table-wrap { background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.06); }
   .users-table { width:100%; border-collapse:collapse; font-size:13px; }
   .users-table thead { background:#F5872E; }
-  .users-table thead th { padding:12px 16px; text-align:left; color:#fff; font-size:13px; font-weight:600; white-space:nowrap; }
+  .users-table thead th { padding:12px 16px; text-align:left; color:#fff; font-size:13px; font-weight:600;
+    white-space:normal; overflow-wrap:anywhere; line-height:1.25; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
   .users-table thead th.sortable { cursor:pointer; user-select:none; transition:background .12s; }
   .users-table thead th.sortable:hover { background:#d96f1e; }
       .users-table thead th.sortable.active-sort { background:#c06015; }
@@ -2907,7 +3011,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.09.10.05</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.26.06</span></div>
   </div>
 </div>
 
@@ -4332,8 +4436,16 @@ function _ovLoadChartLib(cb){
   .appr-toolbar { display:flex; align-items:center; gap:14px; margin-bottom:12px; font-size:13px; color:#666; }
   .appr-count { font-weight:600; color:var(--appr-orange-d); }
   .appr-table-wrap { width:100%; overflow-x:auto; background:#fff; border:1px solid #f1e4d8; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.04); }
+  /* ★LANG-GEOMETRY-LOCK-20261026★ 审批/用户列表容器固定高度 + 内部滚动：
+     行内文字换语言后换行数不同 → 表格变高 → 页面整体上下跳。锁死容器高度即可消除。 */
+  #view-approvals .appr-table-wrap { max-height: calc(100vh - 300px); overflow: auto; }
+  #view-users .users-table-wrap { max-height: calc(100vh - 300px); overflow: auto; }
   table.appr-table { width:100%; border-collapse:collapse; font-size:13px; min-width:920px; }
-  table.appr-table thead th { position:sticky; top:0; background:var(--appr-orange); color:#fff; text-align:left; padding:10px 12px; font-weight:600; white-space:nowrap; border-bottom:2px solid #e0741a; }
+  table.appr-table thead th { position:sticky; top:0; background:var(--appr-orange); color:#fff; text-align:left; padding:10px 12px; font-weight:600; border-bottom:2px solid #e0741a;
+    /* ★HEADER-WRAP-20261026★ 表头分行完整显示，不再 nowrap 截断。
+       高度必须固定 84px（= 越南语最长表头 4 行的高度）：否则中文 67px、越南语 82px，
+       切语言表头就长高 15px —— 正是几何验收报的 approvals/VI +15 那条。 */
+    white-space:normal; overflow-wrap:anywhere; line-height:1.2; height:84px; vertical-align:middle; }
   table.appr-table thead th .th-inner { display:flex; flex-direction:column; gap:6px; }
   table.appr-table thead th .th-label { display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; }
   table.appr-table thead th .th-sort { font-size:10px; opacity:.85; }
@@ -9435,7 +9547,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.09.10.05 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.10.26.01 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -9455,7 +9567,7 @@ function setLangDebug(lang) {
   } catch(e) {}
 
   // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
-  //  - V2026.09.10.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //  - V2026.10.26.01：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
   //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
   //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
   //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
@@ -9538,7 +9650,7 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
-  // ★ V2026.09.10.05 新要求：切语言只刷新【当前激活的表格标签】，
+  // ★ V2026.10.26.01 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
   var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
@@ -9628,7 +9740,11 @@ function applyTopbarLang() {
   var t = T(); var nav = t.nav || {};
   // 手机横屏（矮屏）下改用短标签（如 "Potential Projects" → "Potential"），
   // 这是"6 个标签一个不少地显示在同一行"的关键：原名太长会挤掉后面的标签。
-  var shortNav = (topbarCompact() && t.nav_short) ? t.nav_short : null;
+  // ★TOPBAR-NOJUMP-20261026★ 中文例外：中文全称本来就短（"签约项目"4 字），
+  // 保持中文用全称（与以前外观一致）；英/越仍用短称。
+  // 盒子宽度由 LG.freezeTopbar 按「三语最长文案」算定，所以文案变、盒子不变 → 不闪跳。
+  var _langNow = (window.CUR_LANG || CUR_LANG);
+  var shortNav = (topbarCompact() && _langNow !== 'zh' && t.nav_short) ? t.nav_short : null;
   var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', lost:'lost', approvals:'approvals', users:'users', commission:'commission' };
   for (var k in menuMap) {
     var b = document.querySelector('.tb-item[data-view="'+menuMap[k]+'"]');
@@ -9667,6 +9783,8 @@ function applyTopbarLang() {
   // 「适应屏幕」按钮文字随三语刷新
   if (typeof updateFitBtnUI === 'function') updateFitBtnUI();
   fitTopbarFonts();
+  // ★LANG-GEOMETRY-LOCK-20261026★ 切语言后自检：几何有任何变化即报错
+  try { if (window.LG && LG.scheduleVerify) LG.scheduleVerify(); } catch (e) {}
 }
 
 /**
@@ -9676,16 +9794,745 @@ function applyTopbarLang() {
  */
 function topbarCompact() {
   try {
-    return !!(window.matchMedia &&
-      window.matchMedia('(orientation: landscape) and (max-height: 560px)').matches);
+    // ① 手机横屏矮屏（原有逻辑）
+    if (window.matchMedia && window.matchMedia('(orientation: landscape) and (max-height: 560px)').matches) return true;
+    // ② ★TOPBAR-WRAP-20261026★ 窄视口（≤1180px）：必须与 CSS
+    //    @media (max-width:1180px) 的阈值完全一致，否则 CSS 用紧凑样式、
+    //    JS 却按宽松尺寸算宽度，标签会被裁掉半截。
+    //    阈值从 980 提到 1180：1080 宽的手机 WebView（dpr=1 时 innerWidth 就是 1080）
+    //    以前拿不到短标签，顶栏只能显示 1 个标签 + 横向滚动条。
+    if (window.innerWidth && window.innerWidth <= 1180) return true;
+    return false;
   } catch (e) {
     return false;
   }
 }
 
-// 根据导航栏可用宽度自动缩放字体，确保所有标签完整可见，不出现滚动/遮挡
-// 节流：本函数会读写布局属性，被高频调用（MutationObserver / resize / 权限重算）
-// 会造成强制重排风暴，导致页面卡顿。
+/* ================================================================
+ * ★LANG-GEOMETRY-LOCK-20261026★  LG = Layout Geometry freeze
+ * ----------------------------------------------------------------
+ * 唯一目标：切换语言（zh / en / vi）时界面【几何尺寸】零变化。
+ * 铁律（违反即视为回退，check_lang_geom_lock.py 会拦截）：
+ *   1. 宽度只能「一次性按三语最长文案」算定后写死，之后永不重算；
+ *   2. 语言切换路径上禁止任何「测量 → 写样式」的自适应（含二分缩字号）；
+ *   3. 文案换行时容器高度保持固定，靠压缩行高吸收，绝不撑高上级容器。
+ * ================================================================ */
+window.LG = (function () {
+  'use strict';
+  var LANGS = ['zh', 'en', 'vi'];
+  var _cv = null;
+
+  function ctx() {
+    if (!_cv) { try { _cv = document.createElement('canvas').getContext('2d'); } catch (e) { _cv = null; } }
+    return _cv;
+  }
+  function dict(lang) {
+    try { return (typeof I18N !== 'undefined' && I18N) ? I18N[lang] : null; } catch (e) { return null; }
+  }
+  function navBag(lang, shortMode) {
+    var d = dict(lang); if (!d) return null;
+    if (shortMode && d.nav_short) return d.nav_short;
+    return d.nav || null;
+  }
+  function textW(txt, font) {
+    var c = ctx(); if (!c || !txt) return 0;
+    c.font = font;
+    return c.measureText(txt).width;
+  }
+  /* 某菜单项 / 某文案键在三种语言里的最长像素宽
+     ★TOPBAR-NOJUMP-20261026★ 中文永远按【全称】(nav) 量：
+     紧凑模式下中文显示全称（"签约项目"），英/越显示短称（"Won" / "Thắng"），
+     这里必须把两者都量进去，取最大值当盒子宽度 → 切语言盒子不动、文字也不被裁。 */
+  function maxNavW(key, shortMode, font) {
+    var m = 0;
+    for (var i = 0; i < LANGS.length; i++) {
+      var bag = navBag(LANGS[i], shortMode && LANGS[i] !== 'zh');
+      if (!bag) continue;
+      var w = textW(bag[key], font);
+      if (w > m) m = w;
+    }
+    return m;
+  }
+  function maxNavWAny(keys, shortMode, font) {
+    var m = 0;
+    for (var k = 0; k < keys.length; k++) {
+      var w = maxNavW(keys[k], shortMode, font);
+      if (w > m) m = w;
+    }
+    return m;
+  }
+  /* 真实可见性：必须看渲染结果，不能只看内联 style.display。
+     #tbCommission 是 CSS 里 display:none（暗门未解锁），内联样式为空，
+     若按内联判断会把它算成"可见"，导致首帧按 7 个标签分宽度、之后按 6 个 → 自检报警。 */
+  function isShown(el) {
+    if (!el) return false;
+    if (el.getClientRects().length === 0) return false;
+    try { return window.getComputedStyle(el).display !== 'none'; } catch (e) { return true; }
+  }
+
+  /* 写死一个元素的宽度（宽/高都不再受文案影响） */
+  function freezeW(el, px, minPx) {
+    if (!el) return;
+    px = Math.ceil(Math.max(px, minPx || 0));
+    el.style.flex = '0 0 auto';
+    el.style.width = px + 'px';
+    el.style.minWidth = px + 'px';
+    el.style.maxWidth = px + 'px';
+    el.style.boxSizing = 'border-box';
+  }
+
+  /* ---------------- 顶栏 ---------------- */
+  function freezeTopbar(menu, ignoredItems, compact) {
+    menu = menu || document.getElementById('tbMenu');
+    if (!menu) return;
+
+    /* ① 先冻结右侧信息区（Lang / 用户 / 退出 / 适应）。
+       它是 flex-shrink:0，宽度不定就会把菜单挤窄，导致"菜单可用宽度自己变自己"
+       —— 第一帧算出 122px、第二帧算出 141px 的漂移就是这么来的。必须先定死。 */
+    var logout = document.querySelector('.tb-logout');
+    var fitBtn = document.getElementById('tbFitBtn');
+    var roleEl = document.querySelector('.tb-user-role');
+    var nameEl = document.querySelector('.tb-user-name');
+    var langLbl = document.querySelector('.lang-switch-label');
+    if (logout) {
+      // ★TOPBAR-WRAP-20261026★ 这里必须查「全称包」(false)：compact 传 true 时会去 nav_short
+      // 里找 'logout'，而 nav_short 里没有这个键 → 宽度算成 0+22=22px，
+      // 手机上"退出登录"四个字直接溢出按钮被屏幕裁掉（实测 411px 宽就是这样）。
+      freezeW(logout, maxNavWAny(['logout'], false, '600 ' + (compact ? 11 : 12) + 'px "Segoe UI", Arial, sans-serif')
+        + (compact ? 24 : 30));
+    }
+    if (nameEl) freezeW(nameEl, textW(nameEl.textContent, '400 ' + (compact ? 11 : 13) + 'px "Segoe UI", Arial, sans-serif') + 4, 26);
+    if (roleEl && !compact) {
+      freezeW(roleEl, maxNavWAny(['role_admin'], false, '400 12px "Segoe UI", Arial, sans-serif') + 4);
+    }
+    if (langLbl && !compact) {
+      freezeW(langLbl, maxNavWAny(['lang'], false, '600 11px "Segoe UI", Arial, sans-serif') + 6);
+    }
+    if (fitBtn && compact) {
+      // 同上：'fit'/'fit_exit' 只在 nav 全称包里，nav_short 里没有 → 必须传 false
+      freezeW(fitBtn, maxNavWAny(['fit', 'fit_exit'], false, '700 10px "Segoe UI", Arial, sans-serif') + 20, 36);
+    }
+
+    /* ② ★TOPBAR-NOJUMP-20261026★ 逐项定宽（外观与以前一样：宽窄随文案、整排一行）
+       每一项的宽度 = 该标签在 zh/en/vi 三语里的【最长】文案宽度（中文按全称量），
+       所以切换语言时盒子宽度完全不变 → 不闪跳、不换行、不裁字；
+       整排放不下时只整体降字号（12→8），一次算定写死（仍满足 LANG-GEOMETRY-LOCK）。 */
+    var all = menu.querySelectorAll('.tb-item');
+    var vis = [], i;
+    for (i = 0; i < all.length; i++) { if (isShown(all[i])) vis.push(all[i]); }
+    if (!vis.length) return;
+
+    var avail = menu.clientWidth || menu.offsetWidth || 0;
+    if (!avail) return;
+
+    var gap = compact ? 4 : 12;
+    var pad = compact ? 8 : 16;        // 左右 padding 合计（与下面 0 4px / 0 8px 对应）
+    var buf = 6;
+    var sizes = compact ? [12, 11, 10, 9, 8] : [15, 14, 13, 12, 11, 10, 9, 8];
+    // 用元素真实字体族测量（Android WebView 没有 Segoe UI，写死字体族会测偏 → 文字被裁）
+    var navFam = '';
+    try { navFam = getComputedStyle(all[0]).fontFamily || ''; } catch (e) {}
+    if (!navFam) navFam = '"Segoe UI", Arial, sans-serif';
+
+    var pickFs = sizes[sizes.length - 1], pickW = null, pickGap = gap, fit = false;
+    for (i = 0; i < sizes.length; i++) {
+      var f = '600 ' + sizes[i] + 'px ' + navFam;
+      var ws = [], sum = 0, j;
+      for (j = 0; j < all.length; j++) {                       // 含隐藏项：解锁后不挤别人
+        var wv = Math.ceil(maxNavW(all[j].getAttribute('data-view') || '', compact, f) + pad + buf);
+        if (wv < 26) wv = 26;
+        ws.push(wv);
+        if (isShown(all[j])) sum += wv;
+      }
+      pickFs = sizes[i]; pickW = ws;
+      if (sum + gap * (vis.length - 1) <= avail) { fit = true; break; }
+    }
+    // 剩余空白补到间距里（视觉上仍铺满整行），各项宽度保持不变
+    if (fit && vis.length > 1) {
+      var used = 0, k2;
+      for (k2 = 0; k2 < pickW.length; k2++) used += pickW[k2];
+      var slack = avail - (used + gap * (vis.length - 1));
+      var capGap = compact ? 14 : 28;
+      if (slack > 0) pickGap = Math.min(capGap, gap + Math.floor(slack / (vis.length - 1)));
+    }
+
+    menu.style.gap = pickGap + 'px';
+    menu.style.flexWrap = 'nowrap';
+    for (i = 0; i < all.length; i++) {
+      all[i].style.whiteSpace = 'nowrap';
+      all[i].style.fontSize = pickFs + 'px';
+      all[i].style.padding = '0 ' + (compact ? 4 : 8) + 'px';
+      freezeW(all[i], pickW[i]);
+    }
+    if (!_snap) snapshot();
+  }
+
+  /* ---------------- 运行时自检：切语言后几何必须一像素不差 ----------------
+     每次 freezeTopbar 成功后拍一张快照；applyTopbarLang 结束时调用 verify()，
+     逐项比对宽/高，任何变化都 console.error 并挂到 window.__LG_GEOM_FAILED。 */
+  var _snap = null;
+  function rectOf(el) {
+    var b = el.getBoundingClientRect();
+    return [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)];
+  }
+  function snapshot() {
+    var s = [];
+    var top = document.getElementById('topbar');
+    if (top) s.push(['topbar'].concat(rectOf(top)));
+    var items = document.querySelectorAll('#tbMenu .tb-item');
+    for (var i = 0; i < items.length; i++) {
+      if (!isShown(items[i])) continue;
+      s.push(['tb:' + (items[i].getAttribute('data-view') || i)].concat(rectOf(items[i])));
+    }
+    var right = document.querySelectorAll('.tb-right > *');
+    for (var j = 0; j < right.length; j++) {
+      if (!right[j].getClientRects().length) continue;
+      s.push(['rt:' + (right[j].id || j)].concat(rectOf(right[j])));
+    }
+    _snap = s;
+    return s;
+  }
+  function verify() {
+    if (!_snap) return [];
+    var bad = [];
+    var top = document.getElementById('topbar');
+    var items = [['topbar', top]];
+    var nav = document.querySelectorAll('#tbMenu .tb-item');
+    for (var i = 0; i < nav.length; i++) {
+      if (isShown(nav[i])) items.push(['tb:' + (nav[i].getAttribute('data-view') || i), nav[i]]);
+    }
+    var right = document.querySelectorAll('.tb-right > *');
+    for (var j = 0; j < right.length; j++) {
+      if (right[j].getClientRects().length) items.push(['rt:' + (right[j].id || j), right[j]]);
+    }
+    for (var k = 0; k < _snap.length; k++) {
+      var name = _snap[k][0], want = _snap[k].slice(1), el = null;
+      for (var m = 0; m < items.length; m++) { if (items[m][0] === name) { el = items[m][1]; break; } }
+      if (!el) continue;
+      var got = rectOf(el);
+      for (var d = 0; d < 4; d++) {
+        if (Math.abs(got[d] - want[d]) > 0) {
+          bad.push(name + '[' + d + '] ' + want[d] + '→' + got[d]);
+          break;
+        }
+      }
+    }
+    if (bad.length) {
+      window.__LG_GEOM_FAILED = bad;
+      try { console.error('[LG] 切语言后顶栏几何发生变化（违反 LANG-GEOMETRY-LOCK）:', bad.join(' | ')); } catch (e) {}
+    } else {
+      window.__LG_GEOM_FAILED = null;
+    }
+    return bad;
+  }
+  function scheduleVerify() {
+    setTimeout(verify, 0);
+    setTimeout(verify, 260);   // 字体/图片异步落位后再验一次
+  }
+
+  /* 窗口尺寸真的变了才允许重排，并立刻把新几何作为基准（否则 verify 会误报） */
+  try {
+    window.addEventListener('resize', function () {
+      setTimeout(function () {
+        try {
+          var m = document.getElementById('tbMenu');
+          if (!m) return;
+          var compact = (typeof topbarCompact === 'function') ? topbarCompact() : false;
+          freezeTopbar(m, null, compact);
+          snapshot();
+        } catch (e) {}
+      }, 140);
+    });
+  } catch (e) {}
+
+  return {
+    version: 'LANG-GEOMETRY-LOCK-20261026',
+    freezeTopbar: freezeTopbar,
+    snapshot: snapshot,
+    verify: verify,
+    scheduleVerify: scheduleVerify,
+    textW: textW,
+    maxNavW: maxNavW,
+    freezeW: freezeW
+  };
+})();
+
+/* ================================================================
+ * ★LANG-GEOMETRY-LOCK-20261026★  表格列宽冻结
+ * ----------------------------------------------------------------
+ * 规则：每张表的每一列宽度 = 「中文表头」实测像素 + padding，算一次后写进 <col>，
+ *      之后无论切到 en / vi、无论重渲染 tbody，都只沿用这组写死的宽度。
+ * 换算方式：把表头当前文案反向查回 I18N 的 key，再取 I18N.zh[key] —— 因此
+ *      即使在英文界面首次加载，拿到的也是中文基准宽度，不会先宽后窄。
+ * ⛔ 禁止恢复「按当前语言内容测量列宽」的写法（那是切语言列宽跳动的根因）。
+ * ================================================================ */
+(function () {
+  var LG = window.LG;
+  if (!LG) return;
+  var LANGS = ['zh', 'en', 'vi'];
+  var CACHE_KEY = 'lg_colw_v4_20261026';
+  var _cache = null, _rev = null, _seq = 0;
+  var NUMFMT = /[↕↑↓▲▼⇅⇵⇈⇊\s\u00a0]+/g;
+  // ★LANG-GEOMETRY-LOCK-20261026b★ 表头文案归一化必须把「排序/方向标记」剥干净。
+  // 旧实现只剥 ↕↑↓▲▼，而实际表头长这样：'建设情况 [−]⇅' / 'Construction [−]⇅'，
+  // 于是 norm 后仍带着 '[−]⇅' → 反查 I18N 全部失败 → 退回"当前语言原文"量宽
+  // → 冷启动首帧（还没有列宽缓存时）同一个表在 zh/en/vi 下量出三种宽度，切语言就跳动。
+  function norm(s) {
+    return String(s == null ? '' : s)
+      .replace(/\[[^\]]{0,4}\]/g, ' ')     // [−] [↑] [] 这类列头标记
+      .replace(NUMFMT, '')
+      .trim();
+  }
+  function curLang() {
+    try { return (typeof CUR_LANG !== 'undefined' && CUR_LANG) || 'zh'; } catch (e) { return 'zh'; }
+  }
+  function i18n() {
+    try { return (typeof I18N !== 'undefined') ? I18N : null; } catch (e) { return null; }
+  }
+  function loadCache() {
+    if (_cache) return _cache;
+    try { _cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '') || {}; } catch (e) { _cache = {}; }
+    // ★LANG-GEOMETRY-LOCK-20261026b★ 列宽算法已变更（反查固定中文优先 + 首帧不按半截
+    // 数据定宽）。旧缓存里的宽度是按"第一次看到它的语言 / 那一刻的行数"量出来的，
+    // 必须整体作废重算一次，否则带着历史语言偏差继续用。
+    //   ★ACTION-ROW-ONELINE-20261026★ 同理：操作列改为「按钮整排一行」后按新算法重算一次。
+    if (_cache.__stamp !== '20261026c') { _cache = { __stamp: '20261026c' }; saveCache(); }
+    return _cache;
+  }
+  function saveCache() {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(_cache)); } catch (e) {}
+  }
+  /* 反向索引：某语言的文案 → I18N key（只建一次） */
+  function buildRev() {
+    if (_rev) return _rev;
+    _rev = {};
+    var all = i18n(); if (!all) return _rev;
+    for (var i = 0; i < LANGS.length; i++) {
+      var d = all[LANGS[i]]; if (!d) continue;
+      var m = {};
+      (function walk(o, depth) {
+        if (!o || depth > 3) return;
+        for (var k in o) {
+          var v = o[k];
+          if (typeof v === 'string') { var n = norm(v); if (n && !m[n]) m[n] = k; }
+          else if (v && typeof v === 'object') walk(v, depth + 1);
+        }
+      })(d, 0);
+      _rev[LANGS[i]] = m;
+    }
+    return _rev;
+  }
+  /* 把任意语言的表头文案翻回中文（拿不到就返回空串） */
+  function zhOf(txt) {
+    var n = norm(txt); if (!n) return '';
+    var rev = buildRev(), all = i18n(); if (!all) return '';
+    // ★LANG-GEOMETRY-LOCK-20261026b★ 固定「中文优先」，禁止再按当前语言排序。
+    // 原因：同一串文案可能同时是多个 i18n key 的译文（如 "No"/"STT"），
+    // 按 curLang 优先时，同一张表在 zh / en 界面下反查到的 key 可能不同 →
+    // 算出来的列宽不同 → 切语言列宽跳动。固定顺序后反查结果与当前语言无关。
+    var order = LANGS;
+    for (var i = 0; i < order.length; i++) {
+      var m = rev[order[i]]; if (!m) continue;
+      var key = m[n];
+      if (key && all.zh && typeof all.zh[key] === 'string') return all.zh[key];
+    }
+    return '';
+  }
+
+  /* 表头物理列数 + 每列「最深」表头单元格 */
+  function headerGrid(tbl) {
+    var rows = tbl.querySelectorAll('thead tr');
+    if (!rows.length) return null;
+    var grid = [], maxC = 0;
+    for (var r = 0; r < rows.length; r++) {
+      grid[r] = [];
+      var cells = rows[r].children, ci = 0;
+      for (var a = 0; a < cells.length; a++) {
+        while (grid[r][ci]) ci++;
+        var cell = cells[a];
+        var cs = parseInt(cell.getAttribute('colspan') || '1', 10) || 1;
+        var rs = parseInt(cell.getAttribute('rowspan') || '1', 10) || 1;
+        for (var rr = 0; rr < rs; rr++) {
+          if (!grid[r + rr]) grid[r + rr] = [];
+          for (var cc = 0; cc < cs; cc++) grid[r + rr][ci + cc] = { cell: cell, span: cs };
+        }
+        ci += cs;
+      }
+      if (ci > maxC) maxC = ci;
+    }
+    var last = [];
+    for (var c = 0; c < maxC; c++) {
+      var pick = null;
+      for (var rr2 = grid.length - 1; rr2 >= 0; rr2--) {
+        if (grid[rr2] && grid[rr2][c]) { pick = grid[rr2][c]; break; }
+      }
+      last[c] = pick;
+    }
+    // ★LANG-GEOMETRY-LOCK-20261026★ 列数以 <colgroup> 为唯一事实源。
+    // 原因：CRM/WON/LOST 的组头 colspan 会随「列组折叠 / 货币开关」自动收缩，
+    // 若用 colspan 推算列数，同一个表在不同时刻会算出 48/49/47 等不同值，
+    // 缓存长度对不上 → 每次都重新测量 → 列宽来回跳。colgroup 的列数恒定。
+    var cgCols = tbl.querySelectorAll('colgroup col');
+    if (cgCols.length) {
+      var n = cgCols.length, cells2 = [];
+      for (var k = 0; k < n; k++) cells2.push(last[k] || null);
+      return { cols: n, cells: cells2 };
+    }
+    return { cols: maxC, cells: last };
+  }
+
+  function tableKey(tbl) {
+    if (tbl.id) return 'id:' + tbl.id;
+    var cls = (tbl.className || '').split(/\s+/).filter(Boolean).join('.');
+    if (!tbl.__lgIdx) tbl.__lgIdx = ++_seq;
+    return 'c:' + cls + '#' + tbl.__lgIdx;
+  }
+
+  function measure(txt, font) {
+    try { return LG.textW(txt, font); } catch (e) { return 0; }
+  }
+
+  /* 反查 key（任意语言都能查） */
+  function keyOf(txt) {
+    var n = norm(txt); if (!n) return '';
+    var rev = buildRev();
+    // ★LANG-GEOMETRY-LOCK-20261026b★ 与 zhOf 一致：固定中文优先（见上方说明）。
+    var order = LANGS;
+    for (var i = 0; i < order.length; i++) {
+      var m = rev[order[i]];
+      if (m && m[n]) return m[n];
+    }
+    return '';
+  }
+
+  /* 单元格内容的「三语最长」宽度：
+     同一份内容在 zh/en/vi 三种界面下量出来的结果必须完全一致，
+     否则缓存会随"第一次看到它的语言"而不同 → 切语言列宽跳动。
+     译文能反查到就取三语最大；数据（金额/公司名/编号）三语相同，结果自然稳定。 */
+  function tripleWidth(txt, font) {
+    var n = norm(txt); if (!n) return 0;
+    var key = keyOf(n);
+    if (!key) return measure(n, font);
+    var all = i18n(), max = 0;
+    for (var i = 0; i < LANGS.length; i++) {
+      var d = all && all[LANGS[i]];
+      var v = d ? d[key] : '';
+      var w = measure(typeof v === 'string' && v ? v : n, font);
+      if (w > max) max = w;
+    }
+    return max || measure(n, font);
+  }
+
+  /* 计算一列的宽度（中文基准；已有内联宽度的列原样保留） */
+  function colWidth(entry, fontBold, pad) {
+    if (!entry) return 84;
+    var cell = entry.cell;
+    var inline = parseFloat((cell.style && cell.style.width) || '');
+    if (inline > 0) return Math.round(inline);
+    var raw = norm(cell.textContent);
+    var zh = zhOf(raw) || raw;                 // 中文基准；查不到才退回当前文案
+    var span = entry.span || 1;
+    var txtW = measure(zh, fontBold) / span;
+    var minW = span >= 3 ? 88 : 92;            // 货币三连 / 普通列的最小可用宽
+    var w = Math.ceil(txtW + pad + 12);
+    if (w < minW) w = minW;
+    if (w > 260) w = 260;
+    return w;
+  }
+
+  /* 数据列宽度：取前 12 行真实内容的自然宽度。
+     只按表头算会导致「操作」这类按钮列过窄 —— 中文「操作」26px，
+     而单元格里塞着 3 个按钮（越南语 Sửa quyền / Sao chép / Xóa 更宽）→ 右侧被裁切。
+     数据（金额/公司名）与语言无关，按钮列额外留 22% 余量覆盖英/越文案。 */
+  function colContentWidth(tbl, c, cols, font, pad) {
+    var rows = tbl.querySelectorAll('tbody tr');
+    var max = 0, n = Math.min(rows.length, 12);
+    for (var r = 0; r < n; r++) {
+      var tds = rows[r].children;
+      if (tds.length !== cols) continue;          // 空表占位行（colspan）跳过
+      var td = tds[c]; if (!td) continue;
+      var btns = td.querySelectorAll('button, .btn-action-sm, .icon-btn, a.btn');
+      if (btns.length) {
+        // ★ACTION-ROW-ONELINE-20261026★ 操作列宽 = 刚好放下这一排按钮（不多留），分两类算：
+        //   ① 图标按钮 .icon-btn：CSS 固定 28×28，直接按 28 算（按文案量会给到 44，列宽虚胖一倍）；
+        //   ② 文字按钮 .btn-sm：文案按【按钮自身字号】量（表头 11px ≠ 按钮 13px），
+        //      左右 padding 12+12 + 边框 2，且不小于 CSS 的 min-width:48。
+        //   按钮之间的间距取容器真实 gap（.won-actions 是 flex，gap 6 / 4）。
+        var bBtnFont = font;
+        try {
+          var bCs = window.getComputedStyle(btns[0]);
+          if (bCs && bCs.fontSize) {
+            bBtnFont = (bCs.fontWeight || '500') + ' ' + bCs.fontSize + ' ' + (bCs.fontFamily || 'sans-serif');
+          }
+        } catch (e) {}
+        var bGap = 6;
+        try {
+          var pCs = window.getComputedStyle(btns[0].parentNode);
+          var gv = parseFloat(pCs.columnGap || pCs.gap || '');
+          if (gv >= 0 && !isNaN(gv)) bGap = gv;
+        } catch (e) {}
+        var s = pad + 8;
+        for (var b = 0; b < btns.length; b++) {
+          var elb = btns[b];
+          var bw2;
+          if ((elb.className || '').toString().indexOf('icon-btn') >= 0) {
+            bw2 = 28;                                   // .icon-btn { width:28px }
+          } else {
+            bw2 = tripleWidth(elb.textContent || '', bBtnFont) + 26;
+            if (bw2 < 48) bw2 = 48;                     // .btn-sm { min-width:48px }
+          }
+          s += bw2 + (b > 0 ? bGap : 0);
+        }
+        if (s > max) max = s;
+        continue;
+      }
+      var txt = norm(td.textContent || '');
+      if (!txt) continue;
+      var w = Math.ceil((tripleWidth(txt, font) + pad) * 1.06 + 12);
+      if (w > 320) w = 320;
+      if (w < 72) w = 72;
+      if (w > max) max = w;
+    }
+    return max;
+  }
+
+  function freezeTable(tbl) {
+    if (!tbl || !tbl.tagName || tbl.tagName !== 'TABLE') return false;
+    var hg = headerGrid(tbl);
+    if (!hg || hg.cols < 2) return false;
+    // 已冻过且 <col> 宽度仍在 → 跳过。
+    // 注意：渲染器重建 thead/colgroup 会把宽度丢掉，此时必须补写，否则会出现
+    // 「秒级等宽错乱 → 再恢复」的闪动，因此不能只看列数。
+    var cg = tbl.querySelector('colgroup');
+    var cols = cg ? cg.querySelectorAll('col') : [];
+    // 只有「宽度来自缓存」才算真冻好。若上次是按空表（只有表头）临时算的，
+    // 数据行渲染出来后必须重算一次 —— 否则按钮列/长文本列会永久偏窄（越南语按钮被裁切）。
+    if (tbl.__lgColsFrozen === hg.cols && tbl.__lgFromCache === true &&
+        cols.length === hg.cols && cols[0] && cols[0].style.width) return false;
+
+    if (!cg) { cg = document.createElement('colgroup'); tbl.insertBefore(cg, tbl.firstChild); }
+    if (cols.length !== hg.cols) {
+      var h = '';
+      for (var i = 0; i < hg.cols; i++) h += '<col>';
+      cg.innerHTML = h;
+      cols = cg.querySelectorAll('col');
+    }
+
+    var key = tableKey(tbl);
+    var cache = loadCache();
+    var widths = (cache[key] && cache[key].length === hg.cols) ? cache[key] : null;
+    if (!widths) {
+      widths = [];
+      var headTh = tbl.querySelector('thead th') || tbl;
+      var cs = window.getComputedStyle(headTh);
+      var fsize = cs.fontSize || '11px', ffam = cs.fontFamily || 'sans-serif';
+      var fontBold = '700 ' + fsize + ' ' + ffam;
+      var fontNorm = '400 ' + fsize + ' ' + ffam;
+      var pad = (parseFloat(cs.paddingLeft) || 4) + (parseFloat(cs.paddingRight) || 4);
+      var hasBody = tbl.querySelectorAll('tbody tr').length > 0;
+      var rowsNow = tbl.querySelectorAll('tbody tr').length;
+      var rowsStable = (tbl.__lgRowsSeen === rowsNow);
+      tbl.__lgRowsSeen = rowsNow;
+      if (!tbl.__lgFirstFreezeAt) tbl.__lgFirstFreezeAt = Date.now();
+      // ★LANG-GEOMETRY-LOCK-20261026b★ 首帧不许按"还没到齐的数据"定列宽。
+      // 数据未稳定时只用「中文基准表头宽度」写 <col>（与语言无关，任何语言首帧都一模一样）；
+      // 等行数稳定、或超时兜底后，才合并真实内容宽度（按钮/长文本列）并落盘缓存。
+      // 旧写法在首帧就用半截数据算 max(表头, 内容) 且不落盘，于是每切一次语言就按
+      // "当下那一刻的数据"重算一次 → 屏幕上看到的就是"切语言列宽跳动"。
+      var LG_SETTLE_MS = 3000;
+      var contentReady = hasBody &&
+        (rowsStable || (Date.now() - tbl.__lgFirstFreezeAt) > LG_SETTLE_MS);
+      for (var c = 0; c < hg.cols; c++) {
+        var wh = colWidth(hg.cells[c], fontBold, pad);
+        var wc = contentReady ? colContentWidth(tbl, c, hg.cols, fontNorm, pad) : 0;
+        widths.push(Math.max(wh, wc));
+      }
+      // 落盘条件：① 有真实数据行；② 行数已稳定（或已超时兜底）。
+      // 否则会把"只渲染了一半的行"量出来的偏窄宽度永久钉死，之后数据到齐也不会再修。
+      if (contentReady) { cache[key] = widths; saveCache(); }
+      tbl.__lgFromCache = contentReady;
+    } else {
+      tbl.__lgFromCache = true;
+    }
+
+    var total = 0;
+    for (var w = 0; w < widths.length; w++) { cols[w].style.width = widths[w] + 'px'; total += widths[w]; }
+    tbl.style.tableLayout = 'fixed';
+    // 宽度策略：容器够宽就铺满 100%（fixed 布局下多余空间按写死的列宽等比放大，仍与语言无关）；
+    // 容器不够宽时以 minWidth 兜底 → 出现横向滚动条，列宽一像素不变。
+    tbl.style.width = '100%';
+    tbl.style.minWidth = total + 'px';
+    tbl.style.maxWidth = 'none';
+    // 备注类长文本列 → 单行省略（否则长备注会把行撑高，页面高度随语言跳）
+    if (!tbl.getAttribute('data-lgid')) tbl.setAttribute('data-lgid', String(++_lgIdSeq));
+    var lgid = tbl.getAttribute('data-lgid');
+    var noteCols = [];
+    for (var nc = 0; nc < hg.cols; nc++) {
+      var ent = hg.cells[nc];
+      var zt = ent ? (zhOf(norm(ent.cell.textContent)) || norm(ent.cell.textContent)) : '';
+      if (zt && NOTE_RE.test(zt)) noteCols.push(nc);
+    }
+    tbl.__lgNoteCols = noteCols;
+    injectNoteCss(noteCols, lgid);
+    // 表头单行省略时，把完整文案放进 title（悬停可看全），避免"看不到列名"
+    var ths = tbl.querySelectorAll('thead th');
+    for (var ti = 0; ti < ths.length; ti++) {
+      var tx = String(ths[ti].textContent || '').replace(/\s+/g, ' ').trim();
+      if (tx && ths[ti].title !== tx) ths[ti].title = tx;
+    }
+    tbl.__lgColsFrozen = hg.cols;
+    return true;
+  }
+
+  function freezeAll() {
+    var tbls = document.querySelectorAll('table');
+    var changed = 0;
+    for (var i = 0; i < tbls.length; i++) {
+      try { if (freezeTable(tbls[i])) changed++; } catch (e) {}
+    }
+    return changed;
+  }
+
+  /* ---- 备注类长文本列：单行省略 + 悬停看全文（行高绝对恒定，切语言不会变高） ---- */
+  var NOTE_RE = /(备注|说明|注记|追加说明|note|remark|ghi ch)/i;
+  var _lgIdSeq = 0;
+  function injectNoteCss(noteCols, lgid) {
+    var sid = 'lg-note-css-' + lgid;
+    var st = document.getElementById(sid);
+    if (!noteCols.length) { if (st && st.parentNode) st.parentNode.removeChild(st); return; }
+    if (!st) { st = document.createElement('style'); st.id = sid; document.head.appendChild(st); }
+    var sels = [];
+    for (var i = 0; i < noteCols.length; i++) {
+      sels.push('table[data-lgid="' + lgid + '"] td:nth-child(' + (noteCols[i] + 1) + ')');
+    }
+    st.textContent = sels.join(',') + '{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}';
+  }
+  document.addEventListener('mouseover', function (e) {
+    var td = (e.target && e.target.closest) ? e.target.closest('td') : null;
+    if (!td) return;
+    var tbl = td.closest('table');
+    if (!tbl || !tbl.__lgNoteCols || !tbl.__lgNoteCols.length) return;
+    if (tbl.__lgNoteCols.indexOf(td.cellIndex) < 0) return;
+    if (!td.title) td.title = (td.textContent || '').trim();
+  });
+
+  LG.zhOf = zhOf;
+  LG.freezeTable = freezeTable;
+  LG.freezeAllTables = freezeAll;
+  LG.colWidthCache = function () { return loadCache(); };
+
+  /* 自动接管：任何表格渲染（切视图 / 切语言 / 增删行）后 150ms 内补冻一次。
+     只监听 childList，避免自己写 style 触发死循环。 */
+  var _t = null;
+  function schedule() {
+    if (_t) clearTimeout(_t);
+    _t = setTimeout(function () { _t = null; freezeAll(); }, 150);
+  }
+  /* 渲染器会重建 thead/colgroup 并丢掉宽度 → 包一层，渲染后【同帧】补冻，
+     保证下一帧绘制时列宽已经是冻结值（否则会看到 150ms 的等宽错乱、更闪）。 */
+  function patchRenderer(name) {
+    var fn = window[name];
+    if (typeof fn !== 'function' || fn.__lgPatched) return;
+    var wrapped = function () {
+      var r = fn.apply(this, arguments);
+      try { freezeAll(); } catch (e) {}
+      return r;
+    };
+    wrapped.__lgPatched = true;
+    try { window[name] = wrapped; } catch (e) {}
+  }
+  function boot() {
+    patchRenderer('renderWonThead');
+    patchRenderer('renderCrmThead');
+    patchRenderer('renderLostThead');
+    patchRenderer('autoFitCommissionTable');   // 历史遗留的测宽函数：跑完立刻用中文基准宽度覆盖
+    freezeAll();
+    try {
+      var mo = new MutationObserver(function () {
+        // MutationObserver 回调在同一任务内、绘制之前执行 → 同步补冻不会闪
+        try { freezeAll(); } catch (e) {}
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      window.__lgTableObs = mo;
+    } catch (e) {}
+    window.addEventListener('resize', schedule);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else setTimeout(boot, 0);
+})();
+/* ================================================================
+ * ★LANG-GEOMETRY-LOCK-20261026★  表单标签 / 弹窗宽度冻结
+ * ----------------------------------------------------------------
+ * 表单里的 label 原本宽度＝文字宽度，切语言时英文/越南文更长 → label 变宽
+ * → 输入框起始位置和宽度整体平移。这里把同一弹窗内所有 label 统一固定为
+ * 「三语最长」的宽度，并用 nowrap 防止换行撑高行高。
+ * ================================================================ */
+(function () {
+  var LG = window.LG;
+  if (!LG) return;
+  var LANGS = ['zh', 'en', 'vi'];
+  var LABEL_SEL = '.form-row > label, .login-field > label, .cf-row .login-field > label, .cp-field > label, .cm-field > label';
+
+  function i18n() { try { return (typeof I18N !== 'undefined') ? I18N : null; } catch (e) { return null; } }
+  function fontOf(el) {
+    var cs = window.getComputedStyle(el);
+    return (cs.fontWeight || '400') + ' ' + (cs.fontSize || '11px') + ' ' + (cs.fontFamily || 'sans-serif');
+  }
+  /* 该 label 在三种语言下的最长宽度 */
+  function labelW(el) {
+    var f = fontOf(el);
+    var key = el.getAttribute('data-i18n');
+    var all = i18n();
+    var m = LG.textW((el.textContent || '').trim(), f);
+    if (key && all) {
+      for (var i = 0; i < LANGS.length; i++) {
+        var d = all[LANGS[i]];
+        if (!d) continue;
+        var v = d[key];
+        if (typeof v !== 'string') continue;
+        var w = LG.textW(v, f);
+        if (w > m) m = w;
+      }
+    }
+    return Math.ceil(m) + 6;
+  }
+  function groupOf(el) {
+    return el.closest('.modal, .modal-body, .auth-modal, .panel, .login-box, #loginBox') || document.body;
+  }
+  function freezeLabels() {
+    var labels = document.querySelectorAll(LABEL_SEL);
+    if (!labels.length) return 0;
+    var groups = [], gmap = [];
+    for (var i = 0; i < labels.length; i++) {
+      var g = groupOf(labels[i]);
+      var gi = gmap.indexOf(g);
+      if (gi < 0) { gmap.push(g); groups.push({ el: g, list: [], max: 0 }); gi = groups.length - 1; }
+      var w = labelW(labels[i]);
+      if (w > groups[gi].max) groups[gi].max = w;
+      groups[gi].list.push(labels[i]);
+    }
+    for (var k = 0; k < groups.length; k++) {
+      var W = Math.min(260, Math.max(44, groups[k].max));
+      for (var j = 0; j < groups[k].list.length; j++) {
+        LG.freezeW(groups[k].list[j], W, 44);
+        groups[k].list[j].style.whiteSpace = 'nowrap';
+        groups[k].list[j].style.overflow = 'hidden';
+        groups[k].list[j].style.textOverflow = 'ellipsis';
+      }
+    }
+    return labels.length;
+  }
+
+  LG.freezeLabels = freezeLabels;
+  var t = null;
+  function schedule() { if (t) clearTimeout(t); t = setTimeout(function () { t = null; freezeLabels(); }, 120); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { freezeLabels(); });
+  else setTimeout(freezeLabels, 0);
+  try {
+    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+})();
+// （旧实现：按 scrollWidth 二分缩小字号/内边距/间距 —— 已永久移除，它是"切语言闪动"的根因）
 var _fitTopbarBusy = false;
 var _fitTopbarTimer = null;
 function fitTopbarFonts() {
@@ -9715,48 +10562,12 @@ function fitTopbarFontsNow() {
     if (all[k].style.display !== 'none') items.push(all[k]);
   }
   if (!items.length) return;
-  // 基准值必须与 CSS 保持一致（CSS 在矮屏横屏下用的是紧凑样式）。
-  // 若 JS 按宽松值起算再二分缩小，会先放大后缩小，出现一次肉眼可见的"抖动"。
+  // ★LANG-GEOMETRY-LOCK-20261026★
+  // 只调用冻结逻辑：宽度按「三语最长文案」一次性算定并写死。
+  // 旧实现（按 scrollWidth 二分缩小字号/内边距/间距）是切语言屏幕闪动的根因，已永久移除，
+  // 禁止以任何形式恢复；check_lang_geom_lock.py 会静态拦截。
   var compact = topbarCompact();
-  var baseFont = compact ? 12 : 15, basePad = compact ? 10 : 18, baseGap = compact ? 6 : 14;
-  var minFont  = compact ? 8  : 10, minPad  = compact ? 4  : 8,  minGap  = compact ? 2  : 5;
-  var vPad = compact ? 7 : 10;   // 纵向内边距（CSS 紧凑模式为 7px，普通为 10px）
-
-  // 性能说明：每次读 scrollWidth 都会强制同步布局（reflow），
-  // 原先线性递减最多 200 次迭代，在低端手机 WebView 上会造成明显卡顿。
-  // 改为二分查找：只需约 8 次即可定位到合适的字号。
-  function apply(font, pad, gap) {
-    for (var j = 0; j < items.length; j++) {
-      items[j].style.fontSize = font + 'px';
-      items[j].style.padding = vPad + 'px ' + pad + 'px';
-    }
-    menu.style.gap = gap + 'px';
-  }
-  function overflow() {
-    return menu.scrollWidth > menu.clientWidth + 1;
-  }
-
-  apply(baseFont, basePad, baseGap);
-  if (overflow()) {
-    // 二分查找：t=1 对应基准值，t=0 对应最小值，找出能放得下的最大比例
-    var lo = 0, hi = 1;
-    for (var iter = 0; iter < 8; iter++) {
-      var mid = (lo + hi) / 2;
-      apply(
-        minFont + (baseFont - minFont) * mid,
-        Math.round(minPad + (basePad - minPad) * mid),
-        Math.round(minGap + (baseGap - minGap) * mid)
-      );
-      if (overflow()) hi = mid; else lo = mid;
-    }
-    apply(
-      minFont + (baseFont - minFont) * lo,
-      Math.round(minPad + (basePad - minPad) * lo),
-      Math.round(minGap + (baseGap - minGap) * lo)
-    );
-    // 极端窄屏仍溢出时，用最小值兜底（此时允许横向滚动，CSS 已显示滚动条）
-    if (overflow()) apply(minFont, minPad, minGap);
-  }
+  LG.freezeTopbar(menu, items, compact);
   // 窗口尺寸变化时也自动适配（仅注册一次）
   if (!window.__fitTopbarBound) {
     window.__fitTopbarBound = true;
@@ -9775,6 +10586,15 @@ function fitTopbarFontsNow() {
       else if (mq.addListener) mq.addListener(onCompactChange);
     } catch (e) { /* 老浏览器不支持 matchMedia 监听则忽略 */ }
   }
+  // ★TOPBAR-WRAP-20261026★ 两行顶栏的实际高度写入 CSS 变量 --tb-h，
+  // 内容区（.app-body margin-top）据此下移，避免固定 60px 时被第二行标签挡住。
+  try {
+    var tbEl = document.getElementById('topbar');
+    if (tbEl) {
+      var tbH = Math.round(tbEl.getBoundingClientRect().height);
+      if (tbH > 0) document.documentElement.style.setProperty('--tb-h', tbH + 'px');
+    }
+  } catch (e) {}
   // 仍溢出时，把当前激活的标签滚动到可见区域
   scrollActiveTabIntoView();
 }
@@ -14319,7 +15139,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.09.10.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.10.26.01（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -18819,7 +19639,7 @@ function ptBlur(srcLang){
 }
 window.ptBlur = ptBlur;
 
-// ⛔ 已锁定 —— 三语输入逻辑（V2026.09.10.05）：
+// ⛔ 已锁定 —— 三语输入逻辑（V2026.10.26.01）：
 // 默认三个输入框全部锁死；点击“清空三语”后仅当前系统语言框可输入；
 // 输入后自动翻译并填充另外两语，翻译结果必须按语言标签落入对应框。
 // 未经用户 Tom 明确同意禁止修改。
@@ -22586,7 +23406,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.09.10.05 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.10.26.01 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -22889,9 +23709,18 @@ function fetchCrmChartDataForBlock(bid, callback){
   });
 }
 // 根据三块聚合图表（DB-P1/B1/C1）的权限决策刷新对应图表
+// ★DASH-CHART-PERF-20261026★ 三块聚合图（省份/BU/建设）不再各自重新下载整张 CRM 表：
+//   window.globalCrmData 已经是同一次 /api/crm-projects 的结果，直接复用；
+//   只有「特别授权看全公司」的 block（scope=all 数据不同）才真正再拉一次。
+//   旧实现 = 3 次重复全表下载 + 3 次 destroy/new Chart，手机上省份图会长时间转圈。
 function _refreshCrmAggChartsByDecision(){
   ['DB-P1','DB-B1','DB-C1'].forEach(function(bid){
-    fetchCrmChartDataForBlock(bid, function(list){
+    var _g = window.globalCrmData;
+    if (_g && _g.length && !isCrmFullCompanyBlock(bid)) { _renderCrmAggChart(bid, _g); return; }
+    fetchCrmChartDataForBlock(bid, function(list){ _renderCrmAggChart(bid, list); });
+  });
+}
+function _renderCrmAggChart(bid, list){
       if (!list || !list.length) return;
       // 仅重新渲染该 bid 对应的图表
       var chartIdMap = { 'DB-P1':'dashCrmProvChart', 'DB-B1':'dashCrmBuChart', 'DB-C1':'dashCrmConstChart' };
@@ -22943,13 +23772,11 @@ function _refreshCrmAggChartsByDecision(){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.09.10.05）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.10.26.01）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
       }
-    });
-  });
 }
 // 渲染潜在项目图表（Dashboard 区域）
 // 业务汇总区渲染许可：6 项统计图任一可见 且 对应列表权限可见
@@ -22971,8 +23798,8 @@ function renderDashCrmCharts(crm) {
   }
   if (sec) sec.style.display = '';
   if (!_dashBizAllowed('CRM-L1')) return;   // 6 项统计图全隐藏 或 无列表权限=不渲染
-  // 确保 Chart.js 已加载
-  if (typeof Chart === 'undefined') {
+  // 确保 Chart.js 已加载（★DASH-CHART-PERF-20261026★ 没加载好就等它，别直接放弃）
+  if (_dashChartLibReady(function(){ renderDashCrmCharts(crm); })) {
     return;
   }
   var cur = dashCur || 'USD';
@@ -23253,8 +24080,8 @@ function renderDashWonCharts(won) {
   }
   if (sec) sec.style.display = '';
   if (!_dashBizAllowed('WON-L1')) return;   // 同上
-  // 确保 Chart.js 已加载
-  if (typeof Chart === 'undefined') {
+  // 确保 Chart.js 已加载（★DASH-CHART-PERF-20261026★ 同上，等库就绪后重画）
+  if (_dashChartLibReady(function(){ renderDashWonCharts(won); })) {
     return;
   }
   var cur = dashCur || 'USD';
@@ -23485,8 +24312,8 @@ function renderDashLostCharts(lost) {
   }
   if (sec) sec.style.display = '';
   if (!_dashBizAllowed('LOST-L1')) return;  // 同上
-  // 确保 Chart.js 已加载
-  if (typeof Chart === 'undefined') {
+  // 确保 Chart.js 已加载（★DASH-CHART-PERF-20261026★ 同上，等库就绪后重画）
+  if (_dashChartLibReady(function(){ renderDashLostCharts(lost); })) {
     return;
   }
   var cur = dashCur || 'USD';
@@ -28070,13 +28897,49 @@ function _ovDestroyCharts(){
 // 3. 增强的图表创建函数
 var _origOvMakeChart = typeof _ovMakeChart === 'function' ? _ovMakeChart : null;
 
+/* ★DASH-CHART-PERF-20261026★ 提示层：只在 canvas 上方盖一层文字，绝不删 canvas / 标题。
+   旧写法用 parentNode.innerHTML 覆盖整块内容，会把 canvas 一起删掉，之后 getElementById 拿不到画布，
+   这张图就永久卡在“加载中”——「按省份统计」是第一个被创建的图，最容易中招。 */
+function _ovChartHint(canvas, text){
+  try{
+    var p = canvas && canvas.parentNode;
+    if(!p) return;
+    var box = p.querySelector('.ov-chart-hint');
+    if(!text){
+      if(box && box.parentNode) box.parentNode.removeChild(box);
+      return;
+    }
+    if(!box){
+      box = document.createElement('div');
+      box.className = 'ov-chart-hint';
+      box.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999;font-size:12px;pointer-events:none;';
+      try{ if(getComputedStyle(p).position === 'static') p.style.position = 'relative'; }catch(e){}
+      p.appendChild(box);
+    }
+    box.textContent = '📊 ' + text;
+  }catch(e){}
+}
+/* Chart.js 还没就绪时，等它 load 完再重跑一次渲染（最多 3 次），不再“直接 return 放弃”。 */
+function _dashChartLibReady(fn){
+  if (typeof Chart !== 'undefined') return false;
+  try{
+    window.__dashChartRetry = (window.__dashChartRetry || 0) + 1;
+    if (window.__dashChartRetry > 3) return true;   // 彻底失败：不再排重试，避免死循环
+    _ovLoadChartLib(function(){
+      if (typeof Chart === 'undefined') return;     // 仍是失败态：等下一次真正需要时再说
+      window.__dashChartRetry = 0;
+      try{ fn(); }catch(e){ console.warn('[dashChartLibReady]', e); }
+    });
+  }catch(e){}
+  return true;
+}
 function _ovMakeChart(canvasId, cfg){
   var c = document.getElementById(canvasId);
   if(!c) return null;
   
   if(typeof Chart === 'undefined'){
     console.warn('Chart.js not loaded');
-    c.parentNode.innerHTML = '<div style="text-align:center;padding:20px;color:#999;font-size:12px;">📊 ' + ((typeof I18N!=='undefined'&&I18N[CUR_LANG]&&I18N[CUR_LANG].common_chart_loading)||'图表库加载中…') + '</div>';
+    _ovChartHint(c, (typeof I18N!=='undefined'&&I18N[CUR_LANG]&&I18N[CUR_LANG].common_chart_loading)||'图表库加载中…');
     return null;
   }
   
@@ -28089,13 +28952,11 @@ function _ovMakeChart(canvasId, cfg){
     }
     _ovCharts.push(chart);
     _ovChartsById[canvasId] = chart;  // 存储到字典中
+    _ovChartHint(c, '');              // 画成功 → 撤掉提示层
     return chart;
   } catch(e){
     console.error('Chart creation failed:', canvasId, e.message);
-    var parent = c.parentNode;
-    if(parent){
-      parent.innerHTML = '<div style="text-align:center;padding:20px;color:#999;font-size:12px;">📊 图表加载失败</div>';
-    }
+    _ovChartHint(c, '图表加载失败');
     return null;
   }
 }
@@ -32037,7 +32898,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.09.10.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.10.26.01 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

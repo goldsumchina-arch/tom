@@ -106,7 +106,9 @@ class MainActivity : AppCompatActivity() {
         //   因此这里【必须保持 96】。一旦递增，启动时就会触发 clearCache 强制重新
         //   下载 1.6MB 的 index.html，表现为"点开 APP 白屏好几秒"。
         //   仅当 index.html 等网页内容真正变更时才递增。
-        private const val WEB_VERSION = 97
+        // v98：切语言几何冻结（LANG-GEOMETRY-LOCK-20261026）——顶栏/表格列宽/表单标签
+        //      改为按三语最长文案一次性定宽，切语言不再闪动。
+        private const val WEB_VERSION = 98
 
         private const val PREFS_NAME = "agipm_prefs"
         private const val KEY_LAST_WEB_VERSION = "last_web_version"
@@ -361,6 +363,17 @@ class MainActivity : AppCompatActivity() {
 
         // JS 必须开，你的系统是单页应用，全靠 JS 渲染
         s.javaScriptEnabled = true
+
+        // ★WEBVIEW-DEBUG-20261026★ 打开 WebView 远程调试（chrome://inspect / CDP）。
+        // 用途：手机端布局问题（如顶栏标签被裁、表头省略号）无法靠截图定位时，
+        // 可 `adb forward tcp:9222 localabstract:webview_devtools_remote_<pid>`
+        // 后用 CDP 直接读取 innerWidth / getBoundingClientRect 排查。
+        // 内部企业系统（非公开应用），保持常开。
+        try {
+            WebView.setWebContentsDebuggingEnabled(true)
+        } catch (e: Exception) {
+            Log.w(TAG, "开启 WebView 调试失败", e)
+        }
 
         // 注入 JS 桥：网页通过 window.AndroidBridge 调用原生能力（指纹快速登录）
         webView.addJavascriptInterface(AndroidBridge(), "AndroidBridge")
