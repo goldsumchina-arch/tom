@@ -385,8 +385,8 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.10.27.02 - 看板移除「历史汇率走势」整块（DASH-DEL-FX-20261027） -->
-  <title>签约项目 · AGI-CRM v2026.10.27.02</title>
+  <!-- 版本号：V2026.10.27.03 - 看板 CRM 区移除 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE-20261027） -->
+  <title>签约项目 · AGI-CRM v2026.10.27.03</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
@@ -3015,7 +3015,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.27.02</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.27.03</span></div>
   </div>
 </div>
 
@@ -3259,16 +3259,6 @@ function _ovLoadChartLib(cb){
               <canvas id="dashCrmSalesChart" style="width:100% !important;height:260px !important;"></canvas>
             </div>
           </div>
-          <div class="dash-crm-chart-row">
-            <div class="dash-crm-chart-box" id="dashCrmRateRmbBox">
-              <div class="dash-crm-chart-title" id="dashCrmRateRmbTitle" data-i18n="dash_crm_rate_rmb">RMB-VND 汇率走势</div>
-              <canvas id="dashCrmRateRmbChart" style="width:100% !important;height:260px !important;"></canvas>
-            </div>
-            <div class="dash-crm-chart-box" id="dashCrmRateUsdBox">
-              <div class="dash-crm-chart-title" id="dashCrmRateUsdTitle" data-i18n="dash_crm_rate_usd">USD-VND 汇率走势</div>
-              <canvas id="dashCrmRateUsdChart" style="width:100% !important;height:260px !important;"></canvas>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -3502,6 +3492,32 @@ function _ovLoadChartLib(cb){
         </div>
       </div>
 
+      <!-- 历史汇率走势图表区域 -->
+      <div class="dash-fx-section" id="dashFxSection">
+        <div class="dash-section-header">
+          <h3 id="dashFxSectionTitle">历史汇率走势</h3>
+          <span class="dash-asof" id="dashFxAsOf" title=""></span>
+        </div>
+        <div class="dash-fx-charts">
+          <div class="dash-fx-chart-row">
+            <div class="dash-metal-chart-box" onclick="openDashChartLightbox('dashFxUsdCnyChart')">
+              <span class="dash-large-image-badge" data-i18n="dash_large_image">超大图片</span>
+              <div class="dash-metal-chart-title" id="dashFxUsdCnyTitle">美元兑人民币汇率走势</div>
+              <canvas id="dashFxUsdCnyChart" style="width:100% !important;"></canvas>
+            </div>
+            <div class="dash-metal-chart-box" onclick="openDashChartLightbox('dashFxCnyVndChart')">
+              <span class="dash-large-image-badge" data-i18n="dash_large_image">超大图片</span>
+              <div class="dash-metal-chart-title" id="dashFxCnyVndTitle">人民币兑越南盾汇率走势</div>
+              <canvas id="dashFxCnyVndChart" style="width:100% !important;"></canvas>
+            </div>
+            <div class="dash-metal-chart-box" onclick="openDashChartLightbox('dashFxUsdVndChart')">
+              <span class="dash-large-image-badge" data-i18n="dash_large_image">超大图片</span>
+              <div class="dash-metal-chart-title" id="dashFxUsdVndTitle">美元兑越南盾汇率走势</div>
+              <canvas id="dashFxUsdVndChart" style="width:100% !important;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
   </section>
@@ -10767,7 +10783,7 @@ function applyEmptyLang() {
   var crmChartMap = {
     dashCrmSectionTitle:'dash_crm_section', dashCrmProvTitle:'dash_crm_province',
     dashCrmBuTitle:'dash_crm_bu', dashCrmConstTitle:'dash_crm_construction',
-    dashCrmSalesTitle:'dash_crm_salesperson', dashCrmRateRmbTitle:'dash_crm_rate_rmb', dashCrmRateUsdTitle:'dash_crm_rate_usd'
+    dashCrmSalesTitle:'dash_crm_salesperson'
   };
   for (var cid in crmChartMap) {
     var ce = document.getElementById(cid);
@@ -10800,6 +10816,9 @@ function applyEmptyLang() {
     renderDashMetalCharts();
   }
   // 历史汇率走势图：切换语言后同步标题并重渲染
+  if (typeof renderDashFxCharts === 'function' && document.getElementById('dashFxSectionTitle')) {
+    renderDashFxCharts();
+  }
   // 大宗饲料原料价格图：切换语言后同步标题并重渲染
   if (typeof renderDashFeedCharts === 'function' && document.getElementById('dashFeedSectionTitle')) {
     renderDashFeedCharts();
@@ -10814,7 +10833,7 @@ function applyDashboardChartTitles(){
   var t = T();
   var crmMap = {
     dashCrmProvTitle:'dash_crm_province', dashCrmBuTitle:'dash_crm_bu', dashCrmConstTitle:'dash_crm_construction',
-    dashCrmSalesTitle:'dash_crm_salesperson', dashCrmRateRmbTitle:'dash_crm_rate_rmb', dashCrmRateUsdTitle:'dash_crm_rate_usd'
+    dashCrmSalesTitle:'dash_crm_salesperson'
   };
   var wonMap = {
     dashWonSectionTitle:'dash_won_section', dashWonBuBarTitle:'dash_won_bu_bar',
@@ -23506,6 +23525,7 @@ function renderDashboard(stats, L) {
   _ovLoadChartLib(function(){
     if (typeof renderDashLoginCharts === 'function') renderDashLoginCharts();
     if (typeof renderDashMetalCharts === 'function') renderDashMetalCharts();
+    if (typeof renderDashFxCharts === 'function') renderDashFxCharts();
     if (typeof renderDashFeedCharts === 'function') renderDashFeedCharts();
     if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
   });
@@ -23769,7 +23789,7 @@ function _dashBizAllowed(bid){
 }
 function renderDashCrmCharts(crm) {
   // 无论是否有数据，先销毁旧图表实例，避免清空后旧图残留
-  ['_dashCrmProvChart','_dashCrmBuChart','_dashCrmConstChart','_dashCrmSalesChart','_dashCrmRateRmbChart','_dashCrmRateUsdChart'].forEach(function(k){
+  ['_dashCrmProvChart','_dashCrmBuChart','_dashCrmConstChart','_dashCrmSalesChart'].forEach(function(k){
     if (window[k]) { try { window[k].destroy(); } catch(e){} window[k] = null; }
   });
   var sec = document.getElementById('dashCrmSection');
@@ -23902,119 +23922,6 @@ function renderDashCrmCharts(crm) {
     });
   }
 
-  // 汇率走势图 - 从 rate_rmb_vnd 和 rate_usd_vnd 字段获取汇率数据
-  // 直接从 globalCrmData 计算汇率（与 Overview 一致）
-  var rateData = [];
-  var crmData = window.globalCrmData || crm || [];
-  if (crmData && crmData.length) {
-    var rateMap = {};
-    crmData.forEach(function(p) {
-      var d = p && p.initial_quote_date ? String(p.initial_quote_date).trim() : '';
-      var ym = '';
-      var m = d.match(/(\d{4})[-/.](\d{1,2})/);
-      if (m) ym = m[1] + '-' + ('0' + m[2]).slice(-2);
-      var m2 = d.match(/(\d{1,2})[-/.](\d{4})/);
-      if (m2) ym = m2[2] + '-' + ('0' + m2[1]).slice(-2);
-      if (!ym) return;
-      var rmb = Number(p.rate_rmb_vnd) || 0;
-      var usd = Number(p.rate_usd_vnd) || 0;
-      if (rmb <= 0 && usd <= 0) return;
-      if (!rateMap[ym]) rateMap[ym] = { rmbSum: 0, rmbCnt: 0, usdSum: 0, usdCnt: 0 };
-      if (rmb > 0) { rateMap[ym].rmbSum += rmb; rateMap[ym].rmbCnt++; }
-      if (usd > 0) { rateMap[ym].usdSum += usd; rateMap[ym].usdCnt++; }
-    });
-    var rateKeys = Object.keys(rateMap).sort();
-    rateData = rateKeys.map(function(k) {
-      return {
-        date: k,
-        rmb_vnd: rateMap[k].rmbCnt > 0 ? Math.round(rateMap[k].rmbSum / rateMap[k].rmbCnt * 100) / 100 : null,
-        usd_vnd: rateMap[k].usdCnt > 0 ? Math.round(rateMap[k].usdSum / rateMap[k].usdCnt * 100) / 100 : null
-      };
-    });
-  }
-  // 备用汇率（如果仍然没有数据）
-  if (!rateData.length) {
-    var currentMonth = new Date().toISOString().substring(0, 7);
-    var lastMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().substring(0, 7);
-    rateData = [
-      { date: lastMonth, rmb_vnd: 3150, usd_vnd: 21800 },
-      { date: currentMonth, rmb_vnd: 3186, usd_vnd: 22000 }
-    ];
-  }
-  var ctxRateRmb = document.getElementById('dashCrmRateRmbChart');
-  var ctxRateUsd = document.getElementById('dashCrmRateUsdChart');
-  if (ctxRateRmb && rateData.length) {
-    if (window._dashCrmRateRmbChart) window._dashCrmRateRmbChart.destroy();
-    window._dashCrmRateRmbChart = _ovMakeChart('dashCrmRateRmbChart', {
-      type: 'line',
-      data: {
-        labels: rateData.map(function(r){ return r.date; }),
-        datasets: [{
-          label: 'RMB-VND',
-          data: rateData.map(function(r){ return r.rmb_vnd; }),
-          borderColor: '#2E9CC6',
-          backgroundColor: 'rgba(46,156,198,0.15)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 5,
-          pointBackgroundColor: '#2E9CC6',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          borderWidth: 2,
-          ovUnit: 'rate'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { right: 20, top: 10 } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 0 } },
-          y: { beginAtZero: false, grid: { color: '#eee' }, ticks: { callback: function(v) { return v.toLocaleString(); } }, title: { display: true, text: 'RMB-VND', font: { size: 10 } } }
-        },
-        plugins: {
-          legend: { display: false },
-          title: { display: true, text: T().empty.dash_crm_rate_rmb || 'RMB-VND Rate Trend', font: { size: 12 } }
-        }
-      }
-    });
-  }
-  if (ctxRateUsd && rateData.length) {
-    if (window._dashCrmRateUsdChart) window._dashCrmRateUsdChart.destroy();
-    window._dashCrmRateUsdChart = _ovMakeChart('dashCrmRateUsdChart', {
-      type: 'line',
-      data: {
-        labels: rateData.map(function(r){ return r.date; }),
-        datasets: [{
-          label: 'USD-VND',
-          data: rateData.map(function(r){ return r.usd_vnd; }),
-          borderColor: '#F5872E',
-          backgroundColor: 'rgba(245,135,46,0.15)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 5,
-          pointBackgroundColor: '#F5872E',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          borderWidth: 2,
-          ovUnit: 'rate'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { right: 20, top: 10 } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 0 } },
-          y: { beginAtZero: false, grid: { color: '#eee' }, ticks: { callback: function(v) { return v.toLocaleString(); } }, title: { display: true, text: 'USD-VND', font: { size: 10 } } }
-        },
-        plugins: {
-          legend: { display: false },
-          title: { display: true, text: T().empty.dash_crm_rate_usd || 'USD-VND Rate Trend', font: { size: 12 } }
-        }
-      }
-    });
-  }
 }
 
 // Dashboard CRM 图表通用选项
@@ -25393,6 +25300,105 @@ function _openLivestockChartLightbox(itemKey) {
   openDashChartLightbox(canvasIds[itemKey]);
 }
 
+// ===================== 历史汇率走势图表（真实历史汇率，免费数据源：雅虎财经）=====================
+// 三条曲线：美元兑人民币(USD->CNY)、美元兑越南盾(USD->VND)、人民币兑越南盾(CNY->VND)
+// 均随系统语言切换标题；标签显示 2 位小数，无货币符号。
+function renderDashFxCharts() {
+  var t = (typeof I18N !== 'undefined' && I18N[CUR_LANG]) ? I18N[CUR_LANG] : {};
+  var L = function(k, d) { return t[k] || d; };
+
+  var secTitle = document.getElementById('dashFxSectionTitle');
+  if (secTitle) secTitle.innerText = L('fx_section', '历史汇率走势');
+  var titles = [
+    ['dashFxUsdCnyTitle', 'fx_usd_cny_title', '美元兑人民币汇率走势'],
+    ['dashFxCnyVndTitle', 'fx_cny_vnd_title', '人民币兑越南盾汇率走势'],
+    ['dashFxUsdVndTitle', 'fx_usd_vnd_title', '美元兑越南盾汇率走势']
+  ];
+  titles.forEach(function(tm){
+    var el = document.getElementById(tm[0]);
+    if (el) el.innerText = L(tm[1], tm[2]);
+  });
+
+  if (typeof Chart === 'undefined') {
+    return;
+  }
+
+  _ovLoadChartLib(function(){
+    fetch('/api/fx-rates')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        if (!res.ok || !res.labels) {
+          console.warn('[renderDashFxCharts] Failed to fetch fx rates:', res);
+          return;
+        }
+        _dashAsOf('dashFxAsOf', res);   // ★DASH-ASOF-20261027★
+        var labels = res.labels || [];
+        var series = res.series || {};
+        var fmt2 = function(v){
+          if (v === null || v === undefined) return '-';
+          return Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+        var defs = [
+          { id: 'dashFxUsdCnyChart', key: 'usd_cny', color: '#C0563B', prec: 2 },
+          { id: 'dashFxCnyVndChart', key: 'cny_vnd', color: '#3B7DC0', prec: 0 },
+          { id: 'dashFxUsdVndChart', key: 'usd_vnd', color: '#27AE60', prec: 0 }
+        ];
+        defs.forEach(function(def){
+          var ctx = document.getElementById(def.id);
+          if (!ctx) return;
+          var winKey = '_' + def.id.replace('dash', 'dash') + 'Chart';
+          if (window[winKey]) window[winKey].destroy();
+          var data = series[def.key] || [];
+          window[winKey] = _ovMakeChart(def.id, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: '',
+                data: data,
+                ovUnit: 'rate',
+                ovSymbol: '',
+                ovPrecision: def.prec,
+                borderColor: def.color,
+                backgroundColor: def.color + '22',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                fill: false,
+                tension: 0.35
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              layout: { padding: { top: 24, right: 12, left: 4, bottom: 4 } },
+              interaction: { mode: 'index', intersect: false },
+              scales: {
+                x: {
+                  ticks: { maxTicksLimit: 10, maxRotation: 30, autoSkip: true, font: { size: 9 } },
+                  grid: { display: false }
+                },
+                y: {
+                  beginAtZero: false,
+                  ticks: { callback: function(v){ return fmt2(v); }, font: { size: 9 } }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                ovDataLabels: { symbol: '', full: true, alternate: true },
+                tooltip: {
+                  callbacks: { label: function(c){ return fmt2(c.parsed.y); } }
+                }
+              }
+            }
+          });
+        });
+      })
+      .catch(function(err){
+        console.error('[renderDashFxCharts] Error:', err);
+      });
+  });
+}
 
 
 
@@ -25446,6 +25452,7 @@ function reloadAllDashAmount() {
     if (window.globalLostData && window.globalLostData.length && typeof renderDashLostCharts === 'function') renderDashLostCharts(window.globalLostData);
     if (typeof renderDashLoginCharts === 'function') renderDashLoginCharts();
     if (typeof renderDashMetalCharts === 'function') renderDashMetalCharts();
+    if (typeof renderDashFxCharts === 'function') renderDashFxCharts();
     if (typeof renderDashFeedCharts === 'function') renderDashFeedCharts();
     if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
     if (typeof syncDashCrmCharts === 'function') syncDashCrmCharts();
@@ -29114,8 +29121,6 @@ function syncDashCrmCharts(){
     { from: 'crmOvBuChart', to: 'dashCrmBuChart' },
     { from: 'crmOvConChart', to: 'dashCrmConstChart' },
     { from: 'crmOvSpChart', to: 'dashCrmSalesChart' },
-    { from: 'crmOvRateRmbChart', to: 'dashCrmRateRmbChart' },
-    { from: 'crmOvRateUsdChart', to: 'dashCrmRateUsdChart' },
     // 签约概览图表同步 (从Overview同步到Dashboard)
     { from: 'ovBuSalesChart', to: 'dashWonBuBarChart' },
     { from: 'ovPieBuAllChart', to: 'dashWonPieAllChart' },
