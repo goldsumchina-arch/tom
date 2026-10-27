@@ -385,8 +385,8 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.10.27.01 - 看板价格数据新鲜度角标 + 月度刷新链路恢复（DASH-ASOF-20261027） -->
-  <title>签约项目 · AGI-CRM v2026.10.27.01</title>
+  <!-- 版本号：V2026.10.27.02 - 看板移除「历史汇率走势」整块（DASH-DEL-FX-20261027） -->
+  <title>签约项目 · AGI-CRM v2026.10.27.02</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
@@ -3015,7 +3015,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.27.01</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.27.02</span></div>
   </div>
 </div>
 
@@ -3502,32 +3502,6 @@ function _ovLoadChartLib(cb){
         </div>
       </div>
 
-      <!-- 历史汇率走势图表区域 -->
-      <div class="dash-fx-section" id="dashFxSection">
-        <div class="dash-section-header">
-          <h3 id="dashFxSectionTitle">历史汇率走势</h3>
-          <span class="dash-asof" id="dashFxAsOf" title=""></span>
-        </div>
-        <div class="dash-fx-charts">
-          <div class="dash-fx-chart-row">
-            <div class="dash-metal-chart-box" onclick="openDashChartLightbox('dashFxUsdCnyChart')">
-              <span class="dash-large-image-badge" data-i18n="dash_large_image">超大图片</span>
-              <div class="dash-metal-chart-title" id="dashFxUsdCnyTitle">美元兑人民币汇率走势</div>
-              <canvas id="dashFxUsdCnyChart" style="width:100% !important;"></canvas>
-            </div>
-            <div class="dash-metal-chart-box" onclick="openDashChartLightbox('dashFxCnyVndChart')">
-              <span class="dash-large-image-badge" data-i18n="dash_large_image">超大图片</span>
-              <div class="dash-metal-chart-title" id="dashFxCnyVndTitle">人民币兑越南盾汇率走势</div>
-              <canvas id="dashFxCnyVndChart" style="width:100% !important;"></canvas>
-            </div>
-            <div class="dash-metal-chart-box" onclick="openDashChartLightbox('dashFxUsdVndChart')">
-              <span class="dash-large-image-badge" data-i18n="dash_large_image">超大图片</span>
-              <div class="dash-metal-chart-title" id="dashFxUsdVndTitle">美元兑越南盾汇率走势</div>
-              <canvas id="dashFxUsdVndChart" style="width:100% !important;"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
 
     </div>
   </section>
@@ -10826,9 +10800,6 @@ function applyEmptyLang() {
     renderDashMetalCharts();
   }
   // 历史汇率走势图：切换语言后同步标题并重渲染
-  if (typeof renderDashFxCharts === 'function' && document.getElementById('dashFxSectionTitle')) {
-    renderDashFxCharts();
-  }
   // 大宗饲料原料价格图：切换语言后同步标题并重渲染
   if (typeof renderDashFeedCharts === 'function' && document.getElementById('dashFeedSectionTitle')) {
     renderDashFeedCharts();
@@ -23535,7 +23506,6 @@ function renderDashboard(stats, L) {
   _ovLoadChartLib(function(){
     if (typeof renderDashLoginCharts === 'function') renderDashLoginCharts();
     if (typeof renderDashMetalCharts === 'function') renderDashMetalCharts();
-    if (typeof renderDashFxCharts === 'function') renderDashFxCharts();
     if (typeof renderDashFeedCharts === 'function') renderDashFeedCharts();
     if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
   });
@@ -25423,105 +25393,6 @@ function _openLivestockChartLightbox(itemKey) {
   openDashChartLightbox(canvasIds[itemKey]);
 }
 
-// ===================== 历史汇率走势图表（真实历史汇率，免费数据源：雅虎财经）=====================
-// 三条曲线：美元兑人民币(USD->CNY)、美元兑越南盾(USD->VND)、人民币兑越南盾(CNY->VND)
-// 均随系统语言切换标题；标签显示 2 位小数，无货币符号。
-function renderDashFxCharts() {
-  var t = (typeof I18N !== 'undefined' && I18N[CUR_LANG]) ? I18N[CUR_LANG] : {};
-  var L = function(k, d) { return t[k] || d; };
-
-  var secTitle = document.getElementById('dashFxSectionTitle');
-  if (secTitle) secTitle.innerText = L('fx_section', '历史汇率走势');
-  var titles = [
-    ['dashFxUsdCnyTitle', 'fx_usd_cny_title', '美元兑人民币汇率走势'],
-    ['dashFxCnyVndTitle', 'fx_cny_vnd_title', '人民币兑越南盾汇率走势'],
-    ['dashFxUsdVndTitle', 'fx_usd_vnd_title', '美元兑越南盾汇率走势']
-  ];
-  titles.forEach(function(tm){
-    var el = document.getElementById(tm[0]);
-    if (el) el.innerText = L(tm[1], tm[2]);
-  });
-
-  if (typeof Chart === 'undefined') {
-    return;
-  }
-
-  _ovLoadChartLib(function(){
-    fetch('/api/fx-rates')
-      .then(function(r){ return r.json(); })
-      .then(function(res){
-        if (!res.ok || !res.labels) {
-          console.warn('[renderDashFxCharts] Failed to fetch fx rates:', res);
-          return;
-        }
-        _dashAsOf('dashFxAsOf', res);   // ★DASH-ASOF-20261027★
-        var labels = res.labels || [];
-        var series = res.series || {};
-        var fmt2 = function(v){
-          if (v === null || v === undefined) return '-';
-          return Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        };
-        var defs = [
-          { id: 'dashFxUsdCnyChart', key: 'usd_cny', color: '#C0563B', prec: 2 },
-          { id: 'dashFxCnyVndChart', key: 'cny_vnd', color: '#3B7DC0', prec: 0 },
-          { id: 'dashFxUsdVndChart', key: 'usd_vnd', color: '#27AE60', prec: 0 }
-        ];
-        defs.forEach(function(def){
-          var ctx = document.getElementById(def.id);
-          if (!ctx) return;
-          var winKey = '_' + def.id.replace('dash', 'dash') + 'Chart';
-          if (window[winKey]) window[winKey].destroy();
-          var data = series[def.key] || [];
-          window[winKey] = _ovMakeChart(def.id, {
-            type: 'line',
-            data: {
-              labels: labels,
-              datasets: [{
-                label: '',
-                data: data,
-                ovUnit: 'rate',
-                ovSymbol: '',
-                ovPrecision: def.prec,
-                borderColor: def.color,
-                backgroundColor: def.color + '22',
-                borderWidth: 2,
-                pointRadius: 3,
-                pointHoverRadius: 5,
-                fill: false,
-                tension: 0.35
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              layout: { padding: { top: 24, right: 12, left: 4, bottom: 4 } },
-              interaction: { mode: 'index', intersect: false },
-              scales: {
-                x: {
-                  ticks: { maxTicksLimit: 10, maxRotation: 30, autoSkip: true, font: { size: 9 } },
-                  grid: { display: false }
-                },
-                y: {
-                  beginAtZero: false,
-                  ticks: { callback: function(v){ return fmt2(v); }, font: { size: 9 } }
-                }
-              },
-              plugins: {
-                legend: { display: false },
-                ovDataLabels: { symbol: '', full: true, alternate: true },
-                tooltip: {
-                  callbacks: { label: function(c){ return fmt2(c.parsed.y); } }
-                }
-              }
-            }
-          });
-        });
-      })
-      .catch(function(err){
-        console.error('[renderDashFxCharts] Error:', err);
-      });
-  });
-}
 
 
 
@@ -25575,7 +25446,6 @@ function reloadAllDashAmount() {
     if (window.globalLostData && window.globalLostData.length && typeof renderDashLostCharts === 'function') renderDashLostCharts(window.globalLostData);
     if (typeof renderDashLoginCharts === 'function') renderDashLoginCharts();
     if (typeof renderDashMetalCharts === 'function') renderDashMetalCharts();
-    if (typeof renderDashFxCharts === 'function') renderDashFxCharts();
     if (typeof renderDashFeedCharts === 'function') renderDashFeedCharts();
     if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
     if (typeof syncDashCrmCharts === 'function') syncDashCrmCharts();
