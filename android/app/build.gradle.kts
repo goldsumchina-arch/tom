@@ -34,8 +34,8 @@ android {
         //
         // Windows 的 build_desktop.py 与本项目的 build_apk.py 都从这里读取，
         // 两边生成的 APK / EXE 文件名永远一致。
-        versionCode = 158
-        versionName = "V2026.10.27.01"
+        versionCode = 160
+        versionName = "V2026.10.27.03"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
