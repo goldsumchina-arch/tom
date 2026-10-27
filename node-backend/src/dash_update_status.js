@@ -52,24 +52,42 @@ export async function handleDashUpdateStatus(request, env, url, pathname) {
   const now = new Date();
   const som = startOfMonth(now);
 
-  // 读取 R2 快照最新修改时间
+  // 读取快照自身的生成时间 / 最新月份
+  // ★DASH-STATUS-FIX-20261027★ 旧实现依赖 head().httpMetadata.lastModified，
+  //   但本地文件版 R2 兼容层(filesshim.head)并不返回 httpMetadata →
+  //   snapMeta 恒为 null，接口永远报 NO/NO_SNAPSHOT，等于没有监控。
+  //   现在直接读快照内容里的 _meta.generated_at / _meta.newest_month（与 shim 无关）。
   let snapMeta = null;
   let snapErr = null;
+  let snapNewest = "";
+  let snapMonth = "";
+  let snapUpdatedRaw = "";
   try {
-    const obj = await env.FILES.head(PRICE_SNAPSHOT_KEY);
-    if (obj && obj.httpMetadata && obj.httpMetadata.lastModified) {
-      snapMeta = new Date(obj.httpMetadata.lastModified);
+    const obj = await env.FILES.get(PRICE_SNAPSHOT_KEY);
+    if (!obj) {
+      snapErr = null;
+    } else {
+      const snap = JSON.parse(await obj.text());
+      const meta = (snap && snap._meta) || {};
+      const g = meta.generated_at ? String(meta.generated_at) : "";
+      if (g) {
+        snapUpdatedRaw = g;
+        snapMonth = g.slice(0, 7);            // "2026-10"
+        snapMeta = new Date(g.replace(" ", "T") + "Z");
+      }
+      snapNewest = meta.newest_month ? String(meta.newest_month) : snapMonth;
+      if (!snapMonth && snapNewest) snapMonth = snapNewest;
     }
   } catch (e) {
     snapErr = String(e.message || e);
   }
 
+  const nowYm = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
   let snapStatus = "NO";
   let snapReason = "NO_SNAPSHOT";
-  let snapUpdated = "";
-  if (snapMeta) {
-    snapUpdated = snapMeta.toISOString();
-    if (snapMeta >= som) {
+  let snapUpdated = snapUpdatedRaw;
+  if (snapMonth) {
+    if (snapMonth >= nowYm) {
       snapStatus = "YES";
       snapReason = "OK";
     } else {

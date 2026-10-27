@@ -385,8 +385,8 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.10.26.06 - 操作列按钮整排一行 + 列宽按按钮实宽收紧 -->
-  <title>签约项目 · AGI-CRM v2026.10.26.06</title>
+  <!-- 版本号：V2026.10.27.01 - 看板价格数据新鲜度角标 + 月度刷新链路恢复（DASH-ASOF-20261027） -->
+  <title>签约项目 · AGI-CRM v2026.10.27.01</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
@@ -2449,6 +2449,10 @@ function _ovLoadChartLib(cb){
   .dash-metal-chart-box:hover::after { opacity:1; }
   .dash-metal-chart-box canvas { width:100% !important;height:260px !important;max-height:280px; overflow:hidden; }
   .dash-metal-chart-title { font-size:13px; color:#333; font-weight:600; margin-bottom:8px; text-align:center; }
+  /* ★DASH-ASOF-20261027★ 价格数据新鲜度角标：最新月份 + 快照生成时间，过期变黄/红 */
+  .dash-asof { font-size:11px; color:#7c8798; margin-left:10px; white-space:nowrap; }
+  .dash-asof.stale { color:#e08a1e; font-weight:600; }
+  .dash-asof.very-stale { color:#e74c3c; font-weight:700; }
   /* 大宗饲料原料价格图表区域（绿色系区分金属橙色系） */
   .dash-feed-section { margin-top:24px; background:#f3faf3; border:2px solid #4CAF7D; border-radius:16px; padding:20px; box-shadow:0 4px 12px rgba(76,175,125,.12); }
   .dash-feed-section .dash-section-header { display:flex; align-items:center; justify-content:space-between; }
@@ -3011,7 +3015,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.26.06</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.27.01</span></div>
   </div>
 </div>
 
@@ -3367,6 +3371,7 @@ function _ovLoadChartLib(cb){
       <div class="dash-metal-section" id="dashMetalSection">
         <div class="dash-section-header" style="display:flex;align-items:center;justify-content:space-between;">
           <h3 id="dashMetalSectionTitle" style="margin:0;">金属价格走势</h3>
+          <span class="dash-asof" id="dashMetalAsOf" title=""></span>
           <span class="dash-cur-switch" id="dashMetalCurSwitch">
             <span class="dash-cur-btn active" data-dashcur="RMB" onclick="setDashCurGlobal('RMB')">RMB</span>
             <span class="dash-cur-btn" data-dashcur="USD" onclick="setDashCurGlobal('USD')">USD</span>
@@ -3405,6 +3410,7 @@ function _ovLoadChartLib(cb){
       <div class="dash-feed-section" id="dashFeedSection">
         <div class="dash-section-header" style="display:flex;align-items:center;justify-content:space-between;">
           <h3 id="dashFeedSectionTitle" style="margin:0;">大宗饲料原料价格</h3>
+          <span class="dash-asof" id="dashFeedAsOf" title=""></span>
           <span class="dash-cur-switch" id="dashFeedCurSwitch">
             <span class="dash-cur-btn active" data-dashcur="RMB" onclick="setDashCurGlobal('RMB')">RMB</span>
             <span class="dash-cur-btn" data-dashcur="USD" onclick="setDashCurGlobal('USD')">USD</span>
@@ -3455,6 +3461,7 @@ function _ovLoadChartLib(cb){
       <div class="dash-livestock-section" id="dashLivestockSection">
         <div class="dash-section-header">
           <h3 id="dashLivestockSectionTitle">畜禽出栏价格</h3>
+          <span class="dash-asof" id="dashLivestockAsOf" title=""></span>
           <div class="dash-cur-buttons">
             <button type="button" class="dash-cur-btn active" data-dashcur="RMB" data-cur="RMB" data-target="livestock" onclick="setDashCurGlobal('RMB')"><span data-i18n="livestock_currency_rmb">人民币 CNY</span></button>
             <button type="button" class="dash-cur-btn" data-dashcur="USD" data-cur="USD" data-target="livestock" onclick="setDashCurGlobal('USD')"><span data-i18n="livestock_currency_usd">美元 USD</span></button>
@@ -3499,6 +3506,7 @@ function _ovLoadChartLib(cb){
       <div class="dash-fx-section" id="dashFxSection">
         <div class="dash-section-header">
           <h3 id="dashFxSectionTitle">历史汇率走势</h3>
+          <span class="dash-asof" id="dashFxAsOf" title=""></span>
         </div>
         <div class="dash-fx-charts">
           <div class="dash-fx-chart-row">
@@ -6212,6 +6220,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     crm_sum_q1:"Q1 合计", crm_sum_q2:"Q2 合计", crm_sum_q3:"Q3 合计", crm_sum_q4:"Q4 合计", crm_sum_q5:"Q5 合计", crm_sum_q6:"Q6 合计", crm_sum_q7:"Q7 合计",
     metal_section:"金属价格走势", metal_iron_title:"钢铁价格走势", metal_stainless_title:"中国不锈钢价格走势", metal_zinc_title:"中国锌锭价格走势", metal_plastic_title:"中国塑料价格走势",
     metal_unit_rmb:"（元/吨）", metal_unit_usd:"（美元/吨）", metal_unit_vnd:"（越南盾/吨）",
+    dash_asof:"数据截至 ", dash_upd:"更新于 ", dash_stale:"（已过期，需刷新）",
     feed_section:"大宗饲料原料价格", feed_corn_title:"玉米价格走势", feed_soybean_title:"大豆价格走势", feed_soymeal_title:"豆粕价格走势", feed_ddgs_title:"DDGS价格走势",
     feed_intl_label:"国际市场", feed_china_label:"中国市场", feed_vietnam_label:"越南市场",
     feed_country_label:"国家/地区 DDP 采购价", feed_country_hint:"(基于 CBOT × 到岸升贴水模拟，非真实 DDP)",
@@ -6969,6 +6978,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     crm_sum_q1:"Q1 Total", crm_sum_q2:"Q2 Total", crm_sum_q3:"Q3 Total", crm_sum_q4:"Q4 Total", crm_sum_q5:"Q5 Total", crm_sum_q6:"Q6 Total", crm_sum_q7:"Q7 Total",
     metal_section:"Metal Price Trends", metal_iron_title:"Steel Price Trend", metal_stainless_title:"China Stainless Steel Price Trend", metal_zinc_title:"China Zinc Ingot Price Trend", metal_plastic_title:"China Plastic Price Trend",
     metal_unit_rmb:" (CNY/ton)", metal_unit_usd:" (USD/ton)", metal_unit_vnd:" (VND/ton)",
+    dash_asof:"Data as of ", dash_upd:"updated ", dash_stale:" (stale)",
     feed_section:"Bulk Feed Raw Material Prices", feed_corn_title:"Corn Price Trend", feed_soybean_title:"Soybean Price Trend", feed_soymeal_title:"Soybean Meal Price Trend", feed_ddgs_title:"DDGS Price Trend",
     feed_intl_label:"International", feed_china_label:"China", feed_vietnam_label:"Vietnam",
     feed_country_label:"Country/Region DDP Purchase Price", feed_country_hint:"(Simulated via CBOT × import basis; not actual DDP)",
@@ -7722,6 +7732,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     crm_sum_q1:"Tổng Q1", crm_sum_q2:"Tổng Q2", crm_sum_q3:"Tổng Q3", crm_sum_q4:"Tổng Q4", crm_sum_q5:"Tổng Q5", crm_sum_q6:"Tổng Q6", crm_sum_q7:"Tổng Q7",
     metal_section:"Xu hướng giá kim loại", metal_iron_title:"Xu hướng giá thép", metal_stainless_title:"Xu hướng giá thép không gỉ Trung Quốc", metal_zinc_title:"Xu hướng giá kẽm thỏi Trung Quốc", metal_plastic_title:"Xu hướng giá nhựa Trung Quốc",
     metal_unit_rmb:" (CNY/tấn)", metal_unit_usd:" (USD/tấn)", metal_unit_vnd:" (VND/tấn)",
+    dash_asof:"Dữ liệu đến ", dash_upd:"cập nhật ", dash_stale:" (đã cũ)",
     feed_section:"Giá nguyên liệu thức ăn chăn nuôi", feed_corn_title:"Xu hướng giá ngô", feed_soybean_title:"Xu hướng giá đậu tương", feed_soymeal_title:"Xu hướng giá bã đậu tương", feed_ddgs_title:"Xu hướng giá DDGS",
     feed_intl_label:"Quốc tế", feed_china_label:"Trung Quốc", feed_vietnam_label:"Việt Nam",
     feed_country_label:"Giá mua DDP theo quốc gia/khu vực", feed_country_hint:"(Mô phỏng từ CBOT × phí đến cảng; không phải DDP thực tế)",
@@ -24813,6 +24824,32 @@ function closeDashChartLightbox() {
   if (overlay) overlay.classList.remove('show');
 }
 
+/* ★DASH-ASOF-20261027★ 价格看板"新鲜度角标"
+   在看板价格区块标题旁显示「数据截至 YYYY-MM · 更新于 YYYY-MM-DD」。
+   数据来自 price_snapshot.json 的 labels 末位与 _updated（快照生成时间）。
+   超过 35 天（该月已过 5 周）变黄、超过 70 天变红 —— 这样"某个月没人更新"
+   会立刻在看板上暴露，而不是像之前那样静默停在 2026-09。 */
+function _dashAsOf(elId, res){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  var labs = (res && res.labels) || [];
+  var ym = labs.length ? String(labs[labs.length - 1] || '') : '';
+  var upd = (res && res._updated) || '';
+  if(!ym){ el.textContent = ''; el.className = 'dash-asof'; el.title = ''; return; }
+  var now = new Date();
+  var want = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);
+  var age = 0;
+  try {
+    var y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10);
+    if(!isNaN(y) && !isNaN(m)) age = Math.round((now - new Date(y, m, 1)) / 86400000);
+  } catch(e){}
+  var txt = (typeof L === 'function' ? L('dash_asof', '数据截至 ') : '数据截至 ') + ym;
+  if(upd) txt += ' · ' + (typeof L === 'function' ? L('dash_upd', '更新于 ') : '更新于 ') + String(upd).slice(0, 10);
+  el.textContent = txt;
+  el.className = 'dash-asof' + (age > 70 ? ' very-stale' : (age > 35 || ym < want ? ' stale' : ''));
+  el.title = txt;
+}
+
 function renderDashMetalCharts() {
   var t = (typeof I18N !== 'undefined' && I18N[CUR_LANG]) ? I18N[CUR_LANG] : {};
   var L = function(k, d) { return t[k] || d; };
@@ -24856,6 +24893,7 @@ function renderDashMetalCharts() {
           return;
         }
         var labels = res.labels || [];
+        _dashAsOf('dashMetalAsOf', res);   // ★DASH-ASOF-20261027★
         var series = res.series || {};
         _METAL_KEYS.forEach(function(key){
           var canvasId = 'dashMetal' + key.charAt(0).toUpperCase() + key.slice(1) + 'Chart';
@@ -25085,6 +25123,7 @@ function renderDashFeedCharts() {
           return;
         }
         var labels = res.labels || [];
+        _dashAsOf('dashFeedAsOf', res);   // ★DASH-ASOF-20261027★
         var series = res.series || {};
         var countriesMeta = res.countries || {};
         var curveKeys = ['intl', 'china', 'vietnam'];
@@ -25294,6 +25333,7 @@ function renderDashLivestockCharts() {
           return;
         }
         _LIVESTOCK_LAST_DATA = res;
+        _dashAsOf('dashLivestockAsOf', res);   // ★DASH-ASOF-20261027★
         var labels = res.labels || [];
         var countriesMeta = res.countries || {};
         var items = res.items || {};
@@ -25414,6 +25454,7 @@ function renderDashFxCharts() {
           console.warn('[renderDashFxCharts] Failed to fetch fx rates:', res);
           return;
         }
+        _dashAsOf('dashFxAsOf', res);   // ★DASH-ASOF-20261027★
         var labels = res.labels || [];
         var series = res.series || {};
         var fmt2 = function(v){
