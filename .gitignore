@@ -82,6 +82,29 @@ android/*.txt
 android/*.ps1
 android/*.bat
 
+# h) 一次性工具脚本（2026-10-29 人工确认：不参与构建、无复用价值）
+calibrate_id_coef.py
+calibrate_ph_coef.py
+gen_training.py
+pdf2html.py
+make_icons.py
+make_web_icons.py
+query_db.py
+remove_demo.py
+reset_demo_data.py
+cleanup_junk.py
+collect_livestock.py
+export_demo_snapshot.py
+run_snapshot_task.py
+ingest_livestock_csv.py
+livestock_real_anchors.py
+installer/
+android/sysimg.xml
+
+# 注意：根目录 apple-touch-icon.png 【不忽略】——index.html 第 385 行
+#   <link rel="apple-touch-icon" href="apple-touch-icon.png"> 引用它，
+#   build_dist.py 的 ASSETS 也包含它，忽略会导致部署后 iOS 主屏图标 404。
+
 # g) 历史备份 / 一次性产物
 *.backup-*
 index.html.backup-*
