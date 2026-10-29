@@ -105,6 +105,11 @@ android/sysimg.xml
 #   <link rel="apple-touch-icon" href="apple-touch-icon.png"> 引用它，
 #   build_dist.py 的 ASSETS 也包含它，忽略会导致部署后 iOS 主屏图标 404。
 
+# version.txt：2026-09-06 的旧版本快照（内容 V2026.09.06.12），
+# 全仓库无任何脚本引用；版本号唯一真源是 android/app/build.gradle.kts 的 versionName。
+# 文件保留在本地不删，只是不入库。
+version.txt
+
 # g) 历史备份 / 一次性产物
 *.backup-*
 index.html.backup-*
