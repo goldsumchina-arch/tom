@@ -37,3 +37,58 @@ ph_refresh_log.jsonl
 *.pdf
 .DS_Store
 Thumbs.db
+
+# ===== 工作区清理（2026-10-29）=====
+# 说明：本仓库长期把调试脚本/日志直接丢在根目录，导致 git status 有 400+ 条噪声。
+# 以下规则只作用于【未跟踪文件】，已入库的文件不受影响。
+
+# a) 以 _ 开头的临时脚本/日志/截图（_apk_*.log、_mt*.kt、_probe*.py、_e2e/ 等）
+_*
+!__init__.py
+
+# b) 各种运行日志与探测输出
+*.log
+*.err
+*.out
+*.bak
+*.bak_*
+*.bak-*
+*.bak.*
+
+# c) 编辑器 / 本地工具目录
+.vscode/
+.wrangler/
+.idea/
+
+# d) APK 构建产物（打出来的包走分发，不入库）
+android/apk/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+
+# e) APK 内置站点快照是【构建产物】：build_apk.py 打包前会从 node-backend/dist
+#    整体同步重建，所以除 index.html（历史已入库的那份）外不再入库，避免 4MB 垃圾。
+android/app/src/main/assets/site/**
+!android/app/src/main/assets/site/index.html
+android/app/src/main/assets/mobile_js.js
+android/app/src/main/assets/mobile_css.css
+android/app/src/main/assets/vendor/
+
+# f) android/ 根目录下的本机调试残留（截图、日志、一次性探测脚本）
+#    正式脚本 build_apk.bat / build_apk.py 已入库，不受影响。
+android/*.png
+android/*.txt
+android/*.ps1
+android/*.bat
+
+# g) 历史备份 / 一次性产物
+*.backup-*
+index.html.backup-*
+backup_before_cleanup_*
+backup_commission_demo*_*.json
+backup_d1_*.sql
+node-backend.zip
+gitlog.txt
+test-date.txt
+test-deploy.txt
