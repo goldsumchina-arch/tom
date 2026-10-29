@@ -31,6 +31,15 @@ DISTS = os.path.join(os.path.expanduser("~"), ".gradle", "wrapper", "dists")
 APK_SRC = os.path.join(HERE, "app", "build", "outputs", "apk", "release", "app-release.apk")
 APK_DST_DIR = os.path.join(HERE, "apk")
 
+# ★SITE-SNAPSHOT-SYNC-20261027：APK 内置的网页快照目录。
+#   事故背景（2026-10-27）：assets/site/index.html 一直是 10-27 16:16 的旧版（.03），
+#   而 MainActivity.handleSite() 在「清缓存后 + 首帧」时【优先返回内置快照】，
+#   于是「装了新 APK 打开还是旧页面」反复出现 —— 网页明明已经部署到 .06。
+#   根治：每次打包前把 node-backend/dist（=线上那份）同步进 assets/site。
+ROOT_DIR = os.path.abspath(os.path.join(HERE, ".."))
+DIST_DIR = os.path.join(ROOT_DIR, "node-backend", "dist")
+SITE_ASSETS = os.path.join(HERE, "app", "src", "main", "assets", "site")
+
 
 def read_version():
     """从 app/build.gradle.kts 读 versionName —— 版本号唯一真源。
@@ -86,6 +95,49 @@ def find_local_gradle():
     return best
 
 
+def sync_site_assets():
+    """把线上那份网页（node-backend/dist）同步进 APK 内置快照 assets/site。
+
+    ★为什么必须先跑 build_dist：dist 是由 build_dist.py 从根目录 index.html
+      复制并【版本同步】生成的。只改 index.html 不重建 dist，这里同步到的
+      仍是旧文件；所以这里直接调用 build_dist 的 main()，保证三端同源。
+    返回 True/False。
+    """
+    try:
+        sys.path.insert(0, os.path.join(ROOT_DIR, "node-backend"))
+        import build_dist  # noqa: E402  同仓库脚本，路径已加入
+        build_dist.main()
+    except Exception as e:
+        print("    [WARN] build_dist 执行失败（继续用现有 dist）: %s" % e)
+
+    src_index = os.path.join(DIST_DIR, "index.html")
+    if not os.path.isfile(src_index):
+        print("    [WARN] 未找到 %s，跳过内置快照同步（APP 可能显示旧页面！）" % src_index)
+        return False
+
+    os.makedirs(SITE_ASSETS, exist_ok=True)
+    copied = 0
+    for name in os.listdir(DIST_DIR):
+        src = os.path.join(DIST_DIR, name)
+        dst = os.path.join(SITE_ASSETS, name)
+        if os.path.isdir(src):
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+            copied += 1
+        else:
+            shutil.copy2(src, dst)
+            copied += 1
+
+    # 打印内置快照的版本，便于确认「打包进去的到底是哪一版」
+    try:
+        with open(os.path.join(SITE_ASSETS, "index.html"), "r", encoding="utf-8", errors="replace") as f:
+            head = f.read(20000)
+        m = re.search(r"<title>([^<]*)</title>", head)
+        print("    内置快照: %s 个条目  |  %s" % (copied, m.group(1) if m else "?"))
+    except Exception:
+        print("    内置快照: %s 个条目" % copied)
+    return True
+
+
 def run(cmd, cwd, env=None, timeout=1800):
     """cmd 为字符串列表，避免 shell=True 导致的引号/空格问题"""
     print("    > %s" % " ".join(cmd))
@@ -107,7 +159,7 @@ def main():
     print("  产物: %s" % os.path.basename(APK_DST))
 
     # ---- 环境检查 ----
-    print("\n[1/4] 检查环境")
+    print("\n[1/5] 检查环境")
     java = os.path.join(JAVA_HOME, "bin", "java.exe")
     if not os.path.isfile(java):
         print("    [ERROR] 未找到 JDK: %s" % java)
@@ -125,8 +177,12 @@ def main():
     env["ANDROID_HOME"] = ANDROID_HOME
     env["PATH"] = os.path.join(JAVA_HOME, "bin") + os.pathsep + env.get("PATH", "")
 
+    # ---- 内置页面快照同步（★防止"装了新 APK 还是旧页面"）----
+    print("\n[2/5] 同步内置页面快照（assets/site ← node-backend/dist）")
+    sync_site_assets()
+
     # ---- 选择 Gradle ----
-    print("\n[2/4] 选择 Gradle")
+    print("\n[3/5] 选择 Gradle")
     gradle = find_local_gradle()
     if gradle:
         print("    本地缓存: %s" % gradle)
@@ -136,7 +192,7 @@ def main():
         gradle_cmd = [os.path.join(HERE, "gradlew.bat")]
 
     # ---- 编译：先离线，失败则联网 ----
-    print("\n[3/4] 编译 APK（release 签名版）")
+    print("\n[4/5] 编译 APK（release 签名版）")
     print("    先尝试离线模式（不联网，用已缓存依赖）...")
     code, out = run(gradle_cmd + ["assembleRelease", "--offline", "--console=plain"],
                     cwd=HERE, env=env)
@@ -160,7 +216,7 @@ def main():
         return 1
 
     # ---- 复制 APK ----
-    print("\n[4/4] 复制 APK")
+    print("\n[5/5] 复制 APK")
     if not os.path.isfile(APK_SRC):
         print("    [ERROR] 未找到编译产物: %s" % APK_SRC)
         return 1

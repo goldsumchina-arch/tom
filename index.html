@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.10.26.01：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.10.29.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
 <!-- ==================== 同源后端地址（腾讯云版） ====================
@@ -385,13 +385,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.10.27.03 - 看板 CRM 区移除 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE-20261027） -->
-  <title>签约项目 · AGI-CRM v2026.10.27.03</title>
+  <!-- 版本号：V2026.10.29.05 - 看板 CRM 区移除 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE-20261027） -->
+  <title>签约项目 · AGI-CRM v2026.10.29.05</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 同源前端 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20261026.01';
+    window._DASH_VER = '20261029.05';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -2378,9 +2378,16 @@ function _ovLoadChartLib(cb){
   .dash-card {
     background:#fff; border:1px solid #e4e9ef; border-radius:14px; padding:14px 12px 10px;
     box-shadow:0 2px 8px rgba(20,40,80,.05); display:flex; flex-direction:column; min-height:110px;
-    transition:box-shadow .15s ease, transform .15s ease; position:relative; overflow:hidden;
+    transition:box-shadow .15s ease, transform .15s ease, background .15s ease, border-color .15s ease;
+    position:relative; overflow:hidden;
+    /* ★DASH-CARD-CENTER-20261029★ 卡片内容整体居中（标题/数值/币种） */
+    align-items:center; text-align:center;
   }
-  .dash-card:hover { box-shadow:0 6px 18px rgba(20,40,80,.10); transform:translateY(-2px); }
+  /* ★DASH-CARD-PINK-20261029★ 鼠标移到卡片（标签）上：淡粉色底 + 淡粉边框 */
+  .dash-card:hover {
+    box-shadow:0 6px 18px rgba(20,40,80,.10); transform:translateY(-2px);
+    background:#ffe9f0; border-color:#ffc7d8;
+  }
   /* 六张卡片顶部彩色强调条 */
   .dash-accent-bar { position:absolute; top:0; left:0; right:0; height:5px; }
   .dash-accent-1 .dash-accent-bar { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
@@ -2389,10 +2396,11 @@ function _ovLoadChartLib(cb){
   .dash-accent-4 .dash-accent-bar { background:linear-gradient(90deg,#8b5cf6,#a78bfa); }
   .dash-accent-5 .dash-accent-bar { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
   .dash-accent-6 .dash-accent-bar { background:linear-gradient(90deg,#ef4444,#f87171); }
-  .dash-card-title { font-size:12px; color:#5a6a7a; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .dash-card-line { height:1px; background:#eef1f5; margin:8px 0 10px; }
-  .dash-card-value { font-size:clamp(14px,1.5vw,22px); font-weight:700; color:#1a2b3c; letter-spacing:-.5px; line-height:1.15; word-break:break-all; }
-  .dash-card-cur { margin-top:auto; padding-top:8px; font-size:12px; color:#9aa7b3; min-height:18px; }
+  .dash-card-title { font-size:12px; color:#5a6a7a; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; align-self:stretch; }
+  /* 分隔线要撑满卡片宽度（父级已 align-items:center，不撑开就塌成 0 宽） */
+  .dash-card-line { height:1px; background:#eef1f5; margin:8px 0 10px; align-self:stretch; }
+  .dash-card-value { font-size:clamp(14px,1.5vw,22px); font-weight:700; color:#1a2b3c; letter-spacing:-.5px; line-height:1.15; word-break:break-all; text-align:center; align-self:stretch; }
+  .dash-card-cur { margin-top:auto; padding-top:8px; font-size:12px; color:#9aa7b3; min-height:18px; text-align:center; align-self:stretch; }
   /* 潜在项目/签约项目图表区域样式 */
   .dash-crm-section, .dash-won-section, .dash-lost-section { margin-top:24px; background:#fff8f0; border:2px solid #F5872E; border-radius:16px; padding:20px; box-shadow:0 4px 12px rgba(245,135,46,.15); }
   .dash-section-header { margin-bottom:14px; }
@@ -3015,7 +3023,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.27.03</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.29.05</span></div>
   </div>
 </div>
 
@@ -5549,7 +5557,7 @@ var I18N = {
     login_ph_user:"请输入账号", login_ph_pwd:"请输入密码",
     login_remember:"记住密码", login_btn:"登录",
     login_link_reset:"重置密码", login_link_forget:"忘记密码",
-    login_err_need:"请输入账号和密码", login_err_fail:"登录失败", login_err_net:"无法连接服务器，请先启动后端。",
+    login_err_need:"请输入账号和密码", login_err_fail:"登录失败", login_err_net:"无法连接服务器，请先启动后端。", login_err_timeout:"登录超时，请检查网络后重试",
     login_fp_btn:"🔒 指纹快速登录", login_footer:"AGI-CRM 系统",
     wonTitle:"签约项目", won_province:"省份", won_doc_equip:"设备合同", won_doc_install:"安装合同", btnAddWon:"+ 新建签约", btnExportExcel:"📊 导出 Excel", btnSave:"保存", btnCancel:"取消", btnEdit:"编辑", btnDelete:"删除", btnMove:"上移或下移该行", btnMoveUp:"上移", btnMoveDown:"下移", confirmDelTitle:"确认删除", confirmDel:"确定删除该项目？", btnConfirm:"确定", btnCancel:"取消", saveOk:"保存成功", pending:"已提交审批", fillAll:"请填写所有必填项", noData:"暂无数据", hiddenColumns:"已隐藏列:", cur_col_toggle:"点击显示/隐藏该货币列（至少保留一项）",
     contract_no:"合同编号", customer_name:"客户名称", signing_date:"签约日期", parties:"签约双方", currency:"签约货币", contract_rate:"合同使用汇率", incoterms:"贸易术语", include_install:"含安装吗？",
@@ -6302,7 +6310,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     login_ph_user:"Enter username", login_ph_pwd:"Enter password",
     login_remember:"Remember me", login_btn:"Sign In",
     login_link_reset:"Reset Password", login_link_forget:"Forget Password",
-    login_err_need:"Please enter username and password", login_err_fail:"Login failed", login_err_net:"Cannot connect to server. Please start the backend first.",
+    login_err_need:"Please enter username and password", login_err_fail:"Login failed", login_err_net:"Cannot connect to server. Please start the backend first.", login_err_timeout:"Login timed out. Check your network and try again.",
     login_fp_btn:"🔒 Fingerprint Login", login_footer:"AGI-CRM System",
     wonTitle:"Won Projects", won_province:"Province", won_doc_equip:"Equipment Contract", won_doc_install:"Installation Contract", btnAddWon:"+ New Won", btnExportExcel:"📊 Export Excel", btnSave:"Save", btnCancel:"Cancel", btnEdit:"Edit", btnDelete:"Delete", btnMoveUp:"Move up", btnMoveDown:"Move down", confirmDelTitle:"Confirm Delete", confirmDel:"Delete this project?", btnConfirm:"Confirm", btnCancel:"Cancel", saveOk:"Saved", pending:"Pending approval", fillAll:"Please fill all required fields", noData:"No data", hiddenColumns:"Hidden Columns:", cur_col_toggle:"Click to show/hide this currency column (keep at least one)",
     contract_no:"Contract No.", customer_name:"Customer Name", signing_date:"Contract Date", parties:"Signing Parties", currency:"Contract Currency", contract_rate:"Contract Exchange Rate", incoterms:"Incoterms", include_install:"Including Installation?",
@@ -7058,7 +7066,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     login_ph_user:"Nhập tài khoản", login_ph_pwd:"Nhập mật khẩu",
     login_remember:"Ghi nhớ", login_btn:"Đăng nhập",
     login_link_reset:"Đặt lại mật khẩu", login_link_forget:"Quên mật khẩu",
-    login_err_need:"Vui lòng nhập tài khoản và mật khẩu", login_err_fail:"Đăng nhập thất bại", login_err_net:"Không thể kết nối máy chủ. Vui lòng khởi động backend trước.",
+    login_err_need:"Vui lòng nhập tài khoản và mật khẩu", login_err_fail:"Đăng nhập thất bại", login_err_net:"Không thể kết nối máy chủ. Vui lòng khởi động backend trước.", login_err_timeout:"Đăng nhập quá thời gian, vui lòng kiểm tra mạng và thử lại.",
     login_fp_btn:"🔒 Đăng nhập vân tay", login_footer:"Hệ thống AGI-CRM",
     wonTitle:"Dự Án Thắng", won_province:"Tỉnh", won_doc_equip:"Hợp đồng thiết bị", won_doc_install:"Hợp đồng lắp đặt", btnAddWon:"+ Thắng Mới", btnExportExcel:"📊 Xuất Excel", btnSave:"Lưu", btnCancel:"Hủy", btnEdit:"Sửa", btnDelete:"Xóa", btnMove:"Di chuyển dòng này lên hoặc xuống", btnMoveUp:"Lên", btnMoveDown:"Xuống", confirmDelTitle:"Xác nhận xóa", confirmDel:"Xóa dự án này?", btnConfirm:"Xác nhận", btnCancel:"Hủy", saveOk:"Đã lưu", pending:"Chờ phê duyệt", fillAll:"Vui lòng điền đủ thông tin", noData:"Không có dữ liệu", hiddenColumns:"Cột đã ẩn:", cur_col_toggle:"Bấm để hiện/ẩn cột tiền tệ này (giữ ít nhất một)",
     contract_no:"Số hợp đồng", customer_name:"Tên khách hàng", signing_date:"Ngày ký", parties:"Các bên ký kết", currency:"Loại tiền tệ", contract_rate:"Tỷ giá HĐ", incoterms:"Incoterms", include_install:"Có bao gồm lắp đặt?",
@@ -9548,7 +9556,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.10.26.01 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.10.29.05 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -9568,7 +9576,7 @@ function setLangDebug(lang) {
   } catch(e) {}
 
   // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
-  //  - V2026.10.26.01：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //  - V2026.10.29.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
   //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
   //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
   //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
@@ -9651,7 +9659,7 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
-  // ★ V2026.10.26.01 新要求：切语言只刷新【当前激活的表格标签】，
+  // ★ V2026.10.29.05 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
   var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
@@ -9972,6 +9980,7 @@ window.LG = (function () {
      每次 freezeTopbar 成功后拍一张快照；applyTopbarLang 结束时调用 verify()，
      逐项比对宽/高，任何变化都 console.error 并挂到 window.__LG_GEOM_FAILED。 */
   var _snap = null;
+  var _snapLang = '';   // ★LG-LANG-CHANGE-ONLY-20261027：快照对应的语言
   function rectOf(el) {
     var b = el.getBoundingClientRect();
     return [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)];
@@ -9979,7 +9988,9 @@ window.LG = (function () {
   function snapshot() {
     var s = [];
     var top = document.getElementById('topbar');
-    if (top) s.push(['topbar'].concat(rectOf(top)));
+    // ★LG-LOGIN-SAFE-20261027：登录页顶栏是 display:none，此时绝不能把 0×0
+    //   写进几何快照，否则随后切语言会把 0 与登录后的真实宽度比较 → 误报违规。
+    if (top && isShown(top)) s.push(['topbar'].concat(rectOf(top)));
     var items = document.querySelectorAll('#tbMenu .tb-item');
     for (var i = 0; i < items.length; i++) {
       if (!isShown(items[i])) continue;
@@ -9991,13 +10002,23 @@ window.LG = (function () {
       s.push(['rt:' + (right[j].id || j)].concat(rectOf(right[j])));
     }
     _snap = s;
+    _snapLang = (typeof CUR_LANG !== 'undefined') ? CUR_LANG : '';
     return s;
   }
   function verify() {
     if (!_snap) return [];
+    // ★LG-LANG-CHANGE-ONLY-20261027：只有【语言真的切换过】才比对几何。
+    //   冷启动、登录后用户名回填、字体加载都会让顶栏重新排版（实测 topbar 87→108px、
+    //   用户胶囊 306→360px），这不是"切语言把盒子撑变形"，旧逻辑一律报违规刷屏。
+    var _curLang = (typeof CUR_LANG !== 'undefined') ? CUR_LANG : '';
+    if (_snapLang === _curLang) { snapshot(); return []; }
     var bad = [];
     var top = document.getElementById('topbar');
-    var items = [['topbar', top]];
+    // ★LG-LOGIN-SAFE-20261027：顶栏不可见（登录页/已登出）直接跳过几何校验。
+    //   旧逻辑会把隐藏后的 0 宽度与登录态快照比对，误报「违反 LANG-GEOMETRY-LOCK」。
+    if (!top || !isShown(top)) return [];
+    var items = [];
+    if (isShown(top)) items.push(['topbar', top]);
     var nav = document.querySelectorAll('#tbMenu .tb-item');
     for (var i = 0; i < nav.length; i++) {
       if (isShown(nav[i])) items.push(['tb:' + (nav[i].getAttribute('data-view') || i), nav[i]]);
@@ -10006,12 +10027,26 @@ window.LG = (function () {
     for (var j = 0; j < right.length; j++) {
       if (right[j].getClientRects().length) items.push(['rt:' + (right[j].id || j), right[j]]);
     }
+    // ★LG-NAVSET-RESET-20261027：登录/登出、切换账号、权限变化都会增减导航项或右侧控件，
+    //   顶栏本来就要重新排版。此时必须重建几何基准，否则会把「导航项增减引起的位移」
+    //   误报成「切语言违规」（典型：登录页快照 vs 登录后快照）。
+    var curNames = items.map(function (p) { return p[0]; }).sort().join('|');
+    var oldNames = _snap.map(function (p) { return p[0]; }).sort().join('|');
+    if (curNames !== oldNames) {
+      snapshot();
+      window.__LG_GEOM_FAILED = null;
+      return [];
+    }
     for (var k = 0; k < _snap.length; k++) {
       var name = _snap[k][0], want = _snap[k].slice(1), el = null;
       for (var m = 0; m < items.length; m++) { if (items[m][0] === name) { el = items[m][1]; break; } }
       if (!el) continue;
       var got = rectOf(el);
-      for (var d = 0; d < 4; d++) {
+      // ★LG-WH-ONLY-20261027：只比【宽/高】(rect[2]/[3])，不比 x/y。
+      //   顶栏左侧 Logo、右侧按钮区在登录/加载过程中宽度会变化，导致整排元素
+      //   整体位移 10~40px —— 这不是「切语言把盒子撑变形」，是正常排版重排，
+      //   旧代码连 x 一起比就会在冷启动时误报 LANG-GEOMETRY-LOCK 违规。
+      for (var d = 2; d < 4; d++) {
         if (Math.abs(got[d] - want[d]) > 0) {
           bad.push(name + '[' + d + '] ' + want[d] + '→' + got[d]);
           break;
@@ -14966,7 +15001,10 @@ function _renderUserModal(uid, copyFrom, src){
     document.getElementById("f-position").value=u?u.position:'';
     document.getElementById("f-status").value=u?u.active:1;
   }else{
-    _title.innerText = t.user_modal_title_edit || '新增用户';
+    // ★USER-ADD-TITLE-20261027：新增模式的标题必须用 user_modal_title_add（新增用户）。
+    //   旧代码误用 user_modal_title_edit → 「+ 新增用户」打开后标题显示「编辑用户权限」，
+    //   与切语言后（10924 行用 add）不一致，用户会以为点进了编辑。
+    _title.innerText = t.user_modal_title_add || '新增用户';
     ["f-name","f-login"].forEach(i=>document.getElementById(i).value="");
     document.getElementById("f-position").value="";document.getElementById("f-status").value=1;
   }
@@ -15140,7 +15178,7 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.10.26.01（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.10.29.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
@@ -16120,11 +16158,20 @@ function openApprovalDetail(id){
     (x.resolved_at ? '<div class="appr-field"><div class="appr-field-label"><span class="ic">⏱️</span>'+(t.appr_resolved_at||'审批时间')+'</div><div class="appr-field-value">'+escapeHtml(x.resolved_at)+'</div></div>' : '')+
     (canResolve ? '<div class="appr-actions"><button class="appr-btn approve" onclick="resolveApproval('+x.id+',\'approve\')">'+(t.appr_approve||'通过')+'</button>'+
       '<button class="appr-btn reject" onclick="resolveApproval('+x.id+',\'reject\')">'+(t.appr_reject||'拒绝')+'</button></div>' : '');
-  document.getElementById('apprDrawer').classList.add('open');
+  var _drw = document.getElementById('apprDrawer');
+  // ★APPR-DRAWER-FIX-20261027：抽屉初始带 class="hidden"（全局 .hidden{display:none!important}），
+  //   旧代码只 add('open') 不摘 hidden → 遮罩变暗但抽屉永远不出现，用户以为「点了没反应」。
+  if (_drw) _drw.classList.remove('hidden');
+  if (_drw) _drw.classList.add('open');
   document.getElementById('apprDrawerMask').classList.add('show');
 }
 function closeApprovalDetail(){
-  document.getElementById('apprDrawer').classList.remove('open');
+  var _drw = document.getElementById('apprDrawer');
+  if (_drw) {
+    _drw.classList.remove('open');
+    // 关闭后补回 hidden，保证下次靠 open 动画滑入而不是瞬间闪现
+    setTimeout(function(){ if (_drw && !_drw.classList.contains('open')) _drw.classList.add('hidden'); }, 320);
+  }
   document.getElementById('apprDrawerMask').classList.remove('show');
 }
 function switchApprovalScope(scope){
@@ -19640,7 +19687,7 @@ function ptBlur(srcLang){
 }
 window.ptBlur = ptBlur;
 
-// ⛔ 已锁定 —— 三语输入逻辑（V2026.10.26.01）：
+// ⛔ 已锁定 —— 三语输入逻辑（V2026.10.29.05）：
 // 默认三个输入框全部锁死；点击“清空三语”后仅当前系统语言框可输入；
 // 输入后自动翻译并填充另外两语，翻译结果必须按语言标签落入对应框。
 // 未经用户 Tom 明确同意禁止修改。
@@ -23256,11 +23303,15 @@ var dashLoading = false;
 // 看板/概况图表通用格式化函数（必须放在主脚本块，避免后续 <script> 块加载前回调已触发）
 function _ovNum(v){ v=parseFloat(v); return isFinite(v)?v:0; }
 function _ovFmt(n, decimals){
-  n = (n||0);
+  n = _ovNum(n);
   if (decimals === undefined || decimals === null) {
     var cur = (typeof dashCur !== 'undefined' && dashCur) ? dashCur : 'RMB';
     decimals = (cur === 'VND') ? 0 : 2;
   }
+  // ★BIG-NO-DECIMAL-20261029★ 绝对值 ≥ 10,000 的数值一律不显示小数位（取整）。
+  //   用户口径：10,000 以上再带 ".00" 没意义，只会挤占图表宽度。
+  //   1 万以下保持原小数位（USD/RMB 2 位、VND 0 位），小额精度不丢。
+  if (Math.abs(n) >= 10000) decimals = 0;
   return n.toLocaleString(undefined, {minimumFractionDigits: decimals, maximumFractionDigits: decimals});
 }
 function _ovMoneyShort(v, sym){
@@ -23397,6 +23448,9 @@ function loadDashboard(force) {
   // 个人佣金/审批 等其它标签页时绝不刷新看板数据，省 D1 读取行。
   // 看板数据只在“转到看板”时（switchView('dashboard') 经 needReloadView 门控）才更新。
   if (window.currentView !== 'dashboard') return;
+  // ★DASH-AUTH-GUARD-20261027：已登出（authUser 为空）时不再发看板请求。
+  //   旧行为：登出后切语言会重渲染看板 → 带空身份请求 /api/dashboard-stats → 401 红字。
+  if (typeof authUser === 'undefined' || !authUser) return;
 
   // 进入看板视图时，默认强制刷新数据（force 无参时视为 true），避免使用旧缓存。
   // 原因：DEMO clear/reset 后数据库已清空，但 localStorage 里仍可能有旧数据；
@@ -23407,7 +23461,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.10.26.01 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.10.29.05 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -23773,7 +23827,7 @@ function _renderCrmAggChart(bid, list){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.10.26.01）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.10.29.05）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -25174,6 +25228,21 @@ function _getLivestockCountryName(countriesMeta, code) {
 }
 
 function renderDashLivestockCharts() {
+  // ★CHART-LAZY-GUARD-20261027：Chart.js 是按需懒加载的（/vendor/chart.umd.min.js）。
+  //   看板首帧/切语言会在库到位之前就调用本函数，旧代码直接 new Chart →
+  //   ReferenceError: Chart is not defined，畜牧图表空白且控制台报红。
+  //   这里先确认库已就绪，没有就挂一次性回调，加载完再画。
+  if (typeof Chart === 'undefined') {
+    if (window.__dashLivestockWaiting) return;      // 已经在等，避免重复排队
+    window.__dashLivestockWaiting = true;
+    var _retry = function () {
+      window.__dashLivestockWaiting = false;
+      if (typeof renderDashLivestockCharts === 'function') renderDashLivestockCharts();
+    };
+    if (typeof _ovLoadChartLib === 'function') { try { _ovLoadChartLib(_retry); return; } catch (e) {} }
+    setTimeout(_retry, 1200);   // 兜底：库可能已经在上一次回调里注册插件
+    return;
+  }
   // i18n: 同步 section/标题（三语）
   var t = (typeof I18N !== 'undefined' && I18N[CUR_LANG]) ? I18N[CUR_LANG] : {};
   var L = function(k, d) { return t[k] || d; };
@@ -25266,8 +25335,10 @@ function renderDashLivestockCharts() {
                       var v = ctx.parsed.y;
                       if (v == null) return ctx.dataset.label + ': -';
                       // 货币小数位：USD/RMB 保留 1 位，VND 不保留（取整）
-                      var formatted = (typeof v.toFixed === 'function')
-                        ? (cur === 'VND' ? Math.round(v) : v.toFixed(1))
+                      // ★MONEY-THOUSANDS-20261029★ 价格（元/公斤、₫/kg）也是金额口径，
+                      //   大额本币价（如 85000₫/kg）同样要带千位分隔符。
+                      var formatted = (typeof v === 'number' && isFinite(v))
+                        ? _ovFmt(v, cur === 'VND' ? 0 : 1)
                         : v;
                       return ctx.dataset.label + ': ' + sym + ' ' + formatted + (unit ? ' ' + unit : '');
                     }
@@ -25914,12 +25985,29 @@ function doLogin() {
   var tk = (typeof T === 'function') ? T() : I18N.en;
   if (!user || !pwd) { errEl.textContent = tk.login_err_need || 'Please enter username and password'; return; }
   btn.disabled = true; errEl.textContent = '';
+  // ★LOGIN-BTN-WATCHDOG-20261028：网络"半断"（请求既不返回也不报错）时，
+  //   旧代码会把登录按钮永久置灰 —— 用户只能杀掉 APP 重开，看起来像"登不进去"。
+  //   加 15 秒看门狗：只要还没结果就恢复按钮并给出可读提示。
+  var _loginDone = false;
+  var _loginWd = setTimeout(function () {
+    if (_loginDone) return;
+    _loginDone = true;
+    if (btn) btn.disabled = false;
+    if (errEl && !errEl.textContent) {
+      errEl.textContent = tk.login_err_timeout || '登录超时，请检查网络后重试';
+    }
+  }, 15000);
+  function _loginReset() {
+    _loginDone = true;
+    try { clearTimeout(_loginWd); } catch (e) {}
+    if (btn) btn.disabled = false;
+  }
   fetch(API_BASE + '/api/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username: user, password: pwd })
   }).then(function(r){ return r.json(); }).then(function(d){
-    btn.disabled = false;
+    _loginReset();
     if (d.ok) {
       authUser = d.user;
       // 登录后的附属操作（记住密码、写 sessionStorage 等）不得阻塞主界面显示；
@@ -25982,7 +26070,7 @@ function doLogin() {
         : (d.error || (tk.login_err_fail || 'Login failed'));
     }
   }).catch(function(){
-    btn.disabled = false;
+    _loginReset();
     errEl.textContent = tk.login_err_net || 'Cannot connect to server. Please start the backend first.';
   });
 }
@@ -28583,11 +28671,13 @@ var _ovDataLabelPlugin = {
         if(isRate) {
           label = (v).toLocaleString(undefined,{minimumFractionDigits:0, maximumFractionDigits:prec});
         } else if(isMoney) {
+          // ★MONEY-THOUSANDS-20261029★ 金额标签一律带千位分隔符。
+          //   旧代码 decimals>0 走 v.toFixed(decimals) → "3941851.55"（没有逗号），
+          //   只有 VND（decimals=0）那条分支才走 _ovFmt 带逗号，所以 RMB/USD 下金额全裸奔。
+          //   现在统一走 _ovFmt（内部 toLocaleString），小数位口径保持不变。
           if (useFull) {
-            // full 模式：优先使用 dataset 指定的小数位（ovPrecision）
             var decimals = (dataset.ovPrecision !== undefined) ? dataset.ovPrecision : (useDecimals ? 2 : 0);
-            var numStr = (decimals > 0) ? v.toFixed(decimals) : _ovFmt(Math.round(v), 0);
-            label = dsSym + numStr;
+            label = dsSym + _ovFmt(_ovNum(v), decimals);
           } else {
             label = _ovMoneyShort(v, dsSym);
           }
@@ -28618,15 +28708,26 @@ var _ovDataLabelPlugin = {
       });
     });
     
-    // 第二遍：绘制标签，智能处理重叠
+    // 第二遍：先算最终位置（含错行避让），再统一绘制
+    // ★LABEL-STAGGER-20261029★ 相邻柱子金额标签互相压住时的「错行显示」。
+    //   旧逻辑只处理「同一个 index 内多数据集」的重叠（奇偶上下错开），
+    //   管不了「隔壁柱子」——每根柱子都是独立的 index，一旦标签比柱宽还宽
+    //   （加了千位符后更宽），左右邻居就必然叠在一起。
+    //   现在加一层全局碰撞检测：按 x 从左到右依次落位，若与已放好的标签矩形相撞，
+    //   就依次尝试「上移一行 / 下移一行 / 上移两行 / 下移两行」，取第一个不撞且不越界的位置。
+    var rowH = fs + 6;          // 行距略大于字高，错行后两行之间留出空隙
+    var placedBoxes = [];
+    var hasRect = function(a, b){
+      return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
+    };
+    var drawQueue = [];
+
     Object.keys(labelInfoMap).forEach(function(idx){
       var items = labelInfoMap[idx];
       var hasOverlap = items.length > 1;
-      
+
       // 检测是否真的有重叠（数值太接近）
       if(hasOverlap){
-        var allY = items.map(function(item){ return item.bar.y; });
-        var minY = Math.min.apply(null, allY);
         var maxLabelHeight = fs + 3; // 标签高度随字号缩放
         var tooClose = false;
         for(var i=0;i<items.length;i++){
@@ -28640,20 +28741,11 @@ var _ovDataLabelPlugin = {
         }
         hasOverlap = tooClose;
       }
-      
+
       items.forEach(function(info){
         var dataset = info.dataset;
         var bar = info.bar;
-        var label = info.label;
-        var tw = info.tw;
-        var bw = info.bw;
         var forceH = dataset.ovHorizontal || ovOpts.horizontal;
-
-        ctx.save();
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.font = 'bold ' + fs + 'px Segoe UI, sans-serif';
-        ctx.fillStyle = '#333';
 
         // 计算基础Y位置
         var baseY = bar.y - 6;
@@ -28672,31 +28764,73 @@ var _ovDataLabelPlugin = {
           baseY = bar.y + 10;  // 偶数索引标签放在点下方
         }
 
-        // 检查标签是否会超出图表顶部（与标题/图例重叠）
-        var chartAreaTop = chart.chartArea.top;
-        var labelHeight = fs + 3;
-        var minY = chartAreaTop + labelHeight;
-
-        if(baseY < minY){
-          if(hasOverlap && items.length > 1){
-            baseY = bar.y - 6 + 8;
-          } else if(ovOpts.alternate){
-            baseY = bar.y + 10;  // 交错模式下放下方
-          } else {
-            baseY = minY;
-          }
-        }
-
-        if(tw <= bw + 2 || forceH){
-          ctx.fillText(label, bar.x, baseY);
-        } else {
-          ctx.translate(bar.x, baseY);
-          ctx.rotate(-Math.PI/2);
-          ctx.textAlign='left';
-          ctx.fillText(label, 0, 0);
-        }
-        ctx.restore();
+        drawQueue.push({ info: info, baseY: baseY, forceH: forceH });
       });
+    });
+
+    // 按 x 从左到右落位（同一 x 先放上面那根），保证错行结果稳定、可复现
+    drawQueue.sort(function(a, b){
+      if (Math.abs(a.info.bar.x - b.info.bar.x) > 0.5) return a.info.bar.x - b.info.bar.x;
+      return a.baseY - b.baseY;
+    });
+
+    var areaTop = chart.chartArea ? chart.chartArea.top : 0;
+    var labelH = fs + 4;
+    // 优先往上错行：往上始终在柱体外的空白处，读起来比压在柱子上更清楚；
+    // 只有顶到绘图区上边界才往下（offsets 末尾两项）。
+    var offsets = [0, -1, -2, 1, 2];   // 行偏移（单位：行高）
+
+    drawQueue.forEach(function(d){
+      var info = d.info;
+      var label = info.label;
+      var tw = info.tw;
+      var bw = info.bw;
+      // 竖排（标签比柱宽宽很多时转 -90° 绘制）不参与错行，按原位置画，占位用窄盒
+      d.rotated = (tw > bw + 2 && !d.forceH);
+
+      if (d.rotated) {
+        d.finalY = d.baseY;
+        placedBoxes.push({ x: info.bar.x - labelH / 2, y: d.baseY - tw, w: labelH, h: tw });
+        return;
+      }
+
+      var w = tw + 2;
+      var best = null;
+      for (var c = 0; c < offsets.length; c++) {
+        var y = d.baseY + offsets[c] * rowH;
+        var box = { x: info.bar.x - w / 2, y: y - labelH, w: w, h: labelH };
+        if (box.y < areaTop + 1) continue;          // 顶到绘图区外，换下一个候选
+        var hit = false;
+        for (var k = 0; k < placedBoxes.length; k++) {
+          if (hasRect(box, placedBoxes[k])) { hit = true; break; }
+        }
+        if (!hit) { best = { y: y, box: box }; break; }
+      }
+      // 五个候选都被占：退回最后一行的位置（宁可略挤，也不能把标签丢掉）
+      if (!best) {
+        var yLast = d.baseY + offsets[offsets.length - 1] * rowH;
+        best = { y: yLast, box: { x: info.bar.x - w / 2, y: yLast - labelH, w: w, h: labelH } };
+      }
+      d.finalY = best.y;
+      placedBoxes.push(best.box);
+    });
+
+    drawQueue.forEach(function(d){
+      var info = d.info;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.font = 'bold ' + fs + 'px Segoe UI, sans-serif';
+      ctx.fillStyle = '#333';
+      if (d.rotated) {
+        ctx.translate(info.bar.x, d.finalY);
+        ctx.rotate(-Math.PI/2);
+        ctx.textAlign = 'left';
+        ctx.fillText(info.label, 0, 0);
+      } else {
+        ctx.fillText(info.label, info.bar.x, d.finalY);
+      }
+      ctx.restore();
     });
   }
 };
@@ -28851,6 +28985,48 @@ function _dashChartLibReady(fn){
   }catch(e){}
   return true;
 }
+/* ★MONEY-TOOLTIP-20261029★ 金额数据集的 tooltip 也必须带千位分隔符。
+   Chart.js 默认 tooltip 是把裸数字拼进去的（"金额: 3941851.55"），
+   看板上悬停柱子看到的就是没有逗号的金额。
+   这里在图表创建前统一给「金额」数据集包一层 label 回调：
+     · 只接管金额数据集（有 ovSymbol / ovFull，且不是 count / rate）
+     · 项目数(ovUnit:'count')、汇率(ovUnit:'rate') 保持原样，绝不加分隔符
+     · 图表自己写了 tooltip.callbacks.label 的，非金额数据集仍走它自己的回调 */
+function _ovIsMoneyDataset(ds){
+  if(!ds) return false;
+  if(ds.ovUnit === 'count' || ds.ovUnit === 'rate') return false;
+  return !!(ds.ovSymbol || ds.ovFull || (ds.ovUnit && ds.ovUnit !== 'count' && ds.ovUnit !== 'rate'));
+}
+function _ovPatchMoneyTooltip(cfg){
+  try{
+    if(!cfg || !cfg.data || !cfg.options) return;
+    var hasMoney = false;
+    (cfg.data.datasets || []).forEach(function(d){ if(_ovIsMoneyDataset(d)) hasMoney = true; });
+    if(!hasMoney) return;
+    var plugins = cfg.options.plugins = (cfg.options.plugins || {});
+    var tip = plugins.tooltip = (plugins.tooltip || {});
+    var cbs = tip.callbacks = (tip.callbacks || {});
+    var prevLabel = cbs.label;
+    cbs.label = function(ctx){
+      var ds = (ctx && ctx.dataset) || {};
+      if(!_ovIsMoneyDataset(ds)){
+        return prevLabel ? prevLabel.call(this, ctx) : undefined;
+      }
+      var p = ctx.parsed;
+      var raw = (p && typeof p === 'object')
+        ? (p.y !== undefined ? p.y : (p.x !== undefined ? p.x : p.r))
+        : p;
+      if(typeof raw !== 'number' || !isFinite(raw)){
+        return prevLabel ? prevLabel.call(this, ctx) : undefined;
+      }
+      var sym = ds.ovSymbol || '';
+      var dec = (ds.ovPrecision !== undefined) ? ds.ovPrecision
+              : ((typeof dashCur !== 'undefined' && dashCur === 'VND') ? 0 : 2);
+      var txt = sym + _ovFmt(raw, dec);
+      return (ds.label ? (ds.label + ': ') : '') + txt;
+    };
+  }catch(e){}
+}
 function _ovMakeChart(canvasId, cfg){
   var c = document.getElementById(canvasId);
   if(!c) return null;
@@ -28863,6 +29039,7 @@ function _ovMakeChart(canvasId, cfg){
   
   try{
     _ovRegisterPlugins();
+    _ovPatchMoneyTooltip(cfg);   // ★MONEY-TOOLTIP-20261029★ 金额 tooltip 千位分隔符
     var chart = new Chart(c.getContext('2d'), cfg);
     c.chart = chart;  // 便于放大弹窗读取原图配置
     if(typeof _crmOvCharts !== 'undefined') {
@@ -32681,7 +32858,22 @@ function _doExportOverviewPDF(){
       if (vis('vaultConfirm')) return true;    // 确认弹窗
       if (vis('vaultOverlay')) return true;    // 私密空间（子目录回上一级 / 根目录关闭）
       if (vis('vaultPinModal')) return true;   // PIN 弹窗
-      if (vis('crmModal')) return true;        // CRM 编辑弹窗
+      // ★BACK-CRMMODAL-VIS-20261028：crmModal 靠 display:none 隐藏，没有 .hidden 类，
+      //   用 vis() 判断会永远为真 → 原生一直以为"还能返回"，提示语也随之错乱。
+      var cmv = document.getElementById('crmModal');
+      if (cmv && cmv.getClientRects().length && getComputedStyle(cmv).display !== 'none') return true;   // CRM 编辑弹窗
+      // ★BACK-LAYERS-20261028：与 __handleBack 的层级保持一致。
+      //   否则用户关掉弹窗后原生仍认为"无处可退"，立刻弹「再按一次返回后台」提示，
+      //   看起来像按了两次返回就莫名退出。
+      var ovc = document.getElementById('crmOrangeConfirmOverlay');
+      if (ovc && ovc.style.display !== 'none' && ovc.style.display !== '') return true;
+      var umask = document.getElementById('mask');
+      if (umask && umask.classList.contains('show')) return true;
+      if (document.querySelector('.modal.show, .modal.open')) return true;
+      var drw = document.getElementById('apprDrawer');
+      if (drw && drw.classList.contains('open')) return true;
+      if (window.currentView && window.currentView !== 'dashboard' &&
+          (typeof viewAllowed !== 'function' || viewAllowed('dashboard'))) return true;
     } catch (e) {}
     return false;
   }
@@ -32736,9 +32928,41 @@ function _doExportOverviewPDF(){
       }
       var pm = document.getElementById('vaultPinModal');
       if (pm && pm.classList && !pm.classList.contains('hidden')) { closeVaultPin(); return true; }
+      // ★BACK-CRMMODAL-VIS-20261028：crmModal 是用 display:none 隐藏的，
+      //   类名只有 modal-overlay、从来不加 .hidden。旧判断
+      //   `!classList.contains('hidden')` 永远为真 → 每次返回键都在这里 return true，
+      //   后面的所有层级（用户弹窗/审批抽屉/回看板）根本没机会执行，
+      //   表现就是"按返回键毫无反应，连按两次直接退到后台"。
       var cm = document.getElementById('crmModal');
-      if (cm && cm.classList && !cm.classList.contains('hidden')) {
+      if (cm && cm.getClientRects().length && getComputedStyle(cm).display !== 'none') {
         if (typeof window.closeCrmModal === 'function') { window.closeCrmModal(); return true; }
+      }
+      // ★BACK-LAYERS-20261028：返回键的通用层级（原来只认私密空间 + CRM 弹窗，
+      //   用户页弹窗 / 审批详情抽屉 / 橙色确认框按下毫无反应，
+      //   用户只能连按两次直接退到后台，误以为"卡死"）。
+      //   顺序：确认框 → 普通弹窗 → 审批抽屉 → 子视图回看板。
+      var ovc = document.getElementById('crmOrangeConfirmOverlay');
+      if (ovc && ovc.style.display !== 'none' && ovc.style.display !== '') {
+        var cbtn = document.getElementById('crmOrangeConfirmCancel');
+        if (cbtn) { cbtn.click(); return true; }
+      }
+      // 用户/权限弹窗挂在 #mask（class="modal-mask show"）上，必须用 closeModal()
+      // 摘掉 show；closeAllModals() 并不包含它（只处理导出确认/概况等独立弹窗）。
+      var umask = document.getElementById('mask');
+      if (umask && umask.classList.contains('show')) {
+        if (typeof closeModal === 'function') { closeModal(); return true; }
+      }
+      if (document.querySelector('.modal.show, .modal.open')) {
+        if (typeof closeAllModals === 'function') { closeAllModals(); return true; }
+      }
+      var drw = document.getElementById('apprDrawer');
+      if (drw && drw.classList && drw.classList.contains('open')) {
+        if (typeof closeApprovalDetail === 'function') { closeApprovalDetail(); return true; }
+      }
+      if (window.currentView && window.currentView !== 'dashboard' &&
+          (typeof viewAllowed !== 'function' || viewAllowed('dashboard'))) {
+        switchView('dashboard');
+        return true;
       }
     } catch (err) { return false; }
     return false;
@@ -32814,7 +33038,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.10.26.01 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.10.29.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };

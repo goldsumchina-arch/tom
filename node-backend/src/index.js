@@ -655,6 +655,13 @@ export default {
       "/api/login", "/api/logout", "/api/session", "/api/me",
       "/api/change-password", "/api/health", "/api/tables",
       "/api/perm-version", "/api/translate",
+      // ★FORGET-PWD-PUBLIC-20261027：忘记密码必须免登录——
+      //   用户点「忘记密码」时本来就没登录，旧版本不在白名单里，
+      //   会被下面的会话闸门直接 401「未登录或会话已过期，请重新登录」，
+      //   导致这个功能在最需要它的场景完全不可用。
+      //   安全性与 change-password 同级：只写一条 PWD-FORGET 审批单，
+      //   真正改密码必须由审批人（默认 tom）通过后才执行。
+      "/api/forget-password",
       // 看板价格/汇率数据只读，不涉敏感信息，允许未登录时直接读取（避免登录页/会话恢复前的 401）
       "/api/metal-prices", "/api/feed-prices", "/api/livestock-prices",
       "/api/livestock-farmgate", "/api/fx-rates", "/api/livestock-retail-raw",

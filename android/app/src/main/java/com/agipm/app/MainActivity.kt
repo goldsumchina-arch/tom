@@ -108,7 +108,57 @@ class MainActivity : AppCompatActivity() {
         //   仅当 index.html 等网页内容真正变更时才递增。
         // v98：切语言几何冻结（LANG-GEOMETRY-LOCK-20261026）——顶栏/表格列宽/表单标签
         //      改为按三语最长文案一次性定宽，切语言不再闪动。
-        private const val WEB_VERSION = 98
+        // v99（2026-10-27）：网页侧连续 5 次改动，必须清缓存让手机端拉到新页面——
+        //      ① 顶栏导航一排不闪跳（TOPBAR-NOJUMP）
+        //      ② 看板图表性能 + 看板价格数据新鲜度角标（DASH-CHART-PERF / DASH-ASOF）
+        //      ③ 操作列按钮单行 + 列宽收紧（ACTION-ROW-ONELINE）
+        //      ④ CRM 区去掉 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE）
+        //      ⑤ 网页版本 V2026.10.27.03
+        // v100（2026-10-27）：E2E 全流程验收后修的 6 处缺陷，网页内容变更 → 必须清缓存——
+        //      ① 忘记密码在未登录时被 401 挡住（后端白名单缺 /api/forget-password）
+        //      ② 审批详情抽屉永远不显示（.hidden 未摘，只 add open）
+        //      ③ 新增用户弹窗标题错用「编辑用户权限」
+        //      ④ 登录页切语言误报 LANG-GEOMETRY-LOCK 违规（顶栏隐藏时仍比对几何）
+        //      ⑤ 登录/切账号后导航增减被误报几何违规（基准未重建）
+        //      ⑥ 登出后仍请求 /api/dashboard-stats → 401 红字
+        //      ⑦ 网页版本 V2026.10.27.05
+        // v101（2026-10-27）：二次复验又修 2 处 ——
+        //      ① 畜牧价格图表在 Chart.js 懒加载完成前就 new Chart → ReferenceError 空白
+        //      ② 冷启动时 LANG-GEOMETRY-LOCK 仍误报（比了 x/y，应只比宽/高）
+        //      ③ 网页版本 V2026.10.27.06
+        // v102（2026-10-28）：★"装新 APK 还是旧页面"的真正根因——
+        //      ① APK 内置快照 assets/site/index.html 从来没被更新过（一直停在 .03），
+        //         而 handleSite() 清缓存后优先返回内置快照 → 首帧必然是旧页面。
+        //         已在 build_apk.py 里加 [2/5] 步骤：每次打包自动把 node-backend/dist
+        //         同步进 assets/site（连带跑 build_dist 保证版本号同步）。
+        //      ② 注入移动端样式的 IIFE 在 document.head 还没生成时调用 appendChild 抛
+        //         红字异常，导致整段样式（含暗门载体保护）根本没注进去。
+        //      ③ LANG-GEOMETRY-LOCK 自检改为「只在语言真的切换过时才比对」。
+        //      ④ 网页版本 V2026.10.27.07
+        // v103（2026-10-28）：返回键补齐层级（BACK-LAYERS-20261028）——
+        //      用户页弹窗 / 审批详情抽屉 / 橙色确认框原先按返回键毫无反应，
+        //      必须连按两次直接退到后台；现在逐层消费，最后才退看板。
+        //      ⑤ 网页版本 V2026.10.28.01
+        // v104：用户弹窗挂在 #mask 上，closeAllModals() 并不管它 → 返回键改用 closeModal()。
+        //      ⑥ 网页版本 V2026.10.28.02
+        // v105：根因——#crmModal 用 display:none 隐藏且没有 .hidden 类，
+        //      旧判断 `!contains('hidden')` 恒真 → 返回键永远在第一层 return true，
+        //      后面的弹窗/抽屉/回看板全部执行不到。⑦ 网页版本 V2026.10.28.03
+        // v106：登录按钮加 15 秒看门狗（网络半断时按钮会永久置灰，只能杀进程重开）。
+        //      ⑧ 网页版本 V2026.10.28.04
+        // v107（2026-10-29）：看板金额加千位分隔符（MONEY-THOUSANDS-20261029）——
+        //      ① 柱顶金额标签 full 模式原来走 v.toFixed() → RMB/USD 下没有逗号
+        //      ② 图表 tooltip 金额原来直接拼裸数字
+        //      ③ 畜禽价格 tooltip 同步
+        //      ④ 网页版本 V2026.10.29.01
+        // v108：金额口径再调 —— 绝对值 ≥ 10,000 一律不显示小数位（BIG-NO-DECIMAL-20261029）。
+        //      ⑤ 网页版本 V2026.10.29.02
+        // v109：柱状图金额标签「错行显示」（LABEL-STAGGER-20261029）——
+        //      相邻柱子标签相撞时自动上/下移一行，不再互相压住。⑥ 网页版本 V2026.10.29.03
+        // v110：错行策略定稿（优先往上、行距放大到字高+6、最多上下两行）。⑦ 网页版本 V2026.10.29.04
+        // v111：看板 6 张统计卡内容居中 + 鼠标悬停变淡粉色（DASH-CARD-CENTER/PINK-20261029）。
+        //      ⑧ 网页版本 V2026.10.29.05
+        private const val WEB_VERSION = 111
 
         private const val PREFS_NAME = "agipm_prefs"
         private const val KEY_LAST_WEB_VERSION = "last_web_version"
@@ -876,12 +926,24 @@ class MainActivity : AppCompatActivity() {
             return
         }
         val quoted = org.json.JSONObject.quote(css)
+        // ★STYLE-INJECT-HEADNULL-20261028：onPageStarted 时 document.head 可能还不存在，
+        //   旧代码直接 document.head.appendChild(s) 会抛
+        //   "Cannot read properties of null (reading 'appendChild')"，
+        //   后果是整个 IIFE 中断 → 移动端样式根本没注进去（暗门载体保护也一起没了）。
+        //   现在改为：能注入立刻注入，否则等 DOMContentLoaded 再注入，并带重试兜底。
         val injectJs = "(function(){" +
+            "var n=0;" +
+            "function put(){" +
             "if(document.getElementById('agi-pm-mobile-css'))return;" +
+            "var h=document.head||document.documentElement;" +
+            "if(!h){if(n++<40){setTimeout(put,50);}return;}" +
             "var s=document.createElement('style');" +
             "s.id='agi-pm-mobile-css';" +
             "s.textContent=$quoted;" +
-            "document.head.appendChild(s);" +
+            "h.appendChild(s);" +
+            "}" +
+            "if(document.head){put();}" +
+            "else{document.addEventListener('DOMContentLoaded',put,{once:true});setTimeout(put,300);}" +
             "})()"
         webView.evaluateJavascript(injectJs, null)
 
