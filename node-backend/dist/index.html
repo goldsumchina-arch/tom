@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.10.29.05：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.10.30.01：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
 <!-- ==================== 同源后端地址（腾讯云版） ====================
@@ -385,13 +385,13 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.10.29.05 - 看板 CRM 区移除 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE-20261027） -->
-  <title>签约项目 · AGI-CRM v2026.10.29.05</title>
+  <!-- 版本号：V2026.10.30.01 - 看板 CRM 区移除 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE-20261027） -->
+  <title>签约项目 · AGI-CRM v2026.10.30.01</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 同源前端 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20261029.05';
+    window._DASH_VER = '20261030.01';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -998,20 +998,20 @@ function _ovLoadChartLib(cb){
       resize: both;
     }
     @keyframes cpPop { from{transform:translateY(20px);opacity:0;} to{transform:none;opacity:1;} }
-    .cp-head { display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:linear-gradient(135deg,#F5872E,#f08c2f);color:#fff;flex-shrink:0;cursor:move; }
-    .cp-head h2 { margin:0;font-size:17px;font-weight:700; }
+    .cp-head { display:flex;align-items:center;justify-content:space-between;padding:12px 22px;background:linear-gradient(135deg,#E53935,#E53935);color:#fff;flex-shrink:0;cursor:move; }
+    .cp-head h2 { margin:0;font-size:13.2px;font-weight:700; }
     .cp-head .cp-close { background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;padding:0 4px; }
     .cp-head .cp-close:hover { opacity:.8; }
     .cp-body { padding:16px 22px;flex:1;overflow-y:auto;overflow-x:hidden; }
     .cp-sec { margin-bottom:16px; }
-    .cp-sec-title { font-size:13px;font-weight:700;color:#F5872E;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #f0f0f0;display:flex;align-items:center;gap:6px; }
-    .cp-sec-title::before { content:"";width:4px;height:14px;background:#F5872E;border-radius:3px; }
+    .cp-sec-title { font-size:13px;font-weight:700;color:#E53935;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #f0f0f0;display:flex;align-items:center;gap:6px; }
+    .cp-sec-title::before { content:"";width:4px;height:14px;background:#E53935;border-radius:3px; }
     .cp-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:10px; }
     .cp-grid-2 { display:grid;grid-template-columns:repeat(2,1fr);gap:10px; }
     .cp-field { display:flex;flex-direction:column;gap:3px; }
     .cp-field label { font-size:11px;color:#666;font-weight:600; }
     .cp-field input, .cp-field select { border:1px solid #ddd;border-radius:6px;padding:6px 8px;font-size:12px;color:#333;background:#fff;transition:border .15s; }
-    .cp-field input:focus, .cp-field select:focus { outline:none;border-color:#F5872E;box-shadow:0 0 0 3px rgba(245,135,46,.15); }
+    .cp-field input:focus, .cp-field select:focus { outline:none;border-color:#E53935;box-shadow:0 0 0 3px rgba(211,47,47,.15); }
     .cp-cur-group { display:grid;grid-template-columns:repeat(3,1fr);gap:6px; }
     .cp-cur-box { display:flex;flex-direction:column;gap:2px;border:1px solid #ddd;border-radius:8px;padding:6px 8px; }
     .cp-cur-box[data-cur="rmb"] { background:#fde7ef;border-color:#f8c9db; }
@@ -1028,11 +1028,11 @@ function _ovLoadChartLib(cb){
     .cp-table-wrap { width:100%;overflow-x:auto; }
     .cp-table { min-width:1100px;border-collapse:collapse;font-size:11.5px; }
     .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:4px 6px;vertical-align:middle;white-space:nowrap; }
-    .cp-table thead th { background:#fff5ec;color:#F5872E;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1;
+    .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1;
       white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
     .cp-table tbody tr:nth-child(even) td { background:#fdf8f1; }
     /* 固定前3列：序号、款项类别、用途说明 */
-    .cp-table th:nth-child(1), .cp-table td:nth-child(1) { position:sticky;left:0;z-index:2;background:#fff5ec;min-width:36px;max-width:36px; }
+    .cp-table th:nth-child(1), .cp-table td:nth-child(1) { position:sticky;left:0;z-index:2;background:#FDECEA;min-width:36px;max-width:36px; }
     .cp-table th:nth-child(2), .cp-table td:nth-child(2) { position:sticky;left:36px;z-index:2;background:#fff;min-width:120px; }
     .cp-table tbody tr:nth-child(even) td:nth-child(2) { background:#fdf8f1; }
     .cp-table th:nth-child(3), .cp-table td:nth-child(3) { position:sticky;left:156px;z-index:2;background:#fff;min-width:140px; }
@@ -1041,17 +1041,17 @@ function _ovLoadChartLib(cb){
     .cp-table th:nth-child(2) { z-index:3; }
     .cp-table th:nth-child(3) { z-index:3; }
     .cp-table select, .cp-table input { width:100%;min-width:80px;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px; }
-    .cp-table select:focus, .cp-table input:focus { outline:none;border-color:#F5872E; }
-    .cp-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#fff5ec;color:#F5872E;border:1px solid #f0c8a8;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer; }
-    .cp-add-btn:hover { background:#F5872E;color:#fff; }
+    .cp-table select:focus, .cp-table input:focus { outline:none;border-color:#E53935; }
+    .cp-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#FDECEA;color:#E53935;border:1px solid #f0c8a8;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer; }
+    .cp-add-btn:hover { background:#E53935;color:#fff; }
     .cp-sum { display:flex;justify-content:flex-end;gap:16px;margin-top:8px;font-size:12px;color:#666;flex-wrap:wrap; }
     .cp-sum b { color:#333; }
     .cp-foot { display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 22px;border-top:1px solid #eee;background:#fdfaf5;flex-shrink:0; }
     .cp-foot-right { display:flex;gap:8px; }
     .cp-btn { font-size:12px;font-weight:600;padding:8px 18px;border-radius:8px;cursor:pointer;border:none; }
     .cp-btn-cancel { background:#fff;color:#888;border:1px solid #ddd; }
-    .cp-btn-cancel:hover { color:#F5872E;border-color:#F5872E; }
-    .cp-btn-save { background:linear-gradient(135deg,#F5872E,#f08c2f);color:#fff;box-shadow:0 4px 12px rgba(245,135,46,.3); }
+    .cp-btn-cancel:hover { color:#E53935;border-color:#E53935; }
+    .cp-btn-save { background:linear-gradient(135deg,#E53935,#E53935);color:#fff;box-shadow:0 4px 12px rgba(211,47,47,.3); }
     .cp-btn-save:hover { filter:brightness(1.05); }
 
     /* 拉升提示 */
@@ -1078,7 +1078,7 @@ function _ovLoadChartLib(cb){
 }
 .cp-date-input-wrapper input:focus {
   outline:none;
-  border-color:#F5872E;
+  border-color:#E53935;
 }
 .cp-date-input-wrapper input:disabled {
   background:#f0f0f0;
@@ -1091,38 +1091,38 @@ function _ovLoadChartLib(cb){
     .cp-cal-popup { position:fixed;z-index:30000;width:240px;background:#fff;border:1px solid #f0c8a8;border-radius:10px;box-shadow:0 12px 30px rgba(40,30,15,.25);padding:10px 12px;font-size:12px;display:none; }
     .cp-cal-popup.show { display:block; }
     .cp-cal-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:6px; }
-    .cp-cal-head button { width:24px;height:24px;border:none;background:#fff5ec;color:#F5872E;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center; }
-    .cp-cal-head button:hover { background:#F5872E;color:#fff; }
-    .cp-cal-title { font-weight:700;color:#F5872E;font-size:12px; }
+    .cp-cal-head button { width:24px;height:24px;border:none;background:#FDECEA;color:#E53935;border-radius:5px;cursor:pointer;font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center; }
+    .cp-cal-head button:hover { background:#E53935;color:#fff; }
+    .cp-cal-title { font-weight:700;color:#E53935;font-size:12px; }
     .cp-cal-close { width:24px;height:24px;border:none;background:none;color:#999;font-size:17px;line-height:1;cursor:pointer;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;padding:0; }
     .cp-cal-close:hover { background:#fde8e8;color:#e74c3c; }
     .cp-cal-week { display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px; }
     .cp-cal-week span { text-align:center;font-size:10px;color:#999;font-weight:700;padding:2px 0; }
     .cp-cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px; }
     .cp-cal-grid button { width:100%;aspect-ratio:1/1;border:none;background:transparent;font-size:11px;color:#333;border-radius:5px;cursor:pointer;padding:0; }
-    .cp-cal-grid button:hover:not(.empty):not(.selected) { background:#fff5ec;color:#F5872E; }
+    .cp-cal-grid button:hover:not(.empty):not(.selected) { background:#FDECEA;color:#E53935; }
     .cp-cal-grid button.empty { visibility:hidden; }
-    .cp-cal-grid button.today { box-shadow:inset 0 0 0 1.5px #F5872E;color:#F5872E;font-weight:700; }
-    .cp-cal-grid button.selected { background:#F5872E;color:#fff;font-weight:700; }
+    .cp-cal-grid button.today { box-shadow:inset 0 0 0 1.5px #E53935;color:#E53935;font-weight:700; }
+    .cp-cal-grid button.selected { background:#E53935;color:#fff;font-weight:700; }
     .cp-cal-foot { display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:6px;padding-top:5px;border-top:1px dashed #eee; }
     .cp-cal-foot .cp-cal-fmt { font-size:9.5px;color:#bbb; }
-    .cp-cal-foot .cp-cal-today { border:1px solid #F5872E;background:#fff;color:#F5872E;font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer; }
-    .cp-cal-foot .cp-cal-today:hover { background:#F5872E;color:#fff; }
+    .cp-cal-foot .cp-cal-today { border:1px solid #E53935;background:#fff;color:#E53935;font-size:10px;padding:3px 8px;border-radius:5px;cursor:pointer; }
+    .cp-cal-foot .cp-cal-today:hover { background:#E53935;color:#fff; }
     .cp-cal-foot .cp-cal-clear { border:none;background:none;color:#999;font-size:10px;cursor:pointer;padding:2px 5px;border-radius:4px; }
     .cp-cal-foot .cp-cal-clear:hover { background:#fde8e8;color:#e74c3c; }
 
   /* ===== 智能报告模态框 ===== */
   .cpr-overlay{position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(30,30,50,.45);display:none;align-items:flex-start;justify-content:center;z-index:1100;padding:10px 12px 30px 12px;overflow-y:auto;}
   .cpr-overlay.show{display:flex;}
-  .cpr-box{background:#fff;width:100%;max-width:1000px;border-radius:14px;box-shadow:0 12px 40px rgba(232,114,12,.22);overflow:hidden;animation:pop .25s ease;}
-  .cpr-head{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;background:linear-gradient(135deg,#e8720c,#f08c2f);color:#fff;}
-  .cpr-head h3{margin:0;font-size:17px;font-weight:700;}
-  .cpr-head .cpr-meta{font-size:11px;opacity:.9;margin-top:3px;}
+  .cpr-box{background:#fff;width:100%;max-width:1000px;border-radius:14px;box-shadow:0 12px 40px rgba(211,47,47,.22);overflow:hidden;animation:pop .25s ease;}
+  .cpr-head{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;}
+  .cpr-head h3{margin:0;font-size:13.2px;font-weight:700;}
+  .cpr-head .cpr-meta{font-size:9px;opacity:.9;margin-top:3px;}
   .cpr-close{background:none;border:none;color:#fff;font-size:24px;cursor:pointer;line-height:1;transition:transform .15s;}
   .cpr-close:hover{transform:scale(1.2);}
   .cpr-body{padding:20px 24px;max-height:68vh;overflow-y:auto;}
   .cpr-sec{margin-bottom:16px;padding:14px 16px;border:1px solid #f3e0c8;border-radius:10px;background:#fdf8f1;}
-  .cpr-sec-title{font-size:13px;font-weight:700;color:#e8720c;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #fde8d0;display:flex;align-items:center;gap:6px;}
+  .cpr-sec-title{font-size:13px;font-weight:700;color:#D32F2F;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #FBE9E7;display:flex;align-items:center;gap:6px;}
   .cpr-row{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px dashed #f5e8d8;}
   .cpr-row:last-child{border-bottom:none;}
   .cpr-row .k{color:#8a7050;}
@@ -1131,20 +1131,20 @@ function _ovLoadChartLib(cb){
   .cpr-badge-yes{background:#e6f6ee;color:#27ae60;}
   .cpr-badge-no{background:#f2f2f2;color:#888;}
   .cpr-badge-warn{background:#fff3e0;color:#e67e22;}
-  .cpr-comp-bar{height:8px;background:#fde8d0;border-radius:4px;overflow:hidden;margin-top:6px;}
+  .cpr-comp-bar{height:8px;background:#FBE9E7;border-radius:4px;overflow:hidden;margin-top:6px;}
   .cpr-comp-fill{height:100%;border-radius:4px;transition:width .6s ease;}
   .cpr-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:8px;}
-  .cpr-table th{background:#fdf1e3;color:#c05a00;font-weight:700;padding:6px 8px;text-align:center;border:1px solid #f3d9b8;}
-  .cpr-table td{padding:5px 8px;border:1px solid #fdf1e3;text-align:center;white-space:nowrap;}
+  .cpr-table th{background:#FBE9E7;color:#B71C1C;font-weight:700;padding:6px 8px;text-align:center;border:1px solid #F0C4C4;}
+  .cpr-table td{padding:5px 8px;border:1px solid #FBE9E7;text-align:center;white-space:nowrap;}
   .cpr-table tr:nth-child(even) td{background:#fdf8f1;}
   .cpr-risk{background:#fff8f0;border:1px solid #f5d9b8;border-radius:8px;padding:10px 14px;font-size:12px;color:#8a5a2b;margin-top:8px;}
-  .cpr-risk b{color:#e8720c;}
-  .cpr-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-top:2px solid #fde8d0;background:#fdfaf5;}
+  .cpr-risk b{color:#D32F2F;}
+  .cpr-foot{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;border-top:2px solid #FBE9E7;background:#fdfaf5;}
   .cpr-foot-right{display:flex;gap:8px;}
   .cpr-btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
-  .cpr-btn-outline{background:#fff;color:#e8720c;border:1px solid #f3d9b8;}
-  .cpr-btn-outline:hover{background:#fdf1e3;color:#c05a00;border-color:#e8720c;}
-  .cpr-btn-print{background:linear-gradient(135deg,#e8720c,#f08c2f);color:#fff;box-shadow:0 3px 10px rgba(232,114,12,.3);}
+  .cpr-btn-outline{background:#fff;color:#D32F2F;border:1px solid #F0C4C4;}
+  .cpr-btn-outline:hover{background:#FBE9E7;color:#B71C1C;border-color:#D32F2F;}
+  .cpr-btn-print{background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;box-shadow:0 3px 10px rgba(211,47,47,.3);}
   .cpr-btn-print:hover{filter:brightness(1.06);transform:translateY(-1px);}
 
   /* ===== 报告内新增样式：甘特图 & 现金流预测 ===== */
@@ -1221,6 +1221,10 @@ function _ovLoadChartLib(cb){
     .btn-move:disabled { opacity:.3; cursor:not-allowed; transform:none; box-shadow:none; background:#FFF7F0; color:#F5872E; }
     /* ===== 操作列：纯图标按钮（编辑/删除/上移/下移） ===== */
     .won-actions { display:inline-flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; }
+    /* [ACTIONCOL-20261029] 潜在项目「操作」列：View/Edit/Delete/Move to Failed 四个文字按钮略微收紧，
+       只作用于 CRM 表（#crmTable），其他表格按钮尺寸不受影响。列宽由 LG 冻结模块按真实 padding 重算。 */
+    #crmTable .won-actions { gap:4px; }
+    #crmTable .won-actions .btn-sm { padding:5px 9px; font-size:12.5px; min-width:44px; }
     .icon-btn {
       width:28px; height:28px; padding:0; margin:0; line-height:1;
       display:inline-flex; align-items:center; justify-content:center;
@@ -1240,31 +1244,31 @@ function _ovLoadChartLib(cb){
     .cm-mask.show{display:flex;}
     .cm-modal{background:#fff;width:100%;max-width:900px;border-radius:12px;box-shadow:0 8px 30px rgba(200,120,30,.16);overflow:hidden;animation:cmPop .25s ease;}
     @keyframes cmPop{from{transform:translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
-    .cm-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;background:linear-gradient(135deg,#e8720c,#f08c2f);color:#fff;}
-    .cm-head h2{margin:0;font-size:18px;font-weight:700;display:flex;align-items:center;gap:10px;}
-    .cm-head .cm-sub{font-size:12px;opacity:.85;font-weight:400;}
+    .cm-head{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;}
+    .cm-head h2{margin:0;font-size:13.2px;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .cm-head .cm-sub{font-size:10px;opacity:.85;font-weight:400;}
     .cm-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;}
     .cm-body{padding:22px 24px;max-height:72vh;overflow-y:auto;}
     .cm-sec{margin-bottom:22px;}
-    .cm-sec-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#e8720c;margin:0 0 12px;text-transform:uppercase;letter-spacing:.5px;}
-    .cm-sec-title::before{content:"";width:4px;height:16px;background:#e8720c;border-radius:3px;}
+    .cm-sec-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#D32F2F;margin:0 0 12px;text-transform:uppercase;letter-spacing:.5px;}
+    .cm-sec-title::before{content:"";width:4px;height:16px;background:#D32F2F;border-radius:3px;}
     .cm-grid{display:grid;gap:12px;}
     .cm-g3{grid-template-columns:repeat(3,1fr);}
     .cm-g2{grid-template-columns:repeat(2,1fr);}
     .cm-field{display:flex;flex-direction:column;gap:4px;}
     .cm-field label{font-size:12px;color:#6b7088;font-weight:600;}
     .cm-field input,.cm-field select,.cm-field textarea{border:1px solid #e8d9c5;border-radius:8px;padding:8px 10px;font-size:13px;color:#2b2f4a;background:#fffdfb;transition:border .15s,box-shadow .15s;}
-    .cm-field input:focus,.cm-field select:focus,.cm-field textarea:focus{outline:none;border-color:#f08c2f;box-shadow:0 0 0 3px #fdf1e3;}
+    .cm-field input:focus,.cm-field select:focus,.cm-field textarea:focus{outline:none;border-color:#E53935;box-shadow:0 0 0 3px #FBE9E7;}
     .cm-field textarea{resize:vertical;min-height:60px;}
-    .cm-field input.cm-date{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e8720c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:30px;}
+    .cm-field input.cm-date{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23D32F2F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:30px;}
     .cm-warranty-toggle{display:flex;gap:8px;align-items:center;}
     .cm-warranty-toggle select{border:1px solid #e8d9c5;border-radius:8px;padding:7px 10px;font-size:13px;color:#2b2f4a;background:#fffdfb;}
-    .cm-warranty-toggle select:focus{outline:none;border-color:#f08c2f;box-shadow:0 0 0 3px #fdf1e3;}
+    .cm-warranty-toggle select:focus{outline:none;border-color:#E53935;box-shadow:0 0 0 3px #FBE9E7;}
     .cm-warranty-dates{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px;}
     .cm-currency-group{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
     .cm-curr-box{display:flex;flex-direction:column;gap:4px;border:1px solid #e8d9c5;border-radius:10px;padding:8px 10px;background:#fffdfb;transition:border .15s,box-shadow .15s;}
-    .cm-curr-box:focus-within{border-color:#f08c2f;box-shadow:0 0 0 3px #fdf1e3;}
-    .cm-curr-box .cm-curr-label{font-size:11px;font-weight:700;color:#e8720c;letter-spacing:.5px;text-align:center;background:#fdf1e3;border-radius:6px;padding:2px 0;}
+    .cm-curr-box:focus-within{border-color:#E53935;box-shadow:0 0 0 3px #FBE9E7;}
+    .cm-curr-box .cm-curr-label{font-size:11px;font-weight:700;color:#D32F2F;letter-spacing:.5px;text-align:center;background:#FBE9E7;border-radius:6px;padding:2px 0;}
     .cm-curr-box input{width:100%;border:none;background:transparent;font-size:14px;font-weight:600;color:#2b2f4a;padding:4px 2px;text-align:center;}
     .cm-curr-box input:focus{outline:none;}
     .cm-curr-box[data-cur="rmb"]{background:#fde7ef;border-color:#f3c1d3;}
@@ -1284,53 +1288,53 @@ function _ovLoadChartLib(cb){
     .cm-summary-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 12px;border:1px solid #e8d9c5;border-radius:9px;background:#fffdfb;}
     .cm-summary-row .cm-s-label{font-size:12.5px;color:#6b7088;font-weight:600;flex-shrink:0;}
     .cm-summary-row .cm-s-value{font-size:13px;font-weight:700;color:#2b2f4a;text-align:right;white-space:nowrap;}
-    .cm-summary-row.cm-hl{background:#fdf1e3;border-color:#f3cba0;}
-    .cm-summary-row.cm-hl .cm-s-label{color:#e8720c;}
-    .cm-summary-row.cm-hl .cm-s-value{color:#e8720c;}
+    .cm-summary-row.cm-hl{background:#FBE9E7;border-color:#f3cba0;}
+    .cm-summary-row.cm-hl .cm-s-label{color:#D32F2F;}
+    .cm-summary-row.cm-hl .cm-s-value{color:#D32F2F;}
     .cm-pay-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
     .cm-pay-table th,.cm-pay-table td{border:1px solid #e8d9c5;padding:6px;vertical-align:middle;}
-    .cm-pay-table thead th{background:#fdf1e3;color:#e8720c;font-weight:700;text-align:center;position:sticky;top:0;}
+    .cm-pay-table thead th{background:#FBE9E7;color:#D32F2F;font-weight:700;text-align:center;position:sticky;top:0;}
     .cm-pay-table td input,.cm-pay-table td select{width:auto;min-width:70px;border:1px solid transparent;background:transparent;font-size:12px;padding:4px;color:#2b2f4a;border-radius:5px;white-space:nowrap;}
-    .cm-pay-table td input:focus,.cm-pay-table td select:focus{border-color:#f08c2f;background:#fff;outline:none;}
+    .cm-pay-table td input:focus,.cm-pay-table td select:focus{border-color:#E53935;background:#fff;outline:none;}
     .cm-pay-table tbody tr:nth-child(even) td{background:#fdf8f1;}
     .cm-pay-table .cm-row-act{text-align:center;}
     .cm-icon-btn{border:none;background:none;cursor:pointer;font-size:15px;color:#6b7088;padding:2px 5px;border-radius:5px;}
-    .cm-icon-btn:hover{background:#fdf1e3;color:#e8720c;}
+    .cm-icon-btn:hover{background:#FBE9E7;color:#D32F2F;}
     .cm-icon-btn.cm-del:hover{background:#fde8e8;color:#e05a5a;}
-    .cm-add-row{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#fdf1e3;color:#e8720c;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
-    .cm-add-row:hover{background:#f08c2f;color:#fff;}
+    .cm-add-row{display:inline-flex;align-items:center;gap:6px;margin-top:8px;background:#FBE9E7;color:#D32F2F;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
+    .cm-add-row:hover{background:#E53935;color:#fff;}
     .cm-pay-sum{display:flex;justify-content:flex-end;gap:18px;margin-top:8px;font-size:12.5px;color:#6b7088;flex-wrap:wrap;}
     .cm-pay-sum b{color:#2b2f4a;}
     .cm-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 24px;border-top:1px solid #e8d9c5;background:#fdfaf5;flex-wrap:wrap;}
     .cm-foot .cm-foot-right{display:flex;gap:10px;}
     .cm-btn{font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;cursor:pointer;border:none;}
     .cm-btn-ghost{background:#fff;color:#6b7088;border:1px solid #e8d9c5;}
-    .cm-btn-ghost:hover{color:#e8720c;border-color:#f08c2f;}
-    .cm-btn-primary{background:linear-gradient(135deg,#e8720c,#f08c2f);color:#fff;box-shadow:0 4px 14px rgba(232,114,12,.3);}
+    .cm-btn-ghost:hover{color:#D32F2F;border-color:#E53935;}
+    .cm-btn-primary{background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;box-shadow:0 4px 14px rgba(211,47,47,.3);}
     .cm-btn-primary:hover{filter:brightness(1.05);}
-    .cm-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#e8720c,#f08c2f);color:#fff;padding:14px 26px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(232,114,12,.35);opacity:0;transition:opacity .25s,transform .25s;z-index:2500;text-align:center;max-width:80vw;line-height:1.5;}
+    .cm-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;padding:14px 26px;border-radius:10px;font-size:14px;font-weight:600;box-shadow:0 8px 30px rgba(211,47,47,.35);opacity:0;transition:opacity .25s,transform .25s;z-index:2500;text-align:center;max-width:80vw;line-height:1.5;}
     .cm-toast.show{opacity:1;transform:translate(-50%,-50%);}
     .cm-cal-popup{position:fixed;z-index:3000;width:248px;background:#fff;border:1px solid #e8d9c5;border-radius:12px;box-shadow:0 12px 30px rgba(40,30,15,.22);padding:10px 12px;font-size:12.5px;display:none;}
     .cm-cal-popup.show{display:block;}
     .cm-cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-    .cm-cal-head button{width:26px;height:26px;border:none;background:#fdf1e3;color:#e8720c;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
-    .cm-cal-head button:hover{background:#f08c2f;color:#fff;}
-    .cm-cal-head .cm-cal-title{font-weight:700;color:#F5872E;font-size:12.5px;}
+    .cm-cal-head button{width:26px;height:26px;border:none;background:#FBE9E7;color:#D32F2F;border-radius:6px;cursor:pointer;font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;}
+    .cm-cal-head button:hover{background:#E53935;color:#fff;}
+    .cm-cal-head .cm-cal-title{font-weight:700;color:#E53935;font-size:12.5px;}
     .cm-cal-close{width:26px;height:26px;border:none;background:none;color:#999;font-size:18px;line-height:1;cursor:pointer;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;padding:0;}
     .cm-cal-close:hover{background:#fde8e8;color:#e05a5a;}
     .cm-cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px;}
     .cm-cal-week span{text-align:center;font-size:10.5px;color:#6b7088;font-weight:700;padding:3px 0;}
     .cm-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
     .cm-cal-grid button{width:100%;aspect-ratio:1/1;border:none;background:transparent;font-size:11.5px;color:#2b2f4a;border-radius:6px;cursor:pointer;padding:0;}
-    .cm-cal-grid button:hover:not(.cm-empty){background:#fdf1e3;color:#e8720c;}
+    .cm-cal-grid button:hover:not(.cm-empty){background:#FBE9E7;color:#D32F2F;}
     .cm-cal-grid button.cm-empty{visibility:hidden;}
-    .cm-cal-grid button.cm-today{box-shadow:inset 0 0 0 1.5px #f08c2f;color:#e8720c;font-weight:700;}
-    .cm-cal-grid button.cm-selected{background:#e8720c;color:#fff;font-weight:700;}
-    .cm-cal-grid button.cm-selected:hover{background:#e8720c;color:#fff;}
+    .cm-cal-grid button.cm-today{box-shadow:inset 0 0 0 1.5px #E53935;color:#D32F2F;font-weight:700;}
+    .cm-cal-grid button.cm-selected{background:#D32F2F;color:#fff;font-weight:700;}
+    .cm-cal-grid button.cm-selected:hover{background:#D32F2F;color:#fff;}
     .cm-cal-foot{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:8px;padding-top:6px;border-top:1px dashed #e8d9c5;}
     .cm-cal-foot .cm-cal-fmt{font-size:10px;color:#b0a290;}
-    .cm-cal-foot .cm-cal-today{border:1px solid #f08c2f;background:#fff;color:#e8720c;font-size:10.5px;padding:3px 8px;border-radius:5px;cursor:pointer;}
-    .cm-cal-foot .cm-cal-today:hover{background:#f08c2f;color:#fff;}
+    .cm-cal-foot .cm-cal-today{border:1px solid #E53935;background:#fff;color:#D32F2F;font-size:10.5px;padding:3px 8px;border-radius:5px;cursor:pointer;}
+    .cm-cal-foot .cm-cal-today:hover{background:#E53935;color:#fff;}
     .cm-cal-foot .cm-cal-clear{border:none;background:none;color:#6b7088;font-size:11px;cursor:pointer;padding:2px 6px;border-radius:5px;}
     .cm-cal-foot .cm-cal-clear:hover{background:#fde8e8;color:#e05a5a;}
     @media(max-width:700px){.cm-g3,.cm-g2{grid-template-columns:1fr;}.cm-modal{max-width:100%;}}
@@ -1339,13 +1343,13 @@ function _ovLoadChartLib(cb){
     .gsr-overlay{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1100;justify-content:center;align-items:flex-start;padding:10px 12px 30px 12px;overflow-y:auto;}
     .gsr-overlay.show{display:flex;}
     .gsr-modal{background:white;border-radius:14px;width:900px;max-width:100%;box-shadow:0 10px 40px rgba(0,0,0,.28);overflow:hidden;}
-    .gsr-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;background:linear-gradient(135deg,#F5872E,#e07720);color:white;}
-    .gsr-head h2{font-size:16px;font-weight:700;}
-    .gsr-head .gsr-meta{font-size:11px;opacity:.92;}
+    .gsr-head{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(135deg,#E53935,#C62828);color:white;}
+    .gsr-head h2{font-size:13.2px;font-weight:700;}
+    .gsr-head .gsr-meta{font-size:9px;opacity:.92;}
     .gsr-close{background:none;border:none;color:white;font-size:22px;cursor:pointer;line-height:1;}
     .gsr-body{padding:16px 20px 22px;font-size:12px;color:#333;}
     .gsr-sec{margin-bottom:14px;padding:12px 14px;border:1px solid #f0e0d0;border-radius:9px;background:#fffdfb;}
-    .gsr-sec-title{font-size:13px;font-weight:700;color:#F5872E;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #f5e9d8;display:flex;align-items:center;gap:6px;}
+    .gsr-sec-title{font-size:13px;font-weight:700;color:#E53935;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #f5e9d8;display:flex;align-items:center;gap:6px;}
     .gsr-row{display:flex;gap:8px;margin-bottom:5px;flex-wrap:wrap;align-items:center;}
     .gsr-row .gsr-k{flex:0 0 150px;color:#777;font-size:11.5px;text-align:right;}
     .gsr-row .gsr-v{flex:1;font-weight:600;color:#2c3e50;}
@@ -1363,7 +1367,7 @@ function _ovLoadChartLib(cb){
     .gsr-tbl tbody tr:nth-child(even){background:#f7f9fc;}
     .gsr-tbl .amt{text-align:right;font-family:'Consolas',monospace;}
     .gsr-prog{height:10px;background:#eee;border-radius:5px;overflow:hidden;flex:1;margin:0 8px;}
-    .gsr-prog>div{height:100%;background:linear-gradient(90deg,#F5872E,#ffb05a);border-radius:5px;transition:width .4s;}
+    .gsr-prog>div{height:100%;background:linear-gradient(90deg,#E53935,#EF5350);border-radius:5px;transition:width .4s;}
     .gsr-completion{display:flex;align-items:center;gap:6px;}
     .gsr-gantt-wrap{overflow-x:auto;}
     .gsr-gantt{position:relative;min-width:560px;border-left:1px solid #ddd;border-bottom:1px solid #ddd;padding:4px 0 8px;}
@@ -1453,13 +1457,13 @@ function _ovLoadChartLib(cb){
   .addm-overlay.show { display:flex !important; }
   .addm-modal { background:white; border-radius:14px; width:100%; max-width:1100px; min-width:760px; height:88vh; min-height:420px; max-height:95vh; box-shadow:0 10px 40px rgba(0,0,0,.3); overflow:hidden; display:flex; flex-direction:column; animation:addmPop .25s ease; resize:both; position:relative; }
   @keyframes addmPop { from{transform:translateY(20px);opacity:0;} to{transform:none;opacity:1;} }
-  .addm-head { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #f0f0f0; }
-  .addm-head h3 { font-size:16px; color:#F5872E; margin:0; }
+  .addm-head { display:flex; justify-content:space-between; align-items:center; padding:7px 20px; border-bottom:1px solid #f0f0f0; }
+  .addm-head h3 { font-size:11px; color:#E53935; margin:0; }
   .addm-head .addm-close { background:none; border:none; font-size:22px; cursor:pointer; color:#999; }
   .addm-body { flex:1; overflow:auto; padding:16px 20px; }
   .addm-table { width:100%; border-collapse:collapse; font-size:11.5px; }
   .addm-table th, .addm-table td { border:1px solid #e5e5e5; padding:5px 6px; vertical-align:middle; text-align:center; }
-  .addm-table thead th { background:#fff5ec; color:#F5872E; font-weight:700; font-size:10.5px; position:sticky; top:0; z-index:2;
+  .addm-table thead th { background:#FDECEA; color:#E53935; font-weight:700; font-size:10.5px; position:sticky; top:0; z-index:2;
     white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示，禁止省略号 */
   .addm-table .ad-col-no { width:34px; }
   .addm-table .ad-col-date { width:200px; }
@@ -1468,8 +1472,8 @@ function _ovLoadChartLib(cb){
   .addm-table .ad-col-file { width:230px; }
   .addm-table .ad-col-cnt { width:60px; }
   .addm-table .ad-col-act { width:64px; }
-  .addm-table .ad-view-btn { background:#F5872E; color:#fff; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:10px; margin-left:4px; }
-  .addm-table .ad-view-btn:hover { background:#e07720; }
+  .addm-table .ad-view-btn { background:#E53935; color:#fff; border:none; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:10px; margin-left:4px; }
+  .addm-table .ad-view-btn:hover { background:#C62828; }
   /* 主页 P5"查看合同增补明细"列：仅一个橙色 🔍 图标按钮，居中不撑宽 */
   .ad-view-cell { text-align:center; white-space:nowrap; }
   .ad-view-btn { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; padding:0; border-radius:50%; background:#F5872E; color:#fff; border:none; cursor:pointer; font-size:14px; line-height:1; transition:background .15s; }
@@ -1478,12 +1482,12 @@ function _ovLoadChartLib(cb){
   .addm-sum-overlay { display:none; position:fixed; top:56px; left:0; right:0; bottom:0; background:rgba(40,30,15,.5); z-index:1100; justify-content:center; align-items:flex-start; padding:10px; overflow:hidden; }
   .addm-sum-overlay.show { display:flex; }
   .addm-sum-modal { background:white; border-radius:14px; width:760px; max-width:96vw; max-height:88vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,.3); animation:addmPop .25s ease; }
-  .addm-sum-head { display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid #f0f0f0; background:#fff5ec; }
-  .addm-sum-head h3 { font-size:16px; color:#F5872E; margin:0; }
+  .addm-sum-head { display:flex; justify-content:space-between; align-items:center; padding:7px 20px; border-bottom:1px solid #f0f0f0; background:#FDECEA; }
+  .addm-sum-head h3 { font-size:11px; color:#E53935; margin:0; }
   .addm-sum-body { flex:1; overflow:auto; padding:18px 22px; }
   .addm-sum-foot { display:flex; justify-content:flex-end; padding:12px 20px; border-top:1px solid #f0f0f0; }
-  .addm-sum-btn-close { padding:7px 22px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; background:#F5872E; color:white; box-shadow:0 2px 8px rgba(245,135,46,.35); }
-  .addm-sum-btn-close:hover { background:#e07720; }
+  .addm-sum-btn-close { padding:7px 22px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; background:#E53935; color:white; box-shadow:0 2px 8px rgba(211,47,47,.35); }
+  .addm-sum-btn-close:hover { background:#C62828; }
   .addm-table input[type="text"], .addm-table input[type="number"] { width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:4px; font-size:11.5px; }
   .addm-table input.ad-date { width:100%; padding:4px 6px; border:1px solid #ddd; border-radius:4px; font-size:11.5px; cursor:pointer; background:#fff; }
   .addm-table input.ad-amt { text-align:right; }
@@ -1494,22 +1498,22 @@ function _ovLoadChartLib(cb){
   .addm-foot .addm-hint { font-size:10.5px; color:#999; }
   .addm-foot .addm-actions { display:flex; gap:8px; }
   .addm-btn { padding:6px 16px; border:none; border-radius:6px; cursor:pointer; font-size:11.5px; font-weight:600; transition:all .15s; }
-  .addm-btn-primary { background:#F5872E; color:white; }
-  .addm-btn-primary:hover { background:#e07720; }
+  .addm-btn-primary { background:#E53935; color:white; }
+  .addm-btn-primary:hover { background:#C62828; }
   .addm-btn-outline { background:white; border:1px solid #ddd !important; color:#555; }
-  .addm-btn-outline:hover { border-color:#F5872E; color:#F5872E; }
+  .addm-btn-outline:hover { border-color:#E53935; color:#E53935; }
   .addm-btn-danger { background:#e74c3c; color:white; padding:4px 10px; font-size:10px; }
   .addm-btn-danger:hover { background:#c0392b; }
   /* ===== 橙色居中提示弹窗（补充协议专用，沿用 export-confirm 风格） ===== */
   .addm-alert-overlay { display:none; position:fixed; top:56px; left:0; right:0; bottom:0; background:rgba(0,0,0,.45); z-index:1100; justify-content:center; align-items:flex-start; padding:10px 12px 12px 12px; }
   .addm-alert-overlay.show { display:flex; }
   .addm-alert-box { background:white; border-radius:14px; padding:26px 26px 22px; width:340px; max-width:92vw; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.28); }
-  .addm-alert-box .aa-icon { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:13px; background:#F5872E; margin-bottom:12px; }
+  .addm-alert-box .aa-icon { display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:13px; background:#E53935; margin-bottom:12px; }
   .addm-alert-box .aa-icon svg { width:26px; height:26px; }
-  .addm-alert-box .aa-title { font-size:16px; font-weight:700; color:#F5872E; margin-bottom:8px; }
+  .addm-alert-box .aa-title { font-size:16px; font-weight:700; color:#E53935; margin-bottom:8px; }
   .addm-alert-box .aa-desc { font-size:12px; color:#888; margin-bottom:20px; line-height:1.5; }
-  .addm-alert-box .aa-btn { padding:7px 30px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; background:#F5872E; color:white; box-shadow:0 2px 8px rgba(245,135,46,.35); }
-  .addm-alert-box .aa-btn:hover { background:#e07720; }
+  .addm-alert-box .aa-btn { padding:7px 30px; border:none; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; background:#E53935; color:white; box-shadow:0 2px 8px rgba(211,47,47,.35); }
+  .addm-alert-box .aa-btn:hover { background:#C62828; }
   /* 销售人员设置模态框 */
 
 
@@ -1696,7 +1700,7 @@ function _ovLoadChartLib(cb){
     outline:none; pointer-events:auto; }
   #commCalPopup .cc-ym select:focus,
   .cp-cal-ym select:focus,
-  .cm-cal-ym select:focus { border-color:#F5872E; box-shadow:0 0 0 2px rgba(245,135,46,.15); }
+  .cm-cal-ym select:focus { border-color:#E53935; box-shadow:0 0 0 2px rgba(211,47,47,.15); }
   /* 统一：日历头部为可拖动橙色条 */
   .cp-cal-head, .cm-cal-head, #commCalPopup .cc-head { cursor:move; user-select:none; -webkit-user-select:none; }
   /* 统一：关闭/Today 按钮风格 */
@@ -2602,7 +2606,7 @@ function _ovLoadChartLib(cb){
   .pt-editor-box > .pt-title,
   .auth-modal > h3,
   .cp-head, .cm-head, .gsr-head, .cpr-head {
-    background: linear-gradient(135deg,#F5872E,#F79A46) !important;
+    background: linear-gradient(135deg,#E53935,#EF5350) !important;
     color: #fff !important;
   }
   /* 贴边：抵消各自盒体 padding（负 margin = 盒体 padding），顶部圆角与盒体一致 */
@@ -2645,6 +2649,81 @@ function _ovLoadChartLib(cb){
   .pt-editor-box .pt-close, .cm-head .cm-close, .cpr-head .cpr-close, .gsr-head .gsr-close { color:#fff !important; }
 .pt-editor-box .pt-close { position:absolute; top:7px; right:14px; font-size:22px; cursor:pointer; line-height:1; z-index:5; }
 .pt-editor-box .pt-close:hover { color:#ffe3c8 !important; }
+  /* ==================== [ZIMODAL-20261029] 标题栏「□ 最大化 / × 关闭」按钮 ====================
+     逐条移植自 vnchoicedouble 参考实现（该处为 FROZEN 铁律）：
+       · 两个按钮装入 .modal-actions 容器，锚定标题栏，top:50%+translateY(-50%) 自动垂直居中；
+       · 关闭按钮 right:16px、□ 最大化 right:48px，两者 26×26、间距 6px、同一水平线；
+       · 深色（红色）标题栏用白色按钮，浅色（补充协议）标题栏用深灰按钮。 */
+  .modal-actions { position:absolute; top:50%; transform:translateY(-50%); right:16px; z-index:10; display:inline-flex; align-items:center; gap:6px; height:26px; color:#fff; }
+  .modal-actions > .mmax-btn,
+  .modal-actions > .close,
+  .modal-actions > [class*="-close"] {
+    position:static !important; top:auto !important; right:auto !important; left:auto !important; bottom:auto !important; margin:0 !important;
+    width:26px !important; height:26px !important; display:flex !important; align-items:center !important; justify-content:center !important;
+    padding:0 !important; box-sizing:border-box !important; line-height:26px !important; cursor:pointer; background:none; border:none; border-radius:5px;
+  }
+  .modal-actions > .mmax-btn { font-size:16px; color:#fff; border:1px solid rgba(255,255,255,.7); }
+  .modal-actions > .close,
+  .modal-actions > [class*="-close"] { font-size:18px; color:#fff; }
+  .modal-actions > .mmax-btn:hover,
+  .modal-actions > .close:hover,
+  .modal-actions > [class*="-close"]:hover { background:rgba(255,255,255,.15); }
+  /* 浅色头部弹窗：关闭/最大化按钮用深灰色，避免看不见 */
+  .addm-head .modal-actions,
+  .addm-sum-head .modal-actions,
+  .addm-head .modal-actions > .mmax-btn,
+  .addm-sum-head .modal-actions > .mmax-btn,
+  .addm-head .modal-actions > .close,
+  .addm-sum-head .modal-actions > .close,
+  .addm-head .modal-actions > [class*="-close"],
+  .addm-sum-head .modal-actions > [class*="-close"] { color:#888; border-color:#bbb; }
+  .addm-head .modal-actions > .mmax-btn:hover,
+  .addm-sum-head .modal-actions > .mmax-btn:hover,
+  .addm-head .modal-actions > .close:hover,
+  .addm-sum-head .modal-actions > .close:hover,
+  .addm-head .modal-actions > [class*="-close"]:hover,
+  .addm-sum-head .modal-actions > [class*="-close"]:hover { color:#E53935; border-color:#E53935; }
+  /* 兜底：未被装入 .modal-actions 时，强制同一 top，消除“一高一低” */
+  .modal > .close,
+  .cust-pay-modal > .close, .cust-pay-modal .close,
+  .auth-modal .comm-close,
+  .cp-head .cp-close, .cm-head .cm-close, .gsr-head .gsr-close, .cpr-head .cpr-close,
+  .cpr-box .cpr-close, .cm-modal .cm-close, .gsr-modal .gsr-close, .cust-pay-modal .mmax-btn,
+  .cm-modal .mmax-btn, .gsr-modal .mmax-btn, .cpr-box .mmax-btn,
+  .detail-view-box > .dv-close, .pt-editor-box > .pt-close,
+  .addm-head .addm-close, .addm-sum-head .addm-sum-close,
+  .appr-drawer-head .appr-drawer-close, .rpt-head .rpt-close {
+    top:11px !important;
+  }
+  /* 直接挂在弹窗盒子上的 × / □（不放进标题栏，避免被标题 innerText 重写清掉）：
+     两者同为 26×26，同一水平线，right:16(×) / 48(□)，间距 6px */
+  .modal .close, .cust-pay-modal > .close, .cm-modal > .close, .gsr-modal > .close, .cpr-box > .close {
+    position:absolute; top:11px; right:16px; width:26px; height:26px; margin:0; padding:0;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+    font-size:18px; color:#fff !important; background:none; border:none; border-radius:5px;
+    z-index:11; cursor:pointer; float:none;
+  }
+  .modal .close:hover, .cust-pay-modal > .close:hover, .cm-modal > .close:hover,
+  .gsr-modal > .close:hover, .cpr-box > .close:hover { color:#ffe3c8 !important; background:rgba(255,255,255,.15); }
+  .mmax-btn { top:11px; right:48px; }
+  /* 所有含按钮的标题栏都作为定位上下文（否则 ×/□ 会相对整个弹窗定位，跑到弹窗中部） */
+  .cp-head, .cm-head, .cpr-head, .gsr-head, .addm-head, .addm-sum-head, .rpt-head, .appr-drawer-head,
+  .modal > h2, .modal-header, .auth-modal > h3, .dash-chart-lightbox-head { position:relative; }
+  .cp-head .cp-close, .cm-head .cm-close, .gsr-head .gsr-close, .cpr-head .cpr-close {
+    position:absolute; top:11px; right:16px; width:26px; height:26px; margin:0; padding:0;
+    display:inline-flex; align-items:center; justify-content:center; line-height:1; z-index:5;
+  }
+  .cust-pay-modal .mmax-btn, .cm-modal .mmax-btn, .gsr-modal .mmax-btn, .cpr-box .mmax-btn { top:11px; right:48px; }
+  .addm-head .addm-close, .addm-sum-head .addm-sum-close {
+    position:absolute; top:11px; right:16px; width:26px; height:26px; margin:0; padding:0;
+    display:inline-flex; align-items:center; justify-content:center; line-height:1; z-index:5;
+    background:none; border:none; border-radius:5px;
+  }
+  .addm-head .mmax-btn, .addm-sum-head .mmax-btn, .rpt-head .mmax-btn, .appr-drawer-head .mmax-btn { top:11px; right:48px; z-index:6; }
+  .addm-head .mmax-btn { color:#888; border-color:#bbb; }
+  .addm-head .mmax-btn:hover { color:#E53935; border-color:#E53935; }
+  .rpt-head .mmax-btn, .appr-drawer-head .mmax-btn { color:#fff; border-color:rgba(255,255,255,.7); }
+  .rpt-head .mmax-btn:hover, .appr-drawer-head .mmax-btn:hover { color:#ffe3c8; border-color:#ffe3c8; background:rgba(255,255,255,.15); }
   .auth-modal .login-field { margin-bottom: 13px; }
   .auth-modal .login-field label { font-size: 12px; }
   .auth-modal-btns { margin-top: 20px; display:flex; justify-content:flex-end; gap:12px; }
@@ -3023,7 +3102,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.29.05</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.30.01</span></div>
   </div>
 </div>
 
@@ -5317,8 +5396,8 @@ function _ovLoadChartLib(cb){
             <thead>
               <tr>
                 <th style="width:30px;" id="cpThNo">#</th>
-                <th id="cpThCat" style="background:#fff5ec;color:#F5872E;">款项类别</th>
-                <th id="cpThUsage" style="background:#fff5ec;color:#F5872E;">用途说明</th>
+                <th id="cpThCat" style="background:#FDECEA;color:#E53935;">款项类别</th>
+                <th id="cpThUsage" style="background:#FDECEA;color:#E53935;">用途说明</th>
                 <th style="width:50px;" id="cpThBg">BG?</th>
                 <th style="width:80px;" id="cpThBgParty">BG双方</th>
                 <th style="width:90px;" id="cpThBgStart">BG开始</th>
@@ -5349,7 +5428,7 @@ function _ovLoadChartLib(cb){
           <span id="cpSumPlanLabel">预计合计：</span><b id="cpSumPlan"></b>
           <span id="cpSumActualLabel">实际合计：</span><b id="cpSumActual"></b>
           <span id="cpSumBgLabel">BG合计：</span><b id="cpSumBg"></b>
-          <span style="color:#F5872E;font-weight:600;" id="cpSumWarrantyLabel">质保金合计：</span><b id="cpSumWarranty"></b>
+          <span style="color:#E53935;font-weight:600;" id="cpSumWarrantyLabel">质保金合计：</span><b id="cpSumWarranty"></b>
         </div>
       </div>
 
@@ -5445,8 +5524,8 @@ function _ovLoadChartLib(cb){
             <thead>
               <tr>
                 <th style="width:30px;" id="agiThNo">#</th>
-                <th id="agiThCat" style="background:#fff5ec;color:#F5872E;">款项类别</th>
-                <th id="agiThUsage" style="background:#fff5ec;color:#F5872E;">用途说明</th>
+                <th id="agiThCat" style="background:#FDECEA;color:#E53935;">款项类别</th>
+                <th id="agiThUsage" style="background:#FDECEA;color:#E53935;">用途说明</th>
                 <th style="width:50px;" id="agiThBg">BG?</th>
                 <th style="width:80px;" id="agiThBgParty">BG双方</th>
                 <th style="width:90px;" id="agiThBgStart">BG开始</th>
@@ -5477,7 +5556,7 @@ function _ovLoadChartLib(cb){
           <span id="agiSumPlanLabel">预计合计：</span><b id="agiSumPlan"></b>
           <span id="agiSumActualLabel">实际合计：</span><b id="agiSumActual"></b>
           <span id="agiSumBgLabel">BG合计：</span><b id="agiSumBg"></b>
-          <span style="color:#F5872E;font-weight:600;" id="agiSumWarrantyLabel">质保金合计：</span><b id="agiSumWarranty"></b>
+          <span style="color:#E53935;font-weight:600;" id="agiSumWarrantyLabel">质保金合计：</span><b id="agiSumWarranty"></b>
         </div>
       </div>
 
@@ -7877,7 +7956,11 @@ function sweepI18n(root) {
   }
 }
 window.sweepI18n = sweepI18n;
-function fmtMoney(n, c) { var v=Math.round(Number(n)||0); if(c==='RMB'||c==='rmb') return '¥'+v.toLocaleString('en-US'); if(c==='USD'||c==='usd') return '$'+v.toLocaleString('en-US'); if(c==='VND'||c==='vnd') return '₫'+v.toLocaleString('en-US'); return v.toLocaleString('en-US'); }
+/* 纯字符串千分位（不依赖 Intl/ICU）：大表渲染时 Number.toLocaleString 每次都会新建
+   Intl.NumberFormat，60 行 × 20+ 金额格 = 上千次，是切语言卡顿的主因之一。
+   输出与 toLocaleString('en-US') 完全一致（四舍五入整数 + 逗号千分位 + 负号在前）。 */
+function fmtThousands(v){ v=Math.round(Number(v)||0); var s=String(v); var neg=(s.charAt(0)==='-'); if(neg) s=s.slice(1); return (neg?'-':'') + s.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtMoney(n, c) { var v=Math.round(Number(n)||0); if(c==='RMB'||c==='rmb') return '¥'+fmtThousands(v); if(c==='USD'||c==='usd') return '$'+fmtThousands(v); if(c==='VND'||c==='vnd') return '₫'+fmtThousands(v); return fmtThousands(v); }
 function stripToNumber(str) { return parseInt(String(str||'').replace(/[^0-9-]/g,'')||'0',10); }
 
 // ===== 货币符号 → 纯数字 =====
@@ -9556,7 +9639,7 @@ function setLangDebug(lang) {
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.10.29.05 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.10.30.01 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -9576,7 +9659,7 @@ function setLangDebug(lang) {
   } catch(e) {}
 
   // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
-  //  - V2026.10.29.05：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //  - V2026.10.30.01：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
   //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
   //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
   //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
@@ -9659,7 +9742,7 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
-  // ★ V2026.10.29.05 新要求：切语言只刷新【当前激活的表格标签】，
+  // ★ V2026.10.30.01 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
   var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
@@ -10106,7 +10189,7 @@ window.LG = (function () {
   var LG = window.LG;
   if (!LG) return;
   var LANGS = ['zh', 'en', 'vi'];
-  var CACHE_KEY = 'lg_colw_v4_20261026';
+  var CACHE_KEY = 'lg_colw_v7_20261029';   /* [ROLLBACK-20261029] 必须换代：v6 缓存里存着自愈逻辑写入的异常列宽，不清掉表格仍是坏的 */
   var _cache = null, _rev = null, _seq = 0;
   var NUMFMT = /[↕↑↓▲▼⇅⇵⇈⇊\s\u00a0]+/g;
   // ★LANG-GEOMETRY-LOCK-20261026b★ 表头文案归一化必须把「排序/方向标记」剥干净。
@@ -10314,8 +10397,21 @@ window.LG = (function () {
           if ((elb.className || '').toString().indexOf('icon-btn') >= 0) {
             bw2 = 28;                                   // .icon-btn { width:28px }
           } else {
-            bw2 = tripleWidth(elb.textContent || '', bBtnFont) + 26;
-            if (bw2 < 48) bw2 = 48;                     // .btn-sm { min-width:48px }
+            /* [ACTIONCOL-20261029] 按按钮真实 padding/border/min-width 计算，不再写死 26/48：
+               这样只要改 CSS（如收紧 #crmTable 操作列按钮），列宽会自动跟着变窄，不会留空。 */
+            var bcs2 = null;
+            try { bcs2 = window.getComputedStyle(elb); } catch (e) {}
+            var bpad = 26, bmin = 48;
+            if (bcs2) {
+              bpad = (parseFloat(bcs2.paddingLeft) || 12) + (parseFloat(bcs2.paddingRight) || 12)
+                   + (parseFloat(bcs2.borderLeftWidth) || 1) + (parseFloat(bcs2.borderRightWidth) || 1);
+              if (bcs2.minWidth && bcs2.minWidth !== 'auto') {
+                var _mn = parseFloat(bcs2.minWidth);
+                if (!isNaN(_mn)) bmin = _mn;
+              }
+            }
+            bw2 = tripleWidth(elb.textContent || '', bBtnFont) + bpad;
+            if (bw2 < bmin) bw2 = bmin;                 // 不小于按钮自身 min-width
           }
           s += bw2 + (b > 0 ? bGap : 0);
         }
@@ -10332,6 +10428,9 @@ window.LG = (function () {
     return max;
   }
 
+  /* [ROLLBACK-20261029] 按钮列自愈（healButtonCols）已整段删除：
+     该逻辑会按溢出量改写列宽并落缓存，实测把失败项目的表格搞乱，回滚到原生冻结行为。 */
+
   function freezeTable(tbl) {
     if (!tbl || !tbl.tagName || tbl.tagName !== 'TABLE') return false;
     var hg = headerGrid(tbl);
@@ -10344,7 +10443,7 @@ window.LG = (function () {
     // 只有「宽度来自缓存」才算真冻好。若上次是按空表（只有表头）临时算的，
     // 数据行渲染出来后必须重算一次 —— 否则按钮列/长文本列会永久偏窄（越南语按钮被裁切）。
     if (tbl.__lgColsFrozen === hg.cols && tbl.__lgFromCache === true &&
-        cols.length === hg.cols && cols[0] && cols[0].style.width) return false;
+        cols.length === hg.cols && cols[0] && cols[0].style.width) return false;   /* [ROLLBACK-20261029] 已回滚按钮列自愈 */
 
     if (!cg) { cg = document.createElement('colgroup'); tbl.insertBefore(cg, tbl.firstChild); }
     if (cols.length !== hg.cols) {
@@ -15178,12 +15277,12 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.10.29.05（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.10.30.01（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-09-06-Z112";  // 版本标记：用于确认浏览器加载的是最新代码
+const PERM_BUILD = "build 2026-10-30-Z113";  // 版本标记：用于确认浏览器加载的是最新代码（Z113 = CRM/LOST 表头锁定 HEAD-LOCK-20261030）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -19687,7 +19786,7 @@ function ptBlur(srcLang){
 }
 window.ptBlur = ptBlur;
 
-// ⛔ 已锁定 —— 三语输入逻辑（V2026.10.29.05）：
+// ⛔ 已锁定 —— 三语输入逻辑（V2026.10.30.01）：
 // 默认三个输入框全部锁死；点击“清空三语”后仅当前系统语言框可输入；
 // 输入后自动翻译并填充另外两语，翻译结果必须按语言标签落入对应框。
 // 未经用户 Tom 明确同意禁止修改。
@@ -23461,7 +23560,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.10.29.05 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.10.30.01 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -23827,7 +23926,7 @@ function _renderCrmAggChart(bid, list){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.10.29.05）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.10.30.01）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -30908,30 +31007,24 @@ function _doExportOverviewPDF(){
         e.stopPropagation();
         window.toggleMaximize(box);
       });
-      // 优先把最大化按钮放到标题栏内，与关闭按钮真正并排；
       // 标题栏可能是 h2/h3 或 .modal-header/.cp-head/.cm-head 等。
-      var head = box.querySelector('h2, h3, .modal-header, .cp-head, .cm-head, .cpr-head, .gsr-head, .addm-head, .drawer-header, .appr-drawer-head, .rpt-head, .dash-chart-lightbox-head');
-      var closeInHead = head && head.querySelector('.close, .comm-close, .cp-close, .cm-close, .cpr-close, .gsr-close, .addm-close, .dv-close, .pt-close');
+      var head = box.querySelector('h2, h3, .modal-header, .cp-head, .cm-head, .cpr-head, .gsr-head, .addm-head, .addm-sum-head, .drawer-header, .appr-drawer-head, .rpt-head, .dash-chart-lightbox-head');
       if (head) {
-        if (closeInHead) {
-          // 如果标题栏已有 .modal-actions 容器，把最大化按钮放进去，
-          // 与关闭按钮真正在同一 flex 行内并排、垂直居中。
-          var actions = head.querySelector('.modal-actions');
-          if (actions) {
-            actions.insertBefore(btn, closeInHead);
-          } else {
-            head.insertBefore(btn, closeInHead);
-          }
-        } else {
-          // 关闭按钮在标题栏外时，把它挪进标题栏末尾，确保两个按钮并排
-          var closeInBox = box.querySelector('.close, .comm-close, .cp-close, .cm-close, .cpr-close, .gsr-close, .addm-close, .dv-close, .pt-close');
-          if (closeInBox) {
-            head.appendChild(closeInBox);
-            head.insertBefore(btn, closeInBox);
-          } else {
-            head.appendChild(btn);
-          }
+        /* [ZIMODAL-20261029-FIX] ⚠ 绝不能把按钮塞进标题栏内部：
+           本系统大量代码用 el('xxxTitle').innerText / innerHTML 重写标题（如 crmModalTitle），
+           一旦按钮被放进 <h2>，下次切换语言/重开弹窗时会被整体清掉，
+           表现就是"弹窗右上角根本没有 × 和 □"。
+           因此：按钮一律作为「弹窗盒子」的直接子元素，用绝对定位压在红色标题条上。 */
+        var closeSel = '.close, .comm-close, .cp-close, .cm-close, .cpr-close, .gsr-close, .addm-close, .addm-sum-close, .dv-close, .pt-close, .rpt-close, .appr-drawer-close';
+        var closeInBox = null;
+        var kids = box.children;
+        for (var ci = 0; ci < kids.length; ci++) {
+          if (kids[ci].matches && kids[ci].matches(closeSel)) { closeInBox = kids[ci]; break; }
         }
+        if (!closeInBox) closeInBox = box.querySelector(closeSel);
+        if (closeInBox && closeInBox.parentElement !== box) box.appendChild(closeInBox);
+        if (closeInBox) box.insertBefore(btn, closeInBox.nextSibling);
+        else box.appendChild(btn);
         return;
       }
       // 旧弹窗：插到关闭按钮左侧，保持视觉一致
@@ -33038,7 +33131,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.10.29.05 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.10.30.01 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };
