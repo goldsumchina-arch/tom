@@ -1,4 +1,4 @@
-﻿// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。LOST 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。LOST 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
 /* ============================================================
  * 失败项目（Lost）表格逻辑 —— 完整复刻 潜在项目(crm_table.js)
  * 列结构：CRM 48 列（0-46 相同）+ 失败原因(47) + 操作(48) = 49 列
@@ -151,7 +151,15 @@ function syncLostColVisibility() {
       if (vis === 0) th.classList.add('col-hidden');
       else { th.classList.remove('col-hidden'); th.colSpan = vis; th.classList.toggle('hdr-shrink', vis < g.c.length); }
       var b = th.querySelector('.won-col-toggle');
-      if (b) b.textContent = hidden[first] ? '[+]' : '[−]';
+      if (b) {
+        // ★ LOST-PATCH-TBODY-20261029：内容已一致时不碰 DOM（textContent= 会换掉文本节点）
+        var _bt = hidden[first] ? '[+]' : '[\u2212]';
+        if (b.textContent !== _bt) {
+          var _bo = (b.childNodes.length === 1) ? b.firstChild : null;
+          if (_bo && _bo.nodeType === 3) _bo.nodeValue = _bt;
+          else b.textContent = _bt;
+        }
+      }
     }
   });
   updateLostCollapsedBar();
@@ -437,8 +445,7 @@ function applyLostSort() {
     var list = lostSortState.slice();
     data.sort(function(a, b) { return lostCompareMulti(a, b, list); });
   }
-  var tb = document.getElementById('lostTbody');
-  if (tb) tb.innerHTML = renderLostData(data);
+  _lostSetTbodyHtml(renderLostData(data));
   // 兜底：渲染包装器已处理，但排序后再显式确保行内按钮按权限隐藏
   if (typeof applyLostRowPerms === 'function') applyLostRowPerms();
   updateLostSortIndicators();
@@ -518,9 +525,16 @@ function loadLost(isAuto) {
   if (btnOverview) btnOverview.innerText = t0.btnLostOverview || t0.btnCrmOverview;
   if (btnExport) btnExport.innerText = t0.btnExportLostExcel || t0.btnExportCrmExcel;
 
-  cg.innerHTML = buildLostColGroup();
-  th.innerHTML = renderLostThead();
-  injectLostToggleBtns();
+  // ★ HEAD-LOCK-20261030（复制签约项目 loadWon 的做法）：表头/colgroup 结构只建一次。
+  //   数据重载（保存后刷新 / 备注补翻重拉 / 切语言重取数）绝不再重建 thead，
+  //   已存在时只做【纯文字刷新】→ 一级/二级表头锁死不动，只有文字随语言变化。
+  if (!cg.children.length) cg.innerHTML = buildLostColGroup();
+  if (!th.children.length) {
+    th.innerHTML = renderLostThead();
+    injectLostToggleBtns();
+  } else if (typeof updateLostTheadTextOnly === 'function') {
+    updateLostTheadTextOnly();
+  }
   updateLostCollapsedBar();
   // thead 重建后立即按单一事实源恢复列可见性与组头 colspan（含无数据路径）
   if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
@@ -536,7 +550,7 @@ function loadLost(isAuto) {
         originalLostData = list.slice();
         globalLostData.forEach(function(row,i){ row.idx = i+1; });
         originalLostData.forEach(function(row,i){ row.idx = i+1; });
-        tb.innerHTML = renderLostData(globalLostData);
+        _lostSetTbodyHtml(renderLostData(globalLostData));   // ★ 复用二级表头行节点
       } else {
         tb.innerHTML = emptyRow;
       }
@@ -567,48 +581,69 @@ function applyLostRowPerms(){
 // ★ 100% 复刻 WON 的 applyWonLang 逻辑（与 crm_table.js 同步改造）：
 //   绝不重建 colgroup/thead 结构（纯文本更新），行重渲染仅在视图可见时进行，
 //   不可见时打轻标 _viewLangStale.lost 由 switchView 消费。
+// ★ 表头锁定 · HEAD-LOCK-20261030（用户要求：100% 复制「签约项目」的表头处理逻辑）
+//   与 crm_table.js 的 updateCrmTheadTextOnly() / index.html 签约项目的
+//   updateTheadTextOnly() 完全同构，三条不变量：
+//   ① 结构只建一次（首次进入视图 / loadLost）；② 每个 th 带 data-col 当定位锚点；
+//   ③ 切语言只做【纯文字替换】——绝不重建 th、绝不改 colspan/class 结构，
+//      折叠按钮(.won-col-toggle)、排序箭头(.sort-indicator)、sticky 层级、列宽全部原地保留。
+//   因此一级表头与二级表头在切语言时"锁死不动"，只有文字变化。
+//   ⛔ 不得把 th.innerHTML = renderLostThead() 改回切语言主路径。
+// 取（必要时就地补）th 内的文字容器 .th-label —— 只插入节点，不删除任何结构节点
+function _lostTheadLabelNode(thEl) {
+  var lab = thEl.querySelector('.th-label');
+  if (lab) return lab;
+  lab = document.createElement('span');
+  lab.className = 'th-label';
+  if (thEl.firstChild) thEl.insertBefore(lab, thEl.firstChild);
+  else thEl.appendChild(lab);
+  return lab;
+}
+// 原地改文字：单文本节点时只改 nodeValue（零结构变更）
+function _lostSetLabelText(node, txt) {
+  var only = (node.childNodes.length === 1) ? node.firstChild : null;
+  if (only && only.nodeType === 3) {
+    if (only.nodeValue !== txt) only.nodeValue = txt;
+    return;
+  }
+  if (node.textContent === txt) return;
+  while (node.firstChild) node.removeChild(node.firstChild);
+  node.appendChild(document.createTextNode(txt));
+}
+
 function updateLostTheadTextOnly() {
   var th = document.getElementById('lostThead');
   if (!th || typeof renderLostThead !== 'function') return;
   try {
-    // ================================================================
-    // ⛔ 已锁定实现 —— V2026.09.03.32/33（Z51/Z52）验证通过，禁止修改
-    //    （与 crm_table.js 同构，两处必须保持一致）
-    // ================================================================
-    // ★ 自愈守卫（与 crm_table.js 同步）：表头损坏（无 th[data-col] 节点）→ 完整重建。
-    //   根因背景：HTML 初始 <thead id="lostThead"> 为空，V21 改"文本级更新"后
-    //   【首次进入视图】0 匹配不建表头 → 空白彩条；本守卫为该场景兜底修复。
-    //   日志分级：tbody 有数据行但表头没了 = 真损坏（warn）；thead 尚未初始化（首次
-    //   进入视图，HTML 初始 <thead> 为空）= 正常路径（info），非错误。
-    if (!th.querySelector('th[data-col]')) {
-      var _tbGuard = document.getElementById('lostTbody');
-      var _rowsGuard = _tbGuard ? _tbGuard.querySelectorAll('tr.won-data-row').length : 0;
-      if (_rowsGuard > 0) {
-        console.warn('[lost-lang] thead DAMAGED (' + _rowsGuard + ' rows but no header) -> full rebuild');
-      } else {
+    // 唯一允许建结构的场景：thead 完全空白（首次进入视图，HTML 初始 <thead> 为空）。
+    if (!th.children.length) {
       console.warn('[lost-lang] thead first-time init (empty on view entry) -> build');
-      }
       th.innerHTML = renderLostThead();
       if (typeof injectLostToggleBtns === 'function') injectLostToggleBtns();
       if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
       return;
     }
-    var tmp = document.createElement('thead');
-    tmp.innerHTML = renderLostThead();
-    var newThs = tmp.querySelectorAll('th[data-col]');
-    var _patched = 0;
-    for (var k = 0; k < newThs.length; k++) {
-      var c = newThs[k].getAttribute('data-col');
-      var old = th.querySelector('th[data-col="' + c + '"] .th-label');
-      var src = newThs[k].querySelector('.th-label');
-      if (old && src) { old.textContent = src.textContent; _patched++; }
-    }
-    // 搬运零命中 = 新旧结构不匹配 → 完整重建自愈
-    if (!_patched) {
-      console.warn('[lost-lang] thead text patch matched 0 cells -> full rebuild');
+    // 真损坏（有内容但一个 th[data-col] 都没有）→ 无从打补丁，只能重建自愈。
+    // 正常路径永远不会命中：renderLostThead 生成的每个 th 都带 data-col。
+    if (!th.querySelector('th[data-col]')) {
+      console.warn('[lost-lang] thead DAMAGED (no th[data-col]) -> full rebuild');
       th.innerHTML = renderLostThead();
       if (typeof injectLostToggleBtns === 'function') injectLostToggleBtns();
       if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
+      return;
+    }
+    // 期望文案：同一套渲染函数在【游离 thead】里生成（不进文档流，不触发布局/绘制）
+    var tmp = document.createElement('thead');
+    tmp.innerHTML = renderLostThead();
+    var newThs = tmp.querySelectorAll('th[data-col]');
+    var oldMap = {};
+    th.querySelectorAll('th[data-col]').forEach(function(el){ oldMap[el.getAttribute('data-col')] = el; });
+    for (var k = 0; k < newThs.length; k++) {
+      var c = newThs[k].getAttribute('data-col');
+      var src = newThs[k].querySelector('.th-label');
+      var old = oldMap[c];
+      if (!old || !src) continue;                       // 结构对不上就跳过，绝不重建
+      _lostSetLabelText(_lostTheadLabelNode(old), src.textContent);
     }
   } catch (e) { console.warn('[lost-lang] thead text sync failed:', e); }
 }
@@ -648,8 +683,128 @@ function _lostFillMissingRemarks(tb) {
   });
 }
 
+// ==================================================================
+// tbody / 二级表头【文本级补丁】—— LOST-PATCH-TBODY-20261029（与 crm_table.js 同构）
+// 用户授权（2026-10-29）：切语言时不再销毁重建 tbody，改为"只改文字"，
+// 消除 60×48 单元格重建引起的整层重绘白闪。逻辑与 crm_table.js 完全一致。
+// ==================================================================
+var LOST_PATCH_ATTRS = ['class', 'style', 'colspan', 'data-col', 'href', 'target', 'download', 'onclick', 'title'];
+
+function _lostParseFragment(html) {
+  var tpl = document.createElement('template');
+  if (tpl.content) { tpl.innerHTML = html; return tpl.content; }
+  var tb = document.createElement('table');
+  tb.innerHTML = html;
+  return tb;
+}
+
+function _lostPatchSyncAttrs(oldEl, newEl) {
+  var keepHidden = oldEl.classList && oldEl.classList.contains('col-hidden') &&
+                   !newEl.classList.contains('col-hidden');
+  for (var i = 0; i < LOST_PATCH_ATTRS.length; i++) {
+    var name = LOST_PATCH_ATTRS[i];
+    var nv = newEl.getAttribute(name);
+    var ov = oldEl.getAttribute(name);
+    if (nv === ov) continue;
+    if (nv === null) oldEl.removeAttribute(name);
+    else oldEl.setAttribute(name, nv);
+  }
+  if (keepHidden) oldEl.classList.add('col-hidden');
+}
+
+function _lostPatchTree(oldN, newN) {
+  if (!oldN || !newN) return false;
+  if (oldN.nodeType !== newN.nodeType) return false;
+  if (oldN.nodeType === 3) {
+    if (oldN.nodeValue !== newN.nodeValue) oldN.nodeValue = newN.nodeValue;
+    return true;
+  }
+  if (oldN.nodeType !== 1) return true;
+  _lostPatchSyncAttrs(oldN, newN);
+  var oc = oldN.childNodes, nc = newN.childNodes;
+  var oHasEl = false, nHasEl = false, i;
+  for (i = 0; i < oc.length; i++) { if (oc[i].nodeType === 1) { oHasEl = true; break; } }
+  for (i = 0; i < nc.length; i++) { if (nc[i].nodeType === 1) { nHasEl = true; break; } }
+  if (!oHasEl && !nHasEl) {
+    var oTxt = oldN.textContent, nTxt = newN.textContent;
+    if (oTxt !== nTxt) {
+      var only = (oldN.childNodes.length === 1) ? oldN.firstChild : null;
+      if (only && only.nodeType === 3) only.nodeValue = nTxt;
+      else oldN.textContent = nTxt;
+    }
+    return true;
+  }
+  if (oHasEl !== nHasEl || oc.length !== nc.length) return false;
+  for (i = 0; i < oc.length; i++) {
+    if (!_lostPatchTree(oc[i], nc[i])) return false;
+  }
+  return true;
+}
+
+function patchLostTbodyTextOnly(list) {
+  var tb = document.getElementById('lostTbody');
+  if (!tb || typeof renderLostData !== 'function') return false;
+  var oldRows = tb.querySelectorAll('tr');
+  if (!oldRows.length) return false;
+  var _t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  var frag = _lostParseFragment(renderLostData(list));
+  var newRows = frag.querySelectorAll('tr');
+  if (oldRows.length !== newRows.length) return false;
+  for (var r = 0; r < oldRows.length; r++) {
+    var o = oldRows[r], n = newRows[r];
+    if (o.tagName !== n.tagName) return false;
+    if (o.children.length !== n.children.length) return false;
+    if (!_lostPatchTree(o, n)) return false;
+  }
+  var _t1 = (window.performance && performance.now) ? performance.now() : Date.now();
+  try { window.__lostTbPatch = { mode: 'patch', rows: oldRows.length, ms: Math.round((_t1 - _t0) * 10) / 10 }; } catch (e) {}
+  return true;
+}
+
+// ★ HEAD-LOCK-20261030：不再以"子节点数量必须一致"为前提——按 data-col 逐格原地搬文字，
+//   绝不整行 outerHTML 重建（重建会瞬间抽掉 sticky 行，用户看到表头闪一下）。
+function patchLostFakeHeaderRowTextOnly() {
+  var tb = document.getElementById('lostTbody');
+  if (!tb || typeof renderLostFakeSubHeaderRow !== 'function') return false;
+  var fake = tb.querySelector('tr.fake-header-row');
+  if (!fake) return false;                              // 无该行 → 交给调用方插入（无任何销毁）
+  var frag = _lostParseFragment(renderLostFakeSubHeaderRow());
+  var nrow = frag.querySelector('tr.fake-header-row');
+  if (!nrow) return false;
+  var olds = {};
+  Array.prototype.forEach.call(fake.children, function(td){ olds[td.getAttribute('data-col')] = td; });
+  Array.prototype.forEach.call(nrow.children, function(ntd){
+    var old = olds[ntd.getAttribute('data-col')];
+    if (!old) return;
+    _lostPatchTree(old, ntd);
+  });
+  return true;
+}
+
+// ==================================================================
+// ★ HEAD-LOCK-20261030（二）：tbody 整体重建时【复用二级表头行节点】（与 crm_table.js 同构）
+//   innerHTML 前置把旧 tr.fake-header-row 摘出，重建后原样放回（节点身份不变），
+//   再把文字按当前语言补一遍 → 二级表头不再"消失重建"。
+// ==================================================================
+function _lostSetTbodyHtml(html) {
+  var tb = document.getElementById('lostTbody');
+  if (!tb) return;
+  var oldFake = tb.querySelector('tr.fake-header-row');
+  tb.innerHTML = html;
+  if (!oldFake) return;
+  var newFake = tb.querySelector('tr.fake-header-row');
+  if (!newFake) { tb.insertBefore(oldFake, tb.firstChild); return; }
+  if (newFake !== oldFake) {
+    newFake.parentNode.replaceChild(oldFake, newFake);
+    if (typeof patchLostFakeHeaderRowTextOnly === 'function') patchLostFakeHeaderRowTextOnly();
+  }
+}
+
 // ⛔⛔⛔ 锁死声明（V2026.09.07）：LOST 切语言/表头/数据行渲染历经多次回归修复才稳定，
 // 任何"优化/重构/简化"必须先取得用户明确同意，禁止私自改动！
+// ★ 例外记录：2026-10-29 用户明确同意「白闪治理」——tbody / 假表头行改为文本级补丁，
+//   门控条件、语言戳守卫、备注补翻、权限兜底一律保留；
+//   ⛔ 不得把这两处改回 innerHTML / outerHTML 作为主路径（补丁失败回退分支除外）。
 function applyLostLang() {
   var t = T();
   var titleEl = document.getElementById('lostTitle');
@@ -690,7 +845,10 @@ function applyLostLang() {
   // V39 补充：!hasCache 且 DOM 有数据行时 → 防抖重取数 loadLost()（绝不白板）。
   try {
     if (tb && hasCache) {
-      tb.innerHTML = renderLostData(globalLostData);   // 包装器自动 setTimeout(syncLostColVisibility)
+      // ★ LOST-PATCH-TBODY-20261029：先走文本级补丁（单元格不销毁 → 无白闪），结构对不上才重建
+      if (!patchLostTbodyTextOnly(globalLostData)) {
+        _lostSetTbodyHtml(renderLostData(globalLostData));   // 包装器自动 setTimeout(syncLostColVisibility)
+      }
       if (typeof applyLostRowPerms === 'function') applyLostRowPerms();
       _lostFillMissingRemarks(tb);
     } else if (tb && !hasCache) {
@@ -724,11 +882,10 @@ function applyLostLang() {
     if (tb && typeof renderLostFakeSubHeaderRow === 'function') {
       var fake = tb.querySelector('tr.fake-header-row');
       if (fake) {
-        var fh = renderLostFakeSubHeaderRow();
-        if (fake.outerHTML !== fh) {
-          fake.outerHTML = fh;
-          console.warn('[lost-lang] fake-header-row re-stamped to', CUR_LANG);
-        }
+        // ★ HEAD-LOCK-20261030：二级表头与一级表头同一规则——【只改文字，绝不重建】。
+        //   整行 DOM（sticky 定位/列宽/排序箭头/折叠状态）原样保留，
+        //   已删除 outerHTML 重建分支（曾造成切语言时该粘性行瞬间消失 → 白闪）。
+        patchLostFakeHeaderRowTextOnly();
       }
     }
   } catch (e) { console.warn('[lost-lang] fake-header-row guard failed:', e); }
@@ -751,7 +908,10 @@ function applyLostLang() {
       var _renderLang = window.__lostRenderLang;
       if (_renderLang !== undefined && _renderLang !== CUR_LANG) {
         console.warn('[lost-lang] data rows stale (rendered in ' + _renderLang + ', now ' + CUR_LANG + ') -> force re-render');
-        tb.innerHTML = renderLostData(globalLostData);
+        // ★ 同样先走文本级补丁，补丁失败才整体重建（LOST-PATCH-TBODY-20261029）
+        if (!patchLostTbodyTextOnly(globalLostData)) {
+          _lostSetTbodyHtml(renderLostData(globalLostData));
+        }
         if (typeof applyLostRowPerms === 'function') applyLostRowPerms();
         _lostFillMissingRemarks(tb);
       }
@@ -1066,8 +1226,8 @@ function _legacyExportLostReportPDF() {
     doExport();
   } else {
     var scripts = [
-      { src: '/vendor/html2canvas.min.js', name: 'html2canvas' },
-      { src: '/vendor/jspdf.umd.min.js', name: 'jsPDF' }
+      { src: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', name: 'html2canvas' },
+      { src: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', name: 'jsPDF' }
     ];
     var loaded = 0;
     scripts.forEach(function(sc) {

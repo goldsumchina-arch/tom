@@ -1,4 +1,4 @@
-﻿// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
+// ⛔ FROZEN (2026-09-06) V2026.09.06.20：本文件逻辑已锁定，未经用户明确同意禁止修改。CRM 表格逻辑（含三语/切语言/权限）均正确，仅数据可为演示数据。
 // ==================== CRM 潜在项目表格 (Potential Projects) ====================
 // CRM columns: 48 total
 // 0-11: 基本信息, 12-16: 日期, 17-19: 汇率/贸易, 20-40: 报价Q1-Q7, 41: 安装费, 42-44: PDF, 45-46: 销售, 47: 操作
@@ -117,8 +117,7 @@ function applyCrmSort() {
     var list = crmSortState.slice();
     data.sort(function(a, b) { return crmCompareMulti(a, b, list); });
   }
-  var tb = document.getElementById('crmTbody');
-  if (tb) tb.innerHTML = renderCrmData(data);
+  _crmSetTbodyHtml(renderCrmData(data));
   // 兜底：渲染包装器已处理，但排序后再显式确保行内按钮按权限隐藏
   if (typeof applyCrmRowPerms === 'function') applyCrmRowPerms();
   updateCrmSortIndicators();
@@ -232,7 +231,16 @@ function syncCrmColVisibility() {
       if (vis === 0) th.classList.add('col-hidden');
       else { th.classList.remove('col-hidden'); th.colSpan = vis; th.classList.toggle('hdr-shrink', vis < g.c.length); }
       var b = th.querySelector('.won-col-toggle');
-      if (b) b.innerText = hidden[first] ? '[+]' : '[\u2212]';
+      if (b) {
+        // ★ CRM-PATCH-TBODY-20261029：innerText 会被当成结构变更（且 setter 可能触发布局），
+        //   这里改成原地改文本节点，内容已一致时零 DOM 操作。
+        var _bt = hidden[first] ? '[+]' : '[\u2212]';
+        if (b.textContent !== _bt) {
+          var _bo = (b.childNodes.length === 1) ? b.firstChild : null;
+          if (_bo && _bo.nodeType === 3) _bo.nodeValue = _bt;
+          else b.textContent = _bt;
+        }
+      }
     }
   });
   updateCrmCollapsedBar();
@@ -447,8 +455,10 @@ function renderCrmData(list) {
         case 14: cls='won-yellow'; val=ymdToDmy(val); break;
         case 15: cls='won-yellow'; val=esc(val); break;
         case 16: cls='won-yellow'; val=ymdToDmy(val); break;
-        case 17: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? (Math.round(Number(val)||0)).toLocaleString('en-US') : ''; break;
-        case 18: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? (Math.round(Number(val)||0)).toLocaleString('en-US') : ''; break;
+        // ★ 2026-10-29：toLocaleString('en-US') 每次调用都会新建 Intl.NumberFormat（大表渲染的主要耗时），
+        //   改用 index.html 的纯字符串 fmtThousands，输出完全一致。
+        case 17: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? ((typeof fmtThousands === 'function') ? fmtThousands(val) : (Math.round(Number(val)||0)).toLocaleString('en-US')) : ''; break;
+        case 18: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? ((typeof fmtThousands === 'function') ? fmtThousands(val) : (Math.round(Number(val)||0)).toLocaleString('en-US')) : ''; break;
         case 19: cls='hdr'; val=esc(val); break;
         case 20: case 23: case 26: case 29: case 32: case 35: case 38: {
           var qMap={20:1,23:2,26:3,29:4,32:5,35:6,38:7};
@@ -552,10 +562,17 @@ function loadCrm(isAuto) {
   if (btnCrmOverview) btnCrmOverview.innerText = t0.btnCrmOverview;
   if (btnExportCrmExcel) btnExportCrmExcel.innerText = t0.btnExportCrmExcel;
 
-  // 渲染表头和colgroup
-  cg.innerHTML = buildCrmColGroup();
-  th.innerHTML = renderCrmThead();
-  injectCrmToggleBtns();
+  // ★ HEAD-LOCK-20261030（复制签约项目 loadWon 的做法）：表头/colgroup 结构只建一次。
+  //   数据重载（保存后刷新 / 备注补翻重拉 / 切语言重取数）绝不再重建 thead，
+  //   已存在时只做【纯文字刷新】→ 一级/二级表头锁死不动，只有文字随语言变化。
+  //   （签约项目 loadWon 同样只 renderWonData，从不碰 thead。）
+  if (!cg.children.length) cg.innerHTML = buildCrmColGroup();
+  if (!th.children.length) {
+    th.innerHTML = renderCrmThead();
+    injectCrmToggleBtns();
+  } else if (typeof updateCrmTheadTextOnly === 'function') {
+    updateCrmTheadTextOnly();
+  }
   updateCrmCollapsedBar();
   // thead 重建后立即按单一事实源恢复列可见性与组头 colspan（含无数据路径）
   if (typeof syncCrmColVisibility === 'function') syncCrmColVisibility();
@@ -572,7 +589,7 @@ function loadCrm(isAuto) {
         originalCrmData = list.slice();
         globalCrmData.forEach(function(row,i){ row.idx = i+1; });
         originalCrmData.forEach(function(row,i){ row.idx = i+1; });
-        tb.innerHTML = renderCrmData(globalCrmData);
+        _crmSetTbodyHtml(renderCrmData(globalCrmData));   // ★ 复用二级表头行节点
       } else {
         tb.innerHTML = emptyRow;
       }
@@ -608,53 +625,70 @@ function applyCrmRowPerms(){
 //   _viewLangStale.won 由 switchView 消费。
 //   旧 CRM/LOST 每次切语言都 cg.innerHTML + th.innerHTML 重建表头：
 //   重建后折叠类丢失、开关按钮重置，与行的可见列瞬间错位 → 用户看到"一片空白"。
+// ★ 表头锁定 · HEAD-LOCK-20261030（用户要求：100% 复制「签约项目」的表头处理逻辑）
+//   与 index.html 签约项目的 updateTheadTextOnly() 完全同构，三条不变量：
+//   ① 结构只建一次（首次进入视图 / loadCrm）；② 每个 th 带 data-col 当定位锚点；
+//   ③ 切语言只做【纯文字替换】——绝不重建 th、绝不改 colspan/class 结构、
+//      折叠按钮(.won-col-toggle)、排序箭头(.sort-indicator)、sticky 层级、列宽全部原地保留。
+//   因此一级表头与二级表头在切语言时"锁死不动"，只有文字变化。
+//   ⛔ 不得把 th.innerHTML = renderCrmThead() 改回切语言主路径：重建会让折叠状态/
+//      按钮/排序箭头整体复位，用户看到"表头跳一下 / 闪一下"。
+// 取（必要时就地补）th 内的文字容器 .th-label —— 只插入节点，不删除任何结构节点
+function _crmTheadLabelNode(thEl) {
+  var lab = thEl.querySelector('.th-label');
+  if (lab) return lab;
+  lab = document.createElement('span');
+  lab.className = 'th-label';
+  if (thEl.firstChild) thEl.insertBefore(lab, thEl.firstChild);
+  else thEl.appendChild(lab);
+  return lab;
+}
+// 原地改文字：单文本节点时只改 nodeValue（零结构变更），否则重建文本容器内部文本
+function _crmSetLabelText(node, txt) {
+  var only = (node.childNodes.length === 1) ? node.firstChild : null;
+  if (only && only.nodeType === 3) {
+    if (only.nodeValue !== txt) only.nodeValue = txt;
+    return;
+  }
+  if (node.textContent === txt) return;
+  while (node.firstChild) node.removeChild(node.firstChild);
+  node.appendChild(document.createTextNode(txt));
+}
+
 function updateCrmTheadTextOnly() {
   var th = document.getElementById('crmThead');
   if (!th || typeof renderCrmThead !== 'function') return;
   try {
-    // ================================================================
-    // ⛔ 已锁定实现 —— V2026.09.03.32/33（Z51/Z52）验证通过，禁止修改
-    //    （动此段前必须取得用户明确同意）
-    // ================================================================
-    // ★ 自愈守卫：现有表头损坏（无任何 th[data-col] 节点 = 一级表头行丢失）时，
-    //   文本级更新无从谈起，直接完整重建表头结构 + 折叠按钮 + 列可见性同步。
-    //   任何上游环节（竞态/异常/历史 bug）弄丢表头，这里都会自动恢复，永不再出"空白表头"。
-    //   根因背景：HTML 初始 <thead id="crmThead"> 为空 + V21 改为"文本级更新"后
-    //   【首次进入视图】时文本更新 0 匹配、不建表头 → 空白彩条（旧代码直接
-    //   innerHTML 重建所以从未出现）。本守卫即该场景的兜底修复。
-    //   日志分级：tbody 有数据行但表头没了 = 真损坏（warn）；thead 尚未初始化（首次进入
-    //   视图，HTML 初始 <thead> 为空）= 正常路径（info），非错误。
-    if (!th.querySelector('th[data-col]')) {
-      var _tbGuard = document.getElementById('crmTbody');
-      var _rowsGuard = _tbGuard ? _tbGuard.querySelectorAll('tr.won-data-row').length : 0;
-      if (_rowsGuard > 0) {
-        console.warn('[crm-lang] thead DAMAGED (' + _rowsGuard + ' rows but no header) -> full rebuild');
-      } else {
+    // 唯一允许建结构的场景：thead 完全空白（首次进入视图，HTML 初始 <thead> 为空）。
+    // 此时没有任何既有结构可破坏，等同签约项目首次 renderWonThead。
+    if (!th.children.length) {
       console.warn('[crm-lang] thead first-time init (empty on view entry) -> build');
-      }
       th.innerHTML = renderCrmThead();
       if (typeof injectCrmToggleBtns === 'function') injectCrmToggleBtns();
       if (typeof syncCrmColVisibility === 'function') syncCrmColVisibility();
       return;
     }
-    // 用与重建完全相同的数据源生成一套新 thead，但只把【文本】搬进现有 DOM 节点，
-    // 不替换任何结构 → 折叠状态、列宽、开关按钮、排序指示器全部保留（WON 模式）
-    var tmp = document.createElement('thead');
-    tmp.innerHTML = renderCrmThead();
-    var newThs = tmp.querySelectorAll('th[data-col]');
-    var _patched = 0;
-    for (var k = 0; k < newThs.length; k++) {
-      var c = newThs[k].getAttribute('data-col');
-      var old = th.querySelector('th[data-col="' + c + '"] .th-label');
-      var src = newThs[k].querySelector('.th-label');
-      if (old && src) { old.textContent = src.textContent; _patched++; }
-    }
-    // 搬运零命中 = 新旧结构不匹配（表头已损坏的另一种形态）→ 同样完整重建自愈
-    if (!_patched) {
-      console.warn('[crm-lang] thead text patch matched 0 cells -> full rebuild');
+    // 真损坏（有内容但一个 th[data-col] 都没有）→ 无从打补丁，只能重建自愈。
+    // 正常路径永远不会命中：renderCrmThead 生成的每个 th 都带 data-col。
+    if (!th.querySelector('th[data-col]')) {
+      console.warn('[crm-lang] thead DAMAGED (no th[data-col]) -> full rebuild');
       th.innerHTML = renderCrmThead();
       if (typeof injectCrmToggleBtns === 'function') injectCrmToggleBtns();
       if (typeof syncCrmColVisibility === 'function') syncCrmColVisibility();
+      return;
+    }
+    // 期望文案：同一套渲染函数在【游离 thead】里生成（不进文档流，不触发布局/绘制）
+    var tmp = document.createElement('thead');
+    tmp.innerHTML = renderCrmThead();
+    var newThs = tmp.querySelectorAll('th[data-col]');
+    var oldMap = {};
+    th.querySelectorAll('th[data-col]').forEach(function(el){ oldMap[el.getAttribute('data-col')] = el; });
+    for (var k = 0; k < newThs.length; k++) {
+      var c = newThs[k].getAttribute('data-col');
+      var src = newThs[k].querySelector('.th-label');
+      var old = oldMap[c];
+      if (!old || !src) continue;                       // 结构对不上就跳过，绝不重建
+      _crmSetLabelText(_crmTheadLabelNode(old), src.textContent);
     }
   } catch (e) { console.warn('[crm-lang] thead text sync failed:', e); }
 }
@@ -695,8 +729,160 @@ function _crmFillMissingRemarks(tb) {
   });
 }
 
+// ==================================================================
+// tbody / 二级表头【文本级补丁】—— CRM-PATCH-TBODY-20261029
+// 用户授权（2026-10-29）：切语言时不再销毁重建 tbody，改为"只改文字"。
+//
+// 根因（白闪）：
+//   ① tb.innerHTML = renderCrmData(...) 把 60行×48列=2880 个单元格全部丢弃重建，
+//      字符串拼接 ~609ms + 全表重排 ~212ms；表宽 5428px，Chromium 需重绘整层瓦片，
+//      重绘期间容器背景 #fff 露出来 → 用户看到"白一下"。
+//   ② fake.outerHTML = fh 只为改 12 个标签（RMB/USD/VND/Equip/Install/Both）就把整行
+//      position:sticky 的 48 个 <td> 删掉重插 → 341ms 全表重排，且该行无粘性表头覆盖，
+//      容器背景直接露白。
+//
+// 方案（与 updateCrmTheadTextOnly 完全同构）：用【同一套渲染函数】在游离节点里生成
+//   "期望内容"（不参与布局/绘制，零重排），再逐节点把文本/属性搬到现有 DOM 上，
+//   单元格节点本身不销毁 → 无重排、无整层重绘、无白闪，滚动位置也保持不变。
+// ★ 不复制任何渲染逻辑（省份/币种/PDF/按钮文案全部仍由 renderCrmData 决定），
+//   因此不可能与整体重建的显示结果产生分歧。
+// 回退：行数/列数/子节点结构对不上（空态行、数据增删、历史脏 DOM）→ 返回 false，
+//   调用方退回原来的整体重建，行为与旧版逐字节一致（安全网，不是主路径）。
+// ==================================================================
+var CRM_PATCH_ATTRS = ['class', 'style', 'colspan', 'data-col', 'href', 'target', 'download', 'onclick', 'title'];
+
+function _crmParseFragment(html) {
+  // template 内容为惰性文档片段：解析 tr/td 不会被 foster-parenting 打散，也不触发布局/绘制
+  var tpl = document.createElement('template');
+  if (tpl.content) {
+    tpl.innerHTML = html;
+    return tpl.content;
+  }
+  var tb = document.createElement('table');   // 极端兜底（无 template 支持）
+  tb.innerHTML = html;
+  return tb;
+}
+
+function _crmPatchSyncAttrs(oldEl, newEl) {
+  // class 以新生成的为准，但【保留】运行时才有的 col-hidden：
+  // 列折叠类不在渲染 HTML 里，由 syncCrmColVisibility 维护，抹掉会让隐藏列闪一下再被隐藏。
+  var keepHidden = oldEl.classList && oldEl.classList.contains('col-hidden') &&
+                   !newEl.classList.contains('col-hidden');
+  for (var i = 0; i < CRM_PATCH_ATTRS.length; i++) {
+    var name = CRM_PATCH_ATTRS[i];
+    var nv = newEl.getAttribute(name);
+    var ov = oldEl.getAttribute(name);
+    if (nv === ov) continue;
+    if (nv === null) oldEl.removeAttribute(name);
+    else oldEl.setAttribute(name, nv);
+  }
+  if (keepHidden) oldEl.classList.add('col-hidden');
+}
+
+// 逐节点把 newN 的文本/属性搬到 oldN 上；结构不一致返回 false（调用方整体重建）
+function _crmPatchTree(oldN, newN) {
+  if (!oldN || !newN) return false;
+  if (oldN.nodeType !== newN.nodeType) return false;
+  if (oldN.nodeType === 3) {                     // 文本节点：只改值
+    if (oldN.nodeValue !== newN.nodeValue) oldN.nodeValue = newN.nodeValue;
+    return true;
+  }
+  if (oldN.nodeType !== 1) return true;          // 注释等：无需处理
+  _crmPatchSyncAttrs(oldN, newN);
+  var oc = oldN.childNodes, nc = newN.childNodes;
+  var oHasEl = false, nHasEl = false, i;
+  for (i = 0; i < oc.length; i++) { if (oc[i].nodeType === 1) { oHasEl = true; break; } }
+  for (i = 0; i < nc.length; i++) { if (nc[i].nodeType === 1) { nHasEl = true; break; } }
+  // 纯文本元素（td/span/a/button 内无嵌套元素）：优先【原地改文本节点 nodeValue】，
+  // 不销毁重建文本节点（textContent= 会删旧节点+插新节点，等于一次 DOM 结构变更）；
+  // 只有节点形态不规整时才退回 textContent 赋值。
+  if (!oHasEl && !nHasEl) {
+    var oTxt = oldN.textContent, nTxt = newN.textContent;
+    if (oTxt !== nTxt) {
+      var only = (oldN.childNodes.length === 1) ? oldN.firstChild : null;
+      if (only && only.nodeType === 3) only.nodeValue = nTxt;
+      else oldN.textContent = nTxt;
+    }
+    return true;
+  }
+  if (oHasEl !== nHasEl || oc.length !== nc.length) return false;
+  for (i = 0; i < oc.length; i++) {
+    if (!_crmPatchTree(oc[i], nc[i])) return false;
+  }
+  return true;
+}
+
+// 返回 true = 已原地更新（DOM 未销毁）；false = 需调用方退回 innerHTML 整体重建
+function patchCrmTbodyTextOnly(list) {
+  var tb = document.getElementById('crmTbody');
+  if (!tb || typeof renderCrmData !== 'function') return false;
+  var oldRows = tb.querySelectorAll('tr');
+  if (!oldRows.length) return false;                 // 首次渲染/空 tbody → 整体重建
+  var _t0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  var frag = _crmParseFragment(renderCrmData(list)); // 调用真实渲染函数 → 渲染语言戳/列同步钩子照常生效
+  var newRows = frag.querySelectorAll('tr');
+  if (oldRows.length !== newRows.length) return false;   // 行数变化（数据增删/空态行）
+  for (var r = 0; r < oldRows.length; r++) {
+    var o = oldRows[r], n = newRows[r];
+    if (o.tagName !== n.tagName) return false;
+    if (o.children.length !== n.children.length) return false;   // 单元格数量不一致
+    if (!_crmPatchTree(o, n)) return false;
+  }
+  var _t1 = (window.performance && performance.now) ? performance.now() : Date.now();
+  try { window.__crmTbPatch = { mode: 'patch', rows: oldRows.length, ms: Math.round((_t1 - _t0) * 10) / 10 }; } catch (e) {}
+  return true;
+}
+
+// 二级假表头行：只改标签文字，整行 DOM（含 sticky 定位/排序箭头/列宽/折叠状态）原样保留
+// ★ HEAD-LOCK-20261030：不再以"子节点数量必须一致"为前提——数量对不上时按 data-col 逐格
+//   原地搬文字，绝不整行 outerHTML 重建（重建会瞬间抽掉 sticky 行，用户看到表头闪一下）。
+function patchCrmFakeHeaderRowTextOnly() {
+  var tb = document.getElementById('crmTbody');
+  if (!tb || typeof renderCrmFakeSubHeaderRow !== 'function') return false;
+  var fake = tb.querySelector('tr.fake-header-row');
+  if (!fake) return false;                              // 无该行 → 交给调用方插入（无任何销毁）
+  var frag = _crmParseFragment(renderCrmFakeSubHeaderRow());
+  var nrow = frag.querySelector('tr.fake-header-row');
+  if (!nrow) return false;
+  var olds = {};
+  Array.prototype.forEach.call(fake.children, function(td){ olds[td.getAttribute('data-col')] = td; });
+  Array.prototype.forEach.call(nrow.children, function(ntd){
+    var old = olds[ntd.getAttribute('data-col')];
+    if (!old) return;
+    // 逐节点搬文字与属性；class 里运行时才有的 col-hidden 由 _crmPatchSyncAttrs 保留
+    _crmPatchTree(old, ntd);
+  });
+  return true;
+}
+
+// ==================================================================
+// ★ HEAD-LOCK-20261030（二）：tbody 整体重建时【复用二级表头行节点】
+//   诊断窗里 rebuild=fake-row 的含义 = tr.fake-header-row 被删掉重建，
+//   该 sticky 行瞬间消失 → 用户看到二级表头闪一下/跳一下。
+//   这里在 innerHTML 之前先把旧节点摘出来，重建后原样放回（节点身份不变，
+//   ::sticky / 行高 / 列宽全部沿用），再把文字按当前语言补一遍。
+//   ★ 所有"用字符串整体重排表格"的地方都必须走这里，不要直接 tb.innerHTML=。
+// ==================================================================
+function _crmSetTbodyHtml(html) {
+  var tb = document.getElementById('crmTbody');
+  if (!tb) return;
+  var oldFake = tb.querySelector('tr.fake-header-row');
+  tb.innerHTML = html;
+  if (!oldFake) return;
+  var newFake = tb.querySelector('tr.fake-header-row');
+  if (!newFake) { tb.insertBefore(oldFake, tb.firstChild); return; }
+  if (newFake !== oldFake) {
+    newFake.parentNode.replaceChild(oldFake, newFake);
+    if (typeof patchCrmFakeHeaderRowTextOnly === 'function') patchCrmFakeHeaderRowTextOnly();
+  }
+}
+
 // ⛔⛔⛔ 锁死声明（V2026.09.07）：CRM 切语言/表头/数据行渲染历经多次回归修复才稳定，
 // 任何"优化/重构/简化"必须先取得用户明确同意，禁止私自改动！
+// ★ 例外记录：2026-10-29 用户明确同意「白闪治理」——只把 tbody / 假表头行的更新方式
+//   从"销毁重建"改成"文本级补丁"（上面的 patchCrmTbodyTextOnly / patchCrmFakeHeaderRowTextOnly），
+//   所有门控条件、语言戳守卫、备注补翻、权限兜底一律保留；
+//   ⛔ 不得把这两处改回 innerHTML / outerHTML 作为主路径（补丁失败时的回退分支除外）。
 function applyCrmLang() {
   var t = T();
   // 更新潜在项目页标题与"+ New CRM / 导出 Excel"按钮（三语跟随系统语言）
@@ -748,7 +934,11 @@ function applyCrmLang() {
   //   【绝不能】renderCrmData([])（会白板）→ 防抖重取数 loadCrm() 按新语言渲染。
   try {
     if (tb && hasCache) {
-      tb.innerHTML = renderCrmData(globalCrmData);   // 包装器自动 setTimeout(syncCrmColVisibility)
+      // ★ CRM-PATCH-TBODY-20261029：先走【文本级补丁】（2880 个单元格不销毁 → 无白闪）；
+      //   结构对不上（行数/列数变化、空态行、历史脏 DOM）才退回整体重建。
+      if (!patchCrmTbodyTextOnly(globalCrmData)) {
+        _crmSetTbodyHtml(renderCrmData(globalCrmData)); // 包装器自动 setTimeout(syncCrmColVisibility)
+      }
       if (typeof applyCrmRowPerms === 'function') applyCrmRowPerms();
       _crmFillMissingRemarks(tb);
     } else if (tb && !hasCache) {
@@ -785,11 +975,10 @@ function applyCrmLang() {
     if (tb && typeof renderCrmFakeSubHeaderRow === 'function') {
       var fake = tb.querySelector('tr.fake-header-row');
       if (fake) {
-        var fh = renderCrmFakeSubHeaderRow();
-        if (fake.outerHTML !== fh) {
-          fake.outerHTML = fh;
-          console.warn('[crm-lang] fake-header-row re-stamped to', CUR_LANG);
-        }
+        // ★ HEAD-LOCK-20261030：二级表头与一级表头同一规则——【只改文字，绝不重建】。
+        //   整行 DOM（sticky 定位 / 列宽 / 排序箭头 / 折叠状态）原样保留，
+        //   已删除 outerHTML 重建分支（曾造成切语言时该粘性行瞬间消失 → 白闪）。
+        patchCrmFakeHeaderRowTextOnly();
       }
     }
   } catch (e) { console.warn('[crm-lang] fake-header-row guard failed:', e); }
@@ -815,7 +1004,10 @@ function applyCrmLang() {
       var _renderLang = window.__crmRenderLang;
       if (_renderLang !== undefined && _renderLang !== CUR_LANG) {
         console.warn('[crm-lang] data rows stale (rendered in ' + _renderLang + ', now ' + CUR_LANG + ') -> force re-render');
-        tb.innerHTML = renderCrmData(globalCrmData);
+        // ★ 同样先走文本级补丁，补丁失败才整体重建（CRM-PATCH-TBODY-20261029）
+        if (!patchCrmTbodyTextOnly(globalCrmData)) {
+          _crmSetTbodyHtml(renderCrmData(globalCrmData));
+        }
         if (typeof applyCrmRowPerms === 'function') applyCrmRowPerms();
         _crmFillMissingRemarks(tb);
       }
@@ -1257,8 +1449,8 @@ function _legacyExportCrmReportPDF(){
     doExport();
   } else {
     var scripts=[
-      {src:'/vendor/html2canvas.min.js', name:'html2canvas'},
-      {src:'/vendor/jspdf.umd.min.js', name:'jsPDF'}
+      {src:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', name:'html2canvas'},
+      {src:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', name:'jsPDF'}
     ];
     var loaded=0;
     scripts.forEach(function(sc){
