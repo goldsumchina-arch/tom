@@ -15282,7 +15282,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z116";  // 版本标记：用于确认浏览器加载的是最新代码（Z116 = CRM 联系人区块并为一行）
+const PERM_BUILD = "build 2026-10-31-Z117";  // 版本标记：用于确认浏览器加载的是最新代码（Z117 = CRM 日期区块并为一行）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18863,12 +18863,12 @@ function renderCrmFormHtml(t) {
   '</div>';
 
   // section3 日期（DD-MM-YYYY 可移动日期选择器）
+  // ★ CRM-DATES-1ROW-20261031：初始报价日 / 预计采购日 / 预计发货日 / 报价版本 / 最近报价日
+  //   由「2 + 3」两行并为一行 5 列，字段顺序与录入顺序一致。
   h += '<div class="form-section"><div class="form-section-title">' + (t.crm_section3 || 'Dates') + '</div>' +
     '<div class="form-row">' +
       f(t.crm_lbl_initial_quote_date, 'c_initial_quote_date', {dmy:true, req:true}) +
       f(t.crm_lbl_est_purchase_date, 'c_est_purchase_date', {dmy:true, oninput:'autoCalcShipDate()', req:true}) +
-    '</div>' +
-    '<div class="form-row">' +
       f(t.crm_lbl_est_ship_date, 'c_est_ship_date', {dmy:true, req:true}) +
       f(t.crm_lbl_quote_version, 'c_quote_version', {readonly:true}) +
       f(t.crm_lbl_last_quote_date, 'c_last_quote_date', {dmy:true, req:true}) +
