@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 13:08:03",
+ "generated": "2026-10-31 13:45:22",
  "version": "V2026.10.30.01",
- "note": "新建签约自动带出当日汇率（复用 CRM 逻辑，灰色可改；纯代码，无新增文案）",
+ "note": "英文标签 Freight&Ins 全称化为 Freight & Insurance（6个预算/实际标签 + 分组副标题）",
  "i18n": {
   "dict@5659": {
    "zh": {
@@ -1793,12 +1793,12 @@
     "lbl_superv_rmb": "Supervision RMB",
     "lbl_superv_usd": "Supervision USD",
     "lbl_superv_vnd": "Supervision VND",
-    "lbl_fb_budget_rmb": "Freight&Ins Budget RMB",
-    "lbl_fb_budget_usd": "Freight&Ins Budget USD",
-    "lbl_fb_budget_vnd": "Freight&Ins Budget VND",
-    "lbl_fb_actual_rmb": "Freight&Ins Actual RMB",
-    "lbl_fb_actual_usd": "Freight&Ins Actual USD",
-    "lbl_fb_actual_vnd": "Freight&Ins Actual VND",
+    "lbl_fb_budget_rmb": "Freight & Insurance Budget RMB",
+    "lbl_fb_budget_usd": "Freight & Insurance Budget USD",
+    "lbl_fb_budget_vnd": "Freight & Insurance Budget VND",
+    "lbl_fb_actual_rmb": "Freight & Insurance Actual RMB",
+    "lbl_fb_actual_usd": "Freight & Insurance Actual USD",
+    "lbl_fb_actual_vnd": "Freight & Insurance Actual VND",
     "lbl_cc_budget_rmb": "Customs Budget RMB",
     "lbl_cc_budget_usd": "Customs Budget USD",
     "lbl_cc_budget_vnd": "Customs Budget VND",
@@ -1917,7 +1917,7 @@
     "addm_summary_attachment": "Attachment",
     "addm_summary_modcount": "Mod Count",
     "sub_final_equip": "Final Equipment / Supervision Fee (RMB · USD · VND)",
-    "sub_freight": "Freight&Ins / Customs&Inland (Budget vs Actual)",
+    "sub_freight": "Freight & Insurance / Customs&Inland (Budget vs Actual)",
     "sub_equip_install": "Equipment Combined / Installation (Budget vs Actual)",
     "party_agi_customer": "AGI-Customer",
     "party_gs_customer": "GS-Customer",

@@ -6452,12 +6452,12 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     lbl_superv_rmb:"Supervision RMB",
     lbl_superv_usd:"Supervision USD",
     lbl_superv_vnd:"Supervision VND",
-    lbl_fb_budget_rmb:"Freight&Ins Budget RMB",
-    lbl_fb_budget_usd:"Freight&Ins Budget USD",
-    lbl_fb_budget_vnd:"Freight&Ins Budget VND",
-    lbl_fb_actual_rmb:"Freight&Ins Actual RMB",
-    lbl_fb_actual_usd:"Freight&Ins Actual USD",
-    lbl_fb_actual_vnd:"Freight&Ins Actual VND",
+    lbl_fb_budget_rmb:"Freight & Insurance Budget RMB",
+    lbl_fb_budget_usd:"Freight & Insurance Budget USD",
+    lbl_fb_budget_vnd:"Freight & Insurance Budget VND",
+    lbl_fb_actual_rmb:"Freight & Insurance Actual RMB",
+    lbl_fb_actual_usd:"Freight & Insurance Actual USD",
+    lbl_fb_actual_vnd:"Freight & Insurance Actual VND",
     lbl_cc_budget_rmb:"Customs Budget RMB",
     lbl_cc_budget_usd:"Customs Budget USD",
     lbl_cc_budget_vnd:"Customs Budget VND",
@@ -6547,7 +6547,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     addm_alert_title:"Notice", addm_alert_ok:"OK", addm_view:"View",
     addm_summary_title:"Addendum Summary", addm_summary_total:"Total modifications", addm_summary_times:"times", addm_summary_last_date:"Last modified", addm_summary_has_attachment:"Has attachment", addm_summary_no_attachment:"No attachment", addm_summary_amount:"Amount", addm_summary_detail:"Details", addm_summary_no_data:"No addendum data", addm_summary_close:"Close", addm_summary_seq:"No.", addm_summary_date:"Date", addm_summary_desc:"Description", addm_summary_attachment:"Attachment", addm_summary_modcount:"Mod Count",
     sub_final_equip:"Final Equipment / Supervision Fee (RMB · USD · VND)",
-    sub_freight:"Freight&Ins / Customs&Inland (Budget vs Actual)",
+    sub_freight:"Freight & Insurance / Customs&Inland (Budget vs Actual)",
     sub_equip_install:"Equipment Combined / Installation (Budget vs Actual)",
     party_agi_customer:"AGI-Customer",
     party_gs_customer:"GS-Customer",
@@ -15504,7 +15504,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z138";  // 版本标记：用于确认浏览器加载的是最新代码（Z138 = 新建签约自动带出当日汇率，灰色可改）
+const PERM_BUILD = "build 2026-10-31-Z139";  // 版本标记：用于确认浏览器加载的是最新代码（Z139 = Freight & Insurance 英文标签补全）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
