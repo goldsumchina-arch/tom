@@ -5791,7 +5791,7 @@ var I18N = {
     addm_no_files:"暂无上传文件", addm_save_first:"请先保存主表",
     addm_alert_title:"提示", addm_alert_ok:"确定", addm_view:"查看",
     addm_summary_title:"补充协议摘要", addm_summary_total:"共修改", addm_summary_times:"次", addm_summary_last_date:"最近修改日期", addm_summary_has_attachment:"有附件", addm_summary_no_attachment:"无附件", addm_summary_amount:"金额", addm_summary_detail:"明细", addm_summary_no_data:"暂无补充协议数据", addm_summary_close:"关闭", addm_summary_seq:"序号", addm_summary_date:"日期", addm_summary_desc:"说明", addm_summary_attachment:"附件", addm_summary_modcount:"修改次数",
-    sub_final_equip:"最终设备金额 / 指导安装费（RMB · USD · VND）",
+    sub_final_equip:"最终设备金额（RMB · USD · VND）", sub_superv:"指导安装费（RMB · USD · VND）",
     sub_freight:"运费&保险费 / 清关&内陆运输（预算 vs 实际）",
     sub_equip_install:"设备综合价格 / 安装费（预算 vs 实际）",
     party_agi_customer:"AGI-客户",
@@ -6546,7 +6546,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     addm_no_files:"No files uploaded", addm_save_first:"Please save the main form first",
     addm_alert_title:"Notice", addm_alert_ok:"OK", addm_view:"View",
     addm_summary_title:"Addendum Summary", addm_summary_total:"Total modifications", addm_summary_times:"times", addm_summary_last_date:"Last modified", addm_summary_has_attachment:"Has attachment", addm_summary_no_attachment:"No attachment", addm_summary_amount:"Amount", addm_summary_detail:"Details", addm_summary_no_data:"No addendum data", addm_summary_close:"Close", addm_summary_seq:"No.", addm_summary_date:"Date", addm_summary_desc:"Description", addm_summary_attachment:"Attachment", addm_summary_modcount:"Mod Count",
-    sub_final_equip:"Final Equipment / Supervision Fee (RMB · USD · VND)",
+    sub_final_equip:"Final Equipment (RMB · USD · VND)", sub_superv:"Supervision Fee (RMB · USD · VND)",
     sub_freight:"Freight & Insurance / Customs&Inland (Budget vs Actual)",
     sub_equip_install:"Equipment Combined / Installation (Budget vs Actual)",
     party_agi_customer:"AGI-Customer",
@@ -7304,7 +7304,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     addm_no_files:"Chưa có tệp nào được tải lên", addm_save_first:"Vui lòng lưu form chính trước",
     addm_alert_title:"Thông báo", addm_alert_ok:"Đồng ý", addm_view:"Xem",
     addm_summary_title:"Tóm tắt phụ lục HĐ", addm_summary_total:"Tổng số lần sửa", addm_summary_times:"lần", addm_summary_last_date:"Ngày sửa gần nhất", addm_summary_has_attachment:"Có tệp đính kèm", addm_summary_no_attachment:"Không có tệp", addm_summary_amount:"Số tiền", addm_summary_detail:"Chi tiết", addm_summary_no_data:"Chưa có dữ liệu phụ lục", addm_summary_close:"Đóng", addm_summary_seq:"STT", addm_summary_date:"Ngày", addm_summary_desc:"Mô tả", addm_summary_attachment:"Tệp đính kèm", addm_summary_modcount:"Số lần sửa",
-    sub_final_equip:"Thiết bị / Phí giám sát (RMB · USD · VND)",
+    sub_final_equip:"Thiết bị (RMB · USD · VND)", sub_superv:"Phí giám sát (RMB · USD · VND)",
     sub_freight:"VC&BH / HQ&nội địa (Dự toán vs Thực tế)",
     sub_equip_install:"TB tổng hợp / Lắp đặt (Dự toán vs Thực tế)",
     party_agi_customer:"AGI-Khách hàng",
@@ -15504,7 +15504,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z140";  // 版本标记：用于确认浏览器加载的是最新代码（Z140 = Total E+I 改为 Total Equip+Install）
+const PERM_BUILD = "build 2026-10-31-Z141";  // 版本标记：用于确认浏览器加载的是最新代码（Z141 = 最终设备金额/指导安装费拆成上下两组）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18235,11 +18235,15 @@ function renderModalBody() {
     
     '<div class="form-section">' +
       '<div class="form-section-title">' + t.section2 + '</div>' +
+      // ★WON-SPLIT-EQUIP-SUPERV-20261031：原本 6 个框挤在一行、共用一个标题；改为「最终设备金额」「指导安装费」各自成组，上下两行
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + t.sub_final_equip + '</div></div>' +
       '<div class="form-row">' +
         '<div><label>' + t.lbl_equip_rmb + '</label><input id="w_equip_rmb" class="won-rmb" data-currency="RMB" data-currency-group="equip"></div>' +
         '<div><label>' + t.lbl_equip_usd + '</label><input id="w_equip_usd" class="won-usd" data-currency="USD" data-currency-group="equip"></div>' +
         '<div><label>' + t.lbl_equip_vnd + '</label><input id="w_equip_vnd" class="won-vnd" data-currency="VND" data-currency-group="equip"></div>' +
+      '</div>' +
+      '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + t.sub_superv + '</div></div>' +
+      '<div class="form-row">' +
         '<div><label>' + t.lbl_superv_rmb + '</label><input id="w_superv_rmb" class="won-rmb" data-currency="RMB" data-currency-group="superv"></div>' +
         '<div><label>' + t.lbl_superv_usd + '</label><input id="w_superv_usd" class="won-usd" data-currency="USD" data-currency-group="superv"></div>' +
         '<div><label>' + t.lbl_superv_vnd + '</label><input id="w_superv_vnd" class="won-vnd" data-currency="VND" data-currency-group="superv"></div>' +

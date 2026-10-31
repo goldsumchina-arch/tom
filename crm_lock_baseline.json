@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 14:02:29",
+ "generated": "2026-10-31 14:09:00",
  "version": "V2026.10.30.01",
- "note": "英文 Total E+I 改为 Total Equip+Install（3个币种标签）",
+ "note": "最终设备金额/指导安装费拆为上下两组，标题各自独立（新增 sub_superv 三语词条）",
  "i18n": {
   "dict@5659": {
    "zh": {
@@ -240,7 +240,8 @@
     "addm_summary_desc": "说明",
     "addm_summary_attachment": "附件",
     "addm_summary_modcount": "修改次数",
-    "sub_final_equip": "最终设备金额 / 指导安装费（RMB · USD · VND）",
+    "sub_final_equip": "最终设备金额（RMB · USD · VND）",
+    "sub_superv": "指导安装费（RMB · USD · VND）",
     "sub_freight": "运费&保险费 / 清关&内陆运输（预算 vs 实际）",
     "sub_equip_install": "设备综合价格 / 安装费（预算 vs 实际）",
     "party_agi_customer": "AGI-客户",
@@ -1916,7 +1917,8 @@
     "addm_summary_desc": "Description",
     "addm_summary_attachment": "Attachment",
     "addm_summary_modcount": "Mod Count",
-    "sub_final_equip": "Final Equipment / Supervision Fee (RMB · USD · VND)",
+    "sub_final_equip": "Final Equipment (RMB · USD · VND)",
+    "sub_superv": "Supervision Fee (RMB · USD · VND)",
     "sub_freight": "Freight & Insurance / Customs&Inland (Budget vs Actual)",
     "sub_equip_install": "Equipment Combined / Installation (Budget vs Actual)",
     "party_agi_customer": "AGI-Customer",
@@ -3594,7 +3596,8 @@
     "addm_summary_desc": "Mô tả",
     "addm_summary_attachment": "Tệp đính kèm",
     "addm_summary_modcount": "Số lần sửa",
-    "sub_final_equip": "Thiết bị / Phí giám sát (RMB · USD · VND)",
+    "sub_final_equip": "Thiết bị (RMB · USD · VND)",
+    "sub_superv": "Phí giám sát (RMB · USD · VND)",
     "sub_freight": "VC&BH / HQ&nội địa (Dự toán vs Thực tế)",
     "sub_equip_install": "TB tổng hợp / Lắp đặt (Dự toán vs Thực tế)",
     "party_agi_customer": "AGI-Khách hàng",
@@ -5036,7 +5039,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27094": {
+  "dict@27098": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
