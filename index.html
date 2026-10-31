@@ -8246,7 +8246,8 @@ function crmPdfOnFile(input) {
   };
   reader.readAsArrayBuffer(f);
 }
-// 报价版本升级确认：读取 c_quote_version 现值，提示改成 V+1，是则升级并上传，否则取消
+// 报价版本升级确认：读取 c_quote_version 现值，提示改成 V+1。
+// 选 Yes → 升级版本并上传；选 No → V0 时取消上传（首次报价必须升版），V1 及以上仍上传但不升版
 function crmQuoteVersionConfirm(fid, file, target, input) {
   var t = T();
   var vEl = el('c_quote_version');
@@ -8262,7 +8263,16 @@ function crmQuoteVersionConfirm(fid, file, target, input) {
   }, {
     yesText: t.crm_close_yes || '是',
     noText: t.crm_close_no || '否',
-    noCb: function() { if (input) input.value = ''; }
+    // ★CRM-VER-NO-UPLOAD-20261031：选 No 的规则按版本分两段 ——
+    //   ① V0→V1（首次报价）：必须升级版本才允许上传，选 No 直接取消本次上传；
+    //   ② V1→V2 及以后：允许「不升级版本也上传」，选 No 仍继续上传，只是版本号保持原值。
+    noCb: function() {
+      if (curNum >= 1) {
+        uploadCrmPdf(fid, file, target, input);
+      } else if (input) {
+        input.value = '';
+      }
+    }
   });
 }
 // ===== 报价单 PDF 查看/下载按钮（三语）=====
@@ -15391,7 +15401,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z128";  // 版本标记：用于确认浏览器加载的是最新代码（Z128 = Sales 并入 Basic Info + 区块改名 Remarks）
+const PERM_BUILD = "build 2026-10-31-Z129";  // 版本标记：用于确认浏览器加载的是最新代码（Z129 = 版本升级选 No 时 V1+ 仍允许上传）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
