@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 15:44:54",
+ "generated": "2026-10-31 15:54:03",
  "version": "V2026.10.30.01",
- "note": "VAT 副标题补充费用差异说明（sub_vat 三语改写）",
+ "note": "质保金 开关+三币+起止日期 合并成一行（纯布局，无文案变更）",
  "i18n": {
   "dict@5663": {
    "zh": {
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27196": {
+  "dict@27195": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

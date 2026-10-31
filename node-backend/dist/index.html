@@ -15535,7 +15535,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z153";  // 版本标记：用于确认浏览器加载的是最新代码（Z153 = VAT 副标题补充费用差异说明，三语）
+const PERM_BUILD = "build 2026-10-31-Z154";  // 版本标记：用于确认浏览器加载的是最新代码（Z154 = 质保金 开关+三币+起止日期 合并成一行）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18369,13 +18369,12 @@ function renderModalBody() {
         '<div><label id="w_total_ei_lbl_vnd">' + t.lbl_total_ei_vnd + '</label><input id="w_total_ei_vnd" class="won-vnd calc-result" data-currency="VND" data-currency-group="total_ei" readonly></div>' +
       '</div>' +
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;margin-top:8px;border-top:1px dashed #8b0000;padding-top:8px;">' + t.sub_warranty + '</div></div>' +
+      // ★WON-WARRANTY-1ROW-20261031：质保金 开关 + 三币 + 起止日期 合并成同一行（6 格）
       '<div class="form-row">' +
         '<div><label>' + t.lbl_warranty_on + '</label><select id="w_has_warranty" onchange="onHasWarrantyChange()">' +
           '<option value="yes" id="wWarrantyOptYes">' + (t.cp_yes || '是') + '</option>' +
           '<option value="no" id="wWarrantyOptNo">' + (t.cp_no || '否') + '</option>' +
         '</select></div>' +
-      '</div>' +
-      '<div class="form-row">' +
         '<div><label>' + t.lbl_warranty_rmb + '</label><input id="w_warranty_rmb" class="won-rmb" data-currency="RMB" data-currency-group="warranty" placeholder="0"></div>' +
         '<div><label>' + t.lbl_warranty_usd + '</label><input id="w_warranty_usd" class="won-usd" data-currency="USD" data-currency-group="warranty" placeholder="0"></div>' +
         '<div><label>' + t.lbl_warranty_vnd + '</label><input id="w_warranty_vnd" class="won-vnd" data-currency="VND" data-currency-group="warranty" placeholder="0"></div>' +
