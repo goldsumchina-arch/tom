@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 16:18:55",
+ "generated": "2026-10-31 16:22:50",
  "version": "V2026.10.30.01",
- "note": "GS-客户 时隐藏 AGI→GS 付款块（仅改 display 切换，无文案变更；dict@27228 为偏移误报）",
+ "note": "AGI-GS 时隐藏 客户付款情况 / GS→AGI 佣金&付款 两块（仅加 id 与 display 切换，无文案变更；dict@27233 为偏移误报）",
  "i18n": {
   "dict@5685": {
    "zh": {
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27228": {
+  "dict@27233": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
