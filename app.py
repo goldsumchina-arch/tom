@@ -559,6 +559,7 @@ def init_db():
         pdf_equip TEXT DEFAULT '',
         pdf_install TEXT DEFAULT '',
         pdf_both TEXT DEFAULT '',
+        quote_version_log TEXT DEFAULT '[]',
 
         q1_rmb INTEGER DEFAULT 0, q1_usd INTEGER DEFAULT 0, q1_vnd INTEGER DEFAULT 0,
         q2_rmb INTEGER DEFAULT 0, q2_usd INTEGER DEFAULT 0, q2_vnd INTEGER DEFAULT 0,
@@ -578,6 +579,11 @@ def init_db():
     # ★ 独立记录：为 crm_projects 添加 owner_user_id（记录归属账号）
     try:
         c.execute("ALTER TABLE crm_projects ADD COLUMN owner_user_id TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
+    # ★CRM-VER-LOG-20261031：版本升级日志列（删除触发升级的附件时据此自动降级）
+    try:
+        c.execute("ALTER TABLE crm_projects ADD COLUMN quote_version_log TEXT DEFAULT '[]'")
     except sqlite3.OperationalError:
         pass
 
@@ -2812,7 +2818,7 @@ def delete_project(pid):
 CRM_FIELDS = [
     "quote_no","project_name","province","customer","bu","construction",
     "startup_pct","sign_pct","manager","manager_phone","company_info",
-    "initial_quote_date","est_purchase_date","est_ship_date","quote_version",
+    "initial_quote_date","est_purchase_date","est_ship_date","quote_version","quote_version_log",
     "last_quote_date","rate_rmb_vnd","rate_usd_vnd","incoterm",
     "install_quoted","salesperson","remark","pdf_equip","pdf_install","pdf_both",
     "remark_zh","remark_en","remark_vi",

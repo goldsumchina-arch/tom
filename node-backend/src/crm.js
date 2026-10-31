@@ -14,7 +14,7 @@ import { migrateProvinceColumn, migrateBuColumn } from "./provinces.js";
 export const CRM_FIELDS = [
   "quote_no", "project_name", "province", "customer", "bu", "construction",
   "startup_pct", "sign_pct", "manager", "manager_phone", "company_info",
-  "initial_quote_date", "est_purchase_date", "est_ship_date", "quote_version",
+  "initial_quote_date", "est_purchase_date", "est_ship_date", "quote_version", "quote_version_log",
   "last_quote_date", "rate_rmb_vnd", "rate_usd_vnd", "incoterm",
   "install_quoted", "salesperson", "remark", "pdf_equip", "pdf_install", "pdf_both",
   "remark_zh", "remark_en", "remark_vi",
@@ -310,6 +310,15 @@ async function ensureCrmRemarkCols(env) {
       "WHERE (remark_zh IS NULL OR remark_zh = '') AND remark IS NOT NULL AND remark != ''"
     ).run();
   } catch (e) { /* 回填失败不阻塞 */ }
+  // ★CRM-VER-LOG-20261031：版本升级日志列（记录触发升级的附件槽位，删除时据此自动降级）
+  try {
+    await env.DB.prepare("ALTER TABLE crm_projects ADD COLUMN quote_version_log TEXT DEFAULT '[]'").run();
+  } catch (e) {
+    const m = String(e && e.message || e).toLowerCase();
+    if (!m.includes("duplicate") && !m.includes("already exists") && !m.includes("exists")) {
+      throw new Error("CRM 版本日志列迁移失败(quote_version_log): " + (e && e.message || e));
+    }
+  }
   _crmRmEnsured = true;
 }
 
