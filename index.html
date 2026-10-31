@@ -15352,7 +15352,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z122";  // 版本标记：用于确认浏览器加载的是最新代码（Z122 = Q5/Q7 汇总列列头黄色底）
+const PERM_BUILD = "build 2026-10-31-Z123";  // 版本标记：用于确认浏览器加载的是最新代码（Z123 = 必填金额允许填 0）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -19341,9 +19341,17 @@ function crmValidateRequired() {
   if (iqSel && (String(iqSel.value) === '否' || String(iqSel.value) === 'No' || String(iqSel.value) === 'Không')) installYes = false;
   var qArr = ['q1','q2','q3','q4'];
   if (installYes) qArr.push('q6');
+  // ★CRM-Q-ZERO-OK-20261031：必填项允许填 0。
+  //   旧逻辑用 `N(...) || N(...) || N(...)` 判断"是否有值"，0 是 falsy 会被误判为未填；
+  //   现改为判断"输入框里是否真的有数字"——只要有任意一个币种填了（哪怕值是 0）即视为已填，
+  //   空框仍是 ''（crmCurBlur / crmQuoteLink 对空值不格式化），所以空与 0 可区分。
+  var qCurCols = ['rmb','usd','vnd'];
   for (var q = 0; q < qArr.length; q++) {
-    var any = N('c_' + qArr[q] + '_rmb') || N('c_' + qArr[q] + '_usd') || N('c_' + qArr[q] + '_vnd');
-    if (!any) return false;
+    var filled = false;
+    for (var ci = 0; ci < qCurCols.length; ci++) {
+      if (S('c_' + qArr[q] + '_' + qCurCols[ci]).replace(/[^0-9]/g, '') !== '') { filled = true; break; }
+    }
+    if (!filled) return false;
   }
   // 报价单PDF（设备/安装/设备&安装）至少上传一个
   var pdfOk = S('c_pdf_equip') || S('c_pdf_install') || S('c_pdf_both');
