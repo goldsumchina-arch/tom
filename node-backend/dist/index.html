@@ -5711,9 +5711,9 @@ var I18N = {
     lbl_cc_actual_rmb:"清关内陆·实际 RMB",
     lbl_cc_actual_usd:"清关内陆·实际 USD",
     lbl_cc_actual_vnd:"清关内陆·实际 VND",
-    lbl_total_equip_rmb:"设备综合·RMB",
-    lbl_total_equip_usd:"设备综合·USD",
-    lbl_total_equip_vnd:"设备综合·VND",
+    lbl_total_equip_rmb:"设备综合价格 RMB",
+    lbl_total_equip_usd:"设备综合价格 USD",
+    lbl_total_equip_vnd:"设备综合价格 VND",
     lbl_inst_budget_rmb:"安装费·预算 RMB",
     lbl_inst_budget_usd:"安装费·预算 USD",
     lbl_inst_budget_vnd:"安装费·预算 VND",
@@ -15518,7 +15518,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z148";  // 版本标记：用于确认浏览器加载的是最新代码（Z148 = 包含安装=否 时安装费整组清空锁死并隐藏）
+const PERM_BUILD = "build 2026-10-31-Z149";  // 版本标记：用于确认浏览器加载的是最新代码（Z149 = 设备综合价格改名 + 包含安装=否 时隐藏设备&安装总价）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18336,11 +18336,14 @@ function renderModalBody() {
           '</div>' +
         '</div>' +
       '</div>' +
+      // ★WON-EI-HIDE-20261031：「包含安装?=否」时整块「设备&安装总价」隐藏（id=w_ei_group）
+      '<div id="w_ei_group">' +
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + wonSubTitle(t.lbl_total_ei_rmb) + '</div></div>' +
       '<div class="form-row">' +
         '<div><label>' + t.lbl_total_ei_rmb + '</label><input id="w_total_ei_rmb" class="won-rmb calc-result" data-currency="RMB" data-currency-group="total_ei" readonly></div>' +
         '<div><label>' + t.lbl_total_ei_usd + '</label><input id="w_total_ei_usd" class="won-usd calc-result" data-currency="USD" data-currency-group="total_ei" readonly></div>' +
         '<div><label>' + t.lbl_total_ei_vnd + '</label><input id="w_total_ei_vnd" class="won-vnd calc-result" data-currency="VND" data-currency-group="total_ei" readonly></div>' +
+      '</div>' +
       '</div>' +
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;margin-top:8px;border-top:1px dashed #ddd;padding-top:8px;">' + t.sub_vat + '</div></div>' +
       '<div class="form-row">' +
@@ -19112,6 +19115,9 @@ function setInstallFieldsState(disabled) {
   // ★WON-INST-HIDE-20261031：「包含安装?=否」时整块「安装 预算 / 实际」隐藏不可见；选「是」时恢复显示
   var grp = el('w_inst_group');
   if (grp) grp.style.display = disabled ? 'none' : '';
+  // ★WON-EI-HIDE-20261031：「设备&安装总价」整块同样跟随隐藏
+  var eigrp = el('w_ei_group');
+  if (eigrp) eigrp.style.display = disabled ? 'none' : '';
   // 清空安装费后合计会变，直接改 value 不触发 input 事件，这里手动重算一次
   if (disabled && typeof calcEITotal === 'function') calcEITotal();
 }
