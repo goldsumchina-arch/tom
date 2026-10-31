@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 15:10:16",
+ "generated": "2026-10-31 15:14:37",
  "version": "V2026.10.30.01",
- "note": "新增 sub_total_equip / sub_total_ei / sub_total_ei_noinst 三语词条；lbl_total_equip 标签的历史改动一并纳入基线",
+ "note": "不含安装时，设备&安装总价三个字段标签改为 设备(不含安装)总价（新增 lbl_total_ei_noinst 三语词条）",
  "i18n": {
   "dict@5661": {
    "zh": {
@@ -144,6 +144,7 @@
     "sub_total_equip": "设备综合价格（RMB · USD · VND）",
     "sub_total_ei": "设备&安装总价（RMB · USD · VND）",
     "sub_total_ei_noinst": "设备(不含安装) 总价（RMB · USD · VND）",
+    "lbl_total_ei_noinst": "设备(不含安装)总价",
     "lbl_total_ei_rmb": "设备&安装总价 RMB",
     "lbl_total_ei_usd": "设备&安装总价 USD",
     "lbl_total_ei_vnd": "设备&安装总价 VND",
@@ -1827,6 +1828,7 @@
     "sub_total_equip": "Total Equipment (RMB · USD · VND)",
     "sub_total_ei": "Total Equip+Install (RMB · USD · VND)",
     "sub_total_ei_noinst": "Total Equipment excl. Install (RMB · USD · VND)",
+    "lbl_total_ei_noinst": "Total Equipment excl. Install",
     "lbl_total_ei_rmb": "Total Equip+Install RMB",
     "lbl_total_ei_usd": "Total Equip+Install USD",
     "lbl_total_ei_vnd": "Total Equip+Install VND",
@@ -3512,6 +3514,7 @@
     "sub_total_equip": "TB tổng hợp (RMB · USD · VND)",
     "sub_total_ei": "Tổng TB&LĐ (RMB · USD · VND)",
     "sub_total_ei_noinst": "Tổng TB không gồm LĐ (RMB · USD · VND)",
+    "lbl_total_ei_noinst": "Tổng TB không gồm LĐ",
     "lbl_total_ei_rmb": "Tổng TB&LĐ RMB",
     "lbl_total_ei_usd": "Tổng TB&LĐ USD",
     "lbl_total_ei_vnd": "Tổng TB&LĐ VND",
@@ -5057,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27183": {
+  "dict@27193": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
