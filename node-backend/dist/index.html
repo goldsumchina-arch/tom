@@ -5718,6 +5718,10 @@ var I18N = {
     lbl_inst_actual_rmb:"安装费·实际 RMB",
     lbl_inst_actual_usd:"安装费·实际 USD",
     lbl_inst_actual_vnd:"安装费·实际 VND",
+    // ★WON-ACTUAL-TITLE-20261031：Actual 分组副标题（区别于 Budget，提示“填写至实际费用确认”）
+    sub_fb_actual:"运费&保险 实际（填写至实际费用确认）",
+    sub_cc_actual:"清关&内陆 实际（填写至实际费用确认）",
+    sub_inst_actual:"安装 实际（填写至实际费用确认）",
     lbl_total_ei_rmb:"设备&安装总价 RMB",
     lbl_total_ei_usd:"设备&安装总价 USD",
     lbl_total_ei_vnd:"设备&安装总价 VND",
@@ -6473,6 +6477,10 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     lbl_inst_actual_rmb:"Install Actual RMB",
     lbl_inst_actual_usd:"Install Actual USD",
     lbl_inst_actual_vnd:"Install Actual VND",
+    // ★WON-ACTUAL-TITLE-20261031：Actual 分组副标题（区别于 Budget，提示“填写至实际费用确认”）
+    sub_fb_actual:"Freight & Insurance Actual (Fill Until Actual Costs Confirmed)",
+    sub_cc_actual:"Customs Actual (Fill Until Actual Costs Confirmed)",
+    sub_inst_actual:"Install Actual (Fill Until Actual Costs Confirmed)",
     lbl_total_ei_rmb:"Total Equip+Install RMB",
     lbl_total_ei_usd:"Total Equip+Install USD",
     lbl_total_ei_vnd:"Total Equip+Install VND",
@@ -7231,6 +7239,10 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     lbl_inst_actual_rmb:"LĐ thực tế RMB",
     lbl_inst_actual_usd:"LĐ thực tế USD",
     lbl_inst_actual_vnd:"LĐ thực tế VND",
+    // ★WON-ACTUAL-TITLE-20261031：Actual 分组副标题（区别于 Budget，提示“填写至实际费用确认”）
+    sub_fb_actual:"VC&BH thực tế (Điền cho đến khi chi phí thực tế được xác nhận)",
+    sub_cc_actual:"HQ thực tế (Điền cho đến khi chi phí thực tế được xác nhận)",
+    sub_inst_actual:"LĐ thực tế (Điền cho đến khi chi phí thực tế được xác nhận)",
     lbl_total_ei_rmb:"Tổng TB&LĐ RMB",
     lbl_total_ei_usd:"Tổng TB&LĐ USD",
     lbl_total_ei_vnd:"Tổng TB&LĐ VND",
@@ -15504,7 +15516,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z144";  // 版本标记：用于确认浏览器加载的是最新代码（Z144 = 清关&内陆、安装 的预算/实际 也并排一行）
+const PERM_BUILD = "build 2026-10-31-Z145";  // 版本标记：用于确认浏览器加载的是最新代码（Z145 = 三个 Actual 分组副标题改为 Fill Until Actual Costs Confirmed）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18267,7 +18279,7 @@ function renderModalBody() {
           '</div>' +
         '</div>' +
         '<div class="w-cell w-wide">' +
-          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + wonSubTitle(t.lbl_fb_actual_rmb) + '</div>' +
+          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + t.sub_fb_actual + '</div>' +
           '<div class="form-row" style="margin-bottom:0;align-items:flex-start;">' +
             '<div><label>' + t.lbl_fb_actual_rmb + '</label><input id="w_fb_actual_rmb" class="won-rmb" data-currency="RMB" data-currency-group="fb_actual"></div>' +
             '<div><label>' + t.lbl_fb_actual_usd + '</label><input id="w_fb_actual_usd" class="won-usd" data-currency="USD" data-currency-group="fb_actual"></div>' +
@@ -18286,7 +18298,7 @@ function renderModalBody() {
           '</div>' +
         '</div>' +
         '<div class="w-cell w-wide">' +
-          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + wonSubTitle(t.lbl_cc_actual_rmb) + '</div>' +
+          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + t.sub_cc_actual + '</div>' +
           '<div class="form-row" style="margin-bottom:0;align-items:flex-start;">' +
             '<div><label>' + t.lbl_cc_actual_rmb + '</label><input id="w_cc_actual_rmb" class="won-rmb" data-currency="RMB" data-currency-group="cc_actual"></div>' +
             '<div><label>' + t.lbl_cc_actual_usd + '</label><input id="w_cc_actual_usd" class="won-usd" data-currency="USD" data-currency-group="cc_actual"></div>' +
@@ -18311,7 +18323,7 @@ function renderModalBody() {
           '</div>' +
         '</div>' +
         '<div class="w-cell w-wide">' +
-          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + wonSubTitle(t.lbl_inst_actual_rmb) + '</div>' +
+          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + t.sub_inst_actual + '</div>' +
           '<div class="form-row" style="margin-bottom:0;align-items:flex-start;">' +
             '<div><label>' + t.lbl_inst_actual_rmb + '</label><input id="w_inst_actual_rmb" class="won-rmb" data-currency="RMB" data-currency-group="inst_actual"></div>' +
             '<div><label>' + t.lbl_inst_actual_usd + '</label><input id="w_inst_actual_usd" class="won-usd" data-currency="USD" data-currency-group="inst_actual"></div>' +
