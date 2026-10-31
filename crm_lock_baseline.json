@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 12:18:48",
+ "generated": "2026-10-31 12:28:45",
  "version": "V2026.10.30.01",
- "note": "WON 三语提示词补充（won_doc_need_save/won_save_fail/won_del_fail）+ 基础信息两行布局（无新增文案）",
+ "note": "销售人员下拉改由用户名录驱动并即时刷新（仅代码逻辑，无新增文案）",
  "i18n": {
   "dict@5657": {
    "zh": {
@@ -5036,7 +5036,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26972": {
+  "dict@27016": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

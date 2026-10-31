@@ -15457,7 +15457,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z133";  // 版本标记：用于确认浏览器加载的是最新代码（Z133 = WON 基础信息15项压缩为两行）
+const PERM_BUILD = "build 2026-10-31-Z134";  // 版本标记：用于确认浏览器加载的是最新代码（Z134 = 销售人员下拉严格取自用户名录并即时刷新）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18022,9 +18022,13 @@ function getSalespersonList(){
       });
     }
   }catch(e){}
-  FIXED.forEach(function(n){
-    if(!seen[n]){ seen[n]=1; out.push(n); }
-  });
+  // ★SALESP-USERS-ONLY-20261031：名录可用时下拉「严格等于」名录里的销售/销售总监，
+  //   不再把写死的三人混进去；仅当名录为空（接口未就绪/全部离职）才用固定三人兜底。
+  if(!out.length){
+    FIXED.forEach(function(n){
+      if(!seen[n]){ seen[n]=1; out.push(n); }
+    });
+  }
   return out;
 }
 // 历史数据回显：原销售人员已不在当前名单（离职/转岗/改观察者）时，
@@ -18052,6 +18056,37 @@ function salespersonOptionsHtml(t, sel, includeAgiGs){
   // AGI-GS Internal：仅作记录的符号人员，仅在 WON 签约双方=AGI-GS 时允许出现
   if(includeAgiGs) h+='<option value="AGI-GS Internal"'+(sel==='AGI-GS Internal'?' selected':'')+'>AGI-GS Internal</option>';
   return h;
+}
+// ★SALESP-FRESH-20261031：销售人员下拉的唯一真相 = 用户名录（/api/users 中 position=销售|销售总监 的在职账号）。
+//   根因修复：原先 loadUsers() 在页面解析期就调用，那时云模式还没有 Bearer token 会直接空跑返回，
+//   之后登录成功/切视图都不会再拉，usersData 长期为 []，下拉就只剩写死的 tom/cuong/james。
+//   现在：① 登录/会话恢复后主动拉一次；② 每次打开弹窗前按需拉最新名录，拉回后原地重建下拉并保留已选值。
+var _salespUsersAt = 0;
+function refreshSalespersonSelects(){
+  var t = T();
+  ['c_salesperson','w_salesperson'].forEach(function(id){
+    var sel = el(id);
+    if (!sel || sel.tagName !== 'SELECT') return;
+    var cur = sel.value;
+    var names = getSalespersonList();
+    var h = '<option value="">' + (t.ph_salesperson || '—') + '</option>';
+    for (var i = 0; i < names.length; i++) { h += '<option value="' + names[i] + '">' + names[i] + '</option>'; }
+    sel.innerHTML = h;
+    if (cur) {
+      var has = false;
+      for (var k = 0; k < sel.options.length; k++) { if (sel.options[k].value === cur) { has = true; break; } }
+      if (!has) { var o = document.createElement('option'); o.value = cur; o.textContent = cur; sel.appendChild(o); }
+      sel.value = cur;
+    }
+  });
+}
+function ensureUsersFresh(maxAgeMs){
+  var now = Date.now();
+  maxAgeMs = maxAgeMs || 30000;
+  if (usersData && usersData.length && (now - _salespUsersAt) < maxAgeMs) return;
+  _salespUsersAt = now;
+  if (typeof loadUsers !== 'function') return;
+  loadUsers().then(function(){ refreshSalespersonSelects(); }).catch(function(){});
 }
 function buDisplay(v){
   if(!v) return '—';
@@ -18901,6 +18936,8 @@ function openWonModal(id) {
   el('wonModal').classList.add('show');
   // ★ V45：设备合同/安装合同 查看/下载按钮显隐（有附件才显示）
   refreshWonDocBtns();
+  // ★SALESP-FRESH-20261031：打开签约项目弹窗时按需刷新用户名录，确保销售人员下拉即时反映名录改动
+  if (typeof ensureUsersFresh === 'function') ensureUsersFresh();
 
   // 打开模态框后，如果有报告数据则同步客户付款字段
   setTimeout(function() {
@@ -19195,6 +19232,8 @@ function openCrmModal(id) {
     }
   }
   el('crmModal').classList.add('show');
+  // ★SALESP-FRESH-20261031：打开潜在项目弹窗时按需刷新用户名录，确保销售人员下拉即时反映名录改动
+  if (typeof ensureUsersFresh === 'function') ensureUsersFresh();
   // 打开后按汇率统一重算一次三币联动，确保数据一致（新/旧记录均生效）
   if (typeof crmRateChanged === 'function') crmRateChanged();
   // 兜底：刷新报价单 PDF 查看/下载 按钮显隐（有附件才显示）
@@ -25963,6 +26002,8 @@ function clearAuthKeep() {
       document.getElementById('loginPage').classList.add('hidden');
       _updateUserChip(authUser);
       showMainContent();
+      // ★SALESP-FRESH-20261031：会话恢复（刷新页面）后补拉用户名录，避免 usersData 长期为空
+      if (typeof loadUsers === 'function') loadUsers();
     } else {
       hideMainContent();
     }
@@ -26369,6 +26410,9 @@ function doLogin() {
       // 后台预加载 Won 数据，切到 Won 视图时立即可用
       if (typeof renderWonThead === 'function') renderWonThead();
       if (typeof loadWon === 'function') loadWon();
+      // ★SALESP-FRESH-20261031：登录拿到 token 后立即拉取用户名录（页面解析期那次调用早于 token，必然空跑），
+      //   否则销售人员下拉长期只有写死的 tom/cuong/james。
+      if (typeof loadUsers === 'function') { _salespUsersAt = Date.now(); loadUsers(); }
       // B. 登录后启动权限版本轮询，被改权限时页面立即刷新
       if (typeof startPermWatch === 'function') startPermWatch(5000);
       // 兜底：极端情况下 #app 若仍被隐藏（脚本未就绪/缓存截断），强制显示并切看板
