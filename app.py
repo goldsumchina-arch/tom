@@ -6156,6 +6156,51 @@ def api_fx_rates():
     return jsonify(resp)
 
 
+@app.route("/api/fx-latest")
+def api_fx_latest():
+    """最新一期（当日优先）汇率 —— CRM 报价汇率自动填充用。
+
+    规则：取日线缓存里「最近的可用日期」；若当日尚未同步，自动回退到上一可用日。
+    返回：{ok, date, is_today, usd_vnd, usd_cny, cny_vnd, source}
+    """
+    cached = _API_CACHE.get("fx_latest")
+    if cached and (time.time() - cached[0] < 300):
+        return jsonify(cached[1])
+    conn = get_db()
+    try:
+        fx = _fx_load_cache(conn)
+    finally:
+        conn.close()
+    usdvnd = fx.get("USDVND", {}) or {}
+    usdcny = fx.get("USDCNY", {}) or {}
+    dates = sorted(set(usdvnd.keys()) | set(usdcny.keys()))
+
+    best_v, best_v_date = None, ""
+    for d in reversed(dates):
+        if usdvnd.get(d) is not None:
+            best_v, best_v_date = usdvnd[d], d
+            break
+    best_c, best_c_date = None, ""
+    for d in reversed(dates):
+        if usdcny.get(d) is not None:
+            best_c, best_c_date = usdcny[d], d
+            break
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    used_date = max(best_v_date, best_c_date) if (best_v_date and best_c_date) else (best_v_date or best_c_date)
+    resp = {
+        "ok": bool(best_v and best_c),
+        "date": used_date,
+        "is_today": bool(best_v_date == today and best_c_date == today),
+        "usd_vnd": int(round(best_v)) if best_v else None,
+        "usd_cny": float(best_c) if best_c else None,
+        "cny_vnd": int(round(best_v / best_c)) if (best_v and best_c) else None,
+        "source": "sqlite-daily",
+    }
+    _API_CACHE["fx_latest"] = (time.time(), resp)
+    return jsonify(resp)
+
+
 # ============================================================================
 # DEMO 演示数据机制（一键还原 / 一键清空）
 # ============================================================================

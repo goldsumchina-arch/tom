@@ -693,6 +693,9 @@ function _ovLoadChartLib(cb){
     .inco-tooltip .inco-body { color:#333; }
     .form-row input { width:100%; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:12px; transition:border .2s; }
     .form-row input:focus { border-color:#F5872E; outline:none; }
+    /* ★CRM-AUTOFX-20261031：自动带入的汇率用灰色显示（表示是系统默认值），
+       用户一旦修改即移除该 class 恢复常规黑色，避免和手工录入的数值混淆。 */
+    .form-row input.fx-auto { color:#9aa0a6; }
     .btn { padding:4px 10px; border:none; border-radius:4px; cursor:pointer; font-size:10px; margin-right:2px; transition:all .15s; }
     .btn-primary { background:#F5872E; color:white; }
     .btn-primary:hover { background:#e07720; }
@@ -7979,6 +7982,66 @@ function formatRateDisplay(input) {
   var raw = input.value.replace(/,/g, '').replace(/[^0-9]/g, '');
   if (raw === '') { input.value = ''; return; }
   input.value = parseInt(raw, 10).toLocaleString('en-US');
+}
+
+// ===================== CRM 报价汇率自动填充 =====================
+// ★CRM-AUTOFX-20261031：打开「新增/编辑项目」时自动带入最新汇率
+//   ① 优先 /api/fx-latest（当日日线；当日未同步则返回上一可用日）
+//   ② 该接口不可用时回退 /api/fx-rates（月度聚合，取最后一个非空点）
+//   ③ 值以灰色显示（class=fx-auto），用户一改动即恢复常规颜色并由用户值接管
+//   已有值的记录（编辑旧项目）不覆盖，只在两个汇率都为空时补。
+var _crmFxLatest = null;
+function _crmFxLastNonNull(arr) {
+  if (!arr) return null;
+  for (var i = arr.length - 1; i >= 0; i--) {
+    if (arr[i] !== null && arr[i] !== undefined) return arr[i];
+  }
+  return null;
+}
+function crmRateUserEdit(input) {
+  if (!input) return;
+  if (input.classList) input.classList.remove('fx-auto');
+  input.removeAttribute('title');
+}
+function crmAutoFillRates(force) {
+  var e1 = el('c_rate_rmb_vnd'), e2 = el('c_rate_usd_vnd');
+  if (!e1 || !e2) return;
+  if (!force && (String(e1.value || '').trim() || String(e2.value || '').trim())) return;
+
+  var apply = function(d) {
+    if (!d || !d.ok) return;
+    if (d.cny_vnd) { e1.value = Number(d.cny_vnd).toLocaleString('en-US'); e1.classList.add('fx-auto'); }
+    if (d.usd_vnd) { e2.value = Number(d.usd_vnd).toLocaleString('en-US'); e2.classList.add('fx-auto'); }
+    var tip = '自动汇率 ' + (d.date || '') + (d.is_today ? '（当日）' : '（当日未同步，沿用上一可用日）') + ' · 可直接修改';
+    e1.title = tip; e2.title = tip;
+    if (typeof crmRateChanged === 'function') crmRateChanged();
+    // 自动填充属于"系统默认"，不应触发"未保存修改"提示；
+    // 但仅当用户此时还没聚焦表单时才刷新基准快照，避免吞掉真实改动。
+    try {
+      var ae = document.activeElement;
+      if (!(ae && ae.closest && ae.closest('#crmModalBody'))) crmOrigSnapshot = snapshotCrmForm();
+    } catch (err) {}
+  };
+
+  if (_crmFxLatest) { apply(_crmFxLatest); return; }
+  fetch('/api/fx-latest', { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (d && d.ok) { _crmFxLatest = d; apply(d); return null; }
+      // 回退：老的月度聚合接口
+      return fetch('/api/fx-rates', { cache: 'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(res){
+          if (!res || !res.ok || !res.series) return;
+          var uv = _crmFxLastNonNull(res.series.usd_vnd);
+          var cv = _crmFxLastNonNull(res.series.cny_vnd);
+          if (!uv || !cv) return;
+          var d2 = { ok: true, date: (res.labels || []).slice(-1)[0] || '', is_today: false,
+                     usd_vnd: uv, cny_vnd: cv };
+          _crmFxLatest = d2; apply(d2);
+        });
+    })
+    .catch(function(){ /* 离线/接口异常：保持空值，用户手填 */ });
 }
 // ===== 根据货币类型格式化带符号+千分位 =====
 function formatCurrencyWithSymbol(val, currency) {
@@ -15282,7 +15345,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z117";  // 版本标记：用于确认浏览器加载的是最新代码（Z117 = CRM 日期区块并为一行）
+const PERM_BUILD = "build 2026-10-31-Z118";  // 版本标记：用于确认浏览器加载的是最新代码（Z118 = CRM 汇率自动带入 + 灰色可改）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18878,8 +18941,8 @@ function renderCrmFormHtml(t) {
   // section4 汇率/贸易（tooltip 独立成行，避免挤压左侧汇率列）
   h += '<div class="form-section"><div class="form-section-title">' + (t.crm_section4 || 'Rate') + '</div>' +
     '<div class="form-row">' +
-      f(t.crm_lbl_rate_rmb_vnd, 'c_rate_rmb_vnd', {ph:t.crm_ph_rate, im:'numeric', oninput:'formatRateInput(this);crmRateChanged()', onblur:'formatRateDisplay(this)', req:true}) +
-      f(t.crm_lbl_rate_usd_vnd, 'c_rate_usd_vnd', {ph:t.crm_ph_rate, im:'numeric', oninput:'formatRateInput(this);crmRateChanged()', onblur:'formatRateDisplay(this)', req:true}) +
+      f(t.crm_lbl_rate_rmb_vnd, 'c_rate_rmb_vnd', {ph:t.crm_ph_rate, im:'numeric', oninput:'crmRateUserEdit(this);formatRateInput(this);crmRateChanged()', onblur:'formatRateDisplay(this)', req:true}) +
+      f(t.crm_lbl_rate_usd_vnd, 'c_rate_usd_vnd', {ph:t.crm_ph_rate, im:'numeric', oninput:'crmRateUserEdit(this);formatRateInput(this);crmRateChanged()', onblur:'formatRateDisplay(this)', req:true}) +
       '<div><label>' + t.crm_lbl_incoterm + '<span class="req-star">*</span>' +
         ' <span class="incoterm-star" onmouseenter="showIncotermHelp()" onmouseleave="hideIncotermHelp()" title="' + (t.incoterm_star || '?') + '">★</span>' +
         '</label><select id="c_incoterm" onchange="updateIncotermTooltip()">' + incotermOptionsHtml(t) + '</select>' +
@@ -19027,6 +19090,8 @@ function openCrmModal(id) {
   if (typeof crmRateChanged === 'function') crmRateChanged();
   // 兜底：刷新报价单 PDF 查看/下载 按钮显隐（有附件才显示）
   if (typeof refreshCrmPdfBtns === 'function') refreshCrmPdfBtns();
+  // ★CRM-AUTOFX-20261031：自动带入最新汇率（新建总是带入；编辑时仅当两个汇率都为空才补）
+  if (typeof crmAutoFillRates === 'function') crmAutoFillRates(!id);
   // 记录打开时的表单快照，用于关闭时判断是否有未保存的更改
   crmOrigSnapshot = snapshotCrmForm();
 }

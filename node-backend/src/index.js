@@ -32,6 +32,7 @@ import { handleApproval } from "./approval.js";
 import { handleUsers } from "./users.js";
 import { handleFiles } from "./files.js";
 import { handlePrices } from "./prices.js";
+import { handleFxLatest } from "./fx.js";
 import { handleCommission } from "./commission.js";
 import { handleVault } from "./vault.js";
 import { handlePurge } from "./purge.js";
@@ -665,6 +666,8 @@ export default {
       // 看板价格/汇率数据只读，不涉敏感信息，允许未登录时直接读取（避免登录页/会话恢复前的 401）
       "/api/metal-prices", "/api/feed-prices", "/api/livestock-prices",
       "/api/livestock-farmgate", "/api/fx-rates", "/api/livestock-retail-raw",
+      // CRM 报价汇率自动填充：只读、不涉敏感信息，与 /api/fx-rates 同级放行
+      "/api/fx-latest",
       "/",
     ]);
     // 附件直链（<img src>/<a href>）浏览器无法自动带 Authorization 头，故免鉴权；
@@ -875,7 +878,7 @@ export default {
     for (const handler of [
       handleSync,
       handleCrm, handleWonLost, handleApproval,
-      handleUsers, handleFiles, handlePrices,
+      handleUsers, handleFiles, handlePrices, handleFxLatest,
       handleCommission, handleVault, handlePurge, handleDashUpdateStatus, handleDashStats,
     ]) {
       let out = null;
