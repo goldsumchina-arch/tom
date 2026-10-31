@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 11:47:15",
+ "generated": "2026-10-31 12:06:43",
  "version": "V2026.10.30.01",
- "note": "WON 设备/安装合同字段上传后显示上传/查看/删除，原下载按钮改删除，新增三语 won_doc_del_msg",
+ "note": "WON 上传前自动保存 + 提示三语化（won_doc_need_save/won_save_fail/won_del_fail）",
  "i18n": {
   "dict@5649": {
    "zh": {
@@ -26,6 +26,9 @@
     "won_doc_equip": "设备合同",
     "won_doc_install": "安装合同",
     "won_doc_del_msg": "确定删除这份合同文件？（仅从本项目移除，原文件仍在文件库）",
+    "won_doc_need_save": "请先填写合同号或客户名称，再上传合同文件",
+    "won_save_fail": "保存失败：无法连接服务器，数据未写入",
+    "won_del_fail": "删除失败：无法连接服务器",
     "btnAddWon": "+ 新建签约",
     "btnExportExcel": "📊 导出 Excel",
     "btnSave": "保存",
@@ -1700,6 +1703,9 @@
     "won_doc_equip": "Equipment Contract",
     "won_doc_install": "Installation Contract",
     "won_doc_del_msg": "Remove this contract file from the project? (The file stays in the vault.)",
+    "won_doc_need_save": "Please fill in Contract No. or Customer before uploading contract files",
+    "won_save_fail": "Save failed: cannot reach the server, data was not saved",
+    "won_del_fail": "Delete failed: cannot reach the server",
     "btnAddWon": "+ New Won",
     "btnExportExcel": "📊 Export Excel",
     "btnSave": "Save",
@@ -3374,6 +3380,9 @@
     "won_doc_equip": "Hợp đồng thiết bị",
     "won_doc_install": "Hợp đồng lắp đặt",
     "won_doc_del_msg": "Xóa tệp hợp đồng này khỏi dự án? (Tệp vẫn còn trong kho tệp.)",
+    "won_doc_need_save": "Vui lòng nhập Số hợp đồng hoặc Khách hàng trước khi tải lên tệp hợp đồng",
+    "won_save_fail": "Lưu thất bại: không kết nối được máy chủ, dữ liệu chưa được lưu",
+    "won_del_fail": "Xóa thất bại: không kết nối được máy chủ",
     "btnAddWon": "+ Thắng Mới",
     "btnExportExcel": "📊 Xuất Excel",
     "btnSave": "Lưu",
@@ -5027,7 +5036,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26941": {
+  "dict@26971": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
