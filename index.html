@@ -15518,7 +15518,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z147";  // 版本标记：用于确认浏览器加载的是最新代码（Z147 = Actual 组输入框上方文字改为红色）
+const PERM_BUILD = "build 2026-10-31-Z148";  // 版本标记：用于确认浏览器加载的是最新代码（Z148 = 包含安装=否 时安装费整组清空锁死并隐藏）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -16798,6 +16798,8 @@ function applyWonLang() {
       if (s.fx && f.classList) f.classList.add('fx-auto');
       if (s.d) f.disabled = true;
     });
+    // ★WON-INST-HIDE-20261031：重建 DOM 后重新套用「包含安装?=否 → 清空+锁死+隐藏」状态
+    if (typeof onIncludeInstallChange === 'function') onIncludeInstallChange();
     el('w_payment_terms_zh').value = _ptSnap.zh;
     el('w_payment_terms_en').value = _ptSnap.en;
     el('w_payment_terms_vi').value = _ptSnap.vi;
@@ -18315,7 +18317,8 @@ function renderModalBody() {
         '<div><label>' + t.lbl_total_equip_vnd + '</label><input id="w_total_equip_vnd" class="won-vnd calc-result" data-currency="VND" data-currency-group="total_equip" readonly></div>' +
       '</div>' +
       // ★WON-PAIR-ROW-20261031：安装 预算 / 实际 两组并排一行
-      '<div class="w-2row">' +
+      // ★WON-INST-HIDE-20261031：包含安装?=否 时整块隐藏（id=w_inst_group），由 setInstallFieldsState 控制
+      '<div class="w-2row" id="w_inst_group">' +
         '<div class="w-cell w-wide">' +
           '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + wonSubTitle(t.lbl_inst_budget_rmb) + '</div>' +
           '<div class="form-row" style="margin-bottom:0;align-items:flex-start;">' +
@@ -19106,6 +19109,11 @@ function setInstallFieldsState(disabled) {
     }
     
   });
+  // ★WON-INST-HIDE-20261031：「包含安装?=否」时整块「安装 预算 / 实际」隐藏不可见；选「是」时恢复显示
+  var grp = el('w_inst_group');
+  if (grp) grp.style.display = disabled ? 'none' : '';
+  // 清空安装费后合计会变，直接改 value 不触发 input 事件，这里手动重算一次
+  if (disabled && typeof calcEITotal === 'function') calcEITotal();
 }
 
 function onIncludeInstallChange() {

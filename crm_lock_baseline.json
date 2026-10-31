@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 14:44:52",
+ "generated": "2026-10-31 14:52:24",
  "version": "V2026.10.30.01",
- "note": "Actual 组输入框上方文字改为红色（新增 won-actual 样式类，无文案变更）",
+ "note": "包含安装=否 时安装费整组清空锁死并隐藏（纯逻辑/布局，无文案变更）",
  "i18n": {
   "dict@5661": {
    "zh": {
@@ -5048,7 +5048,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27155": {
+  "dict@27163": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
