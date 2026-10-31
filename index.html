@@ -698,7 +698,7 @@ function _ovLoadChartLib(cb){
     .form-row input.fx-auto { color:#9aa0a6; }
     /* ★CRM-Q-GRID-20261031：报价金额 Q1-Q7 转置矩阵（列=科目，行=币种） */
     .crm-q-grid { display:grid; grid-template-columns:104px repeat(7, minmax(0,1fr)); gap:5px 6px; align-items:center; }
-    .crm-q-grid .crm-q-head { font-size:11px; font-weight:700; text-align:center; color:#333; background:#f2f2f2; border-radius:4px; padding:3px 2px; white-space:nowrap; }
+    .crm-q-grid .crm-q-head { font-size:10px; font-weight:700; text-align:center; color:#333; background:#f2f2f2; border-radius:4px; padding:4px 3px; line-height:1.25; min-height:44px; display:flex; align-items:center; justify-content:center; word-break:break-word; }
     .crm-q-grid .crm-q-rowlbl { font-size:11px; font-weight:700; text-align:center; border-radius:4px; line-height:28px; }
     .crm-q-grid .crm-q-corner { }
     .btn { padding:4px 10px; border:none; border-radius:4px; cursor:pointer; font-size:10px; margin-right:2px; transition:all .15s; }
@@ -15350,7 +15350,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z120";  // 版本标记：用于确认浏览器加载的是最新代码（Z120 = 报价金额 Q1-Q7 转置矩阵，3 行×7 列）
+const PERM_BUILD = "build 2026-10-31-Z121";  // 版本标记：用于确认浏览器加载的是最新代码（Z121 = Q1-Q7 列头显示完整科目名）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18979,8 +18979,9 @@ function renderCrmFormHtml(t) {
        '<div class="crm-q-corner"></div>' +
        qKeys.map(function(qk, idx){
          var q = qIds[idx].toLowerCase();
+         // ★CRM-Q-GRID-FULLNAME-20261031：列头显示完整科目名（原只显示 Q1…Q7）
          var full = String(t[qk] || qIds[idx]).replace(/"/g, '');
-         return '<div class="crm-q-head" title="' + full + '">' + qIds[idx] +
+         return '<div class="crm-q-head" title="' + full + '">' + full +
            (qReq[q] ? '<span class="req-star">*</span>' : '') + '</div>';
        }).join('') +
        sumMeta.map(function(sm){
