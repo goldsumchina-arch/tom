@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 15:54:03",
+ "generated": "2026-10-31 16:04:36",
  "version": "V2026.10.30.01",
- "note": "质保金 开关+三币+起止日期 合并成一行（纯布局，无文案变更）",
+ "note": "二级模态框补齐 × 关闭按钮（新增 CSS 定位规则，无文案变更）",
  "i18n": {
-  "dict@5663": {
+  "dict@5685": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27195": {
+  "dict@27217": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

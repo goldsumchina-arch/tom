@@ -2744,6 +2744,28 @@ function _ovLoadChartLib(cb){
     display:inline-flex; align-items:center; justify-content:center; line-height:1; z-index:5;
   }
   .cust-pay-modal .mmax-btn, .cm-modal .mmax-btn, .gsr-modal .mmax-btn, .cpr-box .mmax-btn { top:11px; right:48px; }
+  /* ★WON-SUB2-CLOSE-20261031：二级模态框（客户付款明细 / AGI付款明细 / 佣金支付管理 /
+     客户付款智能报告 / AGI付款智能报告 / GS→AGI 佣金报告）的 × 关闭按钮，
+     会被自动注入 □ 的脚本移到「弹窗盒子」外层，从而失去 `.cp-head .cp-close` 这类按标题栏作用域的样式，
+     变成流内白字按钮（看不见）。这里按一级模态框 .modal > .close 的规格补齐：
+     26×26、top:11px、right:16px（□ 在 right:48px）、白色、透明底。 */
+  .cust-pay-modal > .cp-close,
+  .cm-modal > .cm-close,
+  .gsr-modal > .gsr-close,
+  .cpr-box > .cpr-close {
+    position:absolute !important; top:11px !important; right:16px !important;
+    left:auto !important; bottom:auto !important;
+    width:26px !important; height:26px !important; margin:0 !important; padding:0 !important;
+    display:flex !important; align-items:center !important; justify-content:center !important;
+    font-size:18px !important; line-height:1 !important; color:#fff !important;
+    background:none; border:none; border-radius:5px; cursor:pointer; float:none !important; z-index:11;
+  }
+  .cust-pay-modal > .cp-close:hover,
+  .cm-modal > .cm-close:hover,
+  .gsr-modal > .gsr-close:hover,
+  .cpr-box > .cpr-close:hover { color:#ffe3c8 !important; background:rgba(255,255,255,.15); }
+  /* 给 ×/□ 两个按钮让出位置，避免压住标题栏右侧的「可拖拽拉升」提示文字 */
+  .cp-head .cp-resize-hint { padding-right:78px; }
   .addm-head .addm-close, .addm-sum-head .addm-sum-close {
     position:absolute; top:11px; right:16px; width:26px; height:26px; margin:0; padding:0;
     display:inline-flex; align-items:center; justify-content:center; line-height:1; z-index:5;
@@ -15535,7 +15557,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z154";  // 版本标记：用于确认浏览器加载的是最新代码（Z154 = 质保金 开关+三币+起止日期 合并成一行）
+const PERM_BUILD = "build 2026-10-31-Z155";  // 版本标记：用于确认浏览器加载的是最新代码（Z155 = 二级模态框补齐 × 关闭按钮）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
