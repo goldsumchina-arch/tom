@@ -105,7 +105,7 @@ def main():
     # ⑦ 表格列宽冻结模块必须在
     ck_yes(h, r"function\s+freezeTable\s*\(", "⑦ 缺少 freezeTable()（列宽冻结）")
     ck_yes(h, r"LG\.freezeAllTables", "⑦ 未导出 LG.freezeAllTables")
-    ck_yes(h, r"lg_colw_v4_20261026", "⑦ 缺少列宽缓存 key（列宽必须来自中文基准缓存）")
+    ck_yes(h, r"lg_colw_v7_20261029", "⑦ 缺少列宽缓存 key（列宽必须来自中文基准缓存）")
     # 唯一允许存在的运行时测宽函数是历史遗留的 autoFitCommissionTable，
     # 它必须被 patchRenderer 包住（运行后用中文基准宽度覆盖回去）。
     ck_yes(h, r"patchRenderer\('autoFitCommissionTable'\)",
