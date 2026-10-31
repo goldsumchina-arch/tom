@@ -696,6 +696,11 @@ function _ovLoadChartLib(cb){
     /* ★CRM-AUTOFX-20261031：自动带入的汇率用灰色显示（表示是系统默认值），
        用户一旦修改即移除该 class 恢复常规黑色，避免和手工录入的数值混淆。 */
     .form-row input.fx-auto { color:#9aa0a6; }
+    /* ★CRM-Q-GRID-20261031：报价金额 Q1-Q7 转置矩阵（列=科目，行=币种） */
+    .crm-q-grid { display:grid; grid-template-columns:104px repeat(7, minmax(0,1fr)); gap:5px 6px; align-items:center; }
+    .crm-q-grid .crm-q-head { font-size:11px; font-weight:700; text-align:center; color:#333; background:#f2f2f2; border-radius:4px; padding:3px 2px; white-space:nowrap; }
+    .crm-q-grid .crm-q-rowlbl { font-size:11px; font-weight:700; text-align:center; border-radius:4px; line-height:28px; }
+    .crm-q-grid .crm-q-corner { }
     .btn { padding:4px 10px; border:none; border-radius:4px; cursor:pointer; font-size:10px; margin-right:2px; transition:all .15s; }
     .btn-primary { background:#F5872E; color:white; }
     .btn-primary:hover { background:#e07720; }
@@ -15345,7 +15350,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z119";  // 版本标记：用于确认浏览器加载的是最新代码（Z119 = EN 报价科目改名 Supervision Cost / Inland Freight / Sub-total Equipment / Installation Cost）
+const PERM_BUILD = "build 2026-10-31-Z120";  // 版本标记：用于确认浏览器加载的是最新代码（Z120 = 报价金额 Q1-Q7 转置矩阵，3 行×7 列）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18956,48 +18961,41 @@ function renderCrmFormHtml(t) {
     '</div>' +
   '</div>';
 
-  // section5 报价金额 Q1-Q7（左侧为 Q 具体含义标签 + 顶部 RMB/USD/VND 列头，与表格 Q 子列完全对应）
+  // section5 报价金额 Q1-Q7
+  // ★ CRM-Q-GRID-20261031：由「7 行 × 3 币」转置为「3 行 × 7 科目」矩阵 ——
+  //   顶部一行排 Q1…Q7，纵向只留 RMB / USD / VND 三行；
+  //   高度由 7 行降到 3 行，更紧凑。列头用短标签 Q1…Q7（完整科目名放进 title 悬浮提示），
+  //   必填科目（Q1-Q4、Q6）保留红星；Q5 / Q7 仍是只读自动汇总。
   var qKeys = ['crm_q1','crm_q2','crm_q3','crm_q4','crm_q5','crm_q6','crm_q7'];
-  var qIds  = ['q1','q2','q3','q4','q5','q6','q7'];
-  var hdrs  = [t.crm_rmb || 'RMB', t.crm_usd || 'USD', t.crm_vnd || 'VND'];
-  h += '<div class="form-section"><div class="form-section-title">' + (t.crm_section5 || 'Quote Amounts') + '</div>';
-  // 列头行（背景色与主表格 RMB/USD/VND 列一致）
-  var hdrMeta = [
-    {txt:hdrs[0], bg:'#fde8e8', color:'#c0392b'},
-    {txt:hdrs[1], bg:'#e8edf8', color:'#2c5fa8'},
-    {txt:hdrs[2], bg:'#f8f4e0', color:'#b8860b'}
-  ];
-  h += '<div class="form-row" style="align-items:center;">' +
-        '<div style="flex:0 0 150px;line-height:30px;font-weight:700;">&nbsp;</div>' +
-        hdrMeta.map(function(hm){ return '<div style="flex:1;text-align:center;font-weight:700;color:' + hm.color + ';background:' + hm.bg + ';line-height:30px;border-radius:4px;">' + hm.txt + '</div>'; }).join('') +
-      '</div>';
+  var qIds  = ['Q1','Q2','Q3','Q4','Q5','Q6','Q7'];
+  var qReq  = { q1:1, q2:1, q3:1, q4:1, q6:1 };
   var sumMeta = [
-    {c:'rmb', cls:'cur-rmb', sym:'¥'},
-    {c:'usd', cls:'cur-usd', sym:'$'},
-    {c:'vnd', cls:'cur-vnd', sym:'₫'}
+    {c:'rmb', cls:'cur-rmb', sym:'¥', bg:'#fde8e8', head:(t.crm_rmb || 'RMB'), hcol:'#c0392b'},
+    {c:'usd', cls:'cur-usd', sym:'$', bg:'#e8edf8', head:(t.crm_usd || 'USD'), hcol:'#2c5fa8'},
+    {c:'vnd', cls:'cur-vnd', sym:'₫', bg:'#f8f4e0', head:(t.crm_vnd || 'VND'), hcol:'#b8860b'}
   ];
-  qKeys.forEach(function(qk, idx) {
-    var q = qIds[idx];
-    if (q === 'q5' || q === 'q7') {
-      // Q5 设备综合 / Q7 总金额：自动计算、只读显示
-      h += '<div class="form-row" style="align-items:center;">' +
-        '<div style="flex:0 0 150px;line-height:30px;font-weight:600;">' + (t[qk] || (q.toUpperCase())) + '</div>' +
-        sumMeta.map(function(sm){
-          return '<div style="flex:1;padding:0 4px;"><div class="cur-input-wrap ' + sm.cls + '" style="height:34px;display:flex;align-items:center;padding:0 8px;font-weight:700;">' +
-            '<span id="c_' + q + '_' + sm.c + '_sum">' + sm.sym + ' 0</span></div></div>';
-        }).join('') +
-      '</div>';
-    } else {
-      // Q1-Q4、Q6 为必填（三种币至少填一项）
-      h += '<div class="form-row" style="align-items:center;">' +
-        '<div style="flex:0 0 150px;line-height:30px;font-weight:600;">' + (t[qk] || (q.toUpperCase())) + '<span class="req-star">*</span></div>' +
-        f('', 'c_' + q + '_rmb', {cur:'RMB', bg:'#fde8e8'}) +
-        f('', 'c_' + q + '_usd', {cur:'USD', bg:'#e8edf8'}) +
-        f('', 'c_' + q + '_vnd', {cur:'VND', bg:'#f8f4e0'}) +
-      '</div>';
-    }
-  });
-  h += '</div>';
+  h += '<div class="form-section"><div class="form-section-title">' + (t.crm_section5 || 'Quote Amounts') + '</div>' +
+       '<div class="crm-q-grid">' +
+       '<div class="crm-q-corner"></div>' +
+       qKeys.map(function(qk, idx){
+         var q = qIds[idx].toLowerCase();
+         var full = String(t[qk] || qIds[idx]).replace(/"/g, '');
+         return '<div class="crm-q-head" title="' + full + '">' + qIds[idx] +
+           (qReq[q] ? '<span class="req-star">*</span>' : '') + '</div>';
+       }).join('') +
+       sumMeta.map(function(sm){
+         var cells = qIds.map(function(lbl){
+           var q = lbl.toLowerCase();
+           if (q === 'q5' || q === 'q7') {
+             // Q5 设备综合 / Q7 总金额：自动计算、只读显示
+             return '<div class="cur-input-wrap ' + sm.cls + '" style="height:32px;display:flex;align-items:center;padding:0 8px;font-weight:700;">' +
+               '<span id="c_' + q + '_' + sm.c + '_sum">' + sm.sym + ' 0</span></div>';
+           }
+           return f('', 'c_' + q + '_' + sm.c, {cur: sm.c.toUpperCase(), bg: sm.bg});
+         }).join('');
+         return '<div class="crm-q-rowlbl" style="background:' + sm.bg + ';color:' + sm.hcol + ';">' + sm.head + '</div>' + cells;
+       }).join('') +
+       '</div></div>';
 
   // section6 报价单PDF（含 已报安装费 + 三个 PDF 子列：缩小输入框 + 上传按钮 + 查看/下载按钮）
   var pdfField = function(lbl, id) {
