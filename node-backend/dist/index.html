@@ -15282,7 +15282,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-30-Z113";  // 版本标记：用于确认浏览器加载的是最新代码（Z113 = CRM/LOST 表头锁定 HEAD-LOCK-20261030）
+const PERM_BUILD = "build 2026-10-31-Z114";  // 版本标记：用于确认浏览器加载的是最新代码（Z114 = CRM 基本信息 4/4 两行紧凑布局）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18833,17 +18833,18 @@ function renderCrmFormHtml(t) {
   var h = '';
 
   // section1 基本信息
+  // ★ CRM-BASIC-2ROWS-20261031：8 个必填项由「2/3/3」三行压成「4/4」两行，纵向省掉一整行高度。
+  //   字段顺序按录入习惯：第 1 行=项目标识（报价编号/项目名称/省份/客户名称），
+  //   第 2 行=分类与概率（BU/建设情况/启动概率%/签约概率%）。实际列数由 .form-row 的 flex 均分。
   h += '<div class="form-section"><div class="form-section-title">' + (t.crm_section1 || 'Basic') + '</div>' +
     '<div class="form-row">' +
       f(t.crm_lbl_quote_no, 'c_quote_no', {ph:t.crm_ph_quote_no, req:true}) +
       f(t.crm_lbl_project_name, 'c_project_name', {req:true}) +
-    '</div>' +
-    '<div class="form-row">' +
       '<div><label>' + t.crm_lbl_province + '<span class="req-star">*</span></label><select id="c_province">' + provinceOptionsHtml(t, CUR_LANG) + '</select></div>' +
       f(t.crm_lbl_customer, 'c_customer', {req:true}) +
-      '<div><label>' + t.crm_lbl_bu + '<span class="req-star">*</span></label><select id="c_bu">' + buOptionsHtml(t) + '</select></div>' +
     '</div>' +
     '<div class="form-row">' +
+      '<div><label>' + t.crm_lbl_bu + '<span class="req-star">*</span></label><select id="c_bu">' + buOptionsHtml(t) + '</select></div>' +
       '<div><label>' + t.crm_lbl_construction + '<span class="req-star">*</span></label><select id="c_construction">' + constructionOptionsHtml(t) + '</select></div>' +
       f(t.crm_lbl_startup_pct, 'c_startup_pct', {ph:t.crm_ph_pct, req:true}) +
       f(t.crm_lbl_sign_pct, 'c_sign_pct', {ph:t.crm_ph_pct, req:true}) +
