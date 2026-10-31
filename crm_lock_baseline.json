@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 10:54:45",
+ "generated": "2026-10-31 11:47:15",
  "version": "V2026.10.30.01",
- "note": "Sales 下拉并入 Basic Info 第一行；区块标题 Sales/Remark 改为 Remarks（三语）",
+ "note": "WON 设备/安装合同字段上传后显示上传/查看/删除，原下载按钮改删除，新增三语 won_doc_del_msg",
  "i18n": {
   "dict@5649": {
    "zh": {
@@ -25,6 +25,7 @@
     "won_province": "省份",
     "won_doc_equip": "设备合同",
     "won_doc_install": "安装合同",
+    "won_doc_del_msg": "确定删除这份合同文件？（仅从本项目移除，原文件仍在文件库）",
     "btnAddWon": "+ 新建签约",
     "btnExportExcel": "📊 导出 Excel",
     "btnSave": "保存",
@@ -1698,6 +1699,7 @@
     "won_province": "Province",
     "won_doc_equip": "Equipment Contract",
     "won_doc_install": "Installation Contract",
+    "won_doc_del_msg": "Remove this contract file from the project? (The file stays in the vault.)",
     "btnAddWon": "+ New Won",
     "btnExportExcel": "📊 Export Excel",
     "btnSave": "Save",
@@ -3371,6 +3373,7 @@
     "won_province": "Tỉnh",
     "won_doc_equip": "Hợp đồng thiết bị",
     "won_doc_install": "Hợp đồng lắp đặt",
+    "won_doc_del_msg": "Xóa tệp hợp đồng này khỏi dự án? (Tệp vẫn còn trong kho tệp.)",
     "btnAddWon": "+ Thắng Mới",
     "btnExportExcel": "📊 Xuất Excel",
     "btnSave": "Lưu",
@@ -5024,7 +5027,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26880": {
+  "dict@26941": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
