@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 14:40:12",
+ "generated": "2026-10-31 14:44:52",
  "version": "V2026.10.30.01",
- "note": "三个 Actual 副标题括号说明改为 待真实数据发生后才填写（三语）",
+ "note": "Actual 组输入框上方文字改为红色（新增 won-actual 样式类，无文案变更）",
  "i18n": {
-  "dict@5659": {
+  "dict@5661": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5048,7 +5048,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27153": {
+  "dict@27155": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
