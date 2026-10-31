@@ -704,6 +704,8 @@ function _ovLoadChartLib(cb){
     /* ★CRM-AUTOFX-20261031：自动带入的汇率用灰色显示（表示是系统默认值），
        用户一旦修改即移除该 class 恢复常规黑色，避免和手工录入的数值混淆。 */
     .form-row input.fx-auto { color:#9aa0a6; }
+    /* ★WON-FX-AUTO-20261031：签约项目基础信息用的是 .w-2row/.w-cell 网格，需单独放开灰色规则 */
+    .w-2row .w-cell input.fx-auto { color:#9aa0a6; }
     /* ★CRM-Q-GRID-20261031：报价金额 Q1-Q7 转置矩阵（列=科目，行=币种） */
     .crm-q-grid { display:grid; grid-template-columns:104px repeat(7, minmax(0,1fr)); gap:5px 6px; align-items:center; }
     .crm-q-grid .crm-q-head { font-size:10px; font-weight:700; text-align:center; color:#333; background:#f2f2f2; border-radius:4px; padding:4px 3px; line-height:1.25; min-height:44px; display:flex; align-items:center; justify-content:center; word-break:break-word; }
@@ -8056,6 +8058,51 @@ function crmAutoFillRates(force) {
     .then(function(d){
       if (d && d.ok) { _crmFxLatest = d; apply(d); return null; }
       // 回退：老的月度聚合接口
+      return fetch('/api/fx-rates', { cache: 'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(res){
+          if (!res || !res.ok || !res.series) return;
+          var uv = _crmFxLastNonNull(res.series.usd_vnd);
+          var cv = _crmFxLastNonNull(res.series.cny_vnd);
+          if (!uv || !cv) return;
+          var d2 = { ok: true, date: (res.labels || []).slice(-1)[0] || '', is_today: false,
+                     usd_vnd: uv, cny_vnd: cv };
+          _crmFxLatest = d2; apply(d2);
+        });
+    })
+    .catch(function(){ /* 离线/接口异常：保持空值，用户手填 */ });
+}
+
+// ★WON-FX-AUTO-20261031：签约项目（新建/编辑）的汇率自动带出，逻辑与「潜在项目」完全一致：
+//   ① 优先 /api/fx-latest（当日汇率；当日未同步时接口自带上一可用日）→ 失败才回退 /api/fx-rates 月度聚合；
+//   ② 值以灰色显示（class=fx-auto），用户一改动即恢复常规颜色并由用户值接管；
+//   ③ 编辑已有记录（已有汇率值）不覆盖，只在新记录且两框都为空时补。
+//   与 CRM 共用 _crmFxLatest 缓存，避免重复请求。
+function wonRateUserEdit(input) {
+  if (!input) return;
+  if (input.classList) input.classList.remove('fx-auto');
+  input.removeAttribute('title');
+}
+function wonAutoFillRates(force) {
+  var e1 = el('w_rate_rmb_vnd'), e2 = el('w_rate_usd_vnd');
+  if (!e1 || !e2) return;
+  // 签约双方=AGI-GS 等锁定场景下输入框被 disabled，系统默认值不应写进锁定区
+  if (e1.disabled || e2.disabled) return;
+  if (!force && (String(e1.value || '').trim() || String(e2.value || '').trim())) return;
+
+  var apply = function(d) {
+    if (!d || !d.ok) return;
+    if (d.cny_vnd) { e1.value = Number(d.cny_vnd).toLocaleString('en-US'); e1.classList.add('fx-auto'); }
+    if (d.usd_vnd) { e2.value = Number(d.usd_vnd).toLocaleString('en-US'); e2.classList.add('fx-auto'); }
+    var tip = '自动汇率 ' + (d.date || '') + (d.is_today ? '（当日）' : '（当日未同步，沿用上一可用日）') + ' · 可直接修改';
+    e1.title = tip; e2.title = tip;
+  };
+
+  if (_crmFxLatest) { apply(_crmFxLatest); return; }
+  fetch('/api/fx-latest', { cache: 'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (d && d.ok) { _crmFxLatest = d; apply(d); return null; }
       return fetch('/api/fx-rates', { cache: 'no-store' })
         .then(function(r){ return r.ok ? r.json() : null; })
         .then(function(res){
@@ -15457,7 +15504,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z137";  // 版本标记：用于确认浏览器加载的是最新代码（Z137 = 付款方式下移至第三行最左，与两份合同同行）
+const PERM_BUILD = "build 2026-10-31-Z138";  // 版本标记：用于确认浏览器加载的是最新代码（Z138 = 新建签约自动带出当日汇率，灰色可改）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -16720,7 +16767,8 @@ function applyWonLang() {
     var _formSnap = [];
     document.querySelectorAll('#modalBody input, #modalBody select, #modalBody textarea').forEach(function(f){
       if (!f.id || f.type === 'file') return;
-      _formSnap.push({ id: f.id, v: f.value, d: !!f.disabled, r: !!f.readOnly });
+      _formSnap.push({ id: f.id, v: f.value, d: !!f.disabled, r: !!f.readOnly,
+                       fx: !!(f.classList && f.classList.contains('fx-auto')) });
     });
     renderModalBody();
     // 还原快照；select 若新 DOM 里没有该选项（语言/名录变化）则补一个，避免已选值被吞
@@ -16733,6 +16781,7 @@ function applyWonLang() {
       }
       f.value = s.v;
       if (s.r && 'readOnly' in f) f.readOnly = true;
+      if (s.fx && f.classList) f.classList.add('fx-auto');
       if (s.d) f.disabled = true;
     });
     el('w_payment_terms_zh').value = _ptSnap.zh;
@@ -18170,8 +18219,8 @@ function renderModalBody() {
         '<div class="w-cell"><label>' + t.lbl_incoterm + '</label><select id="w_incoterm"><option value="EXW">EXW</option><option value="FCA">FCA</option><option value="FAS">FAS</option><option value="FOB">FOB</option><option value="CFR">CFR</option><option value="CIF">CIF</option><option value="CPT">CPT</option><option value="CIP">CIP</option><option value="DAP">DAP</option><option value="DPU">DPU</option><option value="DDP">DDP</option><option value="OTHERS">OTHERS</option></select></div>' +
       '</div>' +
       '<div class="w-2row">' +
-        '<div class="w-cell"><label>' + t.lbl_rate_rmb_vnd + '</label><input id="w_rate_rmb_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_rmb + '" oninput="formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
-        '<div class="w-cell"><label>' + t.lbl_rate_usd_vnd + '</label><input id="w_rate_usd_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_usd + '" oninput="formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
+        '<div class="w-cell"><label>' + t.lbl_rate_rmb_vnd + '</label><input id="w_rate_rmb_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_rmb + '" oninput="wonRateUserEdit(this);formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
+        '<div class="w-cell"><label>' + t.lbl_rate_usd_vnd + '</label><input id="w_rate_usd_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_usd + '" oninput="wonRateUserEdit(this);formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
         '<div class="w-cell"><label>' + t.lbl_include_install + '</label><select id="w_include_install" onchange="onIncludeInstallChange()"><option value="YES">' + t.inc_yes + '</option><option value="NO">' + t.inc_no + '</option></select></div>' +
         '<div class="w-cell"><label>' + t.lbl_bu + '</label><select id="w_doc_remark">' + buOptionsHtml(t) + '</select></div>' +
         '<div class="w-cell"><label>' + t.lbl_salesperson + '</label><select id="w_salesperson">' + salespersonOptionsHtml(t, '', false) + '</select></div>' +
@@ -18959,6 +19008,9 @@ function openWonModal(id) {
   onIncludeInstallChange();
   // 根据「签约双方」锁定无关区域（③④⑤ 锁死 + 假数值 0）
   if (typeof applySigningLock === 'function') applySigningLock();
+  // ★WON-FX-AUTO-20261031：新建时自动带出当日汇率（灰色显示、可直接改）；编辑已有记录不覆盖。
+  //   必须在 applySigningLock 之后调用：锁定区（如 AGI-GS）的汇率框是 disabled，不该被系统值写入。
+  if (typeof wonAutoFillRates === 'function') wonAutoFillRates(!id);
   el('wonModal').classList.add('show');
   // ★ V45：设备合同/安装合同 查看/下载按钮显隐（有附件才显示）
   refreshWonDocBtns();

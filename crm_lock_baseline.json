@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 12:55:47",
+ "generated": "2026-10-31 13:08:03",
  "version": "V2026.10.30.01",
- "note": "付款方式下移至第三行最左（纯布局调整，无新增文案）",
+ "note": "新建签约自动带出当日汇率（复用 CRM 逻辑，灰色可改；纯代码，无新增文案）",
  "i18n": {
-  "dict@5657": {
+  "dict@5659": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5036,7 +5036,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27042": {
+  "dict@27094": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
