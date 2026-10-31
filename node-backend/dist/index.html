@@ -15504,7 +15504,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z142";  // 版本标记：用于确认浏览器加载的是最新代码（Z142 = 第2区块所有金额项按各自标签拆成独立分组）
+const PERM_BUILD = "build 2026-10-31-Z143";  // 版本标记：用于确认浏览器加载的是最新代码（Z143 = 运费&保险 预算/实际 两组并排一行）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18256,17 +18256,24 @@ function renderModalBody() {
       '</div>' +
       // ★WON-SPLIT-TITLES-20261031：运费&保险 / 清关&内陆 / 设备合计 / 安装 各按自己的标签单独成组，
       //   一组一个标题 + 一行三币输入，不再两组混排。
-      '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + wonSubTitle(t.lbl_fb_budget_rmb) + '</div></div>' +
-      '<div class="form-row">' +
-        '<div><label>' + t.lbl_fb_budget_rmb + '</label><input id="w_fb_budget_rmb" class="won-rmb" data-currency="RMB" data-currency-group="fb_budget"></div>' +
-        '<div><label>' + t.lbl_fb_budget_usd + '</label><input id="w_fb_budget_usd" class="won-usd" data-currency="USD" data-currency-group="fb_budget"></div>' +
-        '<div><label>' + t.lbl_fb_budget_vnd + '</label><input id="w_fb_budget_vnd" class="won-vnd" data-currency="VND" data-currency-group="fb_budget"></div>' +
-      '</div>' +
-      '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + wonSubTitle(t.lbl_fb_actual_rmb) + '</div></div>' +
-      '<div class="form-row">' +
-        '<div><label>' + t.lbl_fb_actual_rmb + '</label><input id="w_fb_actual_rmb" class="won-rmb" data-currency="RMB" data-currency-group="fb_actual"></div>' +
-        '<div><label>' + t.lbl_fb_actual_usd + '</label><input id="w_fb_actual_usd" class="won-usd" data-currency="USD" data-currency-group="fb_actual"></div>' +
-        '<div><label>' + t.lbl_fb_actual_vnd + '</label><input id="w_fb_actual_vnd" class="won-vnd" data-currency="VND" data-currency-group="fb_actual"></div>' +
+      // ★WON-PAIR-ROW-20261031：运费&保险 预算 / 实际 两组并排一行（左预算、右实际），组内仍是三币一排
+      '<div class="w-2row">' +
+        '<div class="w-cell w-wide">' +
+          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + wonSubTitle(t.lbl_fb_budget_rmb) + '</div>' +
+          '<div class="form-row" style="margin-bottom:0;align-items:flex-start;">' +
+            '<div><label>' + t.lbl_fb_budget_rmb + '</label><input id="w_fb_budget_rmb" class="won-rmb" data-currency="RMB" data-currency-group="fb_budget"></div>' +
+            '<div><label>' + t.lbl_fb_budget_usd + '</label><input id="w_fb_budget_usd" class="won-usd" data-currency="USD" data-currency-group="fb_budget"></div>' +
+            '<div><label>' + t.lbl_fb_budget_vnd + '</label><input id="w_fb_budget_vnd" class="won-vnd" data-currency="VND" data-currency-group="fb_budget"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="w-cell w-wide">' +
+          '<div style="font-weight:600;color:#555;font-size:10px;margin-bottom:2px;">' + wonSubTitle(t.lbl_fb_actual_rmb) + '</div>' +
+          '<div class="form-row" style="margin-bottom:0;align-items:flex-start;">' +
+            '<div><label>' + t.lbl_fb_actual_rmb + '</label><input id="w_fb_actual_rmb" class="won-rmb" data-currency="RMB" data-currency-group="fb_actual"></div>' +
+            '<div><label>' + t.lbl_fb_actual_usd + '</label><input id="w_fb_actual_usd" class="won-usd" data-currency="USD" data-currency-group="fb_actual"></div>' +
+            '<div><label>' + t.lbl_fb_actual_vnd + '</label><input id="w_fb_actual_vnd" class="won-vnd" data-currency="VND" data-currency-group="fb_actual"></div>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + wonSubTitle(t.lbl_cc_budget_rmb) + '</div></div>' +
       '<div class="form-row">' +
