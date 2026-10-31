@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 10:36:23",
+ "generated": "2026-10-31 10:44:21",
  "version": "V2026.10.30.01",
- "note": "CRM 报价单 PDF 章节新增三语备注 crm_pdf_note + 上传后隐藏必填星号",
+ "note": "报价PDF 下载按钮改为删除：新增三语确认文案 crm_pdf_del_msg",
  "i18n": {
   "dict@5649": {
    "zh": {
@@ -1346,6 +1346,7 @@
     "crm_section6": "报价单PDF",
     "crm_section7": "销售/备注",
     "crm_pdf_note": "（下面三个报价，上传任意一个或两个即可，其余的均可不填）",
+    "crm_pdf_del_msg": "确定删除这个报价PDF？（仅从本项目移除，原文件仍保留在文件库）",
     "crm_ph_quote_no": "如 Q-2024-001",
     "crm_ph_pct": "0-100",
     "crm_ph_rate": "如 34000",
@@ -3020,6 +3021,7 @@
     "crm_section6": "Quote PDF",
     "crm_section7": "Sales/Remark",
     "crm_pdf_note": "(of the 3 quotes below, upload any one or two — the rest may be left empty)",
+    "crm_pdf_del_msg": "Remove this quote PDF from the project? (The file stays in the vault.)",
     "crm_ph_quote_no": "e.g. Q-2024-001",
     "crm_ph_pct": "0-100",
     "crm_ph_rate": "e.g. 34000",
@@ -4692,6 +4694,7 @@
     "crm_section6": "Báo giá PDF",
     "crm_section7": "KD/Ghi chú",
     "crm_pdf_note": "(trong 3 báo giá bên dưới, chỉ cần tải lên một hoặc hai — các báo giá còn lại có thể để trống)",
+    "crm_pdf_del_msg": "Xóa báo giá PDF này khỏi dự án? (Tệp vẫn còn trong kho tệp.)",
     "crm_ph_quote_no": "VD: Q-2024-001",
     "crm_ph_pct": "0-100",
     "crm_ph_rate": "VD: 34000",
@@ -5021,7 +5024,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26860": {
+  "dict@26881": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
