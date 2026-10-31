@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 12:06:43",
+ "generated": "2026-10-31 12:18:48",
  "version": "V2026.10.30.01",
- "note": "WON 上传前自动保存 + 提示三语化（won_doc_need_save/won_save_fail/won_del_fail）",
+ "note": "WON 三语提示词补充（won_doc_need_save/won_save_fail/won_del_fail）+ 基础信息两行布局（无新增文案）",
  "i18n": {
-  "dict@5649": {
+  "dict@5657": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5036,7 +5036,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26971": {
+  "dict@26972": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
