@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 10:00:42",
+ "generated": "2026-10-31 10:36:23",
  "version": "V2026.10.30.01",
- "note": "EN 报价科目改名：Guide Installation->Supervision Cost / Customs & Inland->Customs & Inland Freight / Equipment Combined->Sub-total Equipment / Installation Fee->Installation Cost",
+ "note": "CRM 报价单 PDF 章节新增三语备注 crm_pdf_note + 上传后隐藏必填星号",
  "i18n": {
-  "dict@5636": {
+  "dict@5649": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -1345,6 +1345,7 @@
     "crm_section5": "报价金额(Q1-Q7)",
     "crm_section6": "报价单PDF",
     "crm_section7": "销售/备注",
+    "crm_pdf_note": "（下面三个报价，上传任意一个或两个即可，其余的均可不填）",
     "crm_ph_quote_no": "如 Q-2024-001",
     "crm_ph_pct": "0-100",
     "crm_ph_rate": "如 34000",
@@ -3018,6 +3019,7 @@
     "crm_section5": "Quote Amount (Q1-Q7)",
     "crm_section6": "Quote PDF",
     "crm_section7": "Sales/Remark",
+    "crm_pdf_note": "(of the 3 quotes below, upload any one or two — the rest may be left empty)",
     "crm_ph_quote_no": "e.g. Q-2024-001",
     "crm_ph_pct": "0-100",
     "crm_ph_rate": "e.g. 34000",
@@ -4689,6 +4691,7 @@
     "crm_section5": "Giá báo (Q1-Q7)",
     "crm_section6": "Báo giá PDF",
     "crm_section7": "KD/Ghi chú",
+    "crm_pdf_note": "(trong 3 báo giá bên dưới, chỉ cần tải lên một hoặc hai — các báo giá còn lại có thể để trống)",
     "crm_ph_quote_no": "VD: Q-2024-001",
     "crm_ph_pct": "0-100",
     "crm_ph_rate": "VD: 34000",
@@ -5018,7 +5021,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26819": {
+  "dict@26860": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
