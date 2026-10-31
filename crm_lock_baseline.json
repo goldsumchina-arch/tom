@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 15:33:04",
+ "generated": "2026-10-31 15:44:54",
  "version": "V2026.10.30.01",
- "note": "各区域之间加深红色虚线分隔（新增 won-sep 样式类，纯样式无文案变更）",
+ "note": "VAT 副标题补充费用差异说明（sub_vat 三语改写）",
  "i18n": {
   "dict@5663": {
    "zh": {
@@ -148,7 +148,7 @@
     "lbl_total_ei_rmb": "设备&安装总价 RMB",
     "lbl_total_ei_usd": "设备&安装总价 USD",
     "lbl_total_ei_vnd": "设备&安装总价 VND",
-    "sub_vat": "增值税&关税&其他费用调节平衡输入",
+    "sub_vat": "增值税&关税&其他费用调节平衡输入（有时预计的增值税、关税等其他特殊费用引起价格上的差异）",
     "lbl_vat_rmb": "增值税&关税·RMB",
     "lbl_vat_usd": "增值税&关税·USD",
     "lbl_vat_vnd": "增值税&关税·VND",
@@ -1832,7 +1832,7 @@
     "lbl_total_ei_rmb": "Total Equip+Install RMB",
     "lbl_total_ei_usd": "Total Equip+Install USD",
     "lbl_total_ei_vnd": "Total Equip+Install VND",
-    "sub_vat": "VAT & Customs & Other Adjustment",
+    "sub_vat": "VAT & Customs & Other Adjustment (price differences caused by anticipated VAT, customs and other special fees)",
     "lbl_vat_rmb": "VAT&Customs·RMB",
     "lbl_vat_usd": "VAT&Customs·USD",
     "lbl_vat_vnd": "VAT&Customs·VND",
@@ -3518,7 +3518,7 @@
     "lbl_total_ei_rmb": "Tổng TB&LĐ RMB",
     "lbl_total_ei_usd": "Tổng TB&LĐ USD",
     "lbl_total_ei_vnd": "Tổng TB&LĐ VND",
-    "sub_vat": "VAT & Thuế quan & Điều chỉnh khác",
+    "sub_vat": "VAT & Thuế quan & Điều chỉnh khác (đôi khi VAT, thuế quan và các khoản phí đặc biệt khác dự kiến gây ra chênh lệch giá)",
     "lbl_vat_rmb": "VAT&Thuế·RMB",
     "lbl_vat_usd": "VAT&Thuế·USD",
     "lbl_vat_vnd": "VAT&Thuế·VND",
