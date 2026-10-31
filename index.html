@@ -15457,7 +15457,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z135";  // 版本标记：用于确认浏览器加载的是最新代码（Z135 = 切换语言不再清空 WON 弹窗已录入内容）
+const PERM_BUILD = "build 2026-10-31-Z136";  // 版本标记：用于确认浏览器加载的是最新代码（Z136 = 销售人员下拉恢复 名录+固定三人 合并）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18046,13 +18046,11 @@ function getSalespersonList(){
       });
     }
   }catch(e){}
-  // ★SALESP-USERS-ONLY-20261031：名录可用时下拉「严格等于」名录里的销售/销售总监，
-  //   不再把写死的三人混进去；仅当名录为空（接口未就绪/全部离职）才用固定三人兜底。
-  if(!out.length){
-    FIXED.forEach(function(n){
-      if(!seen[n]){ seen[n]=1; out.push(n); }
-    });
-  }
+  // ★SALESP-MERGE-20261031：名录里的销售/销售总监 + 固定三人（tom/cuong/james）合并展示，
+  //   固定三人作为业务兜底始终出现（与历史逻辑一致），名录增减则自动增减，互不覆盖。
+  FIXED.forEach(function(n){
+    if(!seen[n]){ seen[n]=1; out.push(n); }
+  });
   return out;
 }
 // 历史数据回显：原销售人员已不在当前名单（离职/转岗/改观察者）时，
