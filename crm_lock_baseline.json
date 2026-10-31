@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 09:39:27",
+ "generated": "2026-10-31 10:00:42",
  "version": "V2026.10.30.01",
- "note": "EN labels: Startup Prob.% -> Go probability, Sign Prob.% -> Get probability",
+ "note": "EN 报价科目改名：Guide Installation->Supervision Cost / Customs & Inland->Customs & Inland Freight / Equipment Combined->Sub-total Equipment / Installation Fee->Installation Cost",
  "i18n": {
-  "dict@5633": {
+  "dict@5636": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -2765,11 +2765,11 @@
     "crm_ov_pct": "Relative Value",
     "crm_ov_currency": "Currency",
     "crm_ov_q1_equip": "Q1-Equipment Sales Amount",
-    "crm_ov_q2_guide": "Q2-Guide Installation Amount",
+    "crm_ov_q2_guide": "Q2-Supervision Cost Amount",
     "crm_ov_q3_freight": "Q3-Freight & Insurance Amount",
-    "crm_ov_q4_customs": "Q4-Customs & Inland Amount",
-    "crm_ov_q5_combined": "Q5-Combined Equipment Amount",
-    "crm_ov_q6_install": "Q6-Installation Fee Amount",
+    "crm_ov_q4_customs": "Q4-Customs & Inland Freight Amount",
+    "crm_ov_q5_combined": "Q5-Sub-total Equipment Amount",
+    "crm_ov_q6_install": "Q6-Installation Cost Amount",
     "crm_ov_q7_total": "Q7-Equipment & Installation Total",
     "crm_ov_by_province": "By Province (Project Count + Q1 Equipment Sales)",
     "crm_ov_by_bu": "By BU (Project Count + Q1 Equipment Sales)",
@@ -2807,11 +2807,11 @@
     "crm_ov_rate_rmb_vnd": "RMB-VND Exchange Rate Trend",
     "crm_ov_rate_usd_vnd": "USD-VND Exchange Rate Trend",
     "crm_q1": "Q1-Equipment",
-    "crm_q2": "Q2-Guide Installation",
+    "crm_q2": "Q2-Supervision Cost",
     "crm_q3": "Q3-Freight & Insurance",
-    "crm_q4": "Q4-Customs & Inland",
-    "crm_q5": "Q5-Equipment Combined",
-    "crm_q6": "Q6-Installation Fee",
+    "crm_q4": "Q4-Customs & Inland Freight",
+    "crm_q5": "Q5-Sub-total Equipment",
+    "crm_q6": "Q6-Installation Cost",
     "crm_q7": "Q7-Total Amount",
     "lost_ov_count": "All Failed Projects Listed",
     "lost_ov_item": "items",
@@ -5018,7 +5018,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26754": {
+  "dict@26819": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
