@@ -1536,8 +1536,8 @@ function _crmReportRender() {
   // 建设情况随系统语言显示（使用现有翻译函数）
   var consDisp = (typeof constructionDisplay === 'function') ? constructionDisplay(row.construction) : esc(row.construction);
   html += field(t.crm_construction || 'Construction', esc(consDisp));
-  html += field(t.crm_startup_pct || 'Startup Prob.%', pct(row.startup_pct));
-  html += field(t.crm_sign_pct || 'Sign Prob.%', pct(row.sign_pct));
+  html += field(t.crm_startup_pct || 'Go probability', pct(row.startup_pct));
+  html += field(t.crm_sign_pct || 'Get probability', pct(row.sign_pct));
   html += field(t.crm_initial_quote_date || 'Initial Quote Date', date(row.initial_quote_date));
   html += field(t.crm_est_purchase_date || 'Est. Purchase Date', date(row.est_purchase_date));
   html += field(t.crm_est_ship_date || 'Est. Ship Date', date(row.est_ship_date));

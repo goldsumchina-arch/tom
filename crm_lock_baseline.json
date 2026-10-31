@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-30 08:24:53",
+ "generated": "2026-10-31 09:39:27",
  "version": "V2026.10.30.01",
- "note": "HEAD-LOCK-20261030: CRM/LOST header lock (text-only lang switch, no thead rebuild) + V2026.10.30.01",
+ "note": "EN labels: Startup Prob.% -> Go probability, Sign Prob.% -> Get probability",
  "i18n": {
   "dict@5633": {
    "zh": {
@@ -2789,8 +2789,8 @@
     "crm_customer": "Customer",
     "crm_bu": "BU",
     "crm_construction": "Construction",
-    "crm_startup_pct": "Startup Prob.%",
-    "crm_sign_pct": "Sign Prob.%",
+    "crm_startup_pct": "Go probability",
+    "crm_sign_pct": "Get probability",
     "crm_manager": "Customer P.I.C",
     "crm_manager_phone": "Cell of P.I.C",
     "crm_company_info": "Company Info",
@@ -2946,8 +2946,8 @@
     "crm_lbl_customer": "Customer",
     "crm_lbl_bu": "BU",
     "crm_lbl_construction": "Construction",
-    "crm_lbl_startup_pct": "Startup Prob.%",
-    "crm_lbl_sign_pct": "Sign Prob.%",
+    "crm_lbl_startup_pct": "Go probability",
+    "crm_lbl_sign_pct": "Get probability",
     "crm_not_found": "Project not found",
     "crm_report_title": "Project Report",
     "crm_report_close": "Close",
@@ -5018,7 +5018,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@26753": {
+  "dict@26754": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
@@ -5145,7 +5145,7 @@
   }
  },
  "files": {
-  "crm_table.js": "edcfeb08fd2d0451",
-  "lost_table.js": "90a85855e0932ed5"
+  "crm_table.js": "f585faa1800b948b",
+  "lost_table.js": "304bf0cb1bfc4433"
  }
 }

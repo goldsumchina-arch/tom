@@ -6972,7 +6972,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     crm_ov_by_salesperson:"By Salesperson (Project Count + Q1 Equipment Sales)",
     crm_ov_by_salesperson_pie:"Sales Amount Share (Absolute + Relative)",
     crm_ov_rate_trend:"Exchange Rate Trend (RMB-VND & USD-VND)",
-    crm_quote_no:"Quote No.", crm_project_name:"Project Name", crm_province:"Province", crm_customer:"Customer", crm_bu:"BU", crm_construction:"Construction", crm_startup_pct:"Startup Prob.%", crm_sign_pct:"Sign Prob.%",
+    crm_quote_no:"Quote No.", crm_project_name:"Project Name", crm_province:"Province", crm_customer:"Customer", crm_bu:"BU", crm_construction:"Construction", crm_startup_pct:"Go probability", crm_sign_pct:"Get probability",
     crm_manager:"Customer P.I.C", crm_manager_phone:"Cell of P.I.C", crm_company_info:"Company Info",
     crm_initial_quote_date:"Initial Quote Date", crm_est_purchase_date:"Est. Purchase Date", crm_est_ship_date:"Est. Ship Date", crm_quote_version:"Quote Version", crm_last_quote_date:"Last Quote Date",
     crm_rate_title:"Exchange Rate at Quote", crm_rate_rmb_vnd:"RMB-VND", crm_rate_usd_vnd:"USD-VND", crm_incoterm:"Incoterms", crm_install_quoted:"Install Quoted?", crm_ov_rate_rmb_vnd:"RMB-VND Exchange Rate Trend", crm_ov_rate_usd_vnd:"USD-VND Exchange Rate Trend",
@@ -7022,7 +7022,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     fr_design:"Design proposal fail",
     fr_cancel:"Client cancelled the project",
     fr_other:"Other reasons",
-    crm_lbl_quote_no:"Quote No.", crm_lbl_project_name:"Project Name", crm_lbl_province:"Province", crm_lbl_customer:"Customer", crm_lbl_bu:"BU", crm_lbl_construction:"Construction", crm_lbl_startup_pct:"Startup Prob.%", crm_lbl_sign_pct:"Sign Prob.%",
+    crm_lbl_quote_no:"Quote No.", crm_lbl_project_name:"Project Name", crm_lbl_province:"Province", crm_lbl_customer:"Customer", crm_lbl_bu:"BU", crm_lbl_construction:"Construction", crm_lbl_startup_pct:"Go probability", crm_lbl_sign_pct:"Get probability",
     crm_not_found:"Project not found", crm_report_title:"Project Report", crm_report_close:"Close", crm_report_currency:"Currency", crm_report_sec_basic:"Project Basic Info", crm_report_sec_progress:"Project Progress", crm_report_sec_quote:"Quotation", crm_report_rate:"Exchange Rate at Quote", crm_report_incoterm:"Incoterms", crm_report_install_quoted:"Install Quoted?", crm_report_price_detail:"Price Details", crm_report_chart_bar:"Quote Amount Bar Chart (Q1-Q6)", crm_report_chart_pie:"Quote Composition Pie Chart (Q1-Q6)", crm_report_abs:"Absolute Value", crm_report_pct:"Relative Value", crm_report_unit:"Amount", crm_report_export:"Export PDF", crm_report_pdf_success:"Export successful!", crm_report_pdf_failed:"PDF export failed", crm_report_pdf_load_err:"PDF library failed to load, please check network connection.",
     cons_land:"Land Acquisition", cons_license:"Farming License", cons_design:"Design Phase", cons_final_design:"Final Design Confirmed", cons_bidding:"Bidding", cons_supplier_sel:"Supplier Selection", cons_nearing:"Nearing Supplier Decision", cons_signed_no_deposit:"Contract Signed No Deposit", cons_placeholder:"Select Construction Status",
     incoterm_placeholder:"Select Incoterms", incoterm_star:"View Incoterms Explanation", incoterm_help_title:"Incoterms Explanation", incoterm_help_pick:"Please select an Incoterm first.",
@@ -15282,7 +15282,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z114";  // 版本标记：用于确认浏览器加载的是最新代码（Z114 = CRM 基本信息 4/4 两行紧凑布局）
+const PERM_BUILD = "build 2026-10-31-Z115";  // 版本标记：用于确认浏览器加载的是最新代码（Z115 = EN 文案 Go/Get probability）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
