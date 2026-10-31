@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- ⛔ FROZEN (2026-09-08) V2026.10.30.01：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
@@ -5711,9 +5711,9 @@ var I18N = {
     lbl_cc_actual_rmb:"清关内陆·实际 RMB",
     lbl_cc_actual_usd:"清关内陆·实际 USD",
     lbl_cc_actual_vnd:"清关内陆·实际 VND",
-    lbl_total_equip_rmb:"设备综合价格 RMB",
-    lbl_total_equip_usd:"设备综合价格 USD",
-    lbl_total_equip_vnd:"设备综合价格 VND",
+    lbl_total_equip_rmb:"设备综合·RMB",
+    lbl_total_equip_usd:"设备综合·USD",
+    lbl_total_equip_vnd:"设备综合·VND",
     lbl_inst_budget_rmb:"安装费·预算 RMB",
     lbl_inst_budget_usd:"安装费·预算 USD",
     lbl_inst_budget_vnd:"安装费·预算 VND",
@@ -5724,6 +5724,10 @@ var I18N = {
     sub_fb_actual:"运费&保险 实际（待真实数据发生后才填写）",
     sub_cc_actual:"清关&内陆 实际（待真实数据发生后才填写）",
     sub_inst_actual:"安装 实际（待真实数据发生后才填写）",
+    // ★WON-TOTAL-TITLE-20261031：设备综合 / 设备&安装总价 的分组副标题（后者随「包含安装」切换文案）
+    sub_total_equip:"设备综合价格（RMB · USD · VND）",
+    sub_total_ei:"设备&安装总价（RMB · USD · VND）",
+    sub_total_ei_noinst:"设备(不含安装) 总价（RMB · USD · VND）",
     lbl_total_ei_rmb:"设备&安装总价 RMB",
     lbl_total_ei_usd:"设备&安装总价 USD",
     lbl_total_ei_vnd:"设备&安装总价 VND",
@@ -6483,6 +6487,10 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     sub_fb_actual:"Freight & Insurance Actual (Fill in only after actual data occurs)",
     sub_cc_actual:"Customs Actual (Fill in only after actual data occurs)",
     sub_inst_actual:"Install Actual (Fill in only after actual data occurs)",
+    // ★WON-TOTAL-TITLE-20261031：设备综合 / 设备&安装总价 的分组副标题（后者随「包含安装」切换文案）
+    sub_total_equip:"Total Equipment (RMB · USD · VND)",
+    sub_total_ei:"Total Equip+Install (RMB · USD · VND)",
+    sub_total_ei_noinst:"Total Equipment excl. Install (RMB · USD · VND)",
     lbl_total_ei_rmb:"Total Equip+Install RMB",
     lbl_total_ei_usd:"Total Equip+Install USD",
     lbl_total_ei_vnd:"Total Equip+Install VND",
@@ -7245,6 +7253,10 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     sub_fb_actual:"VC&BH thực tế (Chỉ điền sau khi dữ liệu thực tế phát sinh)",
     sub_cc_actual:"HQ thực tế (Chỉ điền sau khi dữ liệu thực tế phát sinh)",
     sub_inst_actual:"LĐ thực tế (Chỉ điền sau khi dữ liệu thực tế phát sinh)",
+    // ★WON-TOTAL-TITLE-20261031：设备综合 / 设备&安装总价 的分组副标题（后者随「包含安装」切换文案）
+    sub_total_equip:"TB tổng hợp (RMB · USD · VND)",
+    sub_total_ei:"Tổng TB&LĐ (RMB · USD · VND)",
+    sub_total_ei_noinst:"Tổng TB không gồm LĐ (RMB · USD · VND)",
     lbl_total_ei_rmb:"Tổng TB&LĐ RMB",
     lbl_total_ei_usd:"Tổng TB&LĐ USD",
     lbl_total_ei_vnd:"Tổng TB&LĐ VND",
@@ -15518,7 +15530,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z149";  // 版本标记：用于确认浏览器加载的是最新代码（Z149 = 设备综合价格改名 + 包含安装=否 时隐藏设备&安装总价）
+const PERM_BUILD = "build 2026-10-31-Z149";  // 版本标记：用于确认浏览器加载的是最新代码（Z149 = 设备综合价格标题 + 不含安装时总计标题切换）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18310,7 +18322,8 @@ function renderModalBody() {
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + wonSubTitle(t.lbl_total_equip_rmb) + '</div></div>' +
+      // ★WON-TOTAL-TITLE-20261031：设备综合 → 设备综合价格
+      '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + t.sub_total_equip + '</div></div>' +
       '<div class="form-row">' +
         '<div><label>' + t.lbl_total_equip_rmb + '</label><input id="w_total_equip_rmb" class="won-rmb calc-result" data-currency="RMB" data-currency-group="total_equip" readonly></div>' +
         '<div><label>' + t.lbl_total_equip_usd + '</label><input id="w_total_equip_usd" class="won-usd calc-result" data-currency="USD" data-currency-group="total_equip" readonly></div>' +
@@ -18336,14 +18349,12 @@ function renderModalBody() {
           '</div>' +
         '</div>' +
       '</div>' +
-      // ★WON-EI-HIDE-20261031：「包含安装?=否」时整块「设备&安装总价」隐藏（id=w_ei_group）
-      '<div id="w_ei_group">' +
-      '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + wonSubTitle(t.lbl_total_ei_rmb) + '</div></div>' +
+      // ★WON-TOTAL-TITLE-20261031：该组始终可见；标题随「包含安装」切换（是=含安装总价，否=设备(不含安装) 总价）
+      '<div class="form-row"><div id="w_total_ei_title" style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;">' + t.sub_total_ei + '</div></div>' +
       '<div class="form-row">' +
         '<div><label>' + t.lbl_total_ei_rmb + '</label><input id="w_total_ei_rmb" class="won-rmb calc-result" data-currency="RMB" data-currency-group="total_ei" readonly></div>' +
         '<div><label>' + t.lbl_total_ei_usd + '</label><input id="w_total_ei_usd" class="won-usd calc-result" data-currency="USD" data-currency-group="total_ei" readonly></div>' +
         '<div><label>' + t.lbl_total_ei_vnd + '</label><input id="w_total_ei_vnd" class="won-vnd calc-result" data-currency="VND" data-currency-group="total_ei" readonly></div>' +
-      '</div>' +
       '</div>' +
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;margin-top:8px;border-top:1px dashed #ddd;padding-top:8px;">' + t.sub_vat + '</div></div>' +
       '<div class="form-row">' +
@@ -19115,9 +19126,12 @@ function setInstallFieldsState(disabled) {
   // ★WON-INST-HIDE-20261031：「包含安装?=否」时整块「安装 预算 / 实际」隐藏不可见；选「是」时恢复显示
   var grp = el('w_inst_group');
   if (grp) grp.style.display = disabled ? 'none' : '';
-  // ★WON-EI-HIDE-20261031：「设备&安装总价」整块同样跟随隐藏
-  var eigrp = el('w_ei_group');
-  if (eigrp) eigrp.style.display = disabled ? 'none' : '';
+  // ★WON-TOTAL-TITLE-20261031：「设备&安装总价」组不隐藏，只切换标题文案
+  var tei = el('w_total_ei_title');
+  if (tei && typeof T === 'function') {
+    var _d = T();
+    tei.textContent = disabled ? (_d.sub_total_ei_noinst || tei.textContent) : (_d.sub_total_ei || tei.textContent);
+  }
   // 清空安装费后合计会变，直接改 value 不触发 input 事件，这里手动重算一次
   if (disabled && typeof calcEITotal === 'function') calcEITotal();
 }

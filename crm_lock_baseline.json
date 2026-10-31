@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 14:56:40",
+ "generated": "2026-10-31 15:10:16",
  "version": "V2026.10.30.01",
- "note": "设备综合· 改名为 设备综合价格（中文3条）+ 包含安装=否 时隐藏设备&安装总价整块",
+ "note": "新增 sub_total_equip / sub_total_ei / sub_total_ei_noinst 三语词条；lbl_total_equip 标签的历史改动一并纳入基线",
  "i18n": {
   "dict@5661": {
    "zh": {
@@ -129,9 +129,9 @@
     "lbl_cc_actual_rmb": "清关内陆·实际 RMB",
     "lbl_cc_actual_usd": "清关内陆·实际 USD",
     "lbl_cc_actual_vnd": "清关内陆·实际 VND",
-    "lbl_total_equip_rmb": "设备综合价格 RMB",
-    "lbl_total_equip_usd": "设备综合价格 USD",
-    "lbl_total_equip_vnd": "设备综合价格 VND",
+    "lbl_total_equip_rmb": "设备综合·RMB",
+    "lbl_total_equip_usd": "设备综合·USD",
+    "lbl_total_equip_vnd": "设备综合·VND",
     "lbl_inst_budget_rmb": "安装费·预算 RMB",
     "lbl_inst_budget_usd": "安装费·预算 USD",
     "lbl_inst_budget_vnd": "安装费·预算 VND",
@@ -141,6 +141,9 @@
     "sub_fb_actual": "运费&保险 实际（待真实数据发生后才填写）",
     "sub_cc_actual": "清关&内陆 实际（待真实数据发生后才填写）",
     "sub_inst_actual": "安装 实际（待真实数据发生后才填写）",
+    "sub_total_equip": "设备综合价格（RMB · USD · VND）",
+    "sub_total_ei": "设备&安装总价（RMB · USD · VND）",
+    "sub_total_ei_noinst": "设备(不含安装) 总价（RMB · USD · VND）",
     "lbl_total_ei_rmb": "设备&安装总价 RMB",
     "lbl_total_ei_usd": "设备&安装总价 USD",
     "lbl_total_ei_vnd": "设备&安装总价 VND",
@@ -1821,6 +1824,9 @@
     "sub_fb_actual": "Freight & Insurance Actual (Fill in only after actual data occurs)",
     "sub_cc_actual": "Customs Actual (Fill in only after actual data occurs)",
     "sub_inst_actual": "Install Actual (Fill in only after actual data occurs)",
+    "sub_total_equip": "Total Equipment (RMB · USD · VND)",
+    "sub_total_ei": "Total Equip+Install (RMB · USD · VND)",
+    "sub_total_ei_noinst": "Total Equipment excl. Install (RMB · USD · VND)",
     "lbl_total_ei_rmb": "Total Equip+Install RMB",
     "lbl_total_ei_usd": "Total Equip+Install USD",
     "lbl_total_ei_vnd": "Total Equip+Install VND",
@@ -3503,6 +3509,9 @@
     "sub_fb_actual": "VC&BH thực tế (Chỉ điền sau khi dữ liệu thực tế phát sinh)",
     "sub_cc_actual": "HQ thực tế (Chỉ điền sau khi dữ liệu thực tế phát sinh)",
     "sub_inst_actual": "LĐ thực tế (Chỉ điền sau khi dữ liệu thực tế phát sinh)",
+    "sub_total_equip": "TB tổng hợp (RMB · USD · VND)",
+    "sub_total_ei": "Tổng TB&LĐ (RMB · USD · VND)",
+    "sub_total_ei_noinst": "Tổng TB không gồm LĐ (RMB · USD · VND)",
     "lbl_total_ei_rmb": "Tổng TB&LĐ RMB",
     "lbl_total_ei_usd": "Tổng TB&LĐ USD",
     "lbl_total_ei_vnd": "Tổng TB&LĐ VND",
@@ -5048,7 +5057,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27169": {
+  "dict@27183": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
