@@ -1,9 +1,9 @@
 {
- "generated": "2026-10-31 15:17:30",
+ "generated": "2026-10-31 15:33:04",
  "version": "V2026.10.30.01",
- "note": "增值税调节输入块移动到设备综合价格与设备总价之间（纯布局，无文案变更）",
+ "note": "各区域之间加深红色虚线分隔（新增 won-sep 样式类，纯样式无文案变更）",
  "i18n": {
-  "dict@5661": {
+  "dict@5663": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27194": {
+  "dict@27196": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
