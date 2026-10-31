@@ -701,6 +701,9 @@ function _ovLoadChartLib(cb){
     .crm-q-grid .crm-q-head { font-size:10px; font-weight:700; text-align:center; color:#333; background:#f2f2f2; border-radius:4px; padding:4px 3px; line-height:1.25; min-height:44px; display:flex; align-items:center; justify-content:center; word-break:break-word; }
     /* ★CRM-Q-GRID-YELLOW-20261031：Q5（小计）/ Q7（合计）为自动汇总列，列头用黄色底突出，和可录入列区分开 */
     .crm-q-grid .crm-q-head.crm-q-head-sum { background:#ffe9a8; color:#7a5300; }
+    /* ★CRM-Q6-HIDE-20261031：「已报安装费?」=否 时 Q6 整列隐藏，网格自动从 7 列缩为 6 列 */
+    .crm-q-grid.hide-q6 { grid-template-columns:104px repeat(6, minmax(0,1fr)); }
+    .crm-q-grid.hide-q6 .crm-q-col-q6 { display:none !important; }
     .crm-q-grid .crm-q-rowlbl { font-size:11px; font-weight:700; text-align:center; border-radius:4px; line-height:28px; }
     .crm-q-grid .crm-q-corner { }
     .btn { padding:4px 10px; border:none; border-radius:4px; cursor:pointer; font-size:10px; margin-right:2px; transition:all .15s; }
@@ -8157,7 +8160,7 @@ function crmCurBlur(input, cur) {
   var raw = String(input.value).replace(/,/g, '').replace(/[^0-9]/g, '');
   input.value = raw === '' ? '' : crmCurFmt(parseInt(raw, 10), cur);
 }
-// ===== "已报安装费?" 是/否：否 => Q6 三币输入禁用；是 => 启用并必填 =====
+// ===== "已报安装费?" 是/否：否 => Q6 整列隐藏（不再出现）；是 => 显示并必填 =====
 function crmInstallQuotedChange(sel) {
   var isYes = sel && (String(sel.value) === '是' || String(sel.value) === 'Yes' || String(sel.value) === 'Có');
   var ids = ['c_q6_rmb', 'c_q6_usd', 'c_q6_vnd'];
@@ -8167,6 +8170,9 @@ function crmInstallQuotedChange(sel) {
     e.disabled = !isYes;
     if (!isYes) e.value = '';
   });
+  // ★CRM-Q6-HIDE-20261031：整列隐藏（列头 + 三个币种输入），网格列数 7 -> 6
+  var grid = document.querySelector('#crmModalBody .crm-q-grid') || document.querySelector('.crm-q-grid');
+  if (grid) grid.classList.toggle('hide-q6', !isYes);
   if (typeof crmCalcTotals === 'function') crmCalcTotals();
 }
 // ===== 自动合计：Q5=Q1+Q2+Q3+Q4；Q7=Q6+Q5（按币种列各自相加） =====
@@ -15355,7 +15361,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z124";  // 版本标记：用于确认浏览器加载的是最新代码（Z124 = 金额 0 可显示 + 金额居中）
+const PERM_BUILD = "build 2026-10-31-Z125";  // 版本标记：用于确认浏览器加载的是最新代码（Z125 = PDF 区块一行 + 安装费=否 隐藏 Q6 列）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18988,7 +18994,9 @@ function renderCrmFormHtml(t) {
          var full = String(t[qk] || qIds[idx]).replace(/"/g, '');
          // ★CRM-Q-GRID-YELLOW-20261031：Q5 / Q7 是自动汇总列，列头涂黄色底
          var sumCls = (q === 'q5' || q === 'q7') ? ' crm-q-head-sum' : '';
-         return '<div class="crm-q-head' + sumCls + '" title="' + full + '">' + full +
+         // ★CRM-Q6-HIDE-20261031：Q6 整列可隐藏（已报安装费=否 时）
+         var colCls = (q === 'q6') ? ' crm-q-col-q6' : '';
+         return '<div class="crm-q-head' + sumCls + colCls + '" title="' + full + '">' + full +
            (qReq[q] ? '<span class="req-star">*</span>' : '') + '</div>';
        }).join('') +
        sumMeta.map(function(sm){
@@ -18999,35 +19007,36 @@ function renderCrmFormHtml(t) {
              return '<div class="cur-input-wrap ' + sm.cls + '" style="height:32px;display:flex;align-items:center;justify-content:center;padding:0 8px;font-weight:700;">' +
                '<span id="c_' + q + '_' + sm.c + '_sum" style="text-align:center;">' + sm.sym + ' 0</span></div>';
            }
-           return f('', 'c_' + q + '_' + sm.c, {cur: sm.c.toUpperCase(), bg: sm.bg});
+           var cell = f('', 'c_' + q + '_' + sm.c, {cur: sm.c.toUpperCase(), bg: sm.bg});
+           return q === 'q6' ? '<div class="crm-q-col-q6">' + cell + '</div>' : cell;
          }).join('');
          return '<div class="crm-q-rowlbl" style="background:' + sm.bg + ';color:' + sm.hcol + ';">' + sm.head + '</div>' + cells;
        }).join('') +
        '</div></div>';
 
   // section6 报价单PDF（含 已报安装费 + 三个 PDF 子列：缩小输入框 + 上传按钮 + 查看/下载按钮）
+  // ★CRM-PDF-1ROW-20261031：已报安装费 + 三个 PDF 子列并为一行 4 列；
+  //   按钮区允许换行（有附件时会出现 查看/下载 两个额外按钮，窄列下自动折行不撑宽）。
   var pdfField = function(lbl, id) {
     return '<div>' +
       '<label>' + (lbl || id) + '<span class="req-star">*</span></label>' +
-      '<div style="display:flex;align-items:center;gap:6px;">' +
-        '<input id="' + id + '" readonly style="width:100%;flex:1;min-width:0;height:26px;font-size:12px;" placeholder=".pdf">' +
-        '<button type="button" data-uploadfor="' + id + '" onclick="crmPdfUpload(this)" style="white-space:nowrap;height:26px;padding:0 12px;font-size:12px;">' + (t.crm_upload || '上传') + '</button>' +
-        '<button type="button" data-viewfor="' + id + '" onclick="crmPdfView(this)" style="white-space:nowrap;height:26px;padding:0 10px;font-size:12px;display:none;">' + (t.crm_view || '查看') + '</button>' +
-        '<button type="button" data-dlfor="' + id + '" onclick="crmPdfDownload(this)" style="white-space:nowrap;height:26px;padding:0 10px;font-size:12px;display:none;">' + (t.crm_download || '下载') + '</button>' +
+      '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
+        '<input id="' + id + '" readonly style="width:100%;flex:1;min-width:80px;height:26px;font-size:12px;" placeholder=".pdf">' +
+        '<button type="button" data-uploadfor="' + id + '" onclick="crmPdfUpload(this)" style="white-space:nowrap;height:26px;padding:0 10px;font-size:12px;">' + (t.crm_upload || '上传') + '</button>' +
+        '<button type="button" data-viewfor="' + id + '" onclick="crmPdfView(this)" style="white-space:nowrap;height:26px;padding:0 8px;font-size:12px;display:none;">' + (t.crm_view || '查看') + '</button>' +
+        '<button type="button" data-dlfor="' + id + '" onclick="crmPdfDownload(this)" style="white-space:nowrap;height:26px;padding:0 8px;font-size:12px;display:none;">' + (t.crm_download || '下载') + '</button>' +
         '<input type="file" accept="application/pdf,.pdf" style="display:none;" data-filefor="' + id + '" onchange="crmPdfOnFile(this)">' +
       '</div>' +
     '</div>';
   };
   h += '<div class="form-section"><div class="form-section-title">' + (t.crm_section6 || 'Quote Doc') + '</div>' +
     '<div class="form-row">' +
-      '<div><label>' + (t.crm_lbl_install_quoted || '已报安装费?') + '<span class="req-star">*</span></label>' +
+      '<div style="flex:0.8;min-width:140px;"><label>' + (t.crm_lbl_install_quoted || '已报安装费?') + '<span class="req-star">*</span></label>' +
       '<select id="c_install_quoted" onchange="crmInstallQuotedChange(this)" style="width:100%;height:34px;">' +
         '<option value="是">' + (t.crm_yes || '是') + '</option>' +
         '<option value="否">' + (t.crm_no_yes || '否') + '</option>' +
       '</select></div>' +
       pdfField(t.crm_lbl_pdf_equip, 'c_pdf_equip') +
-    '</div>' +
-    '<div class="form-row">' +
       pdfField(t.crm_lbl_pdf_install, 'c_pdf_install') +
       pdfField(t.crm_lbl_pdf_both, 'c_pdf_both') +
     '</div>' +
@@ -19187,6 +19196,9 @@ function fillCrmForm(row, t) {
     else if (moneyToNumber(row[q + '_rmb']) > 0) crmCurSrc[q] = 'rmb';
     else if (moneyToNumber(row[q + '_vnd']) > 0) crmCurSrc[q] = 'vnd';
   });
+  // ★CRM-Q6-HIDE-20261031：金额回填完成后重新应用「已报安装费」状态
+  //   （回填会把库里的 Q6 值写回输入框，这里再按 是/否 决定是否隐藏并清零）
+  if (insSel) crmInstallQuotedChange(insSel);
   // 重算 Q5 设备综合 / Q7 总金额 只读合计
   if (typeof crmCalcTotals === 'function') crmCalcTotals();
   // 编辑打开时若已有贸易术语，则预填工具提示内容（悬停星星时才会显示）
