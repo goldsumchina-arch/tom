@@ -9669,6 +9669,13 @@ function applySigningLock() {
   applySigningLockGroup('cust', lock.lockCust);
   applySigningLockGroup('gs', lock.lockGs);
   applySigningLockGroup('agi', lock.lockAgi);
+  // ★WON-AGICUST-HIDE-20261031：签约双方=AGI-客户 时，④ GS→AGI 佣金 & 付款、⑤ AGI→GS 付款 两块整体隐藏（不可见）
+  var _spEl = el('w_signing_parties');
+  var _hideGagi = !!(_spEl && _spEl.value === 'AGI-Customer');
+  ['w_sec_gs', 'w_sec_agi'].forEach(function(_sid) {
+    var _sec = el(_sid);
+    if (_sec) _sec.style.display = _hideGagi ? 'none' : '';
+  });
   applyAgiGsSalespersonLock();
 }
 
@@ -15557,7 +15564,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z155";  // 版本标记：用于确认浏览器加载的是最新代码（Z155 = 二级模态框补齐 × 关闭按钮）
+const PERM_BUILD = "build 2026-10-31-Z156";  // 版本标记：用于确认浏览器加载的是最新代码（Z156 = 签约双方=AGI-客户 时隐藏 GS→AGI / AGI→GS 两块）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18435,7 +18442,8 @@ function renderModalBody() {
       '</div>' +
     '</div>' +
     
-    '<div class="form-section">' +
+    // ★WON-AGICUST-HIDE-20261031：签约双方=AGI-客户 时整块隐藏（④ GS→AGI 佣金 & 付款）
+    '<div class="form-section" id="w_sec_gs">' +
       '<div class="form-section-title">' + t.section4 + '</div>' +
       '<div class="form-row">' +
         '<div><label>' + t.lbl_gs_comm_pct + '</label><input id="w_gs_comm_pct" type="text" inputmode="numeric" placeholder="0.0000" onblur="formatCommPct(this)" oninput="formatCommPctLive(this)"></div>' +
@@ -18471,7 +18479,8 @@ function renderModalBody() {
       '</div>' +
     '</div>' +
     
-    '<div class="form-section">' +
+    // ★WON-AGICUST-HIDE-20261031：签约双方=AGI-客户 时整块隐藏（⑤ AGI→GS 付款）
+    '<div class="form-section" id="w_sec_agi">' +
       '<div class="form-section-title">' + t.section5 + '</div>' +
       '<div class="form-row">' +
         '<div><label>' + t.lbl_agi_payable_rmb + '</label><input id="w_agi_payable_rmb" class="won-rmb calc-result" data-currency="RMB" data-currency-group="agi_payable" readonly style="background:#f2f2f2;cursor:default;"></div>' +
