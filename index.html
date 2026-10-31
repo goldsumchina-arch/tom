@@ -822,7 +822,8 @@ function _ovLoadChartLib(cb){
 
     /* ===== 报价金额 Q1-Q7 三币输入框：货币符号 + 千分位 + 联动 ===== */
     .cur-input-wrap { display:flex; align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden; }
-    .cur-input-wrap input { border:none !important; background:transparent !important; }
+    /* ★CRM-CUR-CENTER-20261031：金额在框内水平居中（原来是左对齐，看着贴边） */
+    .cur-input-wrap input { border:none !important; background:transparent !important; text-align:center; }
     .cur-input-wrap input:focus { box-shadow:none !important; }
     .cur-input-wrap.cur-rmb { background:#fde8e8 !important; border-color:#f5c2c2 !important; }
     .cur-input-wrap.cur-usd { background:#e8edf8 !important; border-color:#c2d3f3 !important; }
@@ -8064,8 +8065,10 @@ function crmCurSym(cur) {
   return cur === 'RMB' ? '¥' : cur === 'USD' ? '$' : '₫';
 }
 function crmCurFmt(n, cur) {
-  if (!n) return '';
-  return crmCurSym(cur) + ' ' + n.toLocaleString('en-US');
+  // ★CRM-Q-ZERO-DISPLAY-20261031：0 是有效值，必须显示成「¥ 0」。
+  //   旧写法 `if (!n) return ''` 会把 0 当成空，导致输入 0 后框里什么都不剩。
+  if (n === null || n === undefined || n === '' || isNaN(Number(n))) return '';
+  return crmCurSym(cur) + ' ' + Number(n).toLocaleString('en-US');
 }
 function crmQuoteLink(inputId, cur) {
   var input = el(inputId);
@@ -15352,7 +15355,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z123";  // 版本标记：用于确认浏览器加载的是最新代码（Z123 = 必填金额允许填 0）
+const PERM_BUILD = "build 2026-10-31-Z124";  // 版本标记：用于确认浏览器加载的是最新代码（Z124 = 金额 0 可显示 + 金额居中）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18993,8 +18996,8 @@ function renderCrmFormHtml(t) {
            var q = lbl.toLowerCase();
            if (q === 'q5' || q === 'q7') {
              // Q5 设备综合 / Q7 总金额：自动计算、只读显示
-             return '<div class="cur-input-wrap ' + sm.cls + '" style="height:32px;display:flex;align-items:center;padding:0 8px;font-weight:700;">' +
-               '<span id="c_' + q + '_' + sm.c + '_sum">' + sm.sym + ' 0</span></div>';
+             return '<div class="cur-input-wrap ' + sm.cls + '" style="height:32px;display:flex;align-items:center;justify-content:center;padding:0 8px;font-weight:700;">' +
+               '<span id="c_' + q + '_' + sm.c + '_sum" style="text-align:center;">' + sm.sym + ' 0</span></div>';
            }
            return f('', 'c_' + q + '_' + sm.c, {cur: sm.c.toUpperCase(), bg: sm.bg});
          }).join('');
@@ -19175,7 +19178,9 @@ function fillCrmForm(row, t) {
   ['q1','q2','q3','q4','q5','q6','q7'].forEach(function(q){
     ['rmb','usd','vnd'].forEach(function(c){
       var v = moneyToNumber(row[q + '_' + c]);
-      set('c_' + q + '_' + c, v ? crmCurFmt(v, c.toUpperCase()) : '');
+      // ★CRM-Q-ZERO-DISPLAY-20261031：库里存的是 0 也要回显「¥ 0」（旧写法 v?:'' 会把 0 显示成空白）
+      var hasVal = (row[q + '_' + c] !== null && row[q + '_' + c] !== undefined && String(row[q + '_' + c]) !== '');
+      set('c_' + q + '_' + c, hasVal ? crmCurFmt(v, c.toUpperCase()) : '');
     });
     // 预填后记录每行源币种（有 USD 以 USD 为源，否则 RMB、VND 依次）
     if (moneyToNumber(row[q + '_usd']) > 0) crmCurSrc[q] = 'usd';
