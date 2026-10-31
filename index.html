@@ -15457,7 +15457,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z134";  // 版本标记：用于确认浏览器加载的是最新代码（Z134 = 销售人员下拉严格取自用户名录并即时刷新）
+const PERM_BUILD = "build 2026-10-31-Z135";  // 版本标记：用于确认浏览器加载的是最新代码（Z135 = 切换语言不再清空 WON 弹窗已录入内容）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -16713,7 +16713,28 @@ function applyWonLang() {
     var _ptSnap = { zh: el('w_payment_terms_zh').value, en: el('w_payment_terms_en').value, vi: el('w_payment_terms_vi').value };
     // ★ 切语言前快照补充协议明细（未保存的新增行在 doc_view_addendum 里，renderModalBody 会重建 DOM 把它覆盖）
     var _addmSnap = el('doc_view_addendum') ? el('doc_view_addendum').value : '';
+    // ★WON-LANG-KEEP-20261031：切换语言会整块重建 #modalBody，DOM 全部丢弃。
+    //   以前只补救了付款方式/补充协议/备注三项，其余（合同号、客户、省份、签约双方、日期、
+    //   币种、贸易术语、两个汇率、是否含安装、业务单元、销售人员、两个合同文件）全被清空。
+    //   这里在重建前做一次全量表单快照，重建后按 id 原样还原。
+    var _formSnap = [];
+    document.querySelectorAll('#modalBody input, #modalBody select, #modalBody textarea').forEach(function(f){
+      if (!f.id || f.type === 'file') return;
+      _formSnap.push({ id: f.id, v: f.value, d: !!f.disabled, r: !!f.readOnly });
+    });
     renderModalBody();
+    // 还原快照；select 若新 DOM 里没有该选项（语言/名录变化）则补一个，避免已选值被吞
+    _formSnap.forEach(function(s){
+      var f = el(s.id); if (!f) return;
+      if (f.tagName === 'SELECT' && s.v !== '') {
+        var has = false;
+        for (var _i2 = 0; _i2 < f.options.length; _i2++) { if (f.options[_i2].value === s.v) { has = true; break; } }
+        if (!has) { var _o2 = document.createElement('option'); _o2.value = s.v; _o2.textContent = s.v; f.appendChild(_o2); }
+      }
+      f.value = s.v;
+      if (s.r && 'readOnly' in f) f.readOnly = true;
+      if (s.d) f.disabled = true;
+    });
     el('w_payment_terms_zh').value = _ptSnap.zh;
     el('w_payment_terms_en').value = _ptSnap.en;
     el('w_payment_terms_vi').value = _ptSnap.vi;
@@ -16736,6 +16757,9 @@ function applyWonLang() {
       else { RM_WON_BASES.forEach(function(base){ rmShowCurrent(base); }); }
       window.__rmSnapWon = null;
     } catch(e) { console.warn('[lang] remark restore failed:', e); }
+    // ★WON-LANG-KEEP-20261031：重建后重新套用签约锁定态（disabled/灰底/锁定组清零）与合同文件按钮显隐
+    if (typeof applySigningLock === 'function') applySigningLock();
+    if (typeof refreshWonDocBtns === 'function') refreshWonDocBtns();
     // V56：切换语言后重新锁定/启用三语框
     setTimeout(function(){ RM_WON_BASES.forEach(function(base){ triLangInit('won_' + base, {zh:'w_' + base + '_zh', en:'w_' + base + '_en', vi:'w_' + base + '_vi'}); }); }, 0);
   }
