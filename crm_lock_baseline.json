@@ -1,7 +1,7 @@
 {
- "generated": "2026-10-31 13:45:22",
+ "generated": "2026-10-31 14:02:29",
  "version": "V2026.10.30.01",
- "note": "英文标签 Freight&Ins 全称化为 Freight & Insurance（6个预算/实际标签 + 分组副标题）",
+ "note": "英文 Total E+I 改为 Total Equip+Install（3个币种标签）",
  "i18n": {
   "dict@5659": {
    "zh": {
@@ -1814,9 +1814,9 @@
     "lbl_inst_actual_rmb": "Install Actual RMB",
     "lbl_inst_actual_usd": "Install Actual USD",
     "lbl_inst_actual_vnd": "Install Actual VND",
-    "lbl_total_ei_rmb": "Total E+I RMB",
-    "lbl_total_ei_usd": "Total E+I USD",
-    "lbl_total_ei_vnd": "Total E+I VND",
+    "lbl_total_ei_rmb": "Total Equip+Install RMB",
+    "lbl_total_ei_usd": "Total Equip+Install USD",
+    "lbl_total_ei_vnd": "Total Equip+Install VND",
     "sub_vat": "VAT & Customs & Other Adjustment",
     "lbl_vat_rmb": "VAT&Customs·RMB",
     "lbl_vat_usd": "VAT&Customs·USD",
