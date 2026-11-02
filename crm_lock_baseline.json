@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 09:42:29",
+ "generated": "2026-11-02 10:01:34",
  "version": "V2026.10.30.01",
- "note": "topbar right-side slim: pure CSS sizing + freeze width math, no dictionary text changes; dict@5750/27313 are line-offset false positives",
+ "note": "cp payment table switched to percentage colgroup (layout only, no dictionary/script text changes); dict@5754/27317 are line-offset false positives",
  "i18n": {
-  "dict@5750": {
+  "dict@5754": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27313": {
+  "dict@27317": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
