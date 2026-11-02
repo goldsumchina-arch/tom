@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 09:35:46",
+ "generated": "2026-11-02 09:42:29",
  "version": "V2026.10.30.01",
- "note": "顶栏导航字号下限改为 13/11px（纯 JS 尺寸常量 + 注释，无文案/逻辑变更；dict@27290 为行号偏移误报）",
+ "note": "topbar right-side slim: pure CSS sizing + freeze width math, no dictionary text changes; dict@5750/27313 are line-offset false positives",
  "i18n": {
-  "dict@5735": {
+  "dict@5750": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27290": {
+  "dict@27313": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

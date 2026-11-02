@@ -2223,6 +2223,21 @@ function _ovLoadChartLib(cb){
     white-space:nowrap;   /* ★LANG-GEOMETRY-LOCK：绝不能竖排换行（宽度已冻结） */
   }
   .tb-logout:hover { background:rgba(231,76,60,.85); border-color:transparent; }
+  /* ★TOPBAR-RIGHTSLIM-20261102★ 用户要求：顶部标签必须一屏放下、不出现横向滚动条。
+     办法是把右侧信息区（语言胶囊 / 用户 / 退出）整体瘦身，省下的约 120px 全部让给标签：
+       · 语言胶囊去掉「语言:」字样 —— 中/EN/VI 三个按钮自解释（切语言逻辑完全不受影响）
+       · 用户胶囊不再显示「（管理员）」角色文字 —— 角色在个人菜单里仍可见
+       · 顶栏/右侧间距与按钮内边距收紧
+     ★LANG-GEOMETRY-LOCK：这里只改静态尺寸，各控件宽度仍由 LG.freezeTopbar 按三语最长文案定死。 */
+  #topbar { gap:12px; }
+  .tb-right { gap:8px; }
+  .lang-switch { padding:2px 6px; gap:2px; }
+  .lang-switch-label { display:none; }
+  .lang-switch button { padding:2px 7px; }
+  .tb-user { gap:5px; font-size:12px; }
+  .tb-user-avatar { width:24px; height:24px; font-size:12px; }
+  .tb-user-role { display:none; }
+  .tb-logout { padding:5px 10px; }
   /* ===== 「适应屏幕」按钮 =====
      默认隐藏（电脑上不需要）；只在手机横屏/矮屏显示。
      默认不缩放，与浏览器 100% 一致，宽表格横向滚动查看；
@@ -10328,14 +10343,15 @@ window.LG = (function () {
       // ★TOPBAR-WRAP-20261026★ 这里必须查「全称包」(false)：compact 传 true 时会去 nav_short
       // 里找 'logout'，而 nav_short 里没有这个键 → 宽度算成 0+22=22px，
       // 手机上"退出登录"四个字直接溢出按钮被屏幕裁掉（实测 411px 宽就是这样）。
+      // ★TOPBAR-RIGHTSLIM-20261102★ 内边距改为 5px 10px（左右 20 + 边框 2 = 22）。
       freezeW(logout, maxNavWAny(['logout'], false, '600 ' + (compact ? 11 : 12) + 'px "Segoe UI", Arial, sans-serif')
-        + (compact ? 24 : 30));
+        + (compact ? 20 : 22));
     }
-    if (nameEl) freezeW(nameEl, textW(nameEl.textContent, '400 ' + (compact ? 11 : 13) + 'px "Segoe UI", Arial, sans-serif') + 4, 26);
-    if (roleEl && !compact) {
+    if (nameEl) freezeW(nameEl, textW(nameEl.textContent, '400 ' + (compact ? 11 : 12) + 'px "Segoe UI", Arial, sans-serif') + 4, 26);
+    if (roleEl && !compact && isShown(roleEl)) {
       freezeW(roleEl, maxNavWAny(['role_admin'], false, '400 12px "Segoe UI", Arial, sans-serif') + 4);
     }
-    if (langLbl && !compact) {
+    if (langLbl && !compact && isShown(langLbl)) {
       freezeW(langLbl, maxNavWAny(['lang'], false, '600 11px "Segoe UI", Arial, sans-serif') + 6);
     }
     if (fitBtn && compact) {
@@ -10368,8 +10384,13 @@ window.LG = (function () {
     try { navFam = getComputedStyle(all[0]).fontFamily || ''; } catch (e) {}
     if (!navFam) navFam = '"Segoe UI", Arial, sans-serif';
 
+    // ★TOPBAR-NOSCROLL-20261102★ 用户要求顶部不出横向滚动条：
+    // 优先保字号（15→13），字号降到底后只压缩标签之间的间距（12→8→4），
+    // 把最后几十像素也挤出来；右侧信息区已在 CSS 里整体瘦身，让出约 120px。
+    var gapList = compact ? [4] : [12, 8, 4];
+
     var pickFs = sizes[sizes.length - 1], pickW = null, pickGap = gap, fit = false;
-    for (i = 0; i < sizes.length; i++) {
+    for (i = 0; i < sizes.length && !fit; i++) {
       var f = '600 ' + sizes[i] + 'px ' + navFam;
       var ws = [], sum = 0, j;
       for (j = 0; j < all.length; j++) {                       // 含隐藏项：解锁后不挤别人
@@ -10378,16 +10399,18 @@ window.LG = (function () {
         ws.push(wv);
         if (isShown(all[j])) sum += wv;
       }
-      pickFs = sizes[i]; pickW = ws;
-      if (sum + gap * (vis.length - 1) <= avail) { fit = true; break; }
+      for (var gi = 0; gi < gapList.length; gi++) {
+        pickFs = sizes[i]; pickW = ws; pickGap = gapList[gi];
+        if (sum + gapList[gi] * (vis.length - 1) <= avail) { fit = true; break; }
+      }
     }
     // 剩余空白补到间距里（视觉上仍铺满整行），各项宽度保持不变
     if (fit && vis.length > 1) {
       var used = 0, k2;
       for (k2 = 0; k2 < pickW.length; k2++) used += pickW[k2];
-      var slack = avail - (used + gap * (vis.length - 1));
+      var slack = avail - (used + pickGap * (vis.length - 1));
       var capGap = compact ? 14 : 28;
-      if (slack > 0) pickGap = Math.min(capGap, gap + Math.floor(slack / (vis.length - 1)));
+      if (slack > 0) pickGap = Math.min(capGap, pickGap + Math.floor(slack / (vis.length - 1)));
     }
 
     menu.style.gap = pickGap + 'px';
@@ -15624,7 +15647,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z164";  // 版本标记：用于确认浏览器加载的是最新代码（Z164 = 顶栏导航标签字号设下限 13px，不再缩到 8px）
+const PERM_BUILD = "build 2026-11-02-Z165";  // 版本标记：用于确认浏览器加载的是最新代码（Z165 = 顶栏右侧信息区瘦身 + 标签间距自适应，顶部不再出现横向滚动条）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
