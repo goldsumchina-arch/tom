@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 09:02:52",
+ "generated": "2026-11-02 09:13:47",
  "version": "V2026.10.30.01",
- "note": "质保金单行 6 格改为 minmax(0,1fr) 自适应（纯 CSS，行列偏移误报 dict@5698/27249）",
+ "note": "分期付款计划表格改 table-layout:fixed + colgroup 固定列宽（纯 CSS/HTML 布局，无文案变更；dict@5735/27286 为行号偏移误报）",
  "i18n": {
-  "dict@5698": {
+  "dict@5735": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27249": {
+  "dict@27286": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

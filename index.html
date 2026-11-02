@@ -1069,24 +1069,27 @@ function _ovLoadChartLib(cb){
     .cp-field input.cp-cur-in[data-cur="usd"] { background:#e7eefb;border-color:#c2d3f3;color:#2656b3; }
     .cp-field input.cp-cur-in[data-cur="vnd"] { background:#fbf3d8;border-color:#ecdc9f;color:#9a7420; }
 
-    /* 分期付款计划表格 — 横向滚动 + 关键列固定 */
+    /* 分期付款计划表格 — 固定列宽（表头与内容严格对齐） + 横向滚动 + 关键列固定 */
+    /* ★CP-TABLE-FIXED-20261102：改用 table-layout:fixed + <colgroup> 定义每列宽度，
+       解决「表头与单元格错位」和「列过窄导致下拉/日期框溢出到隔壁列」的问题 */
     .cp-table-wrap { width:100%;overflow-x:auto; }
-    .cp-table { min-width:1100px;border-collapse:collapse;font-size:11.5px; }
-    .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:4px 6px;vertical-align:middle;white-space:nowrap; }
+    .cp-table { table-layout:fixed;width:1236px;min-width:1236px;border-collapse:collapse;font-size:11.5px; }
+    .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:4px 6px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
     .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1;
       white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
     .cp-table tbody tr:nth-child(even) td { background:#fdf8f1; }
-    /* 固定前3列：序号、款项类别、用途说明 */
-    .cp-table th:nth-child(1), .cp-table td:nth-child(1) { position:sticky;left:0;z-index:2;background:#FDECEA;min-width:36px;max-width:36px; }
-    .cp-table th:nth-child(2), .cp-table td:nth-child(2) { position:sticky;left:36px;z-index:2;background:#fff;min-width:120px; }
+    /* 固定前3列：序号 32 / 款项类别 100 / 用途说明 124（偏移量须与 colgroup 完全一致） */
+    .cp-table th:nth-child(1), .cp-table td:nth-child(1) { position:sticky;left:0;z-index:2;background:#FDECEA; }
+    .cp-table th:nth-child(2), .cp-table td:nth-child(2) { position:sticky;left:32px;z-index:2;background:#fff; }
     .cp-table tbody tr:nth-child(even) td:nth-child(2) { background:#fdf8f1; }
-    .cp-table th:nth-child(3), .cp-table td:nth-child(3) { position:sticky;left:156px;z-index:2;background:#fff;min-width:140px; }
+    .cp-table th:nth-child(3), .cp-table td:nth-child(3) { position:sticky;left:132px;z-index:2;background:#fff; }
     .cp-table tbody tr:nth-child(even) td:nth-child(3) { background:#fdf8f1; }
-    .cp-table th:nth-child(1) { z-index:3; }
-    .cp-table th:nth-child(2) { z-index:3; }
-    .cp-table th:nth-child(3) { z-index:3; }
-    .cp-table select, .cp-table input { width:100%;min-width:80px;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px; }
+    .cp-table th:nth-child(1), .cp-table th:nth-child(2), .cp-table th:nth-child(3) { z-index:3; }
+    .cp-table select, .cp-table input { width:100%;min-width:0;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px; }
     .cp-table select:focus, .cp-table input:focus { outline:none;border-color:#E53935; }
+    /* 单元格里的日期框不允许用 100px 最小宽度把列撑破 */
+    .cp-table .cp-date-input-wrapper { min-width:0;width:100%; }
+    .cp-table .cp-date-input-wrapper input { min-width:0; }
     .cp-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#FDECEA;color:#E53935;border:1px solid #f0c8a8;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer; }
     .cp-add-btn:hover { background:#E53935;color:#fff; }
     .cp-sum { display:flex;justify-content:flex-end;gap:16px;margin-top:8px;font-size:12px;color:#666;flex-wrap:wrap; }
@@ -5458,31 +5461,48 @@ function _ovLoadChartLib(cb){
         <div class="cp-sec-title" id="cpPlanSecTitle">分期付款计划</div>
         <div class="cp-table-wrap">
           <table class="cp-table" id="cpPayTable">
+            <!-- ★CP-TABLE-FIXED-20261102：14 列固定列宽，表头与内容永远对齐 -->
+            <colgroup>
+              <col style="width:32px;">
+              <col style="width:100px;">
+              <col style="width:124px;">
+              <col style="width:46px;">
+              <col style="width:84px;">
+              <col style="width:86px;">
+              <col style="width:86px;">
+              <col style="width:132px;">
+              <col style="width:132px;">
+              <col style="width:86px;">
+              <col style="width:78px;">
+              <col style="width:132px;">
+              <col style="width:86px;">
+              <col style="width:32px;">
+            </colgroup>
             <thead>
               <tr>
-                <th style="width:30px;" id="cpThNo">#</th>
+                <th id="cpThNo">#</th>
                 <th id="cpThCat" style="background:#FDECEA;color:#E53935;">款项类别</th>
                 <th id="cpThUsage" style="background:#FDECEA;color:#E53935;">用途说明</th>
-                <th style="width:50px;" id="cpThBg">BG?</th>
-                <th style="width:80px;" id="cpThBgParty">BG双方</th>
-                <th style="width:90px;" id="cpThBgStart">BG开始</th>
-                <th style="width:90px;" id="cpThBgEnd">BG到期</th>
+                <th id="cpThBg">BG?</th>
+                <th id="cpThBgParty">BG双方</th>
+                <th id="cpThBgStart">BG开始</th>
+                <th id="cpThBgEnd">BG到期</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="cpThBgAmt">保函金额</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="cpThPlan">预计付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
-                <th style="width:90px;" id="cpThPlanDate">预计日期</th>
-                <th style="width:70px;" id="cpThMethod">付款方式</th>
+                <th id="cpThPlanDate">预计日期</th>
+                <th id="cpThMethod">付款方式</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="cpThActual">实际付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
-                <th style="width:90px;" id="cpThActualDate">实际日期</th>
-                <th style="width:30px;"></th>
+                <th id="cpThActualDate">实际日期</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="cpPayBody"></tbody>
@@ -5586,31 +5606,48 @@ function _ovLoadChartLib(cb){
         <div class="cp-sec-title" id="agiPlanSecTitle">分期付款计划</div>
         <div class="cp-table-wrap">
           <table class="cp-table" id="agiPayTable">
+            <!-- ★CP-TABLE-FIXED-20261102：14 列固定列宽，表头与内容永远对齐 -->
+            <colgroup>
+              <col style="width:32px;">
+              <col style="width:100px;">
+              <col style="width:124px;">
+              <col style="width:46px;">
+              <col style="width:84px;">
+              <col style="width:86px;">
+              <col style="width:86px;">
+              <col style="width:132px;">
+              <col style="width:132px;">
+              <col style="width:86px;">
+              <col style="width:78px;">
+              <col style="width:132px;">
+              <col style="width:86px;">
+              <col style="width:32px;">
+            </colgroup>
             <thead>
               <tr>
-                <th style="width:30px;" id="agiThNo">#</th>
+                <th id="agiThNo">#</th>
                 <th id="agiThCat" style="background:#FDECEA;color:#E53935;">款项类别</th>
                 <th id="agiThUsage" style="background:#FDECEA;color:#E53935;">用途说明</th>
-                <th style="width:50px;" id="agiThBg">BG?</th>
-                <th style="width:80px;" id="agiThBgParty">BG双方</th>
-                <th style="width:90px;" id="agiThBgStart">BG开始</th>
-                <th style="width:90px;" id="agiThBgEnd">BG到期</th>
+                <th id="agiThBg">BG?</th>
+                <th id="agiThBgParty">BG双方</th>
+                <th id="agiThBgStart">BG开始</th>
+                <th id="agiThBgEnd">BG到期</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="agiThBgAmt">保函金额</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="agiThPlan">预计付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
-                <th style="width:90px;" id="agiThPlanDate">预计日期</th>
-                <th style="width:70px;" id="agiThMethod">付款方式</th>
+                <th id="agiThPlanDate">预计日期</th>
+                <th id="agiThMethod">付款方式</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="agiThActual">实际付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
-                <th style="width:90px;" id="agiThActualDate">实际日期</th>
-                <th style="width:30px;"></th>
+                <th id="agiThActualDate">实际日期</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="agiPayBody"></tbody>
@@ -15583,7 +15620,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z161";  // 版本标记：用于确认浏览器加载的是最新代码（Z161 = 质保金单行 6 格在 100% 缩放下自适应不溢出）
+const PERM_BUILD = "build 2026-11-02-Z162";  // 版本标记：用于确认浏览器加载的是最新代码（Z162 = 分期付款计划表格改固定列宽，表头与内容严格对齐）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -21514,11 +21551,11 @@ function addCpPayRow(savedRow) {
   html += '<td style="text-align:center;font-weight:700;color:#F5872E;">' + seq + '</td>';
   html += '<td><select class="cp-cat">' + catOptions + '</select></td>';
   html += '<td><select class="cp-usage">' + usageOptions + '</select></td>';
-  html += '<td style="text-align:center;"><select class="cp-bg-has" onchange="window.cpOnBgHasChange(this)" style="width:auto;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;">';
+  html += '<td style="text-align:center;"><select class="cp-bg-has" onchange="window.cpOnBgHasChange(this)" style="width:100%;min-width:0;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;">';
   html += '<option value="no" ' + bgHasNo + '>' + noText + '</option>';
   html += '<option value="yes" ' + bgHasYes + '>' + yesText + '</option>';
   html += '</select></td>';
-  html += '<td><select class="cp-bg-party" style="width:auto;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;">' + partyOptions + '</select></td>';
+  html += '<td><select class="cp-bg-party" style="width:100%;min-width:0;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;">' + partyOptions + '</select></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="cp-bg-start" value="' + (bg.start || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="cp-bg-end" value="' + (bg.end || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
   html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
@@ -21539,7 +21576,7 @@ function addCpPayRow(savedRow) {
   html += '<input type="text" class="cp-actual-vnd" value="' + (r.actual && r.actual.vnd ? Math.round(r.actual.vnd).toLocaleString() : '') + '" placeholder="VND" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'actual\',\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
   html += '</div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="cp-actual-date" value="' + (r.actualDate || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
-  html += '<td style="text-align:center;"><button onclick="window.cpDelRow(this)" style="border:none;background:#fde8e8;color:#e74c3c;font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px;">🗑</button></td>';
+  html += '<td style="text-align:center;"><button onclick="window.cpDelRow(this)" style="border:none;background:#fde8e8;color:#e74c3c;font-size:13px;cursor:pointer;padding:2px 2px;border-radius:4px;line-height:1;">🗑</button></td>';
 
   tr.innerHTML = html;
   tbody.appendChild(tr);
@@ -22398,7 +22435,7 @@ function addAgiPayRow(savedRow) {
 
   var html = '';
   // 所有控件均可编辑（与"客户付款明细"行风格一致）；placeholder 仅提示初始值来源，不限制编辑
-  var selStyle = 'width:auto;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;';
+  var selStyle = 'width:100%;min-width:0;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;';
   var inpStyle = 'width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;';
   html += '<td style="text-align:center;font-weight:700;color:#F5872E;">' + seq + '</td>';
   html += '<td><select class="agi-cat" style="' + selStyle + '">' + catOptions + '</select></td>';
@@ -22428,7 +22465,7 @@ function addAgiPayRow(savedRow) {
   html += '<input type="text" class="agi-actual-vnd" value="' + (r.actual && r.actual.vnd ? formatCurrencyWithSymbol(Math.round(r.actual.vnd),'VND') : '') + '" placeholder="VND" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'actual\',\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
   html += '</div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="agi-actual-date" value="' + (r.actualDate || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
-  html += '<td style="text-align:center;"><button onclick="window.agiDelRow(this)" style="border:none;background:#fde8e8;color:#e74c3c;font-size:14px;cursor:pointer;padding:2px 6px;border-radius:4px;">🗑</button></td>';
+  html += '<td style="text-align:center;"><button onclick="window.agiDelRow(this)" style="border:none;background:#fde8e8;color:#e74c3c;font-size:13px;cursor:pointer;padding:2px 2px;border-radius:4px;line-height:1;">🗑</button></td>';
 
   tr.innerHTML = html;
   tbody.appendChild(tr);
