@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 08:58:12",
+ "generated": "2026-11-02 09:02:52",
  "version": "V2026.10.30.01",
- "note": "质保金信息六个输入框并成一行（纯布局 + 复用既有 lbl_warranty_* 词条，未改任何字典键/译文；dict@5688/27239 为行号偏移误报）",
+ "note": "质保金单行 6 格改为 minmax(0,1fr) 自适应（纯 CSS，行列偏移误报 dict@5698/27249）",
  "i18n": {
-  "dict@5688": {
+  "dict@5698": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27239": {
+  "dict@27249": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
