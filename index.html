@@ -15807,7 +15807,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z188";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z189";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -29313,8 +29313,10 @@ window.CommissionModal={open:open,close:close,applyLang:applyLang,addPayRow:addP
 .rpt-tbl-budget{border:1px solid #000 !important;}
 .rpt-tbl-budget thead th,.rpt-tbl-budget tbody td{border:1px solid #000 !important;}
 .rpt-tbl-budget th[colspan]{border-bottom:1px solid #000 !important;}
-.rpt-tbl-budget .rpt-td-diff{text-align:right;padding:4px 8px;font-size:10.5px;}
-.rpt-diff-cell{display:flex;flex-wrap:wrap;gap:0 6px;justify-content:flex-end;align-items:baseline;line-height:1.35;}
+/* ★RPT-CELL-CENTER-20261102★ 整表上下左右居中：单元格垂直居中，差异列水平居中 */
+.rpt-tbl-budget thead th,.rpt-tbl-budget tbody td{vertical-align:middle !important;}
+.rpt-tbl-budget .rpt-td-diff{text-align:center;padding:4px 8px;font-size:10.5px;}
+.rpt-diff-cell{display:flex;flex-wrap:wrap;gap:0 6px;justify-content:center;align-items:center;line-height:1.35;}
 .rpt-diff-curs{display:inline-flex;gap:0 6px;white-space:nowrap;}
 .rpt-diff-cell .rpt-cur{white-space:nowrap;}
 .rpt-diff-pct{white-space:nowrap;font-weight:700;font-size:9.5px;}
