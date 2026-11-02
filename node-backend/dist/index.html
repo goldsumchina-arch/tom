@@ -1053,6 +1053,11 @@ function _ovLoadChartLib(cb){
     .cp-cur-label { font-size:10px;font-weight:700;text-align:center;border-radius:4px;padding:1px 0; }
     .cp-cur-box input { border:none;background:transparent;font-size:13px;font-weight:600;padding:2px;text-align:center;color:#333; }
     .cp-cur-box input:focus { outline:none; }
+    /* ★WON-CPWARR-1ROW-20261102：质保金单行排列时用的三个币种输入框（与普通输入框同高，保留粉/蓝/黄配色） */
+    .cp-field input.cp-cur-in { text-align:center;font-weight:700;padding:6px 8px;border-radius:6px; }
+    .cp-field input.cp-cur-in[data-cur="rmb"] { background:#fde7ef;border-color:#f8c9db;color:#b8326b; }
+    .cp-field input.cp-cur-in[data-cur="usd"] { background:#e7eefb;border-color:#c2d3f3;color:#2656b3; }
+    .cp-field input.cp-cur-in[data-cur="vnd"] { background:#fbf3d8;border-color:#ecdc9f;color:#9a7420; }
 
     /* 分期付款计划表格 — 横向滚动 + 关键列固定 */
     .cp-table-wrap { width:100%;overflow-x:auto; }
@@ -5406,9 +5411,10 @@ function _ovLoadChartLib(cb){
       <!-- 质保金 -->
       <div class="cp-sec">
         <div class="cp-sec-title" id="cpWarrantySecTitle">质保金信息</div>
-        <!-- ★WON-CPWARR-LAYOUT-20261102：三列对齐 —— 第一行「有无质保金 / 开始日期 / 到期日期」，
-             第二行「质保金金额」三个币种框（同样三列、同 10px 间距）与上一行严丝合缝对齐 -->
-        <div class="cp-grid" style="margin-bottom:10px;">
+        <!-- ★WON-CPWARR-1ROW-20261102：六个输入框排成一行 ——
+             有无质保金 │ 开始日期 │ 到期日期 │ 质保金 RMB │ 质保金 USD │ 质保金 VND
+             外层 6 列、内层 5 列（同 10px 间距），列宽完全对齐 -->
+        <div class="cp-grid" style="grid-template-columns:repeat(6,1fr);align-items:start;">
           <div class="cp-field">
             <label id="cpHasWarrantyLabel">有没有质保金？</label>
             <select id="cpHasWarranty" disabled style="background:#f5f5f5;color:#555;cursor:not-allowed;">
@@ -5416,16 +5422,13 @@ function _ovLoadChartLib(cb){
               <option value="no" id="cpOptNo">否</option>
             </select>
           </div>
-          <div class="cp-field"><label id="cpWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
-          <div class="cp-field"><label id="cpWarrantyEndLabel">质保金到期日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
-        </div>
-        <div id="cpWarrantyFields">
-          <div class="cp-field">
-            <label id="cpWarrantyAmtLabel">质保金金额</label>
-            <div class="cp-cur-group" style="gap:10px;">
-              <div class="cp-cur-box" data-cur="rmb"><span class="cp-cur-label">RMB</span><input type="text" id="cpWarrantyRmb" placeholder="0" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div>
-              <div class="cp-cur-box" data-cur="usd"><span class="cp-cur-label">USD</span><input type="text" id="cpWarrantyUsd" placeholder="0" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div>
-              <div class="cp-cur-box" data-cur="vnd"><span class="cp-cur-label">VND</span><input type="text" id="cpWarrantyVnd" placeholder="0" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div>
+          <div id="cpWarrantyFields" style="grid-column:2 / span 5;">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start;">
+              <div class="cp-field"><label id="cpWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
+              <div class="cp-field"><label id="cpWarrantyEndLabel">质保金到期日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
+              <div class="cp-field"><label id="cpWarrantyRmbLabel" style="color:#b8326b;">质保金 RMB</label><input class="cp-cur-in" data-cur="rmb" type="text" id="cpWarrantyRmb" placeholder="0" readonly></div>
+              <div class="cp-field"><label id="cpWarrantyUsdLabel" style="color:#2656b3;">质保金 USD</label><input class="cp-cur-in" data-cur="usd" type="text" id="cpWarrantyUsd" placeholder="0" readonly></div>
+              <div class="cp-field"><label id="cpWarrantyVndLabel" style="color:#9a7420;">质保金 VND</label><input class="cp-cur-in" data-cur="vnd" type="text" id="cpWarrantyVnd" placeholder="0" readonly></div>
             </div>
           </div>
         </div>
@@ -15570,7 +15573,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z159";  // 版本标记：用于确认浏览器加载的是最新代码（Z159 = 客户付款明细·质保金信息 三列对齐重排）
+const PERM_BUILD = "build 2026-11-02-Z160";  // 版本标记：用于确认浏览器加载的是最新代码（Z160 = 客户付款明细·质保金信息 六个输入框并成一行）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -21190,9 +21193,12 @@ function applyCpLang() {
   setText('cpHasWarrantyLabel', t2.cp_has_warranty || '有没有质保金？');
   setText('cpOptYes', t2.cp_yes || '是');
   setText('cpOptNo', t2.cp_no || '否');
-  setText('cpWarrantyAmtLabel', t2.cp_warranty_amt || '质保金金额');
   setText('cpWarrantyStartLabel', t2.cp_warranty_start || '质保金开始日期');
   setText('cpWarrantyEndLabel', t2.cp_warranty_end || '质保金到期日期');
+  // ★WON-CPWARR-1ROW-20261102：单行排列后三个币种各自带标签，复用主表单既有三语词条
+  setText('cpWarrantyRmbLabel', t2.lbl_warranty_rmb || '质保金 RMB');
+  setText('cpWarrantyUsdLabel', t2.lbl_warranty_usd || '质保金 USD');
+  setText('cpWarrantyVndLabel', t2.lbl_warranty_vnd || '质保金 VND');
   setText('cpRateSecTitle', t2.cp_rate_sec || '汇率设置（跟随上级输入）');
   setText('cpRateRmbUsdLabel', t2.cp_rate_rmb_usd || 'RMB / USD（自动获取，不可修改）');
   setText('cpRateVndUsdLabel', t2.cp_rate_vnd_usd || 'VND / USD（自动获取，不可修改）');
