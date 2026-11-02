@@ -5406,6 +5406,8 @@ function _ovLoadChartLib(cb){
       <!-- 质保金 -->
       <div class="cp-sec">
         <div class="cp-sec-title" id="cpWarrantySecTitle">质保金信息</div>
+        <!-- ★WON-CPWARR-LAYOUT-20261102：三列对齐 —— 第一行「有无质保金 / 开始日期 / 到期日期」，
+             第二行「质保金金额」三个币种框（同样三列、同 10px 间距）与上一行严丝合缝对齐 -->
         <div class="cp-grid" style="margin-bottom:10px;">
           <div class="cp-field">
             <label id="cpHasWarrantyLabel">有没有质保金？</label>
@@ -5414,19 +5416,17 @@ function _ovLoadChartLib(cb){
               <option value="no" id="cpOptNo">否</option>
             </select>
           </div>
+          <div class="cp-field"><label id="cpWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
+          <div class="cp-field"><label id="cpWarrantyEndLabel">质保金到期日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
         </div>
         <div id="cpWarrantyFields">
-          <div class="cp-field" style="margin-bottom:10px;">
+          <div class="cp-field">
             <label id="cpWarrantyAmtLabel">质保金金额</label>
-            <div class="cp-cur-group">
+            <div class="cp-cur-group" style="gap:10px;">
               <div class="cp-cur-box" data-cur="rmb"><span class="cp-cur-label">RMB</span><input type="text" id="cpWarrantyRmb" placeholder="0" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div>
               <div class="cp-cur-box" data-cur="usd"><span class="cp-cur-label">USD</span><input type="text" id="cpWarrantyUsd" placeholder="0" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div>
               <div class="cp-cur-box" data-cur="vnd"><span class="cp-cur-label">VND</span><input type="text" id="cpWarrantyVnd" placeholder="0" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div>
             </div>
-          </div>
-          <div class="cp-grid-2">
-          <div class="cp-field"><label id="cpWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
-          <div class="cp-field"><label id="cpWarrantyEndLabel">质保金到期日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
           </div>
         </div>
       </div>
@@ -15570,7 +15570,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-10-31-Z158";  // 版本标记：用于确认浏览器加载的是最新代码（Z158 = 签约双方=AGI-GS 时隐藏 客户付款情况 / GS→AGI 佣金&付款）
+const PERM_BUILD = "build 2026-11-02-Z159";  // 版本标记：用于确认浏览器加载的是最新代码（Z159 = 客户付款明细·质保金信息 三列对齐重排）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
