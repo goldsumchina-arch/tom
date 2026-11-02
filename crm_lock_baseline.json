@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 11:00:19",
+ "generated": "2026-11-02 11:10:27",
  "version": "V2026.10.30.01",
- "note": "cp-table column widths: 4 date cols 8%->6.4% (-20%), freed 6.4% split evenly to BG amount & actual payment (9.2%->12.4%); date input padding/font clamp; build Z174",
+ "note": "cp-pay table col widths round 2: # 2.4->1.8, 4 date cols 6.4->5.44 (-15%), freed 4.44% split to expected/actual payment (11.42/14.62); tighter input padding; build Z175",
  "i18n": {
-  "dict@5835": {
+  "dict@5842": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27478": {
+  "dict@27485": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

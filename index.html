@@ -1107,25 +1107,28 @@ function _ovLoadChartLib(cb){
        ★CP-CONTENT-FIRST-20261102★ 比例按「内容必须放得下」重排：
          下拉类（类别/用途/付款方式）与日期列优先给够，货币三连列按 RMB/USD/VND 三个
          短标签的固定宽度收敛（3 格合计约 100px 即可），把省下的宽度全部让给文字列。 */
-    /* ★CP-DATE-NARROW-20261102★ 用户要求：4 个日期列各缩 20%，省下的宽度平分给
-       「保函金额」和「实际付款」两组三币种输入框。
-         日期列 8% × 0.8 = 6.4%   →  每列省 1.6%，4 列共省 6.4%
-         保函金额 9.2% + 3.2% = 12.4%；实际付款 9.2% + 3.2% = 12.4%（平分 6.4%）
-       合计仍是 100%，14 列依旧一屏铺满、无横向滚动；日期框 6.4% 在 1400px 弹窗下约 90px，
-       「DD-MM-YYYY」+ 日历图标实测可完整显示（10px 字号，约占 72px）。 */
-    .cp-table colgroup col:nth-child(1)  { width:2.4%  !important; }  /* # 序号 */
+    /* ★CP-DATE-NARROW2-20261102★ 第二轮收窄（用户要求）：
+       ① 「#」序号列再缩一点：2.4% → 1.8%（只放 1~3 位数字，21px 就够）
+       ② 4 个日期列再缩 15%：6.4% × 0.85 = 5.44%
+       ③ 省下来的宽度【全部】给「预计付款」和「实际付款」两组三币种输入框，两者平分：
+          #      省 0.60%
+          日期×4 省 0.96% × 4 = 3.84%
+          合计    省 4.44%  →  预计付款 9.2% + 2.22% = 11.42%
+                               实际付款 12.4% + 2.22% = 14.62%
+       合计仍是 100%，14 列依旧一屏铺满、无横向滚动。 */
+    .cp-table colgroup col:nth-child(1)  { width:1.8%  !important; }  /* # 序号 */
     .cp-table colgroup col:nth-child(2)  { width:9.2%  !important; }  /* 款项类别（下拉，最长「固定期限固定金额还款」） */
     .cp-table colgroup col:nth-child(3)  { width:10.8% !important; }  /* 用途说明（长下拉，最长「主体合同设备&运费&安装」） */
     .cp-table colgroup col:nth-child(4)  { width:4.2%  !important; }  /* BG? */
     .cp-table colgroup col:nth-child(5)  { width:4.9%  !important; }  /* BG双方 */
-    .cp-table colgroup col:nth-child(6)  { width:6.4%  !important; }  /* BG开始（日期框，-20%） */
-    .cp-table colgroup col:nth-child(7)  { width:6.4%  !important; }  /* BG到期（日期框，-20%） */
-    .cp-table colgroup col:nth-child(8)  { width:12.4% !important; }  /* 保函金额 RMB/USD/VND（+3.2%） */
-    .cp-table colgroup col:nth-child(9)  { width:9.2%  !important; }  /* 预计付款 RMB/USD/VND */
-    .cp-table colgroup col:nth-child(10) { width:6.4%  !important; }  /* 预计日期（日期框，-20%） */
+    .cp-table colgroup col:nth-child(6)  { width:5.44% !important; }  /* BG开始（日期框，累计 -32%） */
+    .cp-table colgroup col:nth-child(7)  { width:5.44% !important; }  /* BG到期（日期框，累计 -32%） */
+    .cp-table colgroup col:nth-child(8)  { width:12.4% !important; }  /* 保函金额 RMB/USD/VND */
+    .cp-table colgroup col:nth-child(9)  { width:11.42% !important; } /* 预计付款 RMB/USD/VND（+2.22%） */
+    .cp-table colgroup col:nth-child(10) { width:5.44% !important; }  /* 预计日期（日期框，累计 -32%） */
     .cp-table colgroup col:nth-child(11) { width:6.5%  !important; }  /* 付款方式（下拉） */
-    .cp-table colgroup col:nth-child(12) { width:12.4% !important; }  /* 实际付款 RMB/USD/VND（+3.2%） */
-    .cp-table colgroup col:nth-child(13) { width:6.4%  !important; }  /* 实际日期（日期框，-20%） */
+    .cp-table colgroup col:nth-child(12) { width:14.62% !important; } /* 实际付款 RMB/USD/VND（+2.22%） */
+    .cp-table colgroup col:nth-child(13) { width:5.44% !important; }  /* 实际日期（日期框，累计 -32%） */
     .cp-table colgroup col:nth-child(14) { width:2.4%  !important; }  /* 删除 */
     .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:3px 3px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
     .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:10px;z-index:1;
@@ -1152,7 +1155,11 @@ function _ovLoadChartLib(cb){
     /* ★CP-DATE-NARROW-20261102★ 日期列被缩到 6.4% 后，输入框要让出内边距才放得下
        "DD-MM-YYYY"。行内样式写的是 font-size:11px;padding:2px 4px，权重比这里高，
        所以必须带 !important 才能压下来（10px 与同表其他下拉一致，视觉更整齐）。 */
-    .cp-table .cp-date-input-wrapper input { min-width:0;font-size:10px !important;padding:2px 2px !important; }
+    .cp-table .cp-date-input-wrapper input { min-width:0;font-size:10px !important;padding:2px 1px !important; }
+    /* ★CP-DATE-NARROW2-20261102★ 行内样式把日期框和三币种输入框都写死成 11px/2px 4px，
+       列再收窄后这些内边距纯属浪费（每格白丢 6px 文字空间）。统一压到 10px / 左右 1px，
+       日期列 5.44% 下 "DD-MM-YYYY"、三币种格里的 "4,306,658" 才能完整显示。 */
+    .cp-table td > div > input { font-size:10px !important;padding:2px 1px !important; }
     .cp-table .cp-date-input-wrapper svg, .cp-table .cp-date-input-wrapper .cp-date-ico { width:10px;height:10px; }
     .cp-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#FDECEA;color:#E53935;border:1px solid #f0c8a8;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer; }
     .cp-add-btn:hover { background:#E53935;color:#fff; }
@@ -15748,7 +15755,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z174";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z175";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
