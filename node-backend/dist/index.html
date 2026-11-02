@@ -1446,13 +1446,38 @@ function _ovLoadChartLib(cb){
     .cm-summary-row.cm-hl{background:#FBE9E7;border-color:#f3cba0;}
     .cm-summary-row.cm-hl .cm-s-label{color:#D32F2F;}
     .cm-summary-row.cm-hl .cm-s-value{color:#D32F2F;}
-    .cm-pay-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:auto;}
-    .cm-pay-table th,.cm-pay-table td{border:1px solid #e8d9c5;padding:6px;vertical-align:middle;}
-    .cm-pay-table thead th{background:#FBE9E7;color:#D32F2F;font-weight:700;text-align:center;position:sticky;top:0;}
-    .cm-pay-table td input,.cm-pay-table td select{width:auto;min-width:70px;border:1px solid transparent;background:transparent;font-size:12px;padding:4px;color:#2b2f4a;border-radius:5px;white-space:nowrap;}
+    /* ★CM-PAY-ALIGN-20261102★ 用户要求「佣金支付计划」的列头与输入框严格对齐。
+       原因：① table-layout:auto 时列宽被内容拉扯；② 通用规则 `.cm-pay-table td input{min-width:70px}`
+       把三个币种小盒子（每格约 56px）里的输入框撑到 70px，溢出盒子并盖住相邻列
+       （所以 USD 盒子里才会出现「DD-MM-YYYY」这种日期占位符）；③ 表头「支付金额」的三个币种子列
+       与行内 .cm-currency-group 的网格参数不一致。
+       改法：① table-layout:fixed + <colgroup> 固定每列宽度；② 表头币种子列与行内币种网格
+       用完全相同的 3 列网格（同 gap、同左右内边距）；③ 行内输入框一律 width:100%;min-width:0，
+       正好铺满所属单元格，绝不再溢出。 */
+    .cm-pay-table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;}
+    .cm-pay-table th,.cm-pay-table td{border:1px solid #e8d9c5;padding:6px 8px;vertical-align:middle;}
+    .cm-pay-table thead th{background:#FBE9E7;color:#D32F2F;font-weight:700;text-align:center;position:sticky;top:0;padding:5px 8px;}
+    .cm-pay-table th.cm-th-amount{padding:0 8px;}
+    .cm-th-amount-title{padding:4px 0 5px;border-bottom:1px solid #e8d9c5;white-space:nowrap;}
+    .cm-th-amount-cur{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:3px 0 2px;}
+    .cm-th-amount-cur span{font-size:10.5px;letter-spacing:.5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .cm-pay-table .cm-currency-group{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0;align-items:stretch;}
+    .cm-pay-table td input,.cm-pay-table td select{width:100%;min-width:0;border:1px solid transparent;background:transparent;font-size:12px;padding:4px;color:#2b2f4a;border-radius:5px;white-space:nowrap;}
     .cm-pay-table td input:focus,.cm-pay-table td select:focus{border-color:#E53935;background:#fff;outline:none;}
+    .cm-pay-table .cm-curr-box{padding:5px 6px;border-radius:8px;}
+    .cm-pay-table .cm-curr-box .cm-curr-label{font-size:10.5px;padding:2px 0;line-height:1.35;}
+    .cm-pay-table .cm-curr-box input{width:100%;min-width:0;padding:2px 0;font-size:13px;text-align:center;overflow:hidden;text-overflow:ellipsis;}
     .cm-pay-table tbody tr:nth-child(even) td{background:#fdf8f1;}
-    .cm-pay-table .cm-row-act{text-align:center;}
+    .cm-pay-table .cm-row-act{text-align:center;padding:6px 2px;}
+    /* ★CM-PAY-ALIGN-20261102★ 列宽必须用 !important 百分比写：LAN-GEOMETRY-LOCK 脚本每次渲染都会
+       把测量值以内联 width 回写进 <colgroup>（并把 min-width 写到 table 上），内联样式优先级高于
+       普通 CSS，所以只有 !important 才压得住——与 .cp-table 的处理方式完全一致。六列合计 100%。 */
+    .cm-pay-table colgroup col:nth-child(1) { width:5.0%  !important; }  /* # 序号 */
+    .cm-pay-table colgroup col:nth-child(2) { width:16.6% !important; }  /* 佣金性质（下拉） */
+    .cm-pay-table colgroup col:nth-child(3) { width:39.4% !important; }  /* 支付金额：RMB / USD / VND 三格 */
+    .cm-pay-table colgroup col:nth-child(4) { width:14.6% !important; }  /* 支付日期 */
+    .cm-pay-table colgroup col:nth-child(5) { width:19.4% !important; }  /* 支付方式（下拉） */
+    .cm-pay-table colgroup col:nth-child(6) { width:5.0%  !important; }  /* 删除 */
     .cm-icon-btn{border:none;background:none;cursor:pointer;font-size:15px;color:#6b7088;padding:2px 5px;border-radius:5px;}
     .cm-icon-btn:hover{background:#FBE9E7;color:#D32F2F;}
     .cm-icon-btn.cm-del:hover{background:#fde8e8;color:#e05a5a;}
@@ -15782,7 +15807,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z182";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z183";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -27443,20 +27468,29 @@ function submitAuth() {
       <div class="cm-sec">
         <p class="cm-sec-title" id="cmSecPlan">佣金支付计划-含佣金预支和实际支付</p>
         <div style="overflow-x:auto;">
+        <!-- ★CM-PAY-ALIGN-20261102★ 用 colgroup 固定每列宽度，列头与行内输入框严格对齐 -->
         <table class="cm-pay-table" id="cmPayTable">
+          <colgroup>
+            <col style="width:42px;">
+            <col style="width:134px;">
+            <col style="width:336px;">
+            <col style="width:126px;">
+            <col style="width:148px;">
+            <col style="width:44px;">
+          </colgroup>
           <thead>
             <tr>
-              <th style="width:40px;padding:4px 2px;" id="cmThNo">#</th>
-              <th style="min-width:130px;padding:4px 2px;" id="cmThNature">佣金性质</th>
-              <th style="width:200px;padding:0;">
-                <div style="padding:4px 2px;border-bottom:1px solid #e8d9c5;" id="cmThAmount">支付金额</div>
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);">
+              <th id="cmThNo">#</th>
+              <th id="cmThNature">佣金性质</th>
+              <th class="cm-th-amount">
+                <div class="cm-th-amount-title" id="cmThAmount">支付金额</div>
+                <div class="cm-th-amount-cur">
                   <span>RMB</span><span>USD</span><span>VND</span>
                 </div>
               </th>
-              <th style="min-width:115px;padding:4px 2px;" id="cmThDate">支付日期</th>
-              <th style="min-width:140px;padding:4px 2px;" id="cmThMethod">支付方式</th>
-              <th style="width:40px;padding:4px 2px;"></th>
+              <th id="cmThDate">支付日期</th>
+              <th id="cmThMethod">支付方式</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="cmPayBody"></tbody>

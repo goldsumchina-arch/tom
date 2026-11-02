@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 13:12:25",
+ "generated": "2026-11-02 13:21:59",
  "version": "V2026.10.30.01",
- "note": "Z182 warranty single row layout",
+ "note": "cm pay table strict alignment; layout only; build Z183",
  "i18n": {
-  "dict@5869": {
+  "dict@5894": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27518": {
+  "dict@27552": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
