@@ -1,7 +1,7 @@
 {
- "generated": "2026-11-02 13:31:02",
+ "generated": "2026-11-02 14:39:01",
  "version": "V2026.10.30.01",
- "note": "project report: hide sections that the signing-party rules hide in the main modal (AGI-GS: no customer payment; AGI-Customer/AGI-GS: no GS->AGI commission; AGI-Customer/GS-Customer: no AGI->GS) + dynamic section numbering; build Z184",
+ "note": "perf: geometry-lock observer debounce + pct-table exemption (no UI text change); Z190",
  "i18n": {
   "dict@5894": {
    "zh": {
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27552": {
+  "dict@27566": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
