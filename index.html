@@ -15807,7 +15807,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z184";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z185";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -29297,6 +29297,20 @@ window.CommissionModal={open:open,close:close,applyLang:applyLang,addPayRow:addP
 .rpt-tbl tr:nth-child(even) td{background:#fdf8f1;}
 .rpt-pos{color:#27ae60;font-weight:700;}
 .rpt-neg{color:#e74c3c;font-weight:700;}
+/* ★RPT-CUR-SYMBOL-20261102★ ⑥ 预算 vs 实际：预算/实际/差异三大列，每列内部按 ¥ / $ / ₫ 三币种展开 */
+.rpt-tbl-wrap{overflow-x:auto;margin-top:8px;}
+.rpt-tbl-budget{margin-top:0;table-layout:fixed;}
+.rpt-tbl-budget th{padding:5px 6px;font-size:11px;}
+.rpt-tbl-budget th.rpt-th-item{width:17%;}
+.rpt-tbl-budget th.rpt-th-group{background:#fbe7cf;}
+.rpt-tbl-budget th.rpt-th-group[rowspan]{width:18%;}
+.rpt-tbl-budget th[colspan]{border-bottom:1px solid #f3d9b8;}
+.rpt-tbl-budget td{padding:4px 6px;font-size:11px;}
+.rpt-tbl-budget .rpt-td-item{text-align:left;font-weight:600;}
+.rpt-tbl-budget .rpt-td-item-bold{font-weight:600;}
+.rpt-tbl-budget .rpt-td-diff{text-align:right;padding:3px 6px;font-size:10.5px;}
+.rpt-diff-line{display:block;line-height:1.45;white-space:nowrap;}
+.rpt-diff-tag{display:block;font-size:10px;font-weight:400;opacity:.85;line-height:1.3;}
 .rpt-supp-item{font-size:12px;padding:6px 10px;background:#fcfcfd;border:1px solid #eef1f4;border-radius:8px;margin-bottom:6px;}
 /* rpt-overlay 打印规则已统一并入文件头部 @media print 的 .print-target 体系（display 方案，无空白首页） */
 /* 操作列新增按钮样式 */
@@ -29351,6 +29365,11 @@ function openProjectReport(id) {
     var n = _rptCirc[_rptSecN-1] || ('(' + _rptSecN + ')');
     return n + ' ' + _rptStrip(rpt(key));
   };
+  /* ★RPT-CUR-SYMBOL-20261102★ 三币种统一带符号输出：¥ RMB / $ USD / ₫ VND */
+  var _rptNum = function(n){ return Number(n || 0).toLocaleString(); };
+  var _rptFmt3 = function(r, u, v){
+    return '¥' + _rptNum(r) + ' / $' + _rptNum(u) + ' / ₫' + _rptNum(v);
+  };
 
   // ① 合同基本信息
   html += '<div class="rpt-sec"><div class="rpt-sec-title">' + _rptCirc[0] + ' ' + _rptStrip(rpt('rpt_sec1')) + '</div>';
@@ -29381,7 +29400,7 @@ function openProjectReport(id) {
   html += '<div class="rpt-sec"><div class="rpt-sec-title">①‑b '+rpt('rpt_warranty_sec')+'</div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_has_warranty')+'</span><span class="v"><span class="rpt-badge '+(hasWRpt?'rpt-badge-yes':'rpt-badge-no')+'">'+(hasWRpt?rpt('cp_yes'):rpt('cp_no'))+'</span></span></div>';
   if (hasWRpt) {
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_warranty_amt')+'</span><span class="v">RMB: '+(wrRpt?wrRpt.toLocaleString():'0')+' / USD: '+(wuRpt?wuRpt.toLocaleString():'0')+' / VND: '+(wvRpt?wvRpt.toLocaleString():'0')+'</span></div>';
+    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_warranty_amt')+'</span><span class="v">'+_rptFmt3(wrRpt, wuRpt, wvRpt)+'</span></div>';
     html += '<div class="rpt-row"><span class="k">'+rpt('rpt_warranty_period')+'</span><span class="v">'+(wsRpt||'—')+' ~ '+(weRpt||'—')+'</span></div>';
   }
   html += '</div>';
@@ -29393,8 +29412,8 @@ function openProjectReport(id) {
     var cTotal = cPaid + cUnpaid;
     var cPct = cTotal>0 ? (cPaid/cTotal*100).toFixed(1) : 0;
     html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec2')+'</div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.cust_paid_rmb||0).toLocaleString()+' / '+(p.cust_paid_usd||0).toLocaleString()+' / '+(p.cust_paid_vnd||0).toLocaleString()+'</span></div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.cust_unpaid_rmb||0).toLocaleString()+' / '+(p.cust_unpaid_usd||0).toLocaleString()+' / '+(p.cust_unpaid_vnd||0).toLocaleString()+'</span></div>';
+    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.cust_paid_rmb, p.cust_paid_usd, p.cust_paid_vnd)+'</span></div>';
+    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.cust_unpaid_rmb, p.cust_unpaid_usd, p.cust_unpaid_vnd)+'</span></div>';
     html += '<div class="rpt-row"><span class="k">'+rpt('rpt_progress')+'</span><span class="v" style="display:flex;align-items:center;gap:8px;width:60%;justify-content:flex-end;"><span style="min-width:40px;">'+cPct+'%</span><div class="rpt-prog"><div style="width:'+cPct+'%;background:linear-gradient(90deg,#F5872E,#ffb05a);"></div></div></span></div>';
     html += '</div>';
   }
@@ -29405,18 +29424,18 @@ function openProjectReport(id) {
     if (!_hideGs) {
       html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec3')+'</div>';
       html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_pct')+'</span><span class="v">'+(p.gs_comm_pct||0)+'%</span></div>';
-      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_amt')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_comm_rmb||0).toLocaleString()+' / '+(p.gs_comm_usd||0).toLocaleString()+' / '+(p.gs_comm_vnd||0).toLocaleString()+'</span></div>';
-      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_paid_rmb||0).toLocaleString()+' / '+(p.gs_paid_usd||0).toLocaleString()+' / '+(p.gs_paid_vnd||0).toLocaleString()+'</span></div>';
-      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_unpaid_rmb||0).toLocaleString()+' / '+(p.gs_unpaid_usd||0).toLocaleString()+' / '+(p.gs_unpaid_vnd||0).toLocaleString()+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_amt')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.gs_comm_rmb, p.gs_comm_usd, p.gs_comm_vnd)+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.gs_paid_rmb, p.gs_paid_usd, p.gs_paid_vnd)+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.gs_unpaid_rmb, p.gs_unpaid_usd, p.gs_unpaid_vnd)+'</span></div>';
       html += '</div>';
     }
 
     // ④ AGI→GS 合同执行（AGI-Customer / GS-Customer 无此环节）
     if (!_hideAgi) {
       html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec4')+'</div>';
-      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_payable')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_payable_rmb||0).toLocaleString()+' / '+(p.agi_payable_usd||0).toLocaleString()+' / '+(p.agi_payable_vnd||0).toLocaleString()+'</span></div>';
-      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_paid_rmb||0).toLocaleString()+' / '+(p.agi_paid_usd||0).toLocaleString()+' / '+(p.agi_paid_vnd||0).toLocaleString()+'</span></div>';
-      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_unpaid_rmb||0).toLocaleString()+' / '+(p.agi_unpaid_usd||0).toLocaleString()+' / '+(p.agi_unpaid_vnd||0).toLocaleString()+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_payable')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.agi_payable_rmb, p.agi_payable_usd, p.agi_payable_vnd)+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.agi_paid_rmb, p.agi_paid_usd, p.agi_paid_vnd)+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+_rptFmt3(p.agi_unpaid_rmb, p.agi_unpaid_usd, p.agi_unpaid_vnd)+'</span></div>';
       html += '</div>';
     }
 
@@ -29441,33 +29460,49 @@ function openProjectReport(id) {
   }
 
   // ⑥ 预算 vs 实际对比（编号随前文区块动态顺位）
+  /* ★RPT-CUR-SYMBOL-20261102★ 原表按币种分两块（RMB 块 / VND 块），缺 USD；
+     现改为「预算 / 实际 / 差异」三大列，每列内部都用 RMB · USD · VND 三种货币表达，
+     单元格带 ¥ / $ / ₫ 符号，差异列三币种各一行并标注（节省）/（超支）。 */
   html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec6')+'</div>';
-  html += '<table class="rpt-tbl"><thead><tr><th>'+rpt('rpt_fb')+'</th><th>'+rpt('rpt_budget')+' (RMB)</th><th>'+rpt('rpt_actual')+' (RMB)</th><th>'+rpt('rpt_diff')+' (RMB)</th></tr></thead><tbody>';
-  var rows = [
-    [rpt('rpt_fb'), p.fb_budget_rmb||0, p.fb_actual_rmb||0],
-    [rpt('rpt_cc'), p.cc_budget_rmb||0, p.cc_actual_rmb||0],
-    [rpt('rpt_inst'), p.inst_budget_rmb||0, p.inst_actual_rmb||0]
+  html += '<div class="rpt-tbl-wrap"><table class="rpt-tbl rpt-tbl-budget">';
+  html += '<thead>'
+       +   '<tr>'
+       +     '<th rowspan="2" class="rpt-th-item">'+rpt('rpt_fb')+'</th>'
+       +     '<th colspan="3" class="rpt-th-group">'+rpt('rpt_budget')+'</th>'
+       +     '<th colspan="3" class="rpt-th-group">'+rpt('rpt_actual')+'</th>'
+       +     '<th rowspan="2" class="rpt-th-group">'+rpt('rpt_diff')+'</th>'
+       +   '</tr>'
+       +   '<tr>'
+       +     '<th>¥ RMB</th><th>$ USD</th><th>₫ VND</th>'
+       +     '<th>¥ RMB</th><th>$ USD</th><th>₫ VND</th>'
+       +   '</tr>'
+       + '</thead><tbody>';
+  var _bRows = [
+    [rpt('rpt_fb'),   'fb'],
+    [rpt('rpt_cc'),   'cc'],
+    [rpt('rpt_inst'), 'inst']
   ];
-  rows.forEach(function(r){
-    var diff = r[2]-r[1];
-    var cls = diff<0 ? 'rpt-pos' : (diff>0 ? 'rpt-neg' : '');
-    var sign = diff<0 ? ' '+rpt('rpt_diff_pos') : (diff>0 ? ' '+rpt('rpt_diff_neg') : '');
-    html += '<tr><td style="text-align:left;font-weight:600;">'+r[0]+'</td><td>'+(r[1]).toLocaleString()+'</td><td>'+(r[2]).toLocaleString()+'</td><td class="'+cls+'">'+(diff>=0?'+':'')+diff.toLocaleString()+sign+'</td></tr>';
+  _bRows.forEach(function(r, idx){
+    var k  = r[1];
+    var bR = Number(p[k+'_budget_rmb']||0), bU = Number(p[k+'_budget_usd']||0), bV = Number(p[k+'_budget_vnd']||0);
+    var aR = Number(p[k+'_actual_rmb']||0), aU = Number(p[k+'_actual_usd']||0), aV = Number(p[k+'_actual_vnd']||0);
+    var dR = aR-bR, dU = aU-bU, dV = aV-bV;
+    var anyNeg = (dR<0 || dU<0 || dV<0);
+    var anyPos = (dR>0 || dU>0 || dV>0);
+    var cls  = anyNeg ? 'rpt-pos' : (anyPos ? 'rpt-neg' : '');
+    var sign = anyNeg ? ' '+rpt('rpt_diff_pos') : (anyPos ? ' '+rpt('rpt_diff_neg') : '');
+    var lineDiff = function(d, sym){
+      return '<span class="rpt-diff-line">'+sym+(d>=0?'+':'')+d.toLocaleString()+'</span>';
+    };
+    html += '<tr>'
+         +   '<td class="rpt-td-item'+(idx===2?' rpt-td-item-bold':'')+'">'+r[0]+'</td>'
+         +   '<td>'+bR.toLocaleString()+'</td><td>'+bU.toLocaleString()+'</td><td>'+bV.toLocaleString()+'</td>'
+         +   '<td>'+aR.toLocaleString()+'</td><td>'+aU.toLocaleString()+'</td><td>'+aV.toLocaleString()+'</td>'
+         +   '<td class="'+cls+' rpt-td-diff">'+lineDiff(dR,'¥')+lineDiff(dU,'$')+lineDiff(dV,'₫')
+         +     (sign ? '<span class="rpt-diff-tag">'+sign+'</span>' : '')+'</td>'
+         + '</tr>';
   });
-  // VND 行
-  html += '<tr><td colspan="4" style="background:#fdf1e3;font-weight:700;color:#c05a00;text-align:left;">'+rpt('rpt_vnd')+'</td></tr>';
-  var rowsV = [
-    [rpt('rpt_fb'), p.fb_budget_vnd||0, p.fb_actual_vnd||0],
-    [rpt('rpt_cc'), p.cc_budget_vnd||0, p.cc_actual_vnd||0],
-    [rpt('rpt_inst'), p.inst_budget_vnd||0, p.inst_actual_vnd||0]
-  ];
-  rowsV.forEach(function(r){
-    var diff = r[2]-r[1];
-    var cls = diff<0 ? 'rpt-pos' : (diff>0 ? 'rpt-neg' : '');
-    var sign = diff<0 ? ' '+rpt('rpt_diff_pos') : (diff>0 ? ' '+rpt('rpt_diff_neg') : '');
-    html += '<tr><td style="text-align:left;">'+r[0]+'</td><td>'+(r[1]).toLocaleString()+'</td><td>'+(r[2]).toLocaleString()+'</td><td class="'+cls+'">'+(diff>=0?'+':'')+diff.toLocaleString()+sign+'</td></tr>';
-  });
-  html += '</tbody></table></div>';
+  html += '</tbody></table></div></div>';
 
   document.getElementById('rptBody').innerHTML = html;
   document.getElementById('rptOverlay').style.display = 'flex';
