@@ -706,6 +706,19 @@ function _ovLoadChartLib(cb){
       .w-2row.w-basic-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .w-2row.w-basic-grid .w-cell.w-wide { grid-column:span 2; }
     }
+    /* ★WON-WARRANTY-1ROW-20261102★ 用户要求「质保金信息」6 个字段必须在一行：
+       有/无质保金 · 质保金RMB · 质保金USD · 质保金VND · 开始日期 · 到期日期。
+       原来用 .form-row（flex + 每个子项 min-width:130px），弹窗一窄 6×130+5×8=820px
+       放不下就折成 5+1，最后一个「质保金到期日期」独占整行（用户截图现象）。
+       改成固定 6 列 grid + min-width:0，宽度不够时只是每格等比变窄，永不换行。 */
+    .form-row.w-warr-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px 10px; align-items:start; }
+    .form-row.w-warr-grid > div { min-width:0; }
+    .form-row.w-warr-grid .cp-date-input-wrapper { min-width:0; }
+    /* 日期框默认 padding:2px 4px，比同排的 input/select 矮 5px，并排看高低不齐；补齐高度 */
+    .form-row.w-warr-grid .cp-date-input-wrapper input { padding:5px 8px; }
+    @media (max-width:760px) {
+      .form-row.w-warr-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    }
     .w-2row .w-cell label { font-size:10.5px; color:#666; display:block; margin-bottom:2px; font-weight:500; }
     .w-2row .w-cell input, .w-2row .w-cell select { width:100%; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:12px; transition:border .2s; background:white; box-sizing:border-box; }
     .w-2row .w-cell select { cursor:pointer; }
@@ -15755,7 +15768,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z175";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z176";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18592,7 +18605,8 @@ function renderModalBody() {
       '</div>' +
       '<div class="form-row"><div style="flex:0 0 100%;font-weight:600;color:#555;font-size:10px;margin-top:8px;border-top:1px dashed #8b0000;padding-top:8px;">' + t.sub_warranty + '</div></div>' +
       // ★WON-WARRANTY-1ROW-20261031：质保金 开关 + 三币 + 起止日期 合并成同一行（6 格）
-      '<div class="form-row">' +
+      // ★WON-WARRANTY-1ROW-20261102★ 加 w-warr-grid：固定 6 列 grid，任何宽度都不折行
+      '<div class="form-row w-warr-grid">' +
         '<div><label>' + t.lbl_warranty_on + '</label><select id="w_has_warranty" onchange="onHasWarrantyChange()">' +
           '<option value="yes" id="wWarrantyOptYes">' + (t.cp_yes || '是') + '</option>' +
           '<option value="no" id="wWarrantyOptNo">' + (t.cp_no || '否') + '</option>' +
