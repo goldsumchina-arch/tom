@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 10:15:41",
+ "generated": "2026-11-02 10:21:58",
  "version": "V2026.10.30.01",
- "note": "cp table: drop narrow-screen min-width fallback, force overflow-x hidden (layout only, no text/script changes)",
+ "note": "cp table: add inverse zoom on .cp-table-wrap under .mmax so table font stays at native size when maximized (CSS only, no text/script change; dict line offsets)",
  "i18n": {
-  "dict@5778": {
+  "dict@5790": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27357": {
+  "dict@27369": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

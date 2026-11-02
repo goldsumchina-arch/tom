@@ -2685,6 +2685,18 @@ function _ovLoadChartLib(cb){
     .mmax #modalBody, .mmax #crmModalBody { max-height: calc((100vh - 215px) / 1.6) !important; }
     .mmax .cm-body, .mmax .addm-body, .mmax .cp-body { max-height: calc((100vh - 190px) / 1.6) !important; }
   }
+  /* ★CP-MAX-FONTLOCK-20261102★ 用户要求：最大化时「分期付款计划」表格的字体保持原大小。
+     原因：最大化会给 .cp-body 加 zoom:1.4，字号跟着放大 1.4 倍 —— 屏幕是变宽了，
+     但每列能放下的字符数反而不增加（宽度涨 40%，字也涨 40%），于是「看不到全部内容」。
+     这里在表格容器上做 1/1.4 反向缩放，两层 zoom 相抵（1.4 × 1/1.4 = 1）：
+       · 表格视觉宽度仍然铺满弹窗（width:100% 按放大后的逻辑宽算，视觉仍是整屏）
+       · 字号/下拉/日期框/按钮回到未放大时的 11.5px / 11px
+     结果：同样的列宽能多显示约 40% 的文字，最大化才真正有用。
+     窄屏断点（≤920px，父级 1.6）同样相抵为 1/1.6。 */
+  .mmax .cp-table-wrap { zoom: 0.7142857; }
+  @media (max-width: 920px) {
+    .mmax .cp-table-wrap { zoom: 0.625; }
+  }
   .auth-modal {
     width: 420px; max-width: 92vw; background:#fff; border-radius:14px;
     box-shadow: 0 18px 50px rgba(0,0,0,.35); padding: 28px 30px 22px;
@@ -15691,7 +15703,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z168";  // 版本标记：用于确认浏览器加载的是最新代码（Z168 = 分期表彻底取消固定最小宽/横向滚动，14 列在任何宽度都等比铺满）
+const PERM_BUILD = "build 2026-11-02-Z169";  // 版本标记：用于确认浏览器加载的是最新代码（Z169 = 最大化时分期表字体不放大，列宽变宽后能显示更多文字）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
