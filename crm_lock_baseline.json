@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 11:56:17",
+ "generated": "2026-11-02 12:40:33",
  "version": "V2026.10.30.01",
- "note": "won modal sections 3/4/5: switch field rows from flex-wrap to fixed grid (w-pay-grid) so each block is exactly 2 rows; sec3 split 7 fields into 4+3, sec4 5+6, sec5 4+6; build Z177",
+ "note": "modals: remove maximize + drag-resize content zoom (no more 1.4/1.6 scale); all red/orange title bars shrink 30% (height+font); build Z178",
  "i18n": {
-  "dict@5863": {
+  "dict@5845": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27512": {
+  "dict@27494": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
