@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 12:54:34",
+ "generated": "2026-11-02 13:12:25",
  "version": "V2026.10.30.01",
- "note": "addendum modal: add missing close button (.addm-modal > .addm-close) anchored at same top as maximize button; build Z180",
+ "note": "Z182 warranty single row layout",
  "i18n": {
-  "dict@5857": {
+  "dict@5869": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27506": {
+  "dict@27518": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
