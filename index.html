@@ -1104,11 +1104,14 @@ function _ovLoadChartLib(cb){
     /* 首列（序号）与末列（删除）内边距收紧，避免窄列把图标按钮裁掉 */
     .cp-table th:first-child, .cp-table td:first-child,
     .cp-table th:last-child,  .cp-table td:last-child { padding-left:2px; padding-right:2px; }
-    /* 手机窄屏：14 列等比压缩到 400px 会挤成一团，此时退回固定宽度 + 横向滚动
-       （桌面/最大化弹窗仍然全列铺满、无滚动条） */
-    @media (max-width:700px) {
-      .cp-table { min-width:1050px; }
-      .cp-table-wrap { overflow-x:auto; }
+    /* ★CP-NOSCROLL-HARD-20261102★ 任何宽度都不允许横向滚动：
+       之前这里在窄屏退回「min-width:1050px + overflow-x:auto」，正是「100% 缩放只看得见
+       前几列、后面被裁掉」的另一个来源（系统 DPI 缩放会让 CSS 视口变窄，从而命中这条规则）。
+       现彻底取消固定最小宽，14 列一律等比压缩、永远铺满容器。 */
+    .cp-table-wrap { overflow-x:hidden !important; }
+    @media (max-width:900px) {
+      .cp-table th, .cp-table td { padding:2px 2px; }
+      .cp-table select, .cp-table input { padding:2px 2px; }
     }
     .cp-table select, .cp-table input { width:100%;min-width:0;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px; }
     .cp-table select:focus, .cp-table input:focus { outline:none;border-color:#E53935; }
@@ -15688,7 +15691,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z167";  // 版本标记：用于确认浏览器加载的是最新代码（Z167 = 修复语言几何锁把分期表列宽改回 px 导致只显示 4 列的问题）
+const PERM_BUILD = "build 2026-11-02-Z168";  // 版本标记：用于确认浏览器加载的是最新代码（Z168 = 分期表彻底取消固定最小宽/横向滚动，14 列在任何宽度都等比铺满）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){

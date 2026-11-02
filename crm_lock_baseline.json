@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 10:13:15",
+ "generated": "2026-11-02 10:15:41",
  "version": "V2026.10.30.01",
- "note": "cp table col widths moved from inline colgroup to CSS !important rules + LG.freezeTable exemption for percentage-layout tables; no dictionary or script text changed (dict@27354 = line offset)",
+ "note": "cp table: drop narrow-screen min-width fallback, force overflow-x hidden (layout only, no text/script changes)",
  "i18n": {
-  "dict@5775": {
+  "dict@5778": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27354": {
+  "dict@27357": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
