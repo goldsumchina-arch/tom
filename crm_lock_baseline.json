@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 14:39:01",
+ "generated": "2026-11-02 14:51:35",
  "version": "V2026.10.30.01",
- "note": "perf: geometry-lock observer debounce + pct-table exemption (no UI text change); Z190",
+ "note": "style: secondary-modal table header font-size aligned to body text (cp-table 10->10.5px, currency sub-labels 9->10.5px, addm-table 10.5->11.5px); no wording changes; build Z191",
  "i18n": {
-  "dict@5894": {
+  "dict@5898": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27566": {
+  "dict@27570": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

@@ -1167,7 +1167,10 @@ function _ovLoadChartLib(cb){
     .cp-table colgroup col:nth-child(13) { width:5.44% !important; }  /* 实际日期（日期框，累计 -32%） */
     .cp-table colgroup col:nth-child(14) { width:2.4%  !important; }  /* 删除 */
     .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:3px 3px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:10px;z-index:1;
+    /* ★CP-HEAD-FONT-20261102★ 表头字号与正文统一（原来 10px 比正文 10.5px 小、三币种子标签只有 9px，
+       用户反馈「看着太小」）。风险控制：列宽仍是固定百分比，表头本来就 white-space:normal，
+       变大后只会在窄列里多折一行，不会把列撑宽、不产生横向滚动。 */
+    .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:10.5px;z-index:1;
       white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
     .cp-table tbody tr:nth-child(even) td { background:#fdf8f1; }
     /* 首列（序号）与末列（删除）内边距收紧，避免窄列把图标按钮裁掉 */
@@ -1643,7 +1646,8 @@ function _ovLoadChartLib(cb){
   .addm-body { flex:1; overflow:auto; padding:16px 20px; }
   .addm-table { width:100%; border-collapse:collapse; font-size:11.5px; }
   .addm-table th, .addm-table td { border:1px solid #e5e5e5; padding:5px 6px; vertical-align:middle; text-align:center; }
-  .addm-table thead th { background:#FDECEA; color:#E53935; font-weight:700; font-size:10.5px; position:sticky; top:0; z-index:2;
+  /* ★CP-HEAD-FONT-20261102★ 表头字号与正文 11.5px 统一（原 10.5px 偏小） */
+  .addm-table thead th { background:#FDECEA; color:#E53935; font-weight:700; font-size:11.5px; position:sticky; top:0; z-index:2;
     white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示，禁止省略号 */
   .addm-table .ad-col-no { width:34px; }
   .addm-table .ad-col-date { width:200px; }
@@ -5651,17 +5655,17 @@ function _ovLoadChartLib(cb){
                 <th id="cpThBgEnd">BG到期</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="cpThBgAmt">保函金额</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:10.5px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="cpThPlan">预计付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:10.5px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th id="cpThPlanDate">预计日期</th>
                 <th id="cpThMethod">付款方式</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="cpThActual">实际付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:10.5px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th id="cpThActualDate">实际日期</th>
                 <th></th>
@@ -5793,17 +5797,17 @@ function _ovLoadChartLib(cb){
                 <th id="agiThBgEnd">BG到期</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="agiThBgAmt">保函金额</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:10.5px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="agiThPlan">预计付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:10.5px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th id="agiThPlanDate">预计日期</th>
                 <th id="agiThMethod">付款方式</th>
                 <th>
                   <div style="border-bottom:1px solid #f0c8a8;padding-bottom:2px;margin-bottom:2px;" id="agiThActual">实际付款</div>
-                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:9px;"><span>RMB</span><span>USD</span><span>VND</span></div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;font-size:10.5px;"><span>RMB</span><span>USD</span><span>VND</span></div>
                 </th>
                 <th id="agiThActualDate">实际日期</th>
                 <th></th>
@@ -15821,7 +15825,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z190";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z191";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
