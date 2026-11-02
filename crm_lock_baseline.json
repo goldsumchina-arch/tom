@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 11:24:04",
+ "generated": "2026-11-02 11:56:17",
  "version": "V2026.10.30.01",
- "note": "won modal warranty row: add w-warr-grid fixed 6-col grid so Has/RMB/USD/VND/Start/End stay on ONE row (was flex-wrap 5+1); date input padding matched; build Z176",
+ "note": "won modal sections 3/4/5: switch field rows from flex-wrap to fixed grid (w-pay-grid) so each block is exactly 2 rows; sec3 split 7 fields into 4+3, sec4 5+6, sec5 4+6; build Z177",
  "i18n": {
-  "dict@5855": {
+  "dict@5863": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27499": {
+  "dict@27512": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

@@ -719,6 +719,14 @@ function _ovLoadChartLib(cb){
     @media (max-width:760px) {
       .form-row.w-warr-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
     }
+    /* ★WON-PAY-2ROWS-20261102★ 用户要求 ③客户付款 / ④GS→AGI / ⑤AGI→GS 三块「排成两行」。
+       这几行原来是 .form-row（flex + 子项 min-width:130px），弹窗 860px 宽时
+       ④ 的 6 个字段（6×130+5×8=820）勉强一行、⑤ 的 6 个同样，而 ③ 的 7 个（958）必然折成
+       5+2 —— 于是三块都变成 3 行，最后一个「Unpaid VND」独占整行（用户截图现象）。
+       改成 grid：每行的列数由行内 style 的 grid-template-columns 决定（该行有几个字段就几列），
+       minmax(0,1fr) 让它们等比铺满、永不折行，整块固定 2 行。 */
+    .form-row.w-pay-grid { display:grid; gap:8px 12px; align-items:end; }
+    .form-row.w-pay-grid > div { min-width:0; }
     .w-2row .w-cell label { font-size:10.5px; color:#666; display:block; margin-bottom:2px; font-weight:500; }
     .w-2row .w-cell input, .w-2row .w-cell select { width:100%; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:12px; transition:border .2s; background:white; box-sizing:border-box; }
     .w-2row .w-cell select { cursor:pointer; }
@@ -15768,7 +15776,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z176";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z177";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18622,11 +18630,14 @@ function renderModalBody() {
     // ★WON-AGIGS-HIDE-20261031：签约双方=AGI-GS 时整块隐藏（③ 客户付款情况）
     '<div class="form-section" id="w_sec_cust">' +
       '<div class="form-section-title">' + t.section3 + '</div>' +
-      '<div class="form-row">' +
+      // ★WON-PAY-2ROWS-20261102★ 7 个字段拆成 2 行：①总付款次数+已付 RMB/USD/VND（4 列）②未付 RMB/USD/VND（3 列）
+      '<div class="form-row w-pay-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">' +
         '<div><label>' + t.lbl_cust_pay_count + '</label><input id="w_cust_pay_count" type="text" inputmode="numeric" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_cust_paid_rmb + '</label><input id="w_cust_paid_rmb" class="won-rmb" data-currency="RMB" data-currency-group="cust_paid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_cust_paid_usd + '</label><input id="w_cust_paid_usd" class="won-usd" data-currency="USD" data-currency-group="cust_paid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_cust_paid_vnd + '</label><input id="w_cust_paid_vnd" class="won-vnd" data-currency="VND" data-currency-group="cust_paid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
+      '</div>' +
+      '<div class="form-row w-pay-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">' +
         '<div><label>' + t.lbl_cust_unpaid_rmb + '</label><input id="w_cust_unpaid_rmb" class="won-rmb" data-currency="RMB" data-currency-group="cust_unpaid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_cust_unpaid_usd + '</label><input id="w_cust_unpaid_usd" class="won-usd" data-currency="USD" data-currency-group="cust_unpaid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_cust_unpaid_vnd + '</label><input id="w_cust_unpaid_vnd" class="won-vnd" data-currency="VND" data-currency-group="cust_unpaid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
@@ -18653,14 +18664,15 @@ function renderModalBody() {
     // ★WON-AGICUST-HIDE-20261031：签约双方=AGI-客户 / AGI-GS 时整块隐藏（④ GS→AGI 佣金 & 付款）
     '<div class="form-section" id="w_sec_gs">' +
       '<div class="form-section-title">' + t.section4 + '</div>' +
-      '<div class="form-row">' +
+      // ★WON-PAY-2ROWS-20261102★ 共 11 个字段 → 固定 2 行：①佣金比率+佣金 RMB/USD/VND+总付款次数（5 列）②已付/未付各三币（6 列）
+      '<div class="form-row w-pay-grid" style="grid-template-columns:repeat(5,minmax(0,1fr));">' +
         '<div><label>' + t.lbl_gs_comm_pct + '</label><input id="w_gs_comm_pct" type="text" inputmode="numeric" placeholder="0.0000" onblur="formatCommPct(this)" oninput="formatCommPctLive(this)"></div>' +
         '<div><label>' + t.lbl_gs_comm_rmb + '</label><input id="w_gs_comm_rmb" class="won-rmb calc-result" data-currency="RMB" data-currency-group="gs_comm" readonly placeholder="0"></div>' +
         '<div><label>' + t.lbl_gs_comm_usd + '</label><input id="w_gs_comm_usd" class="won-usd calc-result" data-currency="USD" data-currency-group="gs_comm" readonly placeholder="0"></div>' +
         '<div><label>' + t.lbl_gs_comm_vnd + '</label><input id="w_gs_comm_vnd" class="won-vnd calc-result" data-currency="VND" data-currency-group="gs_comm" readonly placeholder="0"></div>' +
         '<div><label>' + t.lbl_gs_pay_count + '</label><input id="w_gs_pay_count" type="text" inputmode="numeric" readonly placeholder="0" style="background:#f2f2f2;cursor:default;"></div>' +
       '</div>' +
-      '<div class="form-row">' +
+      '<div class="form-row w-pay-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));">' +
         '<div><label>' + t.lbl_gs_paid_rmb + '</label><input id="w_gs_paid_rmb" class="won-rmb" data-currency="RMB" data-currency-group="gs_paid" readonly placeholder="0" style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_gs_paid_usd + '</label><input id="w_gs_paid_usd" class="won-usd" data-currency="USD" data-currency-group="gs_paid" readonly placeholder="0" style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_gs_paid_vnd + '</label><input id="w_gs_paid_vnd" class="won-vnd" data-currency="VND" data-currency-group="gs_paid" readonly placeholder="0" style="background:#f2f2f2;cursor:default;"></div>' +
@@ -18690,13 +18702,14 @@ function renderModalBody() {
     // ★WON-AGICUST-HIDE-20261031：签约双方=AGI-客户 时整块隐藏（⑤ AGI→GS 付款）；=GS-客户 时同样隐藏
     '<div class="form-section" id="w_sec_agi">' +
       '<div class="form-section-title">' + t.section5 + '</div>' +
-      '<div class="form-row">' +
+      // ★WON-PAY-2ROWS-20261102★ 共 10 个字段 → 固定 2 行：①应付 RMB/USD/VND+总付款次数（4 列）②已付/未付各三币（6 列）
+      '<div class="form-row w-pay-grid" style="grid-template-columns:repeat(4,minmax(0,1fr));">' +
         '<div><label>' + t.lbl_agi_payable_rmb + '</label><input id="w_agi_payable_rmb" class="won-rmb calc-result" data-currency="RMB" data-currency-group="agi_payable" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_agi_payable_usd + '</label><input id="w_agi_payable_usd" class="won-usd calc-result" data-currency="USD" data-currency-group="agi_payable" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_agi_payable_vnd + '</label><input id="w_agi_payable_vnd" class="won-vnd calc-result" data-currency="VND" data-currency-group="agi_payable" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_agi_pay_count + '</label><input id="w_agi_pay_count" type="text" inputmode="numeric" readonly style="background:#f2f2f2;cursor:default;"></div>' +
       '</div>' +
-      '<div class="form-row">' +
+      '<div class="form-row w-pay-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));">' +
         '<div><label>' + t.lbl_agi_paid_rmb + '</label><input id="w_agi_paid_rmb" class="won-rmb" data-currency="RMB" data-currency-group="agi_paid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_agi_paid_usd + '</label><input id="w_agi_paid_usd" class="won-usd" data-currency="USD" data-currency-group="agi_paid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
         '<div><label>' + t.lbl_agi_paid_vnd + '</label><input id="w_agi_paid_vnd" class="won-vnd" data-currency="VND" data-currency-group="agi_paid" readonly style="background:#f2f2f2;cursor:default;"></div>' +
