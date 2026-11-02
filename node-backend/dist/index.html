@@ -688,6 +688,22 @@ function _ovLoadChartLib(cb){
     .w-2row { display:flex; gap:8px 14px; margin-bottom:6px; flex-wrap:wrap; align-items:flex-start; }
     .w-2row .w-cell { flex:1 1 130px; min-width:120px; }
     .w-2row .w-cell.w-wide { flex:1 1 300px; min-width:240px; }
+    /* ★WON-BASIC-3ROW-20261102★ 用户要求「基本信息」正好三行：15 个字段 = 5 列 × 3 行。
+       原来是 flex-wrap（7+5+3 三块），窗口稍窄第一块就折成 5+2，整块变成 4~5 行，
+       且第二、三行大量留白。这里只对基本信息的三块加 .w-basic-grid 固定 5 列，
+       每一块严格一行；其他用 .w-2row 的行（如第②部分货币列显隐组）保持原来的 flex 行为。 */
+    .w-2row.w-basic-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px 12px; align-items:flex-start; }
+    .w-2row.w-basic-grid .w-cell { min-width:0; }
+    .w-2row.w-basic-grid .w-cell.w-wide { min-width:0; }
+    /* 窄屏兜底：3 列（宽字段跨 2 列）→ 2 列 */
+    @media (max-width:900px) {
+      .w-2row.w-basic-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .w-2row.w-basic-grid .w-cell.w-wide { grid-column:span 2; }
+    }
+    @media (max-width:620px) {
+      .w-2row.w-basic-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .w-2row.w-basic-grid .w-cell.w-wide { grid-column:span 2; }
+    }
     .w-2row .w-cell label { font-size:10.5px; color:#666; display:block; margin-bottom:2px; font-weight:500; }
     .w-2row .w-cell input, .w-2row .w-cell select { width:100%; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:12px; transition:border .2s; background:white; box-sizing:border-box; }
     .w-2row .w-cell select { cursor:pointer; }
@@ -15721,7 +15737,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z170";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z171";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18432,26 +18448,27 @@ function renderModalBody() {
   var html = '' +
     '<div class="form-section">' +
       '<div class="form-section-title">' + t.section1 + '</div>' +
-      // ★WON-BASIC-2ROW-20261031：基础信息 15 个输入智能排序，压缩为多行（flex-wrap 自适应，窄屏自动折行）
-      //   第1行 项目标识 7 项 / 第2行 价格条款 5 项 / 第3行 付款方式 + 2 份合同文件
-      '<div class="w-2row">' +
+      // ★WON-BASIC-3ROW-20261102：基础信息 15 个输入 = 5 列 × 3 行（w-basic-grid 固定 5 列）
+      //   第1行 项目标识 5 项 / 第2行 价格条款 5 项 / 第3行 业务单元·销售 + 付款方式 + 2 份合同文件
+      '<div class="w-2row w-basic-grid">' +
         '<div class="w-cell"><label>' + t.lbl_contract_no + '</label><input id="w_contract_no"></div>' +
         '<div class="w-cell"><label>' + t.lbl_customer + '</label><input id="w_customer"></div>' +
         '<div class="w-cell"><label>' + t.won_province + '</label><select id="w_province">' + provinceOptionsHtml(t, CUR_LANG) + '</select></div>' +
         '<div class="w-cell"><label>' + t.lbl_signing_parties + '</label><select id="w_signing_parties" onchange="applySigningLock()"><option value="AGI-Customer">' + t.party_agi_customer + '</option><option value="GS-Customer">' + t.party_gs_customer + '</option><option value="AGI-GS">' + t.party_agi_gs + '</option></select></div>' +
         '<div class="w-cell"><label>' + t.lbl_contract_date + '</label><div class="cp-date-input-wrapper" style="position:relative;"><input id="w_contract_date" type="text" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>' +
+      '</div>' +
+      // 第2行：签约货币 / 贸易术语 / 两个汇率 / 是否含安装（从原第1块尾部与第2块合并）
+      '<div class="w-2row w-basic-grid">' +
         '<div class="w-cell"><label>' + t.lbl_currency + '</label><select id="w_contract_currency"><option value="USD">USD</option><option value="VND">VND</option><option value="RMB">RMB</option></select></div>' +
         '<div class="w-cell"><label>' + t.lbl_incoterm + '</label><select id="w_incoterm"><option value="EXW">EXW</option><option value="FCA">FCA</option><option value="FAS">FAS</option><option value="FOB">FOB</option><option value="CFR">CFR</option><option value="CIF">CIF</option><option value="CPT">CPT</option><option value="CIP">CIP</option><option value="DAP">DAP</option><option value="DPU">DPU</option><option value="DDP">DDP</option><option value="OTHERS">OTHERS</option></select></div>' +
-      '</div>' +
-      '<div class="w-2row">' +
         '<div class="w-cell"><label>' + t.lbl_rate_rmb_vnd + '</label><input id="w_rate_rmb_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_rmb + '" oninput="wonRateUserEdit(this);formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
         '<div class="w-cell"><label>' + t.lbl_rate_usd_vnd + '</label><input id="w_rate_usd_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_usd + '" oninput="wonRateUserEdit(this);formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
         '<div class="w-cell"><label>' + t.lbl_include_install + '</label><select id="w_include_install" onchange="onIncludeInstallChange()"><option value="YES">' + t.inc_yes + '</option><option value="NO">' + t.inc_no + '</option></select></div>' +
+      '</div>' +
+      // 第3行：业务单元 / 销售人员 / 付款方式 / 设备合同 / 安装合同
+      '<div class="w-2row w-basic-grid">' +
         '<div class="w-cell"><label>' + t.lbl_bu + '</label><select id="w_doc_remark">' + buOptionsHtml(t) + '</select></div>' +
         '<div class="w-cell"><label>' + t.lbl_salesperson + '</label><select id="w_salesperson">' + salespersonOptionsHtml(t, '', false) + '</select></div>' +
-      '</div>' +
-      // ★WON-PT-ROW3-20261031：付款方式从第二行下移到第三行，并置于最左，与设备合同/安装合同同一行
-      '<div class="w-2row">' +
         '<div class="w-cell w-wide" style="position:relative;"><label>' + t.lbl_payment_terms + '</label><input id="w_payment_terms" placeholder="' + t.ph_payment_terms + '" readonly style="cursor:pointer;background:#fafafa;" onclick="openPtEditor()"><input type="hidden" id="w_payment_terms_zh"><input type="hidden" id="w_payment_terms_en"><input type="hidden" id="w_payment_terms_vi"></div>' +
         '<div class="w-cell w-wide">' + wonDocField(t.won_doc_equip, 'w_doc_equip') + '</div>' +
         '<div class="w-cell w-wide">' + wonDocField(t.won_doc_install, 'w_doc_install') + '</div>' +

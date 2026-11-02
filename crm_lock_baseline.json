@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 10:29:04",
+ "generated": "2026-11-02 10:38:44",
  "version": "V2026.10.30.01",
- "note": "cp modal widen + font shrink + column rebalance (CSS only; dict line offsets)",
+ "note": "won basic-info form: reorder 4 fields into 3x5 grid + add w-basic-grid CSS (layout only; no i18n text changed, dict block line offsets); build Z171",
  "i18n": {
-  "dict@5808": {
+  "dict@5824": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27387": {
+  "dict@27404": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
