@@ -15807,7 +15807,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z186";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z187";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -29301,16 +29301,31 @@ window.CommissionModal={open:open,close:close,applyLang:applyLang,addPayRow:addP
 .rpt-tbl-wrap{overflow-x:auto;margin-top:8px;}
 .rpt-tbl-budget{margin-top:0;table-layout:fixed;}
 .rpt-tbl-budget th{padding:5px 6px;font-size:11px;}
-.rpt-tbl-budget th.rpt-th-item{width:17%;}
+.rpt-tbl-budget th.rpt-th-item{width:9%;}
 .rpt-tbl-budget th.rpt-th-group{background:#fbe7cf;}
-.rpt-tbl-budget th.rpt-th-group[rowspan]{width:18%;}
+.rpt-tbl-budget th.rpt-th-group[rowspan]{width:34%;}
 .rpt-tbl-budget th[colspan]{border-bottom:1px solid #f3d9b8;}
-.rpt-tbl-budget td{padding:4px 6px;font-size:11px;}
-.rpt-tbl-budget .rpt-td-item{text-align:left;font-weight:600;}
+.rpt-tbl-budget td{padding:4px 5px;font-size:10px;}
+.rpt-tbl-budget .rpt-td-item{text-align:left;font-weight:600;white-space:normal;}
 .rpt-tbl-budget .rpt-td-item-bold{font-weight:600;}
-.rpt-tbl-budget .rpt-td-diff{text-align:right;padding:3px 6px;font-size:10.5px;}
-.rpt-diff-line{display:block;line-height:1.45;white-space:nowrap;}
-.rpt-diff-tag{display:block;font-size:10px;font-weight:400;opacity:.85;line-height:1.3;}
+/* ★RPT-CUR-COLOR-20261102★ 差异三币种改为水平一行（不再竖排）+ 差异百分比 */
+.rpt-tbl-budget .rpt-td-diff{text-align:right;padding:4px 8px;font-size:10.5px;}
+.rpt-diff-cell{display:flex;flex-wrap:wrap;gap:0 6px;justify-content:flex-end;align-items:baseline;line-height:1.35;}
+.rpt-diff-curs{display:inline-flex;gap:0 6px;white-space:nowrap;}
+.rpt-diff-cell .rpt-cur{white-space:nowrap;}
+.rpt-diff-pct{white-space:nowrap;font-weight:700;font-size:9.5px;}
+.rpt-diff-tag{white-space:nowrap;font-size:9.5px;font-weight:400;opacity:.8;}
+/* ★RPT-CUR-COLOR-20261102★ 三币种统一配色：¥ RMB = 蓝，$ USD = 红，₫ VND = 绿（全报告通用） */
+.rpt-cur{font-variant-numeric:tabular-nums;}
+.rpt-cur-rmb{color:#1a5fb4;font-weight:700;}
+.rpt-cur-usd{color:#d32f2f;font-weight:700;}
+.rpt-cur-vnd{color:#1e8e3e;font-weight:700;}
+.rpt-cur-sep{color:#c9c2b8;margin:0 4px;font-weight:400;}
+.rpt-cur-rmb .rpt-cur-num,.rpt-cur-usd .rpt-cur-num,.rpt-cur-vnd .rpt-cur-num{font-weight:700;}
+/* ★RPT-ZEBRA-20261102★ 全报告斑马线：原色(米)与浅灰交替，便于横向阅读 */
+.rpt-sec .rpt-row:nth-child(even){background:#f4eee5;border-radius:4px;}
+.rpt-sec .rpt-supp-item:nth-child(even){background:#f4eee5;}
+.rpt-tbl tbody tr:nth-child(even) td{background:#f6f1e9;}
 .rpt-supp-item{font-size:12px;padding:6px 10px;background:#fcfcfd;border:1px solid #eef1f4;border-radius:8px;margin-bottom:6px;}
 /* rpt-overlay 打印规则已统一并入文件头部 @media print 的 .print-target 体系（display 方案，无空白首页） */
 /* 操作列新增按钮样式 */
@@ -29365,10 +29380,21 @@ function openProjectReport(id) {
     var n = _rptCirc[_rptSecN-1] || ('(' + _rptSecN + ')');
     return n + ' ' + _rptStrip(rpt(key));
   };
-  /* ★RPT-CUR-SYMBOL-20261102★ 三币种统一带符号输出：¥ RMB / $ USD / ₫ VND */
+  /* ★RPT-CUR-SYMBOL-20261102★ 三币种统一带符号输出：¥ RMB / $ USD / ₫ VND
+     ★RPT-CUR-COLOR-20261102★ 三币种固定配色（蓝 / 红 / 绿），全报告统一 */
   var _rptNum = function(n){ return Number(n || 0).toLocaleString(); };
+  var _rptCur  = function(sym, cls, n){ return '<span class="rpt-cur '+cls+'">'+sym+_rptNum(n)+'</span>'; };
+  var _rptSep  = '<span class="rpt-cur-sep">/</span>';
   var _rptFmt3 = function(r, u, v){
-    return '¥' + _rptNum(r) + ' / $' + _rptNum(u) + ' / ₫' + _rptNum(v);
+    return _rptCur('¥', 'rpt-cur-rmb', r) + _rptSep
+         + _rptCur('$', 'rpt-cur-usd', u) + _rptSep
+         + _rptCur('₫', 'rpt-cur-vnd', v);
+  };
+  /* 汇率等标量也要千位分隔（原始值可能是 "3850" / 3850 / "3,850"） */
+  var _rptRate = function(v){
+    if (v === undefined || v === null || v === '') return '—';
+    var n = Number(String(v).replace(/,/g, ''));
+    return isNaN(n) ? String(v) : n.toLocaleString();
   };
 
   // ① 合同基本信息
@@ -29378,8 +29404,8 @@ function openProjectReport(id) {
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_sign_date')+'</span><span class="v">'+(p.contract_date||'—')+'</span></div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_parties')+'</span><span class="v">'+(p.signing_parties||'—')+'</span></div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_currency')+'</span><span class="v">'+(p.contract_currency||'—')+'</span></div>';
-  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_rate_rmb_vnd')+'</span><span class="v">'+(p.rate_rmb_vnd||'—')+'</span></div>';
-  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_rate_usd_vnd')+'</span><span class="v">'+(p.rate_usd_vnd||'—')+'</span></div>';
+  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_rate_rmb_vnd')+'</span><span class="v">'+_rptRate(p.rate_rmb_vnd)+'</span></div>';
+  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_rate_usd_vnd')+'</span><span class="v">'+_rptRate(p.rate_usd_vnd)+'</span></div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_incoterm')+'</span><span class="v">'+(p.incoterm||'—')+'</span></div>';
   var incTxt = includeInstallDisplay(p.include_install);
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_include_install')+'</span><span class="v"><span class="rpt-badge '+(incTxt===rpt('inc_yes')||incTxt==='Yes'||incTxt==='Có'?'rpt-badge-yes':'rpt-badge-no')+'">'+incTxt+'</span></span></div>';
@@ -29461,8 +29487,9 @@ function openProjectReport(id) {
 
   // ⑥ 预算 vs 实际对比（编号随前文区块动态顺位）
   /* ★RPT-CUR-SYMBOL-20261102★ 原表按币种分两块（RMB 块 / VND 块），缺 USD；
-     现改为「预算 / 实际 / 差异」三大列，每列内部都用 RMB · USD · VND 三种货币表达，
-     单元格带 ¥ / $ / ₫ 符号，差异列三币种各一行并标注（节省）/（超支）。 */
+     现改为「预算 / 实际 / 差异」三大列，每列内部都用 RMB · USD · VND 三种货币表达。
+     ★RPT-CUR-COLOR-20261102★ 三币种固定配色 蓝(¥) / 红($) / 绿(₫)，差异三币种水平排一行，
+     并附「差异 ÷ 预算」的百分比与（节省）/（超支）标注。 */
   html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec6')+'</div>';
   html += '<div class="rpt-tbl-wrap"><table class="rpt-tbl rpt-tbl-budget">';
   html += '<thead>'
@@ -29473,8 +29500,12 @@ function openProjectReport(id) {
        +     '<th rowspan="2" class="rpt-th-group">'+rpt('rpt_diff')+'</th>'
        +   '</tr>'
        +   '<tr>'
-       +     '<th>¥ RMB</th><th>$ USD</th><th>₫ VND</th>'
-       +     '<th>¥ RMB</th><th>$ USD</th><th>₫ VND</th>'
+       +     '<th><span class="rpt-cur rpt-cur-rmb">¥ RMB</span></th>'
+       +     '<th><span class="rpt-cur rpt-cur-usd">$ USD</span></th>'
+       +     '<th><span class="rpt-cur rpt-cur-vnd">₫ VND</span></th>'
+       +     '<th><span class="rpt-cur rpt-cur-rmb">¥ RMB</span></th>'
+       +     '<th><span class="rpt-cur rpt-cur-usd">$ USD</span></th>'
+       +     '<th><span class="rpt-cur rpt-cur-vnd">₫ VND</span></th>'
        +   '</tr>'
        + '</thead><tbody>';
   var _bRows = [
@@ -29489,17 +29520,28 @@ function openProjectReport(id) {
     var dR = aR-bR, dU = aU-bU, dV = aV-bV;
     var anyNeg = (dR<0 || dU<0 || dV<0);
     var anyPos = (dR>0 || dU>0 || dV>0);
-    var cls  = anyNeg ? 'rpt-pos' : (anyPos ? 'rpt-neg' : '');
     var sign = anyNeg ? ' '+rpt('rpt_diff_pos') : (anyPos ? ' '+rpt('rpt_diff_neg') : '');
-    var lineDiff = function(d, sym){
-      return '<span class="rpt-diff-line">'+sym+(d>=0?'+':'')+d.toLocaleString()+'</span>';
+    var tagTxt = sign ? String(sign).replace(/[（）()]/g, '').trim() : '';
+    /* 差异百分比：以有预算的币种为基准（优先 RMB → USD → VND），符号与差异一致 */
+    var pct = '';
+    var base = (bR !== 0) ? { d: dR, b: bR } : ((bU !== 0) ? { d: dU, b: bU } : ((bV !== 0) ? { d: dV, b: bV } : null));
+    if (base) pct = (base.d / base.b * 100).toFixed(1) + '%';
+    var curSigned = function(sym, cls, d){
+      return '<span class="rpt-cur ' + cls + '">' + sym + (d >= 0 ? '+' : '') + _rptNum(d) + '</span>';
+    };
+    var cellCur = function(sym, cls, n){
+      return '<span class="rpt-cur ' + cls + '">' + sym + _rptNum(n) + '</span>';
     };
     html += '<tr>'
          +   '<td class="rpt-td-item'+(idx===2?' rpt-td-item-bold':'')+'">'+r[0]+'</td>'
-         +   '<td>'+bR.toLocaleString()+'</td><td>'+bU.toLocaleString()+'</td><td>'+bV.toLocaleString()+'</td>'
-         +   '<td>'+aR.toLocaleString()+'</td><td>'+aU.toLocaleString()+'</td><td>'+aV.toLocaleString()+'</td>'
-         +   '<td class="'+cls+' rpt-td-diff">'+lineDiff(dR,'¥')+lineDiff(dU,'$')+lineDiff(dV,'₫')
-         +     (sign ? '<span class="rpt-diff-tag">'+sign+'</span>' : '')+'</td>'
+         +   '<td>'+cellCur('¥','rpt-cur-rmb',bR)+'</td><td>'+cellCur('$','rpt-cur-usd',bU)+'</td><td>'+cellCur('₫','rpt-cur-vnd',bV)+'</td>'
+         +   '<td>'+cellCur('¥','rpt-cur-rmb',aR)+'</td><td>'+cellCur('$','rpt-cur-usd',aU)+'</td><td>'+cellCur('₫','rpt-cur-vnd',aV)+'</td>'
+         +   '<td class="rpt-td-diff"><div class="rpt-diff-cell">'
+         +     '<span class="rpt-diff-curs">'
+         +       curSigned('¥','rpt-cur-rmb',dR) + curSigned('$','rpt-cur-usd',dU) + curSigned('₫','rpt-cur-vnd',dV)
+         +     '</span>'
+         +     (pct ? '<span class="rpt-diff-pct">(' + pct + (tagTxt ? ' ' + tagTxt : '') + ')</span>' : '')
+         +   '</div></td>'
          + '</tr>';
   });
   html += '</tbody></table></div></div>';
