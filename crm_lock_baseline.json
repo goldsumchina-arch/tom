@@ -1,7 +1,7 @@
 {
- "generated": "2026-11-02 13:21:59",
+ "generated": "2026-11-02 13:31:02",
  "version": "V2026.10.30.01",
- "note": "cm pay table strict alignment; layout only; build Z183",
+ "note": "project report: hide sections that the signing-party rules hide in the main modal (AGI-GS: no customer payment; AGI-Customer/AGI-GS: no GS->AGI commission; AGI-Customer/GS-Customer: no AGI->GS) + dynamic section numbering; build Z184",
  "i18n": {
   "dict@5894": {
    "zh": {

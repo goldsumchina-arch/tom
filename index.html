@@ -15807,7 +15807,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z183";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z184";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -29326,12 +29326,34 @@ function openProjectReport(id) {
 
   var html = '';
 
-  // WON-P345 权限联动：隐藏时报告同步隐藏 ③④⑤ 三个区块，⑥ 顺位改为 ③
+  // WON-P345 权限联动：隐藏时报告同步隐藏 ③④⑤ 三个区块，后续区块自动顺位
   // （服务端已剥离 p3/p4/p5 字段，这里仅控制区块显隐与编号）
   var p345Hide = (typeof wonP345Hidden === 'function') ? wonP345Hidden() : false;
 
+  /* ★RPT-PARTY-HIDE-20261102★ 签约双方联动：主模态框里因「签约双方」被隐藏的区块，
+     智能报告里同样不再展示（规则与 applySigningLock() 完全一致）：
+       _hideCust  → ③ 客户付款情况   (AGI-GS)
+       _hideGs    → ④ GS→AGI 佣金/付款 (AGI-Customer、AGI-GS)
+       _hideAgi   → ⑤ AGI→GS 付款     (AGI-Customer、GS-Customer)
+     区块序号改为动态顺位：隐藏哪块，后面的自动前移，不再出现「②④⑤」这种跳号。
+     同时把文案里自带的「二、」「2.」前缀剥掉，避免与动态序号重复。 */
+  var _rptParty  = String(p.signing_parties || '');
+  var _hideCust  = (_rptParty === 'AGI-GS');
+  var _hideGs    = (_rptParty === 'AGI-Customer' || _rptParty === 'AGI-GS');
+  var _hideAgi   = (_rptParty === 'AGI-Customer' || _rptParty === 'GS-Customer');
+  var _rptCirc   = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+  var _rptSecN   = 1;                       // ① 已占用
+  var _rptStrip  = function(s){
+    return String(s || '').replace(/^\s*(?:\d+\s*[.、]\s*|[一二三四五六七八九十]+\s*、\s*)/, '');
+  };
+  var _rptSecTitle = function(key){         // 取下一个顺位序号 + 清洗后的文案
+    _rptSecN++;
+    var n = _rptCirc[_rptSecN-1] || ('(' + _rptSecN + ')');
+    return n + ' ' + _rptStrip(rpt(key));
+  };
+
   // ① 合同基本信息
-  html += '<div class="rpt-sec"><div class="rpt-sec-title">① '+rpt('rpt_sec1')+'</div>';
+  html += '<div class="rpt-sec"><div class="rpt-sec-title">' + _rptCirc[0] + ' ' + _rptStrip(rpt('rpt_sec1')) + '</div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_contract_no')+'</span><span class="v">'+(p.contract_no||'—')+'</span></div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_customer')+'</span><span class="v">'+(p.customer||'—')+'</span></div>';
   html += '<div class="rpt-row"><span class="k">'+rpt('rpt_sign_date')+'</span><span class="v">'+(p.contract_date||'—')+'</span></div>';
@@ -29364,36 +29386,42 @@ function openProjectReport(id) {
   }
   html += '</div>';
 
-  // ② 客户付款进度
-  var cPaid = (p.cust_paid_rmb||0)+(p.cust_paid_usd||0)*((+p.rate_usd_vnd)||1)/100;
-  var cUnpaid = (p.cust_unpaid_rmb||0)+(p.cust_unpaid_usd||0)*((+p.rate_usd_vnd)||1)/100;
-  var cTotal = cPaid + cUnpaid;
-  var cPct = cTotal>0 ? (cPaid/cTotal*100).toFixed(1) : 0;
-  html += '<div class="rpt-sec"><div class="rpt-sec-title">② '+rpt('rpt_sec2')+'</div>';
-  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.cust_paid_rmb||0).toLocaleString()+' / '+(p.cust_paid_usd||0).toLocaleString()+' / '+(p.cust_paid_vnd||0).toLocaleString()+'</span></div>';
-  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.cust_unpaid_rmb||0).toLocaleString()+' / '+(p.cust_unpaid_usd||0).toLocaleString()+' / '+(p.cust_unpaid_vnd||0).toLocaleString()+'</span></div>';
-  html += '<div class="rpt-row"><span class="k">'+rpt('rpt_progress')+'</span><span class="v" style="display:flex;align-items:center;gap:8px;width:60%;justify-content:flex-end;"><span style="min-width:40px;">'+cPct+'%</span><div class="rpt-prog"><div style="width:'+cPct+'%;background:linear-gradient(90deg,#F5872E,#ffb05a);"></div></div></span></div>';
-  html += '</div>';
+  // ② 客户付款进度（签约双方 = AGI-GS 时，主模态框没有③客户付款情况，报告同样不展示）
+  if (!_hideCust) {
+    var cPaid = (p.cust_paid_rmb||0)+(p.cust_paid_usd||0)*((+p.rate_usd_vnd)||1)/100;
+    var cUnpaid = (p.cust_unpaid_rmb||0)+(p.cust_unpaid_usd||0)*((+p.rate_usd_vnd)||1)/100;
+    var cTotal = cPaid + cUnpaid;
+    var cPct = cTotal>0 ? (cPaid/cTotal*100).toFixed(1) : 0;
+    html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec2')+'</div>';
+    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.cust_paid_rmb||0).toLocaleString()+' / '+(p.cust_paid_usd||0).toLocaleString()+' / '+(p.cust_paid_vnd||0).toLocaleString()+'</span></div>';
+    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.cust_unpaid_rmb||0).toLocaleString()+' / '+(p.cust_unpaid_usd||0).toLocaleString()+' / '+(p.cust_unpaid_vnd||0).toLocaleString()+'</span></div>';
+    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_progress')+'</span><span class="v" style="display:flex;align-items:center;gap:8px;width:60%;justify-content:flex-end;"><span style="min-width:40px;">'+cPct+'%</span><div class="rpt-prog"><div style="width:'+cPct+'%;background:linear-gradient(90deg,#F5872E,#ffb05a);"></div></div></span></div>';
+    html += '</div>';
+  }
 
-  // ③④⑤ P3/P4/P5 区块：WON-P345 隐藏时整块不渲染
+  // ③④⑤ P3/P4/P5 区块：WON-P345 隐藏时整块不渲染；签约双方导致主模态框隐藏的区块同样不渲染
   if (!p345Hide) {
-    // ③ GS→AGI 佣金
-    html += '<div class="rpt-sec"><div class="rpt-sec-title">③ '+rpt('rpt_sec3')+'</div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_pct')+'</span><span class="v">'+(p.gs_comm_pct||0)+'%</span></div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_amt')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_comm_rmb||0).toLocaleString()+' / '+(p.gs_comm_usd||0).toLocaleString()+' / '+(p.gs_comm_vnd||0).toLocaleString()+'</span></div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_paid_rmb||0).toLocaleString()+' / '+(p.gs_paid_usd||0).toLocaleString()+' / '+(p.gs_paid_vnd||0).toLocaleString()+'</span></div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_unpaid_rmb||0).toLocaleString()+' / '+(p.gs_unpaid_usd||0).toLocaleString()+' / '+(p.gs_unpaid_vnd||0).toLocaleString()+'</span></div>';
-    html += '</div>';
+    // ③ GS→AGI 佣金（AGI-Customer / AGI-GS 无此环节）
+    if (!_hideGs) {
+      html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec3')+'</div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_pct')+'</span><span class="v">'+(p.gs_comm_pct||0)+'%</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_comm_amt')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_comm_rmb||0).toLocaleString()+' / '+(p.gs_comm_usd||0).toLocaleString()+' / '+(p.gs_comm_vnd||0).toLocaleString()+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_paid_rmb||0).toLocaleString()+' / '+(p.gs_paid_usd||0).toLocaleString()+' / '+(p.gs_paid_vnd||0).toLocaleString()+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.gs_unpaid_rmb||0).toLocaleString()+' / '+(p.gs_unpaid_usd||0).toLocaleString()+' / '+(p.gs_unpaid_vnd||0).toLocaleString()+'</span></div>';
+      html += '</div>';
+    }
 
-    // ④ AGI→GS 合同执行
-    html += '<div class="rpt-sec"><div class="rpt-sec-title">④ '+rpt('rpt_sec4')+'</div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_payable')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_payable_rmb||0).toLocaleString()+' / '+(p.agi_payable_usd||0).toLocaleString()+' / '+(p.agi_payable_vnd||0).toLocaleString()+'</span></div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_paid_rmb||0).toLocaleString()+' / '+(p.agi_paid_usd||0).toLocaleString()+' / '+(p.agi_paid_vnd||0).toLocaleString()+'</span></div>';
-    html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_unpaid_rmb||0).toLocaleString()+' / '+(p.agi_unpaid_usd||0).toLocaleString()+' / '+(p.agi_unpaid_vnd||0).toLocaleString()+'</span></div>';
-    html += '</div>';
+    // ④ AGI→GS 合同执行（AGI-Customer / GS-Customer 无此环节）
+    if (!_hideAgi) {
+      html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec4')+'</div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_payable')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_payable_rmb||0).toLocaleString()+' / '+(p.agi_payable_usd||0).toLocaleString()+' / '+(p.agi_payable_vnd||0).toLocaleString()+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_paid')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_paid_rmb||0).toLocaleString()+' / '+(p.agi_paid_usd||0).toLocaleString()+' / '+(p.agi_paid_vnd||0).toLocaleString()+'</span></div>';
+      html += '<div class="rpt-row"><span class="k">'+rpt('rpt_unpaid')+' (RMB/USD/VND)</span><span class="v">'+(p.agi_unpaid_rmb||0).toLocaleString()+' / '+(p.agi_unpaid_usd||0).toLocaleString()+' / '+(p.agi_unpaid_vnd||0).toLocaleString()+'</span></div>';
+      html += '</div>';
+    }
 
     // ⑤ 补充协议
-    html += '<div class="rpt-sec"><div class="rpt-sec-title">⑤ '+rpt('rpt_sec5')+'</div>';
+    html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec5')+'</div>';
     var suppCount = (p.doc_addendum_cnt)||0;
     if (suppCount>0) {
       html += '<div class="rpt-row"><span class="k">'+rpt('rpt_supp_count')+'</span><span class="v">'+suppCount+'</span></div>';
@@ -29412,8 +29440,8 @@ function openProjectReport(id) {
     html += '</div>';
   }
 
-  // ⑥ 预算 vs 实际对比（P345 隐藏时编号顺位改为 ③）
-  html += '<div class="rpt-sec"><div class="rpt-sec-title">'+(p345Hide?'③':'⑥')+' '+rpt('rpt_sec6')+'</div>';
+  // ⑥ 预算 vs 实际对比（编号随前文区块动态顺位）
+  html += '<div class="rpt-sec"><div class="rpt-sec-title">'+_rptSecTitle('rpt_sec6')+'</div>';
   html += '<table class="rpt-tbl"><thead><tr><th>'+rpt('rpt_fb')+'</th><th>'+rpt('rpt_budget')+' (RMB)</th><th>'+rpt('rpt_actual')+' (RMB)</th><th>'+rpt('rpt_diff')+' (RMB)</th></tr></thead><tbody>';
   var rows = [
     [rpt('rpt_fb'), p.fb_budget_rmb||0, p.fb_actual_rmb||0],
