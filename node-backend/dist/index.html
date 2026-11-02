@@ -1076,6 +1076,27 @@ function _ovLoadChartLib(cb){
        各列比例来自各列内容的字节宽度（日期 6.6%、金额 11.5%、类别 8%、用途 11%）。 */
     .cp-table-wrap { width:100%;overflow-x:hidden; }
     .cp-table { table-layout:fixed;width:100%;min-width:0;border-collapse:collapse;font-size:11.5px; }
+    /* ★CP-PCT-COLS-20261102★ 14 列百分比列宽的【唯一事实源】。
+       必须带 !important：页面的「语言几何锁」LG.freezeTable() 会遍历 document 里每张表，
+       按三语最长文案给每个 <col> 写回【px】宽度（普通列最少 92px、货币三连列最少 88px），
+       14 列算下来正好约 1408px —— 表格被撑到弹窗之外，再被 .cp-table-wrap 裁掉，
+       于是「100% 缩放只看得见 #/款项类别/用途说明/BG? 四列」，而且看不到滚动条。
+       这就是前几轮改列宽一直"没成功"的真正原因：colgroup 的写法每次都被 JS 覆盖。
+       加 !important 后内联样式压不动它，列宽永远按这里的比例走（合计 100%）。 */
+    .cp-table colgroup col:nth-child(1)  { width:2.3%  !important; }
+    .cp-table colgroup col:nth-child(2)  { width:8.2%  !important; }
+    .cp-table colgroup col:nth-child(3)  { width:10.6% !important; }
+    .cp-table colgroup col:nth-child(4)  { width:3.7%  !important; }
+    .cp-table colgroup col:nth-child(5)  { width:5.5%  !important; }
+    .cp-table colgroup col:nth-child(6)  { width:7.2%  !important; }
+    .cp-table colgroup col:nth-child(7)  { width:7.2%  !important; }
+    .cp-table colgroup col:nth-child(8)  { width:10.9% !important; }
+    .cp-table colgroup col:nth-child(9)  { width:10.9% !important; }
+    .cp-table colgroup col:nth-child(10) { width:7.2%  !important; }
+    .cp-table colgroup col:nth-child(11) { width:5.6%  !important; }
+    .cp-table colgroup col:nth-child(12) { width:10.9% !important; }
+    .cp-table colgroup col:nth-child(13) { width:7.2%  !important; }
+    .cp-table colgroup col:nth-child(14) { width:2.6%  !important; }
     .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:4px 5px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
     .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1;
       white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
@@ -5482,20 +5503,20 @@ function _ovLoadChartLib(cb){
           <table class="cp-table" id="cpPayTable">
             <!-- ★CP-TABLE-FIT-20261102：14 列百分比列宽，随弹窗宽度等比缩放，整表铺满不滚动 -->
             <colgroup>
-              <col style="width:2.3%;">
-              <col style="width:8.2%;">
-              <col style="width:10.6%;">
-              <col style="width:3.7%;">
-              <col style="width:5.5%;">
-              <col style="width:7.2%;">
-              <col style="width:7.2%;">
-              <col style="width:10.9%;">
-              <col style="width:10.9%;">
-              <col style="width:7.2%;">
-              <col style="width:5.6%;">
-              <col style="width:10.9%;">
-              <col style="width:7.2%;">
-              <col style="width:2.6%;">
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
             </colgroup>
             <thead>
               <tr>
@@ -5627,20 +5648,20 @@ function _ovLoadChartLib(cb){
           <table class="cp-table" id="agiPayTable">
             <!-- ★CP-TABLE-FIT-20261102：14 列百分比列宽，随弹窗宽度等比缩放，整表铺满不滚动 -->
             <colgroup>
-              <col style="width:2.3%;">
-              <col style="width:8.2%;">
-              <col style="width:10.6%;">
-              <col style="width:3.7%;">
-              <col style="width:5.5%;">
-              <col style="width:7.2%;">
-              <col style="width:7.2%;">
-              <col style="width:10.9%;">
-              <col style="width:10.9%;">
-              <col style="width:7.2%;">
-              <col style="width:5.6%;">
-              <col style="width:10.9%;">
-              <col style="width:7.2%;">
-              <col style="width:2.6%;">
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
+              <col>
             </colgroup>
             <thead>
               <tr>
@@ -10802,6 +10823,22 @@ window.LG = (function () {
 
   function freezeTable(tbl) {
     if (!tbl || !tbl.tagName || tbl.tagName !== 'TABLE') return false;
+    // ★CP-PCT-EXEMPT-20261102★ 分期付款计划表（.cp-table）用百分比列宽 + table-layout:fixed，
+    // 目标是「14 列随弹窗宽度铺满、永不横向滚动」。这里按 px 冻结（每列 ≥92px，14 列 ≈1408px）
+    // 会把它撑出容器 → 被 .cp-table-wrap 裁掉，只剩前 4 列可见（用户实测现象）。
+    // 百分比布局的表一律豁免：清掉历史遗留的 px 内联宽度，交给 CSS 的 !important 规则接管。
+    if (tbl.classList && tbl.classList.contains('cp-table')) {
+      var cgx = tbl.querySelector('colgroup');
+      if (cgx) {
+        var colx = cgx.querySelectorAll('col');
+        for (var xi = 0; xi < colx.length; xi++) {
+          if (colx[xi].style.width) colx[xi].style.width = '';
+        }
+      }
+      tbl.__lgColsFrozen = 0;
+      tbl.__lgFromCache = false;
+      return false;
+    }
     var hg = headerGrid(tbl);
     if (!hg || hg.cols < 2) return false;
     // 已冻过且 <col> 宽度仍在 → 跳过。
@@ -15651,7 +15688,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z166";  // 版本标记：用于确认浏览器加载的是最新代码（Z166 = 分期付款计划表 14 列改百分比列宽，一屏全显示无横向滚动条）
+const PERM_BUILD = "build 2026-11-02-Z167";  // 版本标记：用于确认浏览器加载的是最新代码（Z167 = 修复语言几何锁把分期表列宽改回 px 导致只显示 4 列的问题）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
