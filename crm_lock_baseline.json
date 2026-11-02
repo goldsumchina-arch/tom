@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 12:50:11",
+ "generated": "2026-11-02 12:54:34",
  "version": "V2026.10.30.01",
- "note": "report modal: add missing close button (.rpt-modal > .rpt-close) anchored same top as maximize button; align sub-modal close buttons to top:4px; build Z179",
+ "note": "addendum modal: add missing close button (.addm-modal > .addm-close) anchored at same top as maximize button; build Z180",
  "i18n": {
-  "dict@5852": {
+  "dict@5857": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27501": {
+  "dict@27506": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
