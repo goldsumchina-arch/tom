@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 10:54:36",
+ "generated": "2026-11-02 11:00:19",
  "version": "V2026.10.30.01",
- "note": "cp/agi pay-plan dropdowns: add CP_TRIPLE 3-language dict + index-based selection + cpRelabelRows so切语言时下拉文字跟随（no i18n dict text change; dict line offset）; build Z173",
+ "note": "cp-table column widths: 4 date cols 8%->6.4% (-20%), freed 6.4% split evenly to BG amount & actual payment (9.2%->12.4%); date input padding/font clamp; build Z174",
  "i18n": {
-  "dict@5826": {
+  "dict@5835": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27469": {
+  "dict@27478": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
