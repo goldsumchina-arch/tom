@@ -10148,7 +10148,7 @@ function setLangDebug(lang) {
   // 性能优化：表头/按钮/导航/弹窗等"轻量"步骤同步执行（UI 立即反馈）；CRM/LOST/WON
   // 表格行重渲染（涉及 colgroup/thead/tbody 字符串拼接+innerHTML，行数大时单帧 30~80ms）
   // 全部推到下一帧批量执行，避免连续同步重渲染阻塞首屏反馈。
-  var lightSteps = ['applyTopbarLang', 'applyEmptyLang', 'applyUsersLang', 'applyApprovalsLang', 'applyCommissionLang', 'applyDashUpdateLang', 'applyDashboardChartTitles', 'applyLangRefreshers', 'applyCleanD1Lang'];
+  var lightSteps = ['applyTopbarLang', 'applyEmptyLang', 'applyUsersLang', 'applyApprovalsLang', 'applyCommissionLang', 'applyDashUpdateLang', 'applyDashboardChartTitles', 'applyLangRefreshers', 'applyCleanD1Lang', 'applyCpModalLang'];
   var heavySteps = ['applyWonLang', 'applyCrmLang', 'applyLostLang'];
   console.warn('[lang] setLangDebug(' + lang + ') lightSteps start');
   for (var i = 0; i < lightSteps.length; i++) {
@@ -15739,7 +15739,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z172";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-02-Z173";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -21410,7 +21410,23 @@ function applyCpLang() {
     }
     
   });
+
+  // ★CP-TRILINGUAL-20261102★ 根因修复点：类别 / 用途说明 / 付款方式 / BG双方 这四个下拉
+  // 以前只生成一次（按打开弹窗那一刻的语言），切语言时没人重写它们的选项文本。
+  cpRelabelRows('cpPayBody');
 }
+
+// ★CP-TRILINGUAL-20261102★ 语言切换入口（setLangDebug 的 lightSteps）调用这个：
+// 只在「客户付款明细 / AGI→GS 付款明细」弹窗开着时重刷下拉，
+// 不管用户当前停在哪个视图（WON / CRM / 佣金…）都不会漏刷，关着时也不做无用功。
+window.applyCpModalLang = function() {
+  try {
+    var m = document.getElementById('custPayModal');
+    if (m && m.classList.contains('show')) applyCpLang();
+    var a = document.getElementById('agiPayModal');
+    if (a && a.classList.contains('show')) applyAgiLang();
+  } catch (e) { console.warn('[lang] applyCpModalLang failed:', e); }
+};
 
 function applyCprLang() {
   var t = getCprLang();
@@ -21600,6 +21616,83 @@ function toggleCpWarranty() {
   if(window.syncAgiWarrantyFromCp) window.syncAgiWarrantyFromCp();
 }
 
+// ★CP-TRILINGUAL-20261102★ 分期付款计划（客户付款明细 / AGI→GS 付款明细）三语下拉字典
+// 根因：原来两处实现都把「选项文本」直接当 value（<option>合同定金</option> → value="合同定金"），
+// 数据里存的其实是【某一种语言的字符串】。于是
+//   ① 渲染时用 r.cat === c 与「当前语言」的选项比对 —— 中文界面 + 存着英文 "Contract Deposit"
+//      必然匹配不到，下拉退回第一项；
+//   ② applyCpLang() 只刷新表头文字和 是/否 两个选项，根本没有重写 类别/用途/付款方式/双方 的选项文本，
+//      所以切到中文后表头是中文、下拉里还留着英文（截图现象）。
+// 现在字典集中在这里，选项按【下标】对应三语：渲染时用下标定位选中项，切语言时按下标重写文本。
+var CP_TRIPLE = {
+  cats: {
+    zh: ['合同定金','发货前货款','货到现场款','安装调试费','验收款','质保金','其他服务费用','月供还款','固定期限固定金额还款'],
+    en: ['Contract Deposit','Pre-shipment Payment','On-site Payment','Installation & Commissioning','Acceptance Payment','Warranty','Other Service Fee','Monthly Installment','Fixed-term Fixed-amount Repayment'],
+    vi: ['Đặt cọc hợp đồng','Thanh toán trước giao hàng','Thanh toán tại hiện trường','Lắp đặt & chạy thử','Thanh toán nghiệm thu','Bảo hành','Phí dịch vụ khác','Hoàn trả trả góp hàng tháng','Hoàn trả kỳ hạn cố định số tiền cố định']
+  },
+  usages: {
+    zh: ['主体合同设备','主体合同运费','主体合同安装费','主体合同设备&运费','主体合同设备&安装费','主体合同运费&安装费','主体合同设备&运费&安装','主体合同质保金','主体合同其他服务费','增补合同设备','增补合同运费','增补合同安装费','增补合同设备&运费','增补合同设备&安装费','增补合同运费&安装费','增补合同设备&运费&安装','增补合同质保金','增补合同其他服务费'],
+    en: ['Main Contract Equipment','Main Contract Freight','Main Contract Installation','Main Contract Equip.&Freight','Main Contract Equip.&Install.','Main Contract Freight&Install.','Main Contract Equip.&Freight&Install.','Main Contract Warranty','Main Contract Other Service','Supp. Contract Equipment','Supp. Contract Freight','Supp. Contract Installation','Supp. Contract Equip.&Freight','Supp. Contract Equip.&Install.','Supp. Contract Freight&Install.','Supp. Contract Equip.&Freight&Install.','Supp. Contract Warranty','Supp. Contract Other Service'],
+    vi: ['Thiết bị HĐ chính','Cước vận chuyển HĐ chính','Lắp đặt HĐ chính','TB&VC HĐ chính','TB&LĐ HĐ chính','VC&LĐ HĐ chính','TB&VC&LĐ HĐ chính','Bảo hành HĐ chính','Dịch vụ khác HĐ chính','Thiết bị HĐ bổ sung','Cước VC HĐ bổ sung','Lắp đặt HĐ bổ sung','TB&VC HĐ bổ sung','TB&LĐ HĐ bổ sung','VC&LĐ HĐ bổ sung','TB&VC&LĐ HĐ bổ sung','Bảo hành HĐ bổ sung','Dịch vụ khác HĐ bổ sung']
+  },
+  methods: {
+    zh: ['银行转账','信用证','商业承兑','企业信用','现金','其他方式'],
+    en: ['Bank Transfer','Letter of Credit','Commercial Acceptance','Corporate Credit','Cash','Other'],
+    vi: ['Chuyển khoản','Thư tín dụng','Chấp nhận thương mại','Tín dụng doanh nghiệp','Tiền mặt','Khác']
+  },
+  parties: {
+    zh: ['','AGI→客户','客户→AGI','GS→客户','客户→GS'],
+    en: ['','AGI→Client','Client→AGI','GS→Client','Client→GS'],
+    vi: ['','AGI→Khách','Khách→AGI','GS→Khách','Khách→GS']
+  }
+};
+
+function cpTriArr(key, lang) {
+  var d = CP_TRIPLE[key];
+  if (!d) return [];
+  return d[lang] || d.zh || [];
+}
+
+// 任意语言的旧文本 → 三语字典里的下标（-1 = 不认识，渲染时按第一项处理）
+function cpTriIdx(key, val) {
+  if (val === undefined || val === null) return -1;
+  var v = String(val);
+  var langs = ['zh', 'en', 'vi'];
+  for (var i = 0; i < langs.length; i++) {
+    var k = cpTriArr(key, langs[i]).indexOf(v);
+    if (k >= 0) return k;
+  }
+  return -1;
+}
+
+// 把表里 4 类下拉（类别/用途/付款方式/BG双方）的选项文本换成当前语言
+// 关键：保持 selectedIndex 不变 —— 选中的还是同一项，只是文字换语言，value 同步更新
+function cpRelabelRows(rootId) {
+  var root = document.getElementById(rootId || 'cpPayBody');
+  if (!root) return;
+  var lang = CUR_LANG || 'zh';
+  var map = [
+    ['select.cp-cat', 'cats'], ['select.cp-usage', 'usages'], ['select.cp-method', 'methods'], ['select.cp-bg-party', 'parties'],
+    ['select.agi-cat', 'cats'], ['select.agi-usage', 'usages'], ['select.agi-method', 'methods'], ['select.agi-bg-party', 'parties']
+  ];
+  for (var m = 0; m < map.length; m++) {
+    var key = map[m][1];
+    var arr = cpTriArr(key, lang);
+    var sels = root.querySelectorAll(map[m][0]);
+    for (var s = 0; s < sels.length; s++) {
+      var sel = sels[s];
+      var si = sel.selectedIndex;
+      var opts = sel.options;
+      for (var i = 0; i < opts.length && i < arr.length; i++) {
+        var label = arr[i] || '';
+        opts[i].textContent = label || '—';
+        opts[i].value = label;
+      }
+      if (si >= 0 && si < opts.length) sel.selectedIndex = si;
+    }
+  }
+}
+
 function addCpPayRow(savedRow) {
   var tbody = el('cpPayBody');
   if (!tbody) return;
@@ -21608,31 +21701,10 @@ function addCpPayRow(savedRow) {
   tr.dataset.seq = seq;
 
   var lang = CUR_LANG || 'zh';
-  var catsDict = {
-    zh: ['合同定金','发货前货款','货到现场款','安装调试费','验收款','质保金','其他服务费用','月供还款','固定期限固定金额还款'],
-    en: ['Contract Deposit','Pre-shipment Payment','On-site Payment','Installation & Commissioning','Acceptance Payment','Warranty','Other Service Fee','Monthly Installment','Fixed-term Fixed-amount Repayment'],
-    vi: ['Đặt cọc hợp đồng','Thanh toán trước giao hàng','Thanh toán tại hiện trường','Lắp đặt & chạy thử','Thanh toán nghiệm thu','Bảo hành','Phí dịch vụ khác','Hoàn trả trả góp hàng tháng','Hoàn trả kỳ hạn cố định số tiền cố định']
-  };
-  var usagesDict = {
-    zh: ['主体合同设备','主体合同运费','主体合同安装费','主体合同设备&运费','主体合同设备&安装费','主体合同运费&安装费','主体合同设备&运费&安装','主体合同质保金','主体合同其他服务费','增补合同设备','增补合同运费','增补合同安装费','增补合同设备&运费','增补合同设备&安装费','增补合同运费&安装费','增补合同设备&运费&安装','增补合同质保金','增补合同其他服务费'],
-    en: ['Main Contract Equipment','Main Contract Freight','Main Contract Installation','Main Contract Equip.&Freight','Main Contract Equip.&Install.','Main Contract Freight&Install.','Main Contract Equip.&Freight&Install.','Main Contract Warranty','Main Contract Other Service','Supp. Contract Equipment','Supp. Contract Freight','Supp. Contract Installation','Supp. Contract Equip.&Freight','Supp. Contract Equip.&Install.','Supp. Contract Freight&Install.','Supp. Contract Equip.&Freight&Install.','Supp. Contract Warranty','Supp. Contract Other Service'],
-    vi: ['Thiết bị HĐ chính','Cước vận chuyển HĐ chính','Lắp đặt HĐ chính','TB&VC HĐ chính','TB&LĐ HĐ chính','VC&LĐ HĐ chính','TB&VC&LĐ HĐ chính','Bảo hành HĐ chính','Dịch vụ khác HĐ chính','Thiết bị HĐ bổ sung','Cước VC HĐ bổ sung','Lắp đặt HĐ bổ sung','TB&VC HĐ bổ sung','TB&LĐ HĐ bổ sung','VC&LĐ HĐ bổ sung','TB&VC&LĐ HĐ bổ sung','Bảo hành HĐ bổ sung','Dịch vụ khác HĐ bổ sung']
-  };
-  var methodsDict = {
-    zh: ['银行转账','信用证','商业承兑','企业信用','现金','其他方式'],
-    en: ['Bank Transfer','Letter of Credit','Commercial Acceptance','Corporate Credit','Cash','Other'],
-    vi: ['Chuyển khoản','Thư tín dụng','Chấp nhận thương mại','Tín dụng doanh nghiệp','Tiền mặt','Khác']
-  };
-  var partiesDict = {
-    zh: ['','AGI→客户','客户→AGI','GS→客户','客户→GS'],
-    en: ['','AGI→Client','Client→AGI','GS→Client','Client→GS'],
-    vi: ['','AGI→Khách','Khách→AGI','GS→Khách','Khách→GS']
-  };
-
-  var cats = (catsDict[lang]||catsDict.zh);
-  var usages = (usagesDict[lang]||usagesDict.zh);
-  var methods = (methodsDict[lang]||methodsDict.zh);
-  var parties = (partiesDict[lang]||partiesDict.zh);
+  var cats = cpTriArr('cats', lang);
+  var usages = cpTriArr('usages', lang);
+  var methods = cpTriArr('methods', lang);
+  var parties = cpTriArr('parties', lang);
   var yesText = (lang==='en'?'Yes':(lang==='vi'?'Có':'是'));
   var noText  = (lang==='en'?'No':(lang==='vi'?'Không':'否'));
   var dashText = (lang==='en'?'—':(lang==='vi'?'—':'—'));
@@ -21641,28 +21713,32 @@ function addCpPayRow(savedRow) {
   var bg = r.bg || {};
   var bgAmt = bg.amt || {rmb:0,usd:0,vnd:0};
 
+  // ★CP-TRILINGUAL-20261102★ 选中项按三语【下标】定位（不再用文本相等比较）：
+  // 中文下存的「合同定金」，在英文界面能正确落到 "Contract Deposit" 上，反之亦然。
+  var selCat = cpTriIdx('cats', r.cat);
+  var selUsage = cpTriIdx('usages', r.usage);
+  var selMethod = cpTriIdx('methods', r.method);
+  var selParty = cpTriIdx('parties', bg.party);
+  if (selParty < 0) selParty = 0;
+
   var catOptions = '';
   for (var ci = 0; ci < cats.length; ci++) {
-    var c = cats[ci];
-    catOptions += '<option ' + (r.cat === c ? 'selected' : '') + '>' + c + '</option>';
+    catOptions += '<option ' + (ci === selCat ? 'selected' : '') + '>' + cats[ci] + '</option>';
   }
 
   var usageOptions = '';
   for (var ui = 0; ui < usages.length; ui++) {
-    var u = usages[ui];
-    usageOptions += '<option ' + (r.usage === u ? 'selected' : '') + '>' + u + '</option>';
+    usageOptions += '<option ' + (ui === selUsage ? 'selected' : '') + '>' + usages[ui] + '</option>';
   }
 
   var methodOptions = '';
   for (var mi = 0; mi < methods.length; mi++) {
-    var m = methods[mi];
-    methodOptions += '<option ' + (r.method === m ? 'selected' : '') + '>' + m + '</option>';
+    methodOptions += '<option ' + (mi === selMethod ? 'selected' : '') + '>' + methods[mi] + '</option>';
   }
 
   var partyOptions = '';
   for (var pi = 0; pi < parties.length; pi++) {
-    var p = parties[pi];
-    partyOptions += '<option value="' + p + '" ' + (bg.party === p ? 'selected' : '') + '>' + (p || dashText) + '</option>';
+    partyOptions += '<option value="' + (parties[pi] || '') + '" ' + (pi === selParty ? 'selected' : '') + '>' + (parties[pi] || dashText) + '</option>';
   }
 
   var bgHasNo = (bg.has !== 'yes') ? 'selected' : '';
@@ -22134,6 +22210,9 @@ function applyAgiLang() {
     }
     
   });
+
+  // ★CP-TRILINGUAL-20261102★ AGI→GS 付款明细同样要把四个下拉按当前语言重写
+  cpRelabelRows('agiPayBody');
 }
 
 // ==================== AGI 智能报告语言刷新 ====================
@@ -22494,31 +22573,10 @@ function addAgiPayRow(savedRow) {
   tr.dataset.seq = seq;
 
   var lang = CUR_LANG || 'zh';
-  var catsDict = {
-    zh: ['合同定金','发货前货款','货到现场款','安装调试费','验收款','质保金','其他服务费用','月供还款','固定期限固定金额还款'],
-    en: ['Contract Deposit','Pre-shipment Payment','On-site Payment','Installation & Commissioning','Acceptance Payment','Warranty','Other Service Fee','Monthly Installment','Fixed-term Fixed-amount Repayment'],
-    vi: ['Đặt cọc hợp đồng','Thanh toán trước giao hàng','Thanh toán tại hiện trường','Lắp đặt & chạy thử','Thanh toán nghiệm thu','Bảo hành','Phí dịch vụ khác','Hoàn trả trả góp hàng tháng','Hoàn trả kỳ hạn cố định số tiền cố định']
-  };
-  var usagesDict = {
-    zh: ['主体合同设备','主体合同运费','主体合同安装费','主体合同设备&运费','主体合同设备&安装费','主体合同运费&安装费','主体合同设备&运费&安装','主体合同质保金','主体合同其他服务费','增补合同设备','增补合同运费','增补合同安装费','增补合同设备&运费','增补合同设备&安装费','增补合同运费&安装费','增补合同设备&运费&安装','增补合同质保金','增补合同其他服务费'],
-    en: ['Main Contract Equipment','Main Contract Freight','Main Contract Installation','Main Contract Equip.&Freight','Main Contract Equip.&Install.','Main Contract Freight&Install.','Main Contract Equip.&Freight&Install.','Main Contract Warranty','Main Contract Other Service','Supp. Contract Equipment','Supp. Contract Freight','Supp. Contract Installation','Supp. Contract Equip.&Freight','Supp. Contract Equip.&Install.','Supp. Contract Freight&Install.','Supp. Contract Equip.&Freight&Install.','Supp. Contract Warranty','Supp. Contract Other Service'],
-    vi: ['Thiết bị HĐ chính','Cước vận chuyển HĐ chính','Lắp đặt HĐ chính','TB&VC HĐ chính','TB&LĐ HĐ chính','VC&LĐ HĐ chính','TB&VC&LĐ HĐ chính','Bảo hành HĐ chính','Dịch vụ khác HĐ chính','Thiết bị HĐ bổ sung','Cước VC HĐ bổ sung','Lắp đặt HĐ bổ sung','TB&VC HĐ bổ sung','TB&LĐ HĐ bổ sung','VC&LĐ HĐ bổ sung','TB&VC&LĐ HĐ bổ sung','Bảo hành HĐ bổ sung','Dịch vụ khác HĐ bổ sung']
-  };
-  var methodsDict = {
-    zh: ['银行转账','信用证','商业承兑','企业信用','现金','其他方式'],
-    en: ['Bank Transfer','Letter of Credit','Commercial Acceptance','Corporate Credit','Cash','Other'],
-    vi: ['Chuyển khoản','Thư tín dụng','Chấp nhận thương mại','Tín dụng doanh nghiệp','Tiền mặt','Khác']
-  };
-  var partiesDict = {
-    zh: ['','AGI→客户','客户→AGI','GS→客户','客户→GS'],
-    en: ['','AGI→Client','Client→AGI','GS→Client','Client→GS'],
-    vi: ['','AGI→Khách','Khách→AGI','GS→Khách','Khách→GS']
-  };
-
-  var cats = (catsDict[lang]||catsDict.zh);
-  var usages = (usagesDict[lang]||usagesDict.zh);
-  var methods = (methodsDict[lang]||methodsDict.zh);
-  var parties = (partiesDict[lang]||partiesDict.zh);
+  var cats = cpTriArr('cats', lang);
+  var usages = cpTriArr('usages', lang);
+  var methods = cpTriArr('methods', lang);
+  var parties = cpTriArr('parties', lang);
   var yesText = (lang==='en'?'Yes':(lang==='vi'?'Có':'是'));
   var noText  = (lang==='en'?'No':(lang==='vi'?'Không':'否'));
   var dashText = (lang==='en'?'—':(lang==='vi'?'—':'—'));
@@ -22527,28 +22585,32 @@ function addAgiPayRow(savedRow) {
   var bg = r.bg || {};
   var bgAmt = bg.amt || {rmb:0,usd:0,vnd:0};
 
+  // ★CP-TRILINGUAL-20261102★ 选中项按三语【下标】定位（不再用文本相等比较）：
+  // 中文下存的「合同定金」，在英文界面能正确落到 "Contract Deposit" 上，反之亦然。
+  var selCat = cpTriIdx('cats', r.cat);
+  var selUsage = cpTriIdx('usages', r.usage);
+  var selMethod = cpTriIdx('methods', r.method);
+  var selParty = cpTriIdx('parties', bg.party);
+  if (selParty < 0) selParty = 0;
+
   var catOptions = '';
   for (var ci = 0; ci < cats.length; ci++) {
-    var c = cats[ci];
-    catOptions += '<option ' + (r.cat === c ? 'selected' : '') + '>' + c + '</option>';
+    catOptions += '<option ' + (ci === selCat ? 'selected' : '') + '>' + cats[ci] + '</option>';
   }
 
   var usageOptions = '';
   for (var ui = 0; ui < usages.length; ui++) {
-    var u = usages[ui];
-    usageOptions += '<option ' + (r.usage === u ? 'selected' : '') + '>' + u + '</option>';
+    usageOptions += '<option ' + (ui === selUsage ? 'selected' : '') + '>' + usages[ui] + '</option>';
   }
 
   var methodOptions = '';
   for (var mi = 0; mi < methods.length; mi++) {
-    var m = methods[mi];
-    methodOptions += '<option ' + (r.method === m ? 'selected' : '') + '>' + m + '</option>';
+    methodOptions += '<option ' + (mi === selMethod ? 'selected' : '') + '>' + methods[mi] + '</option>';
   }
 
   var partyOptions = '';
   for (var pi = 0; pi < parties.length; pi++) {
-    var p = parties[pi];
-    partyOptions += '<option value="' + p + '" ' + (bg.party === p ? 'selected' : '') + '>' + (p || dashText) + '</option>';
+    partyOptions += '<option value="' + (parties[pi] || '') + '" ' + (pi === selParty ? 'selected' : '') + '>' + (parties[pi] || dashText) + '</option>';
   }
 
   var bgHasNo = (bg.has !== 'yes') ? 'selected' : '';

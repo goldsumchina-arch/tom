@@ -1,7 +1,7 @@
 {
- "generated": "2026-11-02 10:42:54",
+ "generated": "2026-11-02 10:54:36",
  "version": "V2026.10.30.01",
- "note": "won basic-info: move Business Unit / Salesperson up one row, 6-col grid, bottom row 3 wide fields span 2 (layout only, no i18n text; dict line offset); build Z172",
+ "note": "cp/agi pay-plan dropdowns: add CP_TRIPLE 3-language dict + index-based selection + cpRelabelRows so切语言时下拉文字跟随（no i18n dict text change; dict line offset）; build Z173",
  "i18n": {
   "dict@5826": {
    "zh": {
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27407": {
+  "dict@27469": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
