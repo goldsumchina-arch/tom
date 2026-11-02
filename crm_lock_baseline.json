@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-02 12:40:33",
+ "generated": "2026-11-02 12:50:11",
  "version": "V2026.10.30.01",
- "note": "modals: remove maximize + drag-resize content zoom (no more 1.4/1.6 scale); all red/orange title bars shrink 30% (height+font); build Z178",
+ "note": "report modal: add missing close button (.rpt-modal > .rpt-close) anchored same top as maximize button; align sub-modal close buttons to top:4px; build Z179",
  "i18n": {
-  "dict@5845": {
+  "dict@5852": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5060,7 +5060,7 @@
     "comm_f_deposit": "Ngày trả đặt cọc"
    }
   },
-  "dict@27494": {
+  "dict@27501": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
