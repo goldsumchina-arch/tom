@@ -1015,7 +1015,10 @@ function _ovLoadChartLib(cb){
       background: white;
       border-radius: 14px;
       width: 100%;
-      max-width: 1100px;
+      /* ★CP-WIDE-20261102★ 用户要求「拉到整个屏幕左右两端」：原来限死 1100px，
+         不论屏幕多宽都只有 1056px 可用 → 14 列挤在一起，下拉内容必然被截。
+         改成随视口铺开（左右各留 8px 圆角边距，最大化时进一步贴到 0）。 */
+      max-width: calc(100vw - 16px);
       min-width: 700px;
       height: 92vh;
       min-height: 400px;
@@ -1075,30 +1078,33 @@ function _ovLoadChartLib(cb){
        列宽随弹窗宽度等比缩放（弹窗可拖拽放大/最大化），永远铺满、永不溢出，
        各列比例来自各列内容的字节宽度（日期 6.6%、金额 11.5%、类别 8%、用途 11%）。 */
     .cp-table-wrap { width:100%;overflow-x:hidden; }
-    .cp-table { table-layout:fixed;width:100%;min-width:0;border-collapse:collapse;font-size:11.5px; }
+    .cp-table { table-layout:fixed;width:100%;min-width:0;border-collapse:collapse;font-size:10.5px; }
     /* ★CP-PCT-COLS-20261102★ 14 列百分比列宽的【唯一事实源】。
        必须带 !important：页面的「语言几何锁」LG.freezeTable() 会遍历 document 里每张表，
        按三语最长文案给每个 <col> 写回【px】宽度（普通列最少 92px、货币三连列最少 88px），
        14 列算下来正好约 1408px —— 表格被撑到弹窗之外，再被 .cp-table-wrap 裁掉，
        于是「100% 缩放只看得见 #/款项类别/用途说明/BG? 四列」，而且看不到滚动条。
        这就是前几轮改列宽一直"没成功"的真正原因：colgroup 的写法每次都被 JS 覆盖。
-       加 !important 后内联样式压不动它，列宽永远按这里的比例走（合计 100%）。 */
-    .cp-table colgroup col:nth-child(1)  { width:2.3%  !important; }
-    .cp-table colgroup col:nth-child(2)  { width:8.2%  !important; }
-    .cp-table colgroup col:nth-child(3)  { width:10.6% !important; }
-    .cp-table colgroup col:nth-child(4)  { width:3.7%  !important; }
-    .cp-table colgroup col:nth-child(5)  { width:5.5%  !important; }
-    .cp-table colgroup col:nth-child(6)  { width:7.2%  !important; }
-    .cp-table colgroup col:nth-child(7)  { width:7.2%  !important; }
-    .cp-table colgroup col:nth-child(8)  { width:10.9% !important; }
-    .cp-table colgroup col:nth-child(9)  { width:10.9% !important; }
-    .cp-table colgroup col:nth-child(10) { width:7.2%  !important; }
-    .cp-table colgroup col:nth-child(11) { width:5.6%  !important; }
-    .cp-table colgroup col:nth-child(12) { width:10.9% !important; }
-    .cp-table colgroup col:nth-child(13) { width:7.2%  !important; }
-    .cp-table colgroup col:nth-child(14) { width:2.6%  !important; }
-    .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:4px 5px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-    .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:11px;z-index:1;
+       加 !important 后内联样式压不动它，列宽永远按这里的比例走（合计 100%）。
+       ★CP-CONTENT-FIRST-20261102★ 比例按「内容必须放得下」重排：
+         下拉类（类别/用途/付款方式）与日期列优先给够，货币三连列按 RMB/USD/VND 三个
+         短标签的固定宽度收敛（3 格合计约 100px 即可），把省下的宽度全部让给文字列。 */
+    .cp-table colgroup col:nth-child(1)  { width:2.4%  !important; }  /* # 序号 */
+    .cp-table colgroup col:nth-child(2)  { width:9.2%  !important; }  /* 款项类别（下拉，最长「固定期限固定金额还款」） */
+    .cp-table colgroup col:nth-child(3)  { width:10.8% !important; }  /* 用途说明（长下拉，最长「主体合同设备&运费&安装」） */
+    .cp-table colgroup col:nth-child(4)  { width:4.2%  !important; }  /* BG? */
+    .cp-table colgroup col:nth-child(5)  { width:4.9%  !important; }  /* BG双方 */
+    .cp-table colgroup col:nth-child(6)  { width:8%    !important; }  /* BG开始（日期框） */
+    .cp-table colgroup col:nth-child(7)  { width:8%    !important; }  /* BG到期（日期框） */
+    .cp-table colgroup col:nth-child(8)  { width:9.2%  !important; }  /* 保函金额 RMB/USD/VND */
+    .cp-table colgroup col:nth-child(9)  { width:9.2%  !important; }  /* 预计付款 RMB/USD/VND */
+    .cp-table colgroup col:nth-child(10) { width:8%    !important; }  /* 预计日期（日期框） */
+    .cp-table colgroup col:nth-child(11) { width:6.5%  !important; }  /* 付款方式（下拉） */
+    .cp-table colgroup col:nth-child(12) { width:9.2%  !important; }  /* 实际付款 RMB/USD/VND */
+    .cp-table colgroup col:nth-child(13) { width:8%    !important; }  /* 实际日期（日期框） */
+    .cp-table colgroup col:nth-child(14) { width:2.4%  !important; }  /* 删除 */
+    .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:3px 3px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .cp-table thead th { background:#FDECEA;color:#E53935;font-weight:700;text-align:center;position:sticky;top:0;font-size:10px;z-index:1;
       white-space:normal; overflow-wrap:anywhere; line-height:1.2; }   /* ★HEADER-WRAP-20261026★ 表头分行显示 */
     .cp-table tbody tr:nth-child(even) td { background:#fdf8f1; }
     /* 首列（序号）与末列（删除）内边距收紧，避免窄列把图标按钮裁掉 */
@@ -1113,11 +1119,14 @@ function _ovLoadChartLib(cb){
       .cp-table th, .cp-table td { padding:2px 2px; }
       .cp-table select, .cp-table input { padding:2px 2px; }
     }
-    .cp-table select, .cp-table input { width:100%;min-width:0;border:1px solid #ddd;border-radius:4px;padding:3px 5px;font-size:11px; }
+    /* ★CP-COMPACT-20261102★ 单元格控件缩小一号（10px / padding 2px 3px），
+       换来每个下拉、日期框能多显示 2~3 个字，配合更宽的弹窗做到「内容不被截」。 */
+    .cp-table select, .cp-table input { width:100%;min-width:0;border:1px solid #ddd;border-radius:4px;padding:2px 3px;font-size:10px; }
     .cp-table select:focus, .cp-table input:focus { outline:none;border-color:#E53935; }
     /* 单元格里的日期框不允许用 100px 最小宽度把列撑破 */
     .cp-table .cp-date-input-wrapper { min-width:0;width:100%; }
-    .cp-table .cp-date-input-wrapper input { min-width:0; }
+    .cp-table .cp-date-input-wrapper input { min-width:0;font-size:10px;padding:2px 2px; }
+    .cp-table .cp-date-input-wrapper svg, .cp-table .cp-date-input-wrapper .cp-date-ico { width:10px;height:10px; }
     .cp-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#FDECEA;color:#E53935;border:1px solid #f0c8a8;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer; }
     .cp-add-btn:hover { background:#E53935;color:#fff; }
     .cp-sum { display:flex;justify-content:flex-end;gap:16px;margin-top:8px;font-size:12px;color:#666;flex-wrap:wrap; }
@@ -2694,6 +2703,15 @@ function _ovLoadChartLib(cb){
      结果：同样的列宽能多显示约 40% 的文字，最大化才真正有用。
      窄屏断点（≤920px，父级 1.6）同样相抵为 1/1.6。 */
   .mmax .cp-table-wrap { zoom: 0.7142857; }
+  /* ★CP-MAX-EDGE-20261102★ 客户付款明细最大化时真正贴到屏幕两端：
+     基础 .mmax 是 left/right/bottom 各留 8px，这里对本弹窗收成 0，
+     内容区内边距也从 22px 收到 2px —— 省下的约 60px 全部变成表格宽度，
+     14 列每列都更宽，下拉里的文字才放得下。 */
+  .cust-pay-modal.mmax {
+    left: 0 !important; right: 0 !important; bottom: 0 !important;
+    border-radius: 0 !important;
+  }
+  .cust-pay-modal.mmax .cp-body { padding-left: 2px; padding-right: 2px; }
   @media (max-width: 920px) {
     .mmax .cp-table-wrap { zoom: 0.625; }
   }
@@ -15703,7 +15721,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z169";  // 版本标记：用于确认浏览器加载的是最新代码（Z169 = 最大化时分期表字体不放大，列宽变宽后能显示更多文字）
+const PERM_BUILD = "build 2026-11-02-Z170";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
