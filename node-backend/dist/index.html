@@ -14230,7 +14230,9 @@ function _commLedgerCells(i){
   var cst = _commCardStats(i);
   var payCnt = 0, pR = 0, pU = 0, pV = 0;
   if (cst.has){
-    payCnt = cst.cnt; pR = cst.act.rmb; pU = cst.act.usd; pV = cst.act.vnd;
+    /* ★COMM-LEDGER-THEO-20261103★ 已经支付佣金 = 卡片「理论应支付金额」小计（与卡片底部小计一致），
+       不是套现折算后的「实际应支付金额」小计 */
+    payCnt = cst.cnt; pR = cst.theo.rmb; pU = cst.theo.usd; pV = cst.theo.vnd;
   } else {
     var bens = window.__beneficiaries || [];
     var key = String(r.name || '').trim().toUpperCase();
@@ -16560,7 +16562,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z262";  // 版本标记：Z262 = 台账与支付明细卡片联动：支付次数=卡片记录行数、已经支付佣金=卡片实际应支付小计、支付状态在「理论任一币种 ≥ 需要支付佣金」时显示「完成支付！」(绿色)；卡片变动实时刷新台账行与总计行
+const PERM_BUILD = "build 2026-11-03-Z263";  // 版本标记：Z263 = 修正台账「已经支付佣金」取值：改用卡片「理论应支付金额」小计（此前误用了套现折算后的实际应支付小计），与卡片底部小计保持一致
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
