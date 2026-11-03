@@ -5204,13 +5204,27 @@ function _ovLoadChartLib(cb){
   #view-approvals .appr-toolbar,
   #view-approvals .appr-empty { flex:0 0 auto; }
   #view-approvals .appr-table-wrap { flex:1 1 auto; min-height:0; max-height:none; overflow:auto; }
-  /* ★USERS-FULLPAGE-20261103★ 用户与授权：表格与页面合成一体（不再是一块固定高度、下方留灰底的浮卡）：
-     视图高度 = 视口剩余高度 → 表头 position:sticky 固定 → 只有记录超出屏幕底部时，表格区域内部才出现纵向滚动条 */
-  #view-users { height: calc(100vh - var(--tb-h, 84px) - 8px); box-sizing: border-box; }
-  #view-users .users-page { height:100%; display:flex; flex-direction:column; box-sizing:border-box; }
-  #view-users .users-page .page-header { flex:0 0 auto; }
-  #view-users .users-table-wrap { flex:1 1 auto; min-height:0; max-height:none; overflow:auto; border-radius:8px 8px 0 0; }
-  #view-users .users-table thead th { position:sticky; top:0; z-index:6; background:#F5872E; box-shadow: inset 0 -2px 0 #e0741a; }
+  /* ★USERS-DOCSCROLL-20261103★ 用户与授权：取消表格内部纵向滚动条，改用页面最右侧（浏览器）滚动条。
+     做法：视图不再定高、表格容器 overflow:visible（页面自然滚动）；
+           标题行（用户与授权 + 新增用户）与橙色表头一起 position:sticky 固定在顶栏下方，
+           记录从表头下方滚过，页面其它部分（顶栏/标题/表头）保持不动。
+           表头 sticky 的 top = 顶栏高度 + 4px + 标题行实测高度（--users-head-h，由 usersStickyMeasure() 写入）。 */
+  #view-users { height:auto; box-sizing:border-box; }
+  /* 页面上内边距从 .users-page 移到 sticky 的标题行里 —— 否则滚动时记录会从那 20px 的缝里露出来 */
+  #view-users .users-page { display:block; height:auto; padding-top:0; }
+  #view-users .users-page .page-header {
+    position:sticky; top:calc(var(--tb-h, 56px) + 4px); z-index:8;
+    margin-bottom:0; padding-top:20px; padding-bottom:14px;   /* 标题行自身底色盖住滚动中的记录 */
+    background:#eef1f4;                                       /* = .app-body 底色，滚动时无缝 */
+  }
+  #view-users .users-table-wrap {
+    overflow:visible; max-height:none; min-height:0;
+    border-radius:8px 8px 0 0; box-shadow:0 1px 4px rgba(0,0,0,.06);
+  }
+  #view-users .users-table thead th {
+    position:sticky; top:calc(var(--tb-h, 56px) + 4px + var(--users-head-h, 72px)); z-index:7;
+    background:#F5872E; box-shadow: inset 0 -2px 0 #e0741a;
+  }
   #view-users .users-table thead th.sortable:hover { background:#d96f1e; }
   #view-users .users-table thead th.sortable.active-sort { background:#c06015; }
   /* ★APPR-TABLE-FIT-20261103★ 审批表按容器宽度等比分配列宽（table-layout:fixed），
@@ -16538,7 +16552,26 @@ function renderUsers(){
       </td>
     </tr>`;
   }).join("");
+  if (typeof usersStickyMeasure === 'function') usersStickyMeasure();
 }
+
+/* ★USERS-DOCSCROLL-20261103★ 量出用户页标题行（用户与授权 + 新增用户）的真实高度，
+   写入 #view-users 的 --users-head-h；橙色表头 sticky 的 top 依赖它（顶栏高度 + 4px + 标题行高度），
+   这样标题行与表头会紧贴着一起固定在页面上，中间不漏出滚动中的行。 */
+function usersStickyMeasure(){
+  var v = document.getElementById('view-users');
+  if (!v) return;
+  var h = v.querySelector('.users-page .page-header');
+  var px = h ? Math.round(h.getBoundingClientRect().height) : 0;
+  if (!px || px <= 0) return;                 // 视图隐藏时高度为 0，保留上一次/默认值
+  v.style.setProperty('--users-head-h', px + 'px');
+}
+window.addEventListener('resize', function(){
+  if (typeof usersStickyMeasure === 'function') usersStickyMeasure();
+});
+window.addEventListener('load', function(){
+  setTimeout(function(){ if (typeof usersStickyMeasure === 'function') usersStickyMeasure(); }, 200);
+});
 
 // ---------- 用户列表行重排（tom/cuong/james + 管理员专属） ----------
 function canReorderUsers(){
@@ -16848,7 +16881,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z276";  // 版本标记：Z276 = 「修改受益人数」密码弹窗输入框占位符改为 money（三语统一，提示密码就是 money），与删除记录气泡一致
+const PERM_BUILD = "build 2026-11-03-Z277";  // 版本标记：Z277 = 用户与授权页去掉表格内部纵向滚动条，改用页面最右侧（浏览器）滚动条；标题行（用户与授权+新增用户）与橙色表头 position:sticky 固定在顶栏下方（表头 top = 顶栏高度+4px+标题行实测高度 --users-head-h）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -25251,6 +25284,11 @@ function switchView(name) {
   // 切到佣金页后表格才可见（此前的测量值全为 0）→ 显示后重测列宽与容器高度
   if (name === 'commission' && typeof autoFitCommissionTable === 'function') {
     setTimeout(autoFitCommissionTable, 0);
+  }
+  // ★USERS-DOCSCROLL-20261103★ 切到用户页后（此前 display:none，量不到高度）重测标题行高度，
+  // 保证表头 sticky 的 top 与标题行严丝合缝
+  if (name === 'users' && typeof usersStickyMeasure === 'function') {
+    setTimeout(usersStickyMeasure, 0);
   }
   // 进出佣金页 → 启停「闲置模糊化 / 右键确认 / 连击退出」监听（离开佣金页立即停止，不影响其他视图）
   if (typeof startCommissionIdleWatch === 'function'){
