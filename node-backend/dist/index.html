@@ -5322,6 +5322,14 @@ function _ovLoadChartLib(cb){
      内边距 14→10、间距 6→4，两个按钮合计 ≈ 118px < 可用宽度，永不再折成两行 */
   table.appr-table .appr-op { gap:4px; flex-wrap:nowrap; }
   table.appr-table .appr-op .appr-mini { padding:5px 10px; }
+  /* ★APPR-COL-CENTER-20261103★ 操作列「表头文字」必须和单元格里的按钮对齐到列中间：
+     表头 th 默认 text-align:left（第 5269 行），而 .th-label 是 display:flex 且被 .th-inner 拉满整列宽，
+     所以光给 th 加 text-align:center 没用 —— 必须同时 justify-content:center，否则「操作」二字仍贴左，
+     看起来就像整列内容偏到了左侧。td 内容原本已居中（.appr-col-action text-align:center）。 */
+  table.appr-table thead th.appr-col-action { text-align:center; }
+  table.appr-table thead th.appr-col-action .th-inner { align-items:center; }
+  table.appr-table thead th.appr-col-action .th-label { justify-content:center; }
+  table.appr-table tbody td.appr-col-action { text-align:center; }
   .appr-cell-title { font-weight:600; color:#333; }
   .appr-cell-avatars { display:flex; flex-wrap:wrap; gap:4px; }
   .appr-cell-avatars .appr-avatar { font-size:11px; }
@@ -16955,7 +16963,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z281";  // 版本标记：Z281 = 审批表彻底消除底部水平滚动条（根因=语言几何锁 LG.freezeTable 给每列写 px 并设 min-width，9 列合计≈1146px>容器）：.appr-table 加入百分比豁免名单 + 表格与列宽全部 !important 百分比（5/9/11/19/9/12/8/11/16=100），操作列 16% 且按钮收紧为单行
+const PERM_BUILD = "build 2026-11-03-Z282";  // 版本标记：Z282 = 审批表「操作」列表头文字与单元格按钮统一水平居中（th 默认 text-align:left 且 .th-label 为撑满整列的 flex → 需 text-align:center + .th-inner align-items:center + .th-label justify-content:center 三个一起才生效）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
