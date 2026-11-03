@@ -14578,7 +14578,7 @@ function renderBenPaymentCards(force){
           + '<td><input id="bct_' + i + '_' + j + '_rmb" class="bc-inp bc-num bc-money bc-rmb" value="' + _benEsc(_benCardMoneyDisplay('rmb', dTheo.rmb)) + '" oninput="benCardInput(' + i + ',' + j + ',\'rmb\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'rmb\')"></td>'
           + '<td><input id="bct_' + i + '_' + j + '_usd" class="bc-inp bc-num bc-money bc-usd" value="' + _benEsc(_benCardMoneyDisplay('usd', dTheo.usd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'usd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'usd\')"></td>'
           + '<td><input id="bct_' + i + '_' + j + '_vnd" class="bc-inp bc-num bc-money bc-vnd" value="' + _benEsc(_benCardMoneyDisplay('vnd', dTheo.vnd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'vnd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'vnd\')"></td>'
-          + '<td><div class="bc-cash-wrap"><input class="bc-inp bc-num bc-cash" value="' + _benEsc(d.cashout || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'cashout\',this.value)" onblur="benCardCashBlur(' + i + ',' + j + ',this)"><span class="bc-pct">%</span></div></td>'
+          + '<td><div class="bc-cash-wrap"><input class="bc-inp bc-num bc-cash" value="' + _benEsc(d.cashout == null ? '' : d.cashout) + '" oninput="benCardInput(' + i + ',' + j + ',\'cashout\',this.value)" onblur="benCardCashBlur(' + i + ',' + j + ',this)"><span class="bc-pct">%</span></div></td>'
           + '<td class="bc-actual bc-rmb" id="bca_' + i + '_' + j + '_rmb">' + _benCardActual(dTheo.rmb, frac, 'rmb') + '</td>'
           + '<td class="bc-actual bc-usd" id="bca_' + i + '_' + j + '_usd">' + _benCardActual(dTheo.usd, frac, 'usd') + '</td>'
           + '<td class="bc-actual bc-vnd" id="bca_' + i + '_' + j + '_vnd">' + _benCardActual(dTheo.vnd, frac, 'vnd') + '</td>'
@@ -14755,8 +14755,10 @@ function benCardInput(i, j, field, val){
 function benCardCashBlur(i, j, el){
   var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
   var d = rows[j]; if (!d) return;
-  var n = parseFloat(String(d.cashout || '').replace(/[^\d.]/g, ''));
-  d.cashout = (isFinite(n) && n > 0) ? n.toFixed(2) : '';
+  var s = String(d.cashout == null ? '' : d.cashout).trim();
+  var n = parseFloat(s.replace(/[^\d.]/g, ''));
+  /* ★BENCARD-CASH0-20261103★ 允许录入 0（原 n>0 会把 0 清空），空值仍视为未填 */
+  d.cashout = (s !== '' && isFinite(n) && n >= 0) ? n.toFixed(2) : '';
   if (el) el.value = d.cashout;
   benCardRecalc(i, j);
 }
@@ -16374,7 +16376,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z257";  // 版本标记：Z257 = 修复切换语言时删除气泡仍消失的根因：①语言按钮点击后给气泡加 1.5~1.8s 锁(__benDelLockUntil)，期间外部点击/重渲染滚动不再关闭；②_benDelLocalize 改在 CUR_LANG 更新后调用（原来在之前，刷新成旧语言）；③取消/Esc/删除/重开用 force 关闭
+const PERM_BUILD = "build 2026-11-03-Z258";  // 版本标记：Z258 = 套现成本允许录入 0：benCardCashBlur 由 n>0 改为 n>=0（原会把 0 清空），空值仍视为未填；行渲染回显改为 == null 判断，0 值不会被吞成空
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
