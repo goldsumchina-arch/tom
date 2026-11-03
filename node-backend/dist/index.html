@@ -2311,18 +2311,22 @@ function _ovLoadChartLib(cb){
     font-size:12px; font-weight:700; color:#8a97a5; pointer-events:none; line-height:1;
   }
   .commission-form .cf-suffix-wrap input:focus ~ .cf-suffix { color:#e8720c; }
-  /* ★COMM-PLAN-20261103★ 收益分配计划行：单行 flex（受益人 / 佣金比率 / 人民币 / 美元 / 越南盾），
-     行间虚线分隔；整行紧凑（标签 12px、输入框 34px），选 OTHER 时自定义输入框内联在受益人右侧，
-     行内其余字段自动收窄，**永不换行**。 */
-  .comm-plan-row {
-    display:flex; flex-wrap:nowrap; align-items:flex-end; gap:12px;
-    /* ★COMM-PLAN-REDLINE-20261103★ 受益人之间用红色虚线分隔，明确区分每一行 */
+  /* ★COMM-PLAN-2UP-20261103★ 收益分配计划：**每行放 2 个受益人**（左 #1 / 右 #2），
+     每个受益人内部仍是「受益人选 OTHER 时自定义框内联、永不换行」的单行 5 字段。
+     行与行之间仍是红色虚线；末尾只有 1 个受益人时用 .comm-plan-ghost 占位，避免拉伸。 */
+  #commPlanRows { display:block; }
+  .comm-plan-line {
+    display:flex; align-items:flex-end; gap:18px;
     padding:10px 0 2px; border-top:1px dashed #e74c3c;
   }
-  .comm-plan-row:first-child { border-top:none; padding-top:2px; }
+  .comm-plan-line:first-child { border-top:none; padding-top:2px; }
+  .comm-plan-row { flex:1 1 0; min-width:0; display:flex; flex-wrap:nowrap; align-items:flex-end; gap:9px; }
+  .comm-plan-ghost { flex:1 1 0; min-width:0; }
   .comm-plan-row > .login-field { flex:1 1 0; min-width:0; }
   /* 受益人格给多一点宽度（下拉整格铺满，不出现右侧豁口） */
-  .comm-plan-row > .login-field.comm-plan-name { flex:1.25 1 0; }
+  .comm-plan-row > .login-field.comm-plan-name { flex:1.15 1 0; }
+  /* 三币金额格略宽：VND 数字位数多，太窄会被截断 */
+  .comm-plan-row > .login-field.comm-plan-money { flex:1.45 1 0; }
   .comm-plan-row > .login-field > label {
     font-size:12px; line-height:1.3; font-weight:600; color:#44546a;
     white-space:normal; word-break:break-word;
@@ -2330,20 +2334,40 @@ function _ovLoadChartLib(cb){
   /* 输入框/下拉统一 34px（含 .comm-plan-name-body 内部的下拉与自定义输入，否则会退回 44px） */
   .comm-plan-row > .login-field input,
   .comm-plan-row > .login-field select {
-    height:34px; padding:0 10px; font-size:13px; border-radius:8px; margin-top:4px; box-sizing:border-box;
+    height:34px; padding:0 8px; font-size:13px; border-radius:8px; margin-top:4px; box-sizing:border-box;
   }
-  .comm-plan-row .comm-plan-name-body { display:flex; flex-wrap:nowrap; align-items:stretch; gap:8px; margin-top:4px; }
+  .comm-plan-row .comm-plan-name-body { display:flex; flex-wrap:nowrap; align-items:stretch; gap:6px; margin-top:4px; }
   /* 默认：只有下拉 → 铺满整格（无豁口） */
   .comm-plan-row .comm-plan-name-body > select {
-    flex:1 1 auto; width:100%; min-width:0; margin-top:0; height:34px; font-size:13px; padding:0 10px; border-radius:8px;
+    flex:1 1 auto; width:100%; min-width:0; margin-top:0; height:34px; font-size:13px; padding:0 8px; border-radius:8px;
   }
   .comm-plan-row .comm-plan-name-body > .comm-plan-custom { display:none; flex:1 1 0; min-width:0; margin-top:0; }
   /* 选 OTHER：下拉收窄 + 右侧并排出现自定义输入框（整行仍是一行） */
   .comm-plan-row.has-other .comm-plan-name-body > select { flex:0 0 46%; }
   .comm-plan-row.has-other .comm-plan-name-body > .comm-plan-custom { display:block; }
+  .comm-plan-row.has-other > .login-field.comm-plan-name { flex:1.9 1 0; }
   .comm-plan-row .cf-suffix-wrap { margin-top:4px; }
   .comm-plan-row .cf-suffix-wrap input { height:34px; }
   .comm-plan-row .comm-plan-idx { font-size:11px; font-weight:700; color:#8a97a5; margin-right:4px; }
+  /* 区块标题右侧的「展开 / 收起」按钮：+ 展开全部受益人，− 收起 */
+  .comm-plan-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .comm-plan-toggle {
+    flex:0 0 auto; width:24px; height:24px; padding:0; margin:0;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid #F5872E; border-radius:7px; background:#fff6ec; color:#F5872E;
+    font-size:15px; font-weight:700; line-height:1; cursor:pointer;
+    transition:background .15s, color .15s, box-shadow .15s;
+  }
+  .comm-plan-toggle:hover { background:#F5872E; color:#fff; box-shadow:0 2px 8px rgba(245,135,46,.28); }
+  /* 收起态：只露出前 2 行（=4 个受益人），超出在块内滚动；展开后全部显示 */
+  #commPlanWrap { max-height:132px; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+  #commPlanWrap.is-expanded { max-height:none; overflow:visible; }
+  /* 窄屏（手机/小窗）：退回一行一个受益人，避免字段被压扁 */
+  @media (max-width: 980px){
+    .comm-plan-line { gap:0; }
+    .comm-plan-ghost { display:none; }
+    .comm-plan-row { flex:1 1 100%; }
+  }
   /* 合作集团下拉：外观与输入框一致 */
   .commission-form select {
     width:100%; box-sizing:border-box; height:44px; padding:0 14px;
@@ -4634,8 +4658,10 @@ function _ovLoadChartLib(cb){
       <!-- ★COMM-PLAN-20261103★ 收益分配计划：紧跟在「受益人数」所在这一排下面，人数 N 确认后自动生成 N 行
            （受益人下拉 L1/C1/TV/TM/OTHER〔选 OTHER 时自定义输入框内联在右侧，整行不换行〕
             + 佣金比率 4 位小数 % + RMB/USD/VND 三币录入） -->
-      <div class="cf-section-title" id="commPlanSecTitle" style="display:none;">
+      <div class="cf-section-title comm-plan-head" id="commPlanSecTitle" style="display:none;">
         <span id="commPlanTitleText">受益人-人数-收益分配计划</span>
+        <button type="button" class="comm-plan-toggle" id="commPlanToggleBtn" onclick="commPlanToggle()"
+                title="展开全部受益人明细" aria-label="expand">+</button>
       </div>
       <div id="commPlanWrap" style="display:none;">
         <div id="commPlanRows"></div>
@@ -13578,6 +13604,7 @@ function commBenCountBlur(el){
    · 只做录入与保存，不自动改写其它字段（受益人表、设备金额、点数均不受影响）
    ══════════════════════════════════════════════════════════════════════════ */
 var COMM_PLAN_MAX = 10;
+var COMM_PLAN_PER_LINE = 2;   // ★COMM-PLAN-2UP-20261103★ 每行并排的受益人个数（2 个/行）
 var COMM_PLAN_NAMES = ['L1','C1','TV','TM','OTHER'];
 var COMM_PLAN_CUR = [
   { c:'rmb', labelKey:'comm_cur_rmb',  fb:'人民币 RMB', cls:'money-rmb', sym:'¥' },
@@ -13604,6 +13631,7 @@ function commPlanReset(plan){
       vnd:    (r && r.vnd)    || ''
     };
   });
+  window.__commPlanExpanded = false;   // 每次开弹窗回到「收起」状态，按钮显示 +
   commPlanRender();
 }
 function commPlanCollect(){
@@ -13632,34 +13660,67 @@ function commPlanRender(){
   }
   if (title) title.style.display = '';
   wrap.style.display = '';
+  /* ★COMM-PLAN-2UP-20261103★ 一行放 2 个受益人（左 #1 / 右 #2），省一半纵向空间；
+     末尾只剩 1 个时用 ghost 占位，保持半宽不被拉伸。 */
   var html = '';
-  for (var i = 0; i < n; i++){
-    var r = st[i] || commPlanBlank();
-    var opts = COMM_PLAN_NAMES.map(function(o){
-      return '<option value="' + o + '"' + (r.name === o ? ' selected' : '') + '>' + o + '</option>';
-    }).join('');
-    html += '<div class="comm-plan-row' + (r.name === 'OTHER' ? ' has-other' : '') + '" data-plan-idx="' + i + '">'
-      // ① 受益人（下拉；选 OTHER 时自定义输入框内联在右侧，整行不换行）
-      +   '<div class="login-field comm-plan-name"><label><span class="comm-plan-idx">#' + (i + 1) + '</span>' + _escComm(t.comm_plan_th_name || '受益人') + '</label>'
-      +     '<div class="comm-plan-name-body">'
-      +       '<select onchange="commPlanNameChange(' + i + ',this)">' + opts + '</select>'
-      +       '<input type="text" class="comm-plan-custom" placeholder="' + _escComm(t.comm_plan_custom || '自定义受益人') + '" value="' + _escComm(r.custom || '') + '" autocomplete="off" oninput="commPlanCustomInput(' + i + ',this)">'
-      +     '</div>'
-      +   '</div>'
-      // ② 佣金比率（4 位小数 + 内嵌 %）
-      +   '<div class="login-field"><label>' + _escComm(t.comm_plan_th_ratio || '佣金比率（%）') + '</label>'
-      +     '<div class="cf-suffix-wrap"><input id="commPlanRatio' + i + '" type="text" inputmode="decimal" placeholder="0.0000" value="' + _escComm(r.ratio || '') + '" autocomplete="off" oninput="commPlanRatioInput(' + i + ',this)"><span class="cf-suffix" aria-hidden="true">%</span></div>'
-      +   '</div>';
-    // ③ RMB / USD / VND
-    for (var k = 0; k < COMM_PLAN_CUR.length; k++){
-      var cd = COMM_PLAN_CUR[k];
-      html += '<div class="login-field"><label>' + _escComm(t[cd.labelKey] || cd.fb) + '</label>'
-        +   '<input id="commPlan' + cd.c.toUpperCase() + i + '" type="text" inputmode="numeric" class="cf-money ' + cd.cls + '" placeholder="' + cd.sym + '" value="' + _escComm(r[cd.c] || '') + '" autocomplete="off" oninput="commPlanMoneyInput(' + i + ',\'' + cd.c + '\',this)">'
-        + '</div>';
+  for (var s = 0; s < n; s += COMM_PLAN_PER_LINE){
+    html += '<div class="comm-plan-line">';
+    for (var j = 0; j < COMM_PLAN_PER_LINE; j++){
+      var idx = s + j;
+      if (idx >= n){ html += '<div class="comm-plan-ghost"></div>'; continue; }
+      html += commPlanRowHtml(idx, st[idx] || commPlanBlank(), t);
     }
     html += '</div>';
   }
   rowsEl.innerHTML = html;
+  commPlanApplyExpand();
+}
+/* 单个受益人行（行内 5 个字段，永不换行；选 OTHER 时自定义框内联在受益人右侧） */
+function commPlanRowHtml(i, r, t){
+  var opts = COMM_PLAN_NAMES.map(function(o){
+    return '<option value="' + o + '"' + (r.name === o ? ' selected' : '') + '>' + o + '</option>';
+  }).join('');
+  var html = '<div class="comm-plan-row' + (r.name === 'OTHER' ? ' has-other' : '') + '" data-plan-idx="' + i + '">'
+    // ① 受益人（下拉 + OTHER 时的自定义输入）
+    +   '<div class="login-field comm-plan-name"><label><span class="comm-plan-idx">#' + (i + 1) + '</span>' + _escComm(t.comm_plan_th_name || '受益人') + '</label>'
+    +     '<div class="comm-plan-name-body">'
+    +       '<select onchange="commPlanNameChange(' + i + ',this)">' + opts + '</select>'
+    +       '<input type="text" class="comm-plan-custom" placeholder="' + _escComm(t.comm_plan_custom || '自定义受益人') + '" value="' + _escComm(r.custom || '') + '" autocomplete="off" oninput="commPlanCustomInput(' + i + ',this)">'
+    +     '</div>'
+    +   '</div>'
+    // ② 佣金比率（4 位小数 + 内嵌 %）
+    +   '<div class="login-field"><label>' + _escComm(t.comm_plan_th_ratio || '佣金比率（%）') + '</label>'
+    +     '<div class="cf-suffix-wrap"><input id="commPlanRatio' + i + '" type="text" inputmode="decimal" placeholder="0.0000" value="' + _escComm(r.ratio || '') + '" autocomplete="off" oninput="commPlanRatioInput(' + i + ',this)"><span class="cf-suffix" aria-hidden="true">%</span></div>'
+    +   '</div>';
+  // ③ RMB / USD / VND
+  for (var k = 0; k < COMM_PLAN_CUR.length; k++){
+    var cd = COMM_PLAN_CUR[k];
+    html += '<div class="login-field comm-plan-money"><label>' + _escComm(t[cd.labelKey] || cd.fb) + '</label>'
+      +   '<input id="commPlan' + cd.c.toUpperCase() + i + '" type="text" inputmode="numeric" class="cf-money ' + cd.cls + '" placeholder="' + cd.sym + '" value="' + _escComm(r[cd.c] || '') + '" autocomplete="off" oninput="commPlanMoneyInput(' + i + ',\'' + cd.c + '\',this)">'
+      + '</div>';
+  }
+  return html + '</div>';
+}
+/* ★COMM-PLAN-2UP-20261103★ 标题右侧「+ / −」：展开全部受益人明细 / 收起为前 2 行 */
+function commPlanApplyExpand(){
+  var wrap = document.getElementById('commPlanWrap');
+  var btn  = document.getElementById('commPlanToggleBtn');
+  var ex = !!window.__commPlanExpanded;
+  if (wrap) wrap.classList.toggle('is-expanded', ex);
+  if (btn){
+    btn.textContent = ex ? '−' : '+';
+    btn.setAttribute('title', ex ? '收起受益人明细' : '展开全部受益人明细');
+    btn.setAttribute('aria-expanded', ex ? 'true' : 'false');
+    // 行数 ≤ 2 行（即 ≤4 个受益人）时无需展开，隐藏按钮
+    var st = commPlanState();
+    var need = st.length > COMM_PLAN_PER_LINE * 2;
+    btn.style.display = need ? '' : 'none';
+    if (!need && ex){ window.__commPlanExpanded = false; wrap && wrap.classList.remove('is-expanded'); btn.textContent = '+'; }
+  }
+}
+function commPlanToggle(){
+  window.__commPlanExpanded = !window.__commPlanExpanded;
+  commPlanApplyExpand();
 }
 function commPlanNameChange(i, el){
   var st = commPlanState(); if (!st[i]) return;
@@ -16275,7 +16336,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z206";  // 版本标记：Z206 = 收益分配计划行间分隔线改为红色虚线
+const PERM_BUILD = "build 2026-11-03-Z207";  // 版本标记：Z207 = 收益分配计划每行并排 2 个受益人 + 标题右侧「+/-」展开收起全部受益人
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
