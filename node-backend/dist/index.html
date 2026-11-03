@@ -1924,8 +1924,8 @@ function _ovLoadChartLib(cb){
   #commissionTable colgroup col:nth-child(9)  { width:7.5%  !important; }  /* VND */
   #commissionTable colgroup col:nth-child(10) { width:6%    !important; }  /* RMB-VND */
   #commissionTable colgroup col:nth-child(11) { width:6%    !important; }  /* USD-VND */
-  #commissionTable colgroup col:nth-child(12) { width:8%    !important; }  /* 编辑 */
-  #commissionTable colgroup col:nth-child(13) { width:12%   !important; }  /* 受益人&秘佣&支付详情 */
+  #commissionTable colgroup col:nth-child(11) { width:8%    !important; }  /* 编辑 */
+  #commissionTable colgroup col:nth-child(12) { width:12%   !important; }  /* 备注 */
   #commissionTable colgroup col:nth-child(14) { width:9.5%  !important; }  /* 备注 */
   /* 文本列压窄时换行，不裁切、不越界 */
   #commissionTable tbody td { white-space:normal; word-break:break-word; overflow-wrap:anywhere; }
@@ -1941,8 +1941,7 @@ function _ovLoadChartLib(cb){
   }
   /* 按钮加了 overflow:hidden 会把 .btn-action-sm::after 的悬浮提示裁掉，佣金表内直接关掉该提示 */
   #commissionTable .btn-action-sm::after { display:none !important; }
-  #commissionTable td[data-col="11"],
-  #commissionTable td[data-col="12"] { white-space:nowrap; overflow:hidden; }
+  #commissionTable td[data-col="11"] { white-space:nowrap; overflow:hidden; }
   /* ★COMM-CENTER-20261102★ 用户要求：表头与单元格内容统一居中对齐（金额/汇率/编号/日期等全部居中） */
   #commissionTable thead th,
   #commissionTable th.comm-sub,
@@ -4487,7 +4486,7 @@ function _ovLoadChartLib(cb){
         <table class="users-table" id="commissionTable">
           <!-- 列宽由 autoFitCommissionTable() 按内容实测后写入（A2：全部列动态） -->
           <colgroup id="commissionCols">
-            <col><col><col><col><col><col><col><col><col><col><col><col><col><col>
+            <col><col><col><col><col><col><col><col><col><col><col><col><col>
           </colgroup>
           <thead>
             <tr>
@@ -4500,7 +4499,6 @@ function _ovLoadChartLib(cb){
               <th colspan="3" id="commThEquipAmt" data-col="6" style="text-align:center;">合同签订设备金额</th>
               <th colspan="2" id="commThRate" data-col="9" style="text-align:center;">计算提成的汇率</th>
               <th rowspan="2" id="commThEdit" data-col="11" style="width:110px;">编辑</th>
-              <th rowspan="2" id="commThDetail" data-col="12">受益人&amp;秘佣&amp;支付详情</th>
               <th rowspan="2" id="commThRemark" data-col="13">备注</th>
             </tr>
             <tr>
@@ -12880,7 +12878,6 @@ function applyCommissionLang(){
   st('commThRateRMB','comm_col_rate_rmbvnd','RMB-VND');
   st('commThRateUSD','comm_col_rate_usdvnd','USD-VND');
   st('commThEdit','comm_col_edit','编辑');
-  st('commThDetail','comm_col_detail','受益人&秘佣&支付详情');
   st('commThRemark','comm_col_remark','备注');
   // 顶部三按钮 + 报告下拉
   st('commBtnAdd','comm_btn_add','新增项目产生的佣金记录');
@@ -13007,7 +13004,6 @@ function renderCommission(){
       + '<td data-col="9">' + _escComm(r.rateRMB) + '</td>'
       + '<td data-col="10">' + _escComm(r.rateUSD) + '</td>'
       + '<td data-col="11" style="text-align:center;white-space:nowrap;"><button class="btn-action btn-action-sm" onclick="openCommissionEditModal(' + i + ')">' + (t.comm_col_edit || '编辑') + '</button></td>'
-      + '<td data-col="12" style="text-align:center;white-space:nowrap;"><button class="btn-action btn-action-sm comm-detail-btn" data-idx="' + i + '" onclick="openCommissionDetail(' + i + ')">' + (t.comm_col_detail || '受益人&秘佣&支付详情') + '</button></td>'
       + '<td data-col="13">' + _escComm(r.remark) + '</td>'
       + '</tr>';
   });
@@ -16594,7 +16590,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z267";  // 版本标记：Z267 = 台账支付状态判据按整数比较：理论应支付金额总额任一币种(整数) ≥ 需要支付佣金同币种(整数) 即「完成支付！」绿色（此前按 0.01 精度比较，136,842 与 136,842.10 判为部分支付）
+const PERM_BUILD = "build 2026-11-03-Z268";  // 版本标记：Z268 = 佣金总表删除「受益人&秘佣&支付详情」列（重复冗余入口，详情改由「编辑项目佣金」进入）：移除表头/行单元格/colgroup 1 列及对应宽度与 i18n 赋值，编辑列与备注列不变
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
