@@ -5196,14 +5196,33 @@ function _ovLoadChartLib(cb){
   .appr-table-wrap { width:100%; overflow-x:auto; background:#fff; border:1px solid #f1e4d8; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.04); }
   /* ★LANG-GEOMETRY-LOCK-20261026★ 审批/用户列表容器固定高度 + 内部滚动：
      行内文字换语言后换行数不同 → 表格变高 → 页面整体上下跳。锁死容器高度即可消除。 */
-  /* ★APPROVALS-FULLPAGE-20261103★ 审批页与用户页同一套逻辑：表格与页面合成一体（原固定 max-height:100vh-300px
-     → 下方留灰底、恒有滚动条）；视图高度=视口剩余高度，标题行/工具条固定，表头 sticky，仅在记录超出屏幕底部时才出现纵向滚动条 */
-  #view-approvals { height: calc(100vh - var(--tb-h, 84px) - 8px); box-sizing: border-box; }
-  #view-approvals .approvals-page { height:100%; display:flex; flex-direction:column; box-sizing:border-box; padding-bottom:12px; }
-  #view-approvals .appr-header,
-  #view-approvals .appr-toolbar,
-  #view-approvals .appr-empty { flex:0 0 auto; }
-  #view-approvals .appr-table-wrap { flex:1 1 auto; min-height:0; max-height:none; overflow:auto; }
+  /* ★APPR-DOCSCROLL-20261103★ 审批页与用户页同一套改造：取消表格内部纵向滚动条，改用页面最右侧（浏览器）滚动条。
+     做法：视图不再定高、表格容器 overflow:visible（页面自然滚动）；
+           标题行（审批 + 全部/我发起的/待我审批）、统计条与橙色表头一起 position:sticky 固定在顶栏下方，
+           记录从表头下方滚过，页面其它部分（顶栏/标题/统计/表头）保持不动。
+           sticky 偏移：--appr-h1 = 标题行实测高度；--appr-head-h = 标题行 + 统计条实测高度（由 apprStickyMeasure() 写入）。 */
+  #view-approvals { height:auto; box-sizing:border-box; }
+  #view-approvals .approvals-page {
+    height:auto; display:block; box-sizing:border-box;
+    padding-top:0;                 /* 上内边距移进 sticky 标题行，滚动时不露行 */
+    padding-bottom:40px;
+  }
+  #view-approvals .appr-header {
+    position:sticky; top:calc(var(--tb-h, 56px) + 4px); z-index:9;
+    margin-bottom:0; padding-top:18px; padding-bottom:14px;
+    background:#eef1f4;           /* = .app-body 底色，滚动时无缝 */
+  }
+  #view-approvals .appr-toolbar {
+    position:sticky; top:calc(var(--tb-h, 56px) + 4px + var(--appr-h1, 74px)); z-index:9;
+    margin:0; padding:10px 0; background:#eef1f4;
+  }
+  #view-approvals .appr-table-wrap {
+    overflow:visible;             /* 关键：不能是 auto，否则 sticky 只相对它生效、不再固定 */
+    max-height:none; min-height:0; flex:none;
+  }
+  #view-approvals table.appr-table thead th {
+    position:sticky; top:calc(var(--tb-h, 56px) + 4px + var(--appr-head-h, 116px)); z-index:8;
+  }
   /* ★USERS-DOCSCROLL-20261103★ 用户与授权：取消表格内部纵向滚动条，改用页面最右侧（浏览器）滚动条。
      做法：视图不再定高、表格容器 overflow:visible（页面自然滚动）；
            标题行（用户与授权 + 新增用户）与橙色表头一起 position:sticky 固定在顶栏下方，
@@ -16881,7 +16900,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z277";  // 版本标记：Z277 = 用户与授权页去掉表格内部纵向滚动条，改用页面最右侧（浏览器）滚动条；标题行（用户与授权+新增用户）与橙色表头 position:sticky 固定在顶栏下方（表头 top = 顶栏高度+4px+标题行实测高度 --users-head-h）
+const PERM_BUILD = "build 2026-11-03-Z278";  // 版本标记：Z278 = 审批页做与用户页相同的改造：去掉表格内部纵向滚动条改用页面最右侧滚动条；标题行（审批+全部/我发起的/待我审批）、统计条、橙色表头三段 sticky 固定在顶栏下方（--appr-h1 / --appr-head-h 实测写入）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -17661,7 +17680,32 @@ function renderApprovals(){
       '<td class="appr-col-action">'+opHtml+'</td>'+
     '</tr>';
   }).join('');
+  if (typeof apprStickyMeasure === 'function') apprStickyMeasure();
 }
+
+/* ★APPR-DOCSCROLL-20261103★ 量出审批页「标题行」与「标题行+统计条」的真实高度，
+   写入 #view-approvals 的 --appr-h1 / --appr-head-h：
+     · 标题行 sticky top = 顶栏高度 + 4px
+     · 统计条    sticky top = 顶栏 + 4px + --appr-h1
+     · 橙色表头  sticky top = 顶栏 + 4px + --appr-head-h
+   三者严丝合缝地叠在一起，滚动时记录只会从表头下方经过，不会从缝里露出。 */
+function apprStickyMeasure(){
+  var v = document.getElementById('view-approvals');
+  if (!v) return;
+  var hd = v.querySelector('.approvals-page .appr-header');
+  var tl = v.querySelector('.approvals-page .appr-toolbar');
+  var h1 = hd ? Math.round(hd.getBoundingClientRect().height) : 0;
+  if (!h1 || h1 <= 0) return;                   // 视图隐藏时量不到，保留上次/默认值
+  v.style.setProperty('--appr-h1', h1 + 'px');
+  var th = (tl && tl.offsetParent !== null) ? Math.round(tl.getBoundingClientRect().height) : 0;
+  v.style.setProperty('--appr-head-h', (h1 + th) + 'px');
+}
+window.addEventListener('resize', function(){
+  if (typeof apprStickyMeasure === 'function') apprStickyMeasure();
+});
+window.addEventListener('load', function(){
+  setTimeout(function(){ if (typeof apprStickyMeasure === 'function') apprStickyMeasure(); }, 200);
+});
 
 function apprToggleSort(key){
   if (APPROVAL_SORT.key === key){
@@ -25289,6 +25333,10 @@ function switchView(name) {
   // 保证表头 sticky 的 top 与标题行严丝合缝
   if (name === 'users' && typeof usersStickyMeasure === 'function') {
     setTimeout(usersStickyMeasure, 0);
+  }
+  // ★APPR-DOCSCROLL-20261103★ 同理：切到审批页后重测标题行/统计条高度，保证三段 sticky 严丝合缝
+  if (name === 'approvals' && typeof apprStickyMeasure === 'function') {
+    setTimeout(apprStickyMeasure, 0);
   }
   // 进出佣金页 → 启停「闲置模糊化 / 右键确认 / 连击退出」监听（离开佣金页立即停止，不影响其他视图）
   if (typeof startCommissionIdleWatch === 'function'){
