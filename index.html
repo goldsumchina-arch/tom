@@ -14533,6 +14533,9 @@ function _benCardPartyOptions(curVal, H){
   return out;
 }
 function renderBenPaymentCards(force){
+  /* ★BENCARD-DELPOP-20261103B★ 任何重渲染（含切换语言）都先关闭右键删除气泡，
+     防止气泡挂在 body 上残留旧语言的弹窗 */
+  if (typeof _benDelClose === 'function') _benDelClose();
   var box = document.getElementById('commBenPayCards');
   if (!box) return;
   var H = _benCardHead();
@@ -16345,7 +16348,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z253";  // 版本标记：Z253 = 修复右键删除气泡不显示：根因是 #benDelPop 的 z-index(99999) 被全屏模态遮罩 z-index(2147483647) 盖在下面；已将气泡 z-index 提到 2147483647（与遮罩同级、插入更晚，绘制在上层）
+const PERM_BUILD = "build 2026-11-03-Z254";  // 版本标记：Z254 = 修复切换语言时右键删除气泡残留：renderBenPaymentCards 开头先调用 _benDelClose()，任何重渲染（含 setLangDebug 切语言）都会关闭气泡，不再显示旧语言弹窗
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
