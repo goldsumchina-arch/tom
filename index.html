@@ -14351,17 +14351,23 @@ function saveCommissionRecord(){
     remark: v('commFRemark')
   };
   // 编辑时保留受益人列表（受益人不在该模态框编辑）
+  /* ★COMM-SAVE-NOCLOSE-20261103★ 保存按钮只保存数据，**不关闭**弹窗：
+     · 编辑态 → 覆盖原记录，弹窗原地保留，可继续改再存
+     · 新增态 → 追加记录后立刻切成「编辑态」（标题/按钮同步），再点保存是更新而不是重复新增
+     · 受益人工作副本不清空，弹窗里的表格/锁定态都保持原样 */
   if (_editIdx >= 0 && COMM_RECORDS[_editIdx]){
     _record.beneficiaries = COMM_RECORDS[_editIdx].beneficiaries || [];
     COMM_RECORDS[_editIdx] = _record;
+    window.__commEditIdx = _editIdx;
+    window.__beneficiaries = _record.beneficiaries;
   } else {
     _record.beneficiaries = window.__beneficiaries || [];
     COMM_RECORDS.push(_record);
+    window.__commEditIdx = COMM_RECORDS.length - 1;   // 保存即转编辑态，避免二次保存变两条
+    window.__beneficiaries = _record.beneficiaries;
+    applyCommAddTitle(true);
   }
-  window.__commEditIdx = null;
-  window.__beneficiaries = [];
   renderBeneficiaryTable();
-  closeCommissionAddModal();
   renderCommission();
   commPersistRecord(_record);   // 落库：刷新/重启后仍在
   showToast(t.comm_save_ok || '保存成功');
@@ -16664,7 +16670,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z217";  // 版本标记：Z217 = 数值框字号自适应（长金额/比率自动缩小，保证完整显示不截断）
+const PERM_BUILD = "build 2026-11-03-Z218";  // 版本标记：Z218 = 「保存」只保存数据、不关闭弹窗；新增保存后自动转编辑态（不会重复新增）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
