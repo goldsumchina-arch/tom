@@ -2285,6 +2285,10 @@ function _ovLoadChartLib(cb){
   .commission-form.comm-4col .cf-row.cols-6 label,
   .commission-form.comm-4col .cf-row.cols-8 label { font-size:12px; line-height:1.35; }
   .commission-form label { font-size:13px; color:#44546a; font-weight:600; }
+  /* ★COMM-LBL-WRAP-20261103★ 窄列下长标签（汇率/验收日期等）必须换行，禁止溢出压到隔壁列：
+     min-width:0 让 grid/flex 子项可收缩，word-break 保证超长单词也不撑破列宽。 */
+  .commission-form .cf-row .login-field { min-width:0; }
+  .commission-form .cf-row .login-field > label { min-width:0; white-space:normal; word-break:break-word; overflow-wrap:anywhere; }
   .commission-form label i { color:#e74c3c; font-style:normal; margin-right:3px; }
   /* 必填项校验失败：红框警示 */
   .commission-form .login-field.req.invalid input,
@@ -7562,7 +7566,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     rep_pay_rows:"Payment Rows", rep_finished_rows:"Settled Rows", rep_ben_rows:"Beneficiaries",
     rep_progress:"Commission Payment Ratio", rep_th_given:"Given Amount", rep_th_time:"Given Time",
     rep_th_after:"Amount After Exchange", rep_th_finished:"Finished?", rep_th_unpaid:"Total Unpaid", rep_th_progress2:"Payment Ratio",
-    comm_add_title:"Add Project Commission Record", comm_edit_title:"Edit Project Commission Record", comm_save_btn:"Save Changes", comm_f_contract:"Contract No.", comm_f_parties:"Signing Parties", comm_f_group:"Partner Group", comm_f_date:"Contract Date", comm_f_equip:"Equipment Contract Amount", comm_f_rate_rmb:"Commission Calculation Rate RMB-VND", comm_f_rate_usd:"Commission Calculation Rate USD-VND", comm_f_remark:"Remarks",
+    comm_add_title:"Add Project Commission Record", comm_edit_title:"Edit Project Commission Record", comm_save_btn:"Save Changes", comm_f_contract:"Contract No.", comm_f_parties:"Signing Parties", comm_f_group:"Partner Group", comm_f_date:"Contract Date", comm_f_equip:"Equipment Contract Amount", comm_f_rate_rmb:"Exchange Rate RMB-VN", comm_f_rate_usd:"Exchange Rate USD-VN", comm_f_remark:"Remarks",
     comm_add_save:"Save", comm_add_cancel:"Cancel", comm_save_ok:"Saved", comm_need_contract:"Please enter the contract number", comm_required_suffix:"is required",
     comm_ph_group_other:"Enter partner group name",
     comm_appr_close:"Close",
@@ -16024,7 +16028,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z196";  // 版本标记：用于确认浏览器加载的是最新代码（Z196 = 英文标签改为 Project Hand-over Date）
+const PERM_BUILD = "build 2026-11-03-Z197";  // 版本标记：Z197 = 英文汇率标签改短 + 窄列长标签强制换行
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
