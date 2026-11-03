@@ -2163,10 +2163,20 @@ function _ovLoadChartLib(cb){
 /* ===== 受益人支付明细卡片（Z239+） ===== */
 .comm-ben-cards { margin:8px 0 4px 0; display:flex; flex-direction:column; gap:10px; }
 .ben-card { border:2px solid #000; border-radius:8px; background:#fff; overflow:hidden; min-width:0; }
-.ben-card-head { display:flex; align-items:center; justify-content:space-between; padding:6px 10px; background:#f3f6fb; border-bottom:1px solid #e3e8ef; }
+.ben-card-head { display:flex; align-items:center; justify-content:flex-start; gap:12px; flex-wrap:wrap; padding:6px 10px; background:#f3f6fb; border-bottom:1px solid #e3e8ef; }
 .ben-card-title { font-weight:700; color:#2c3e50; font-size:13px; }
+/* ★BENCARD-SUM-20261103★ 姓名右侧汇总：总计付款次数 / 总计理论付款 / 总计实际付款，金额按币种着色 */
+.ben-card-sum { display:flex; flex-wrap:wrap; align-items:center; gap:2px 14px; font-size:10px; color:#41505f; font-weight:600; min-width:0; }
+.ben-card-sum .bcs-item { white-space:nowrap; }
+.ben-card-sum .bcs-k { color:#7b8a99; }
+.ben-card-sum b { color:#1f4770; font-weight:700; }
+.ben-card-sum .bc-sum-rmb, .ben-card-table tfoot .bc-sum-rmb { color:#d64541; }
+.ben-card-sum .bc-sum-usd, .ben-card-table tfoot .bc-sum-usd { color:#2e86de; }
+.ben-card-sum .bc-sum-vnd, .ben-card-table tfoot .bc-sum-vnd { color:#1e9e6a; }
+.ben-card-table tfoot td { background:#eef3f9; font-weight:700; font-size:10px; }
+.ben-card-table tfoot td.bc-sum-label { text-align:left; padding-left:8px; color:#2c3e50; }
 /* ★BENCARD-BTN-20261103★ 「＋ 增加记录」按钮：更小、字号降两号(13→11px)、橙色改蓝色（用更高优先级压过后面的 .btn-action 定义） */
-.ben-card-head .ben-card-add { padding:2px 8px !important; font-size:11px !important; line-height:14px !important; border-radius:4px !important; background:linear-gradient(135deg,#2e86de,#1f6fc4) !important; color:#fff !important; border:none !important; font-weight:600 !important; }
+.ben-card-head .ben-card-add { padding:2px 8px !important; font-size:11px !important; line-height:14px !important; border-radius:4px !important; background:linear-gradient(135deg,#2e86de,#1f6fc4) !important; color:#fff !important; border:none !important; font-weight:600 !important; margin-left:auto !important; }
 .ben-card-scroll { overflow-x:hidden; min-width:0; }
 .ben-card-table { width:100%; max-width:100%; border-collapse:collapse; font-size:8.5px; table-layout:fixed; font-variant-numeric:tabular-nums; }
 .ben-card-table th, .ben-card-table td { border:1px solid #e3e8ef; padding:2px 3px; text-align:center; white-space:nowrap; box-sizing:border-box; }
@@ -14435,6 +14445,68 @@ function _benCardActual(theoVal, frac, cur){
   var v = n / (1 - frac);
   return _benCardSym(cur) + Math.round(v).toLocaleString('en-US');
 }
+/* ★BENCARD-SUM-20261103★ 卡片汇总（姓名右侧「总计付款/理论/实际」+ 表格底部「小计」） */
+function _benCardNum(v){
+  var n = parseFloat(String(v == null ? '' : v).replace(/[^\d.]/g, ''));
+  return isFinite(n) ? n : 0;
+}
+function _benCardSumFmt(n, cur){
+  var v = _benCardNum(n);
+  return _benCardSym(cur) + Math.round(v).toLocaleString('en-US');
+}
+function _benCardSum(rows){
+  var o = { cnt: 0, theo: { rmb: 0, usd: 0, vnd: 0 }, act: { rmb: 0, usd: 0, vnd: 0 } };
+  var cs = ['rmb', 'usd', 'vnd'];
+  var list = rows || [];
+  for (var j = 0; j < list.length; j++){
+    var d = list[j] || {};
+    var th = d.theo || {};
+    var frac = _benCardNum(d.cashout) / 100;
+    o.cnt++;
+    for (var k = 0; k < cs.length; k++){
+      var c = cs[k];
+      var n = _benCardNum(th[c]);
+      o.theo[c] += n;
+      if (n > 0 && frac < 1) o.act[c] += n / (1 - frac);
+    }
+  }
+  return o;
+}
+function _benCardTriHtml(obj){
+  return '<span class="bc-sum-rmb">' + _benCardSumFmt(obj.rmb, 'rmb') + '</span>'
+    + '<span class="bc-sum-dot"> · </span>'
+    + '<span class="bc-sum-usd">' + _benCardSumFmt(obj.usd, 'usd') + '</span>'
+    + '<span class="bc-sum-dot"> · </span>'
+    + '<span class="bc-sum-vnd">' + _benCardSumFmt(obj.vnd, 'vnd') + '</span>';
+}
+function _benCardSumHtml(sum, H){
+  return '<span class="bcs-item"><span class="bcs-k">' + H.sumCount + '：</span><b>' + sum.cnt + '</b> ' + H.times + '</span>'
+    + '<span class="bcs-item"><span class="bcs-k">' + H.sumTheo + '：</span>' + _benCardTriHtml(sum.theo) + '</span>'
+    + '<span class="bcs-item"><span class="bcs-k">' + H.sumActual + '：</span>' + _benCardTriHtml(sum.act) + '</span>';
+}
+function _benCardFootRows(sum, H){
+  return '<tr class="bc-sum-row">'
+    + '<td class="bc-sum-label" colspan="6">' + H.subtotal + '</td>'
+    + '<td class="bc-sum bc-sum-rmb">' + _benCardSumFmt(sum.theo.rmb, 'rmb') + '</td>'
+    + '<td class="bc-sum bc-sum-usd">' + _benCardSumFmt(sum.theo.usd, 'usd') + '</td>'
+    + '<td class="bc-sum bc-sum-vnd">' + _benCardSumFmt(sum.theo.vnd, 'vnd') + '</td>'
+    + '<td class="bc-sum bc-sum-blank"></td>'
+    + '<td class="bc-sum bc-sum-rmb">' + _benCardSumFmt(sum.act.rmb, 'rmb') + '</td>'
+    + '<td class="bc-sum bc-sum-usd">' + _benCardSumFmt(sum.act.usd, 'usd') + '</td>'
+    + '<td class="bc-sum bc-sum-vnd">' + _benCardSumFmt(sum.act.vnd, 'vnd') + '</td>'
+    + '<td class="bc-sum bc-sum-blank"></td>'
+    + '</tr>';
+}
+/* 行内金额/套现成本变动后，实时重算该卡片顶部汇总与底部小计（不整表重渲染，避免丢焦点） */
+function _benCardUpdateSums(i){
+  var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
+  var H = _benCardHead();
+  var sum = _benCardSum(rows);
+  var head = document.getElementById('bcs_' + i);
+  if (head) head.innerHTML = _benCardSumHtml(sum, H);
+  var foot = document.getElementById('bcFoot_' + i);
+  if (foot) foot.innerHTML = _benCardFootRows(sum, H);
+}
 /* ★COMM-DETAIL-TOGGLE-20261103★ 标题右侧 +/− 折叠开关：展开/收起下方全部支付明细内容 */
 function toggleCommDetail(){
   var body = document.getElementById('commBenPayCards');
@@ -14467,24 +14539,28 @@ function _benCardHead(){
   var extra = {
     zh: { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
           addRecord:'＋ 增加记录', beneficiary:'受益人',
+          sumCount:'总计付款', sumTheo:'总计理论付款', sumActual:'总计实际付款', times:'次', subtotal:'小计',
           partyOpts:['公司对公司','公司对个人','个人对个人'],
           delConfirm:'是不是要删除这个记录？', delPwd:'请输入密码：', delWrong:'密码错误，记录未删除。',
           emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
           emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' },
     en: { parties:'Parties', rate:'Exchange Rate', theo:'Theoretical Payable', cash:'Cash-out<br>(AGI/Personal)', actual:'Actual Payable',
           addRecord:'＋ Add Record', beneficiary:'Beneficiary',
+          sumCount:'Total Payments', sumTheo:'Total Theoretical', sumActual:'Total Actual', times:'times', subtotal:'Subtotal',
           partyOpts:['Company to Company','Company to Individual','Individual to Individual'],
           delConfirm:'Delete this record?', delPwd:'Enter password:', delWrong:'Wrong password. Record not deleted.',
           emptyRows:'No payment records yet. Click "＋ Add Record" at top-right to add.',
           emptyState:'Please set beneficiaries in "Income Distribution Plan" first; payment detail cards will be generated automatically by count.' },
     vi: { parties:'Bên thanh toán', rate:'Tỷ giá', theo:'Phải trả lý thuyết', cash:'Chi phí quy đổi<br>(AGI/Cá nhân)', actual:'Phải trả thực tế',
           addRecord:'＋ Thêm bản ghi', beneficiary:'Người thụ hưởng',
+          sumCount:'Tổng thanh toán', sumTheo:'Tổng lý thuyết', sumActual:'Tổng thực tế', times:'lần', subtotal:'Tạm tính',
           partyOpts:['Công ty với Công ty','Công ty với Cá nhân','Cá nhân với Cá nhân'],
           delConfirm:'Xóa bản ghi này?', delPwd:'Nhập mật khẩu:', delWrong:'Sai mật khẩu. Bản ghi không bị xóa.',
           emptyRows:'Chưa có bản ghi thanh toán. Nhấn "＋ Thêm bản ghi" ở góc trên bên phải để thêm.',
           emptyState:'Vui lòng thiết lập người thụ hưởng trong "Kế hoạch phân phối thu nhập" trước; thẻ chi tiết thanh toán sẽ được tạo tự động theo số người.' }
   }[L] || { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
           addRecord:'＋ 增加记录', beneficiary:'受益人',
+          sumCount:'总计付款', sumTheo:'总计理论付款', sumActual:'总计实际付款', times:'次', subtotal:'小计',
           partyOpts:['公司对公司','公司对个人','个人对个人'],
           delConfirm:'是不是要删除这个记录？', delPwd:'请输入密码：', delWrong:'密码错误，记录未删除。',
           emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
@@ -14503,6 +14579,11 @@ function _benCardHead(){
     usdvnd: d.comm_col_rate_usdvnd || 'USD-VND',
     addRecord: extra.addRecord,
     beneficiary: extra.beneficiary,
+    sumCount: extra.sumCount,
+    sumTheo: extra.sumTheo,
+    sumActual: extra.sumActual,
+    times: extra.times,
+    subtotal: extra.subtotal,
     emptyRows: extra.emptyRows,
     emptyState: extra.emptyState,
     partyOpts: extra.partyOpts,
@@ -14586,8 +14667,10 @@ function renderBenPaymentCards(force){
           + '</tr>';
       }
     }
+    var sum = _benCardSum(rows);
     html += '<div class="ben-card">'
       + '<div class="ben-card-head"><span class="ben-card-title">' + _benEsc(nm || (H.beneficiary + (i + 1))) + '</span>'
+      + '<span class="ben-card-sum" id="bcs_' + i + '">' + _benCardSumHtml(sum, H) + '</span>'
       + '<button type="button" class="btn-action ben-card-add" onclick="benCardAddRow(' + i + ')">' + H.addRecord + '</button></div>'
       + '<div class="ben-card-scroll"><table class="ben-card-table">'
       + '<colgroup>'
@@ -14601,7 +14684,9 @@ function renderBenPaymentCards(force){
       + '<th colspan="3">' + H.actual + '</th>'
       + '<th rowspan="2">' + H.date + '</th>'
       + '</tr><tr><th>' + H.rmbvnd + '</th><th>' + H.usdvnd + '</th><th>RMB</th><th>USD</th><th>VND</th><th>RMB</th><th>USD</th><th>VND</th></tr></thead>'
-      + '<tbody>' + rowHtml + '</tbody></table></div></div>';
+      + '<tbody>' + rowHtml + '</tbody>'
+      + '<tfoot id="bcFoot_' + i + '">' + _benCardFootRows(sum, H) + '</tfoot>'
+      + '</table></div></div>';
   }
   box.innerHTML = html;
 }
@@ -14818,6 +14903,8 @@ function benCardRecalc(i, j){
     if (el) el.textContent = _benCardActual(v, frac, suf);
   };
   setT('rmb', d.theo.rmb); setT('usd', d.theo.usd); setT('vnd', d.theo.vnd);
+  /* ★BENCARD-SUM-20261103★ 金额/套现成本变动 → 同步刷新卡片顶部汇总与底部小计 */
+  _benCardUpdateSums(i);
 }
 // 汇率默认初始值（可修改，每次打开新增弹窗恢复默认）
 var COMM_RATE_DEFAULT = { rmbvnd: '3,800', usdvnd: '26,000' };
@@ -16376,7 +16463,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z260";  // 版本标记：Z260 = 修复支付明细卡片数据不持久化（刷新即丢）：后端 commission.js 新增 card_payments 列，POST 落库、GET 回传，前端 __benCardPayments 据此还原（此前该字段只发不存）
+const PERM_BUILD = "build 2026-11-03-Z261";  // 版本标记：Z261 = 支付明细卡片新增统计：姓名右侧「总计付款 X 次 / 总计理论付款 / 总计实际付款」(按币种着色)，表格底部「小计」行(理论+实际三币合计)，行内金额/套现成本变动实时刷新
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
