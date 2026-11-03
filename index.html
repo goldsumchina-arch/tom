@@ -5260,8 +5260,12 @@ function _ovLoadChartLib(cb){
   #view-users .users-table thead th.sortable:hover { background:#d96f1e; }
   #view-users .users-table thead th.sortable.active-sort { background:#c06015; }
   /* ★APPR-TABLE-FIT-20261103★ 审批表按容器宽度等比分配列宽（table-layout:fixed），
-     不再因内容/min-width 撑宽表格 → 底部水平滚动条消失，9 列全部可见 */
-  table.appr-table { width:100%; min-width:0; border-collapse:collapse; font-size:13px; table-layout:fixed; }
+     不再因内容/min-width 撑宽表格 → 底部水平滚动条消失，9 列全部可见。
+     ★APPR-PCT-EXEMPT-20261103★ 必须带 !important：语言几何锁 LG.freezeTable() 会给每列写回 px
+     并给表格设 min-width（9 列合计 ≈1146px > 容器），内联样式只有 !important 能压住；
+     同时该表已加入 freezeTable() 的百分比豁免名单，双保险。 */
+  table.appr-table { width:100% !important; min-width:0 !important; max-width:none !important;
+    border-collapse:collapse; font-size:13px; table-layout:fixed !important; }
   table.appr-table thead th { position:sticky; top:0; z-index:6; background:var(--appr-orange); color:#fff; text-align:left; padding:10px 12px; font-weight:600;
     border-bottom:2px solid #e0741a; box-shadow: inset 0 -2px 0 #e0741a;   /* ★APPROVALS-FULLPAGE-20261103★ 固定表头滚动时的分隔线 */
     /* ★HEADER-WRAP-20261026★ 表头分行完整显示，不再 nowrap 截断。
@@ -5274,22 +5278,27 @@ function _ovLoadChartLib(cb){
   table.appr-table thead th .th-filter { display:flex; }
   table.appr-table thead th input.th-filter-input { width:100%; min-width:70px; box-sizing:border-box; border:1px solid #f1c79f; border-radius:14px; padding:3px 9px; font-size:12px; color:#333; background:#fff7f0; }
   table.appr-table thead th input.th-filter-input::placeholder { color:#c79b78; }
-  /* ★APPR-COL-NOHSCROLL-20261103★ 列宽全部改成百分比且合计 100%（序号也算进去）：
-     序号 5% / 发起人 9% / 发起时间 11% / 待审批内容 22% / 审批人 9% / 审批结果 12% / 审批状态 8% / 审批时间 11% / 操作 13%
+  /* ★APPR-COL-NOHSCROLL-20261103★ 列宽全部用百分比且合计 100%（序号也算进去）：
+     序号 5% / 发起人 9% / 发起时间 11% / 待审批内容 19% / 审批人 9% / 审批结果 12% /
+     审批状态 8% / 审批时间 11% / 操作 16%
      —— 旧规则里序号是 56px + 其余 100%，合计 100%+56px，table-layout:fixed 会按「列宽之和」撑宽表格，
-        于是底部出现水平滚动条、最右侧「操作」列被切掉。改成纯百分比即彻底消除横向滚动。 */
-  table.appr-table thead th:nth-child(1) { width:5%; }
-  table.appr-table thead th:nth-child(2) { width:9%; }
-  table.appr-table thead th:nth-child(3) { width:11%; }
-  table.appr-table thead th:nth-child(4) { width:22%; }
-  table.appr-table thead th:nth-child(5) { width:9%; }
-  table.appr-table thead th:nth-child(6) { width:12%; }
-  table.appr-table thead th:nth-child(7) { width:8%; }
-  table.appr-table thead th:nth-child(8) { width:11%; }
-  table.appr-table thead th:nth-child(9) { width:13%; }
+        于是底部出现水平滚动条、最右侧「操作」列被切掉。改成纯百分比即彻底消除横向滚动。
+     全部带 !important：压住语言几何锁写进 <col>/<th> 的 px 宽度（它是横向滚动条真正的来源）。
+     操作 13%→16%（≈159px，正好并排放得下「通过 / 拒绝」两个按钮、不折行），差额从待审批内容 22%→19% 出。 */
+  table.appr-table thead th:nth-child(1) { width:5% !important; }
+  table.appr-table thead th:nth-child(2) { width:9% !important; }
+  table.appr-table thead th:nth-child(3) { width:11% !important; }
+  table.appr-table thead th:nth-child(4) { width:19% !important; }
+  table.appr-table thead th:nth-child(5) { width:9% !important; }
+  table.appr-table thead th:nth-child(6) { width:12% !important; }
+  table.appr-table thead th:nth-child(7) { width:8% !important; }
+  table.appr-table thead th:nth-child(8) { width:11% !important; }
+  table.appr-table thead th:nth-child(9) { width:16% !important; }
   /* ★APPR-COL-NOHSCROLL-20261103★ 固定 px 宽（54/150）会把列宽之和顶出 100%，在审批表里必须让位给百分比 */
-  table.appr-table .appr-col-no { width:auto; }
-  table.appr-table .appr-col-action { width:auto; }
+  table.appr-table .appr-col-no { width:auto !important; }
+  table.appr-table .appr-col-action { width:auto !important; }
+  /* 语言几何锁会给表加 <colgroup><col style="width:Npx">，一并让位给上面的百分比 */
+  table.appr-table colgroup col { width:auto !important; }
   /* 固定列宽后单元格内容必须可换行，否则又会撑破列宽 */
   table.appr-table thead th,
   table.appr-table tbody td { overflow-wrap:anywhere; word-break:break-word; }
@@ -5309,6 +5318,10 @@ function _ovLoadChartLib(cb){
   .appr-col-action { width:150px; text-align:center; }
   /* ★APPR-COL-NOHSCROLL-20261103★ 操作列变窄后允许「通过/拒绝」两个按钮折行，不再把内容挤出列外 */
   table.appr-table td.appr-col-action { white-space:normal; }
+  /* ★APPR-COL-NOHSCROLL-20261103★ 操作列按钮随列宽收紧（16% ≈ 159px 的单元格要并排放下两个按钮）：
+     内边距 14→10、间距 6→4，两个按钮合计 ≈ 118px < 可用宽度，永不再折成两行 */
+  table.appr-table .appr-op { gap:4px; flex-wrap:nowrap; }
+  table.appr-table .appr-op .appr-mini { padding:5px 10px; }
   .appr-cell-title { font-weight:600; color:#333; }
   .appr-cell-avatars { display:flex; flex-wrap:wrap; gap:4px; }
   .appr-cell-avatars .appr-avatar { font-size:11px; }
@@ -11586,8 +11599,13 @@ window.LG = (function () {
     // 表格永远比容器宽 → 右侧「待支付 VND / 支付状态」被裁掉（前几轮改列宽一直"没生效"的真正原因就在这里）。
     // ★BENCARD-PCT-EXEMPT-20261103★ 支付明细卡片表(.ben-card-table)同样是百分比列宽 + table-layout:fixed，
     // 必须加入豁免：否则本模块会把 14 列写成 px 并给表格设 min-width，整表被撑出卡片 → 最右「支付日期」被裁掉。
+    /* ★APPR-PCT-EXEMPT-20261103★ 审批表（.appr-table）与上面几张百分比表同理，必须加入豁免：
+       本模块会按三语最长文案给每列写 px（审批表 9 列实测合计 ≈1146px）并给表格设 min-width，
+       于是表格永远比容器宽 → 审批页底部一直有条水平滚动条、最右「操作」列被切；
+       豁免后列宽交给 CSS 的百分比（合计 100%），表格严格填满容器、永不横向溢出。 */
     if (tbl.classList && (tbl.classList.contains('cp-table') || tbl.classList.contains('cm-pay-table')
-        || tbl.classList.contains('cpc-ledger') || tbl.classList.contains('ben-card-table'))) {
+        || tbl.classList.contains('cpc-ledger') || tbl.classList.contains('ben-card-table')
+        || tbl.classList.contains('appr-table'))) {
       var cgx = tbl.querySelector('colgroup');
       if (cgx) {
         var colx = cgx.querySelectorAll('col');
@@ -16937,7 +16955,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z280";  // 版本标记：Z280 = 审批详情抽屉补齐关闭按钮并按全站弹窗规范约束按钮布局：关闭(×)与最大化(□)统一放进 .modal-actions（右 16px、垂直居中、26×26、间距 6px、不再各自绝对定位），× 改用内联 SVG（不再依赖 ✕ 字形，避免字体缺字显示成空白方块），标题右留 88px，title/aria-label 三语同步
+const PERM_BUILD = "build 2026-11-03-Z281";  // 版本标记：Z281 = 审批表彻底消除底部水平滚动条（根因=语言几何锁 LG.freezeTable 给每列写 px 并设 min-width，9 列合计≈1146px>容器）：.appr-table 加入百分比豁免名单 + 表格与列宽全部 !important 百分比（5/9/11/19/9/12/8/11/16=100），操作列 16% 且按钮收紧为单行
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
