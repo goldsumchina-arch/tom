@@ -2369,9 +2369,10 @@ function _ovLoadChartLib(cb){
     transition:background .15s, color .15s, box-shadow .15s;
   }
   .comm-plan-toggle:hover { background:#F5872E; color:#fff; box-shadow:0 2px 8px rgba(245,135,46,.28); }
-  /* 收起态：只露出前 2 行（=4 个受益人），超出在块内滚动；展开后全部显示 */
-  #commPlanWrap { max-height:132px; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
-  #commPlanWrap.is-expanded { max-height:none; overflow:visible; }
+  /* ★COMM-PLAN-FOLD-20261103★ 展开 = 全部行一次性显示（**块内不出现滚动条**）；
+     收起 = 整块行内容隐藏，只留标题栏与「+」按钮。 */
+  #commPlanWrap { max-height:none; overflow:visible; }
+  #commPlanWrap.is-collapsed { display:none !important; }
   /* 窄屏（手机/小窗）：退回一行一个受益人，避免字段被压扁 */
   @media (max-width: 980px){
     .comm-plan-line { gap:0; }
@@ -13645,7 +13646,7 @@ function commPlanReset(plan){
       vnd:    (r && r.vnd)    || ''
     };
   });
-  window.__commPlanExpanded = false;   // 每次开弹窗回到「收起」状态，按钮显示 +
+  window.__commPlanExpanded = true;    // 每次开弹窗默认「展开」：全部受益人可见，按钮显示 −
   commPlanRender();
 }
 function commPlanCollect(){
@@ -13715,17 +13716,20 @@ function commPlanRowHtml(i, r, t){
   }
   return html + '</div>';
 }
-/* ★COMM-PLAN-2UP-20261103★ 标题右侧「+ / −」：展开全部受益人明细 / 收起为前 2 行
-   ★COMM-PLAN-VSEP-20261103★ 按钮常显（人数少时点 + 只是把块内滚动去掉，视觉无跳变） */
+/* ★COMM-PLAN-FOLD-20261103★ 标题右侧「− / +」：− 把全部受益人一并隐藏（不留滚动条），
+   + 再把全部受益人一次性显示出来（块内始终没有垂直滚动条）。 */
 function commPlanApplyExpand(){
   var wrap = document.getElementById('commPlanWrap');
   var btn  = document.getElementById('commPlanToggleBtn');
-  var ex = !!window.__commPlanExpanded;
-  if (wrap) wrap.classList.toggle('is-expanded', ex);
+  var ex = (window.__commPlanExpanded !== false);   // 未初始化时默认展开
+  if (wrap){
+    wrap.classList.toggle('is-collapsed', !ex);
+    wrap.classList.remove('is-expanded');   // 旧类名已废弃，清理兼容
+  }
   if (btn){
     btn.style.display = '';
     btn.textContent = ex ? '−' : '+';
-    btn.setAttribute('title', ex ? '收起受益人明细' : '展开全部受益人明细');
+    btn.setAttribute('title', ex ? '隐藏全部受益人名录' : '展开全部受益人名录');
     btn.setAttribute('aria-expanded', ex ? 'true' : 'false');
   }
 }
@@ -16347,7 +16351,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z209";  // 版本标记：Z209 = 单行人(1/3/5/7/9)也画中线黑色垂直虚线
+const PERM_BUILD = "build 2026-11-03-Z210";  // 版本标记：Z210 = 受益人名录 -/+ 一键全部隐藏/全部展开，块内不再有滚动条
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
