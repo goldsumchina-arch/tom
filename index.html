@@ -2188,21 +2188,22 @@ function _ovLoadChartLib(cb){
 .ben-card-table colgroup col:nth-child(13) { width:9.5% !important; }
 .ben-card-table colgroup col:nth-child(14) { width:8%   !important; }
 .ben-card-table td.bc-seq, .ben-card-table td.bc-cnt { color:#8a9bb0; }
-.ben-card-table .bc-inp { width:100%; min-width:0; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:1px 2px; font-size:8.5px; font-family:inherit; }
+/* ★BENCARD-UI-20261103★ 输入框缩小（太高/太宽）：统一 height:16px；date 列限宽并居中 */
+.ben-card-table .bc-inp { width:100%; min-width:0; height:16px; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:0 2px; font-size:8.5px; line-height:14px; font-family:inherit; }
 .ben-card-table .bc-inp:focus { outline:2px solid #1e9e6a; }
-.ben-card-table select.bc-inp { padding:1px 2px; }
+.ben-card-table select.bc-inp { height:16px; padding:0 1px; font-size:8px; }
 .ben-card-table .bc-num { text-align:right; }
 .ben-card-table .bc-parties { text-align:left; }
 .ben-card-table .bc-cash-wrap { display:flex; align-items:center; gap:1px; justify-content:center; }
 .ben-card-table .bc-cash-wrap .bc-cash { width:calc(100% - 11px); text-align:right; }
 .ben-card-table .bc-pct { color:#e8720c; font-weight:700; }
 .ben-card-table .bc-actual { font-weight:700; text-align:right; }
-.ben-card-table .bc-actual.bc-rmb { color:#d64541; }
-.ben-card-table .bc-actual.bc-usd { color:#2e86de; }
-.ben-card-table .bc-actual.bc-vnd { color:#1e9e6a; }
+.ben-card-table .bc-actual.bc-rmb, .ben-card-table .bc-money.bc-rmb { color:#d64541; }
+.ben-card-table .bc-actual.bc-usd, .ben-card-table .bc-money.bc-usd { color:#2e86de; }
+.ben-card-table .bc-actual.bc-vnd, .ben-card-table .bc-money.bc-vnd { color:#1e9e6a; }
 .ben-card-table .bc-empty { color:#a6b3c2; padding:6px; }
-.ben-card-table .cp-date-input-wrapper { width:100%; min-width:0; display:block; }
-.ben-card-table .cp-date-input-wrapper input { min-width:0; width:100%; padding:1px 2px; font-size:8.5px; }
+.ben-card-table .cp-date-input-wrapper { width:auto; max-width:78px; min-width:0; margin:0 auto; display:block; }
+.ben-card-table .cp-date-input-wrapper input { min-width:0; width:100%; height:16px; padding:0 2px; font-size:8px; line-height:14px; border-radius:2px; }
 .ben-card-empty { color:#8a9bb0; font-size:12px; padding:8px 4px; }
   .comm-point-check .cpc-chk { padding:3px 0; }
   .comm-point-check .cpc-chk-title { font-size:13px; font-weight:700; color:#5a6b82; }
@@ -14383,11 +14384,25 @@ function _benCardFmt(v){
   if (!(n > 0)) return '—';
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function _benCardActual(theoVal, frac){
+/* ★BENCARD-MONEY-20261103★ 货币符号 + 千位符（RMB ¥ / USD $ / VND ₫） */
+function _benCardSym(cur){
+  cur = String(cur || '').toLowerCase();
+  if (cur === 'rmb') return '¥';
+  if (cur === 'usd') return '$';
+  if (cur === 'vnd') return '₫';
+  return '';
+}
+function _benCardMoneyDisplay(cur, val){
+  var n = parseFloat(String(val == null ? '' : val).replace(/[^\d.]/g, ''));
+  if (!(n > 0)) return '';
+  return _benCardSym(cur) + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function _benCardActual(theoVal, frac, cur){
   var n = parseFloat(String(theoVal == null ? '' : theoVal).replace(/[^\d.]/g, ''));
   if (!(n > 0)) return '—';
   if (frac >= 1) return '—';
-  return _benCardFmt(n / (1 - frac));
+  var v = n / (1 - frac);
+  return _benCardSym(cur) + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 /* ★COMM-DETAIL-TOGGLE-20261103★ 标题右侧 +/− 折叠开关：展开/收起下方全部支付明细内容 */
 function toggleCommDetail(){
@@ -14421,18 +14436,22 @@ function _benCardHead(){
   var extra = {
     zh: { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
           addRecord:'＋ 增加记录', beneficiary:'受益人',
+          partyOpts:['公司对公司','公司对个人','个人对个人'],
           emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
           emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' },
     en: { parties:'Parties', rate:'Exchange Rate', theo:'Theoretical Payable', cash:'Cash-out<br>(AGI/Personal)', actual:'Actual Payable',
           addRecord:'＋ Add Record', beneficiary:'Beneficiary',
+          partyOpts:['Company to Company','Company to Individual','Individual to Individual'],
           emptyRows:'No payment records yet. Click "＋ Add Record" at top-right to add.',
           emptyState:'Please set beneficiaries in "Income Distribution Plan" first; payment detail cards will be generated automatically by count.' },
     vi: { parties:'Bên thanh toán', rate:'Tỷ giá', theo:'Phải trả lý thuyết', cash:'Chi phí quy đổi<br>(AGI/Cá nhân)', actual:'Phải trả thực tế',
           addRecord:'＋ Thêm bản ghi', beneficiary:'Người thụ hưởng',
+          partyOpts:['Công ty với Công ty','Công ty với Cá nhân','Cá nhân với Cá nhân'],
           emptyRows:'Chưa có bản ghi thanh toán. Nhấn "＋ Thêm bản ghi" ở góc trên bên phải để thêm.',
           emptyState:'Vui lòng thiết lập người thụ hưởng trong "Kế hoạch phân phối thu nhập" trước; thẻ chi tiết thanh toán sẽ được tạo tự động theo số người.' }
   }[L] || { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
           addRecord:'＋ 增加记录', beneficiary:'受益人',
+          partyOpts:['公司对公司','公司对个人','个人对个人'],
           emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
           emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' };
   return {
@@ -14450,8 +14469,34 @@ function _benCardHead(){
     addRecord: extra.addRecord,
     beneficiary: extra.beneficiary,
     emptyRows: extra.emptyRows,
-    emptyState: extra.emptyState
+    emptyState: extra.emptyState,
+    partyOpts: extra.partyOpts
   };
+}
+/* ★BENCARD-PARTY-20261103★ 支付双方改为三选一（存 canonical key，显示随语言）；
+   历史自由文本/旧中文值会被映射到 key，无法识别的旧值保留为附加选项，避免丢数据。 */
+var BEN_PARTY_KEYS = ['company_company','company_person','person_person'];
+var BEN_PARTY_LABELS = {
+  'company_company': ['公司对公司','Company to Company','Công ty với Công ty'],
+  'company_person':  ['公司对个人','Company to Individual','Công ty với Cá nhân'],
+  'person_person':   ['个人对个人','Individual to Individual','Cá nhân với Cá nhân']
+};
+function _benCardPartyKey(v){
+  v = String(v == null ? '' : v).trim();
+  if (!v) return '';
+  if (BEN_PARTY_KEYS.indexOf(v) >= 0) return v;
+  for (var k in BEN_PARTY_LABELS){ if (BEN_PARTY_LABELS[k].indexOf(v) >= 0) return k; }
+  return v;
+}
+function _benCardPartyOptions(curVal, H){
+  var labels = (H && H.partyOpts) || ['公司对公司','公司对个人','个人对个人'];
+  var pv = _benCardPartyKey(curVal);
+  var out = '<option value="">—</option>';
+  for (var k = 0; k < BEN_PARTY_KEYS.length; k++){
+    out += '<option value="' + BEN_PARTY_KEYS[k] + '"' + (pv === BEN_PARTY_KEYS[k] ? ' selected' : '') + '>' + _benEsc(labels[k] || BEN_PARTY_KEYS[k]) + '</option>';
+  }
+  if (pv && BEN_PARTY_KEYS.indexOf(pv) < 0) out += '<option value="' + _benEsc(pv) + '" selected>' + _benEsc(pv) + '</option>';
+  return out;
 }
 function renderBenPaymentCards(force){
   var box = document.getElementById('commBenPayCards');
@@ -14482,7 +14527,9 @@ function renderBenPaymentCards(force){
         rowHtml += '<tr>'
           + '<td class="bc-seq">' + (j + 1) + '</td>'
           + '<td class="bc-cnt">' + (j + 1) + '</td>'
-          + '<td><input class="bc-inp bc-parties" value="' + _benEsc(d.parties || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'parties\',this.value)"></td>'
+          + '<td><select class="bc-inp bc-parties" onchange="benCardInput(' + i + ',' + j + ',\'parties\',this.value)">'
+          +   _benCardPartyOptions(d.parties, H)
+          + '</select></td>'
           + '<td><select class="bc-inp bc-cur" onchange="benCardInput(' + i + ',' + j + ',\'currency\',this.value)">'
           +   '<option value="RMB"' + (d.currency === 'RMB' ? ' selected' : '') + '>RMB</option>'
           +   '<option value="USD"' + (d.currency === 'USD' ? ' selected' : '') + '>USD</option>'
@@ -14490,13 +14537,13 @@ function renderBenPaymentCards(force){
           + '</select></td>'
           + '<td><input class="bc-inp bc-num" value="' + _benEsc(d.rateRmbVnd || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'rateRmbVnd\',this.value)"></td>'
           + '<td><input class="bc-inp bc-num" value="' + _benEsc(d.rateUsdVnd || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'rateUsdVnd\',this.value)"></td>'
-          + '<td><input class="bc-inp bc-num" value="' + _benEsc(dTheo.rmb || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'rmb\',this.value)"></td>'
-          + '<td><input class="bc-inp bc-num" value="' + _benEsc(dTheo.usd || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'usd\',this.value)"></td>'
-          + '<td><input class="bc-inp bc-num" value="' + _benEsc(dTheo.vnd || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'vnd\',this.value)"></td>'
+          + '<td><input class="bc-inp bc-num bc-money bc-rmb" value="' + _benEsc(_benCardMoneyDisplay('rmb', dTheo.rmb)) + '" oninput="benCardInput(' + i + ',' + j + ',\'rmb\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'rmb\')"></td>'
+          + '<td><input class="bc-inp bc-num bc-money bc-usd" value="' + _benEsc(_benCardMoneyDisplay('usd', dTheo.usd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'usd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'usd\')"></td>'
+          + '<td><input class="bc-inp bc-num bc-money bc-vnd" value="' + _benEsc(_benCardMoneyDisplay('vnd', dTheo.vnd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'vnd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'vnd\')"></td>'
           + '<td><div class="bc-cash-wrap"><input class="bc-inp bc-num bc-cash" value="' + _benEsc(d.cashout || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'cashout\',this.value)" onblur="benCardCashBlur(' + i + ',' + j + ',this)"><span class="bc-pct">%</span></div></td>'
-          + '<td class="bc-actual bc-rmb" id="bca_' + i + '_' + j + '_rmb">' + _benCardActual(dTheo.rmb, frac) + '</td>'
-          + '<td class="bc-actual bc-usd" id="bca_' + i + '_' + j + '_usd">' + _benCardActual(dTheo.usd, frac) + '</td>'
-          + '<td class="bc-actual bc-vnd" id="bca_' + i + '_' + j + '_vnd">' + _benCardActual(dTheo.vnd, frac) + '</td>'
+          + '<td class="bc-actual bc-rmb" id="bca_' + i + '_' + j + '_rmb">' + _benCardActual(dTheo.rmb, frac, 'rmb') + '</td>'
+          + '<td class="bc-actual bc-usd" id="bca_' + i + '_' + j + '_usd">' + _benCardActual(dTheo.usd, frac, 'usd') + '</td>'
+          + '<td class="bc-actual bc-vnd" id="bca_' + i + '_' + j + '_vnd">' + _benCardActual(dTheo.vnd, frac, 'vnd') + '</td>'
           + '<td><div class="cp-date-input-wrapper"><input class="bc-inp bc-date" value="' + _benEsc(d.date || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" oninput="benCardInput(' + i + ',' + j + ',\'date\',this.value)"></div></td>'
           + '</tr>';
       }
@@ -14548,13 +14595,23 @@ function benCardCashBlur(i, j, el){
   if (el) el.value = d.cashout;
   benCardRecalc(i, j);
 }
+/* ★BENCARD-MONEY-20261103★ 理论金额输入框：聚焦时去符号/千位符便于编辑，失焦时恢复「符号+千位符」显示 */
+function benCardMoneyFocus(el){
+  if (!el) return;
+  el.value = String(el.value || '').replace(/[^\d.\-]/g, '');
+}
+function benCardMoneyBlur(el, cur){
+  if (!el) return;
+  var n = parseFloat(String(el.value || '').replace(/[^\d.]/g, ''));
+  el.value = (isFinite(n) && n > 0) ? _benCardMoneyDisplay(cur, n) : '';
+}
 function benCardRecalc(i, j){
   var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
   var d = rows[j]; if (!d || !d.theo) return;
   var frac = (parseFloat(String(d.cashout || '').replace(/[^\d.]/g, '')) || 0) / 100;
   var setT = function(suf, v){
     var el = document.getElementById('bca_' + i + '_' + j + '_' + suf);
-    if (el) el.textContent = _benCardActual(v, frac);
+    if (el) el.textContent = _benCardActual(v, frac, suf);
   };
   setT('rmb', d.theo.rmb); setT('usd', d.theo.usd); setT('vnd', d.theo.vnd);
 }
@@ -16115,7 +16172,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z246";  // 版本标记：Z246 = 支付明细卡片：①序号列 1.5%→3%、支付次数列 3.5%→5%（英文 "Payment Count" 不再中间断行），理论/实际金额两组各略减让出空间(合计100%)；②「＋ 增加记录」按钮、空行提示、空状态、受益人兜底文案全部改随系统语言(中/英/越)切换
+const PERM_BUILD = "build 2026-11-03-Z247";  // 版本标记：Z247 = 支付明细卡片：①输入框统一 height:16px（原太高/太宽），日期列限宽 78px 居中；②支付双方改三选一下拉（公司对公司/公司对个人/个人对个人，三语，存 canonical key，兼容旧自由文本）；③理论/实际金额带货币符号(¥/$/₫)+千位符，RMB红/USD蓝/VND绿；④理论金额输入聚焦去格式化、失焦恢复显示
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
