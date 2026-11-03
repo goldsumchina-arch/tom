@@ -14109,6 +14109,13 @@ function fmtPlanMoney(c, n){
   var s = v.toLocaleString('en-US', { minimumFractionDigits:4, maximumFractionDigits:4 });
   return (COMM_PLAN_SYM[String(c || '').toLowerCase()] || '') + s;
 }
+/* ★COMM-LEDGER-INT-20261103★ 台账专用：金额取整数（四舍五入，无 4 位小数）；不足 1 显示 — */
+function fmtPlanMoneyInt(c, n){
+  var v = Number(n) || 0;
+  if (!isFinite(v)) v = 0;
+  if (Math.abs(v) < 0.5) return '—';
+  return (COMM_PLAN_SYM[String(c || '').toLowerCase()] || '') + Math.round(v).toLocaleString('en-US');
+}
 /* 读取弹窗顶部「设备金额」原始数值（整数） */
 function commPlanEquipRaw(c){
   var m = COMM_MONEY[String(c || '').toLowerCase()];
@@ -14250,12 +14257,12 @@ function _commLedgerRowSync(i){
   var c = _commLedgerCells(i);
   var set = function(id, html){ var el = document.getElementById(id); if (el) el.innerHTML = html; };
   set('cpcCnt_' + i, c.payCnt > 0 ? String(c.payCnt) : '—');
-  set('cpcPaid_' + i + '_rmb', c.pR > 0 ? fmtPlanMoney('rmb', c.pR) : '—');
-  set('cpcPaid_' + i + '_usd', c.pU > 0 ? fmtPlanMoney('usd', c.pU) : '—');
-  set('cpcPaid_' + i + '_vnd', c.pV > 0 ? fmtPlanMoney('vnd', c.pV) : '—');
-  set('cpcUnpaid_' + i + '_rmb', c.uR > 0.01 ? fmtPlanMoney('rmb', c.uR) : '—');
-  set('cpcUnpaid_' + i + '_usd', c.uU > 0.01 ? fmtPlanMoney('usd', c.uU) : '—');
-  set('cpcUnpaid_' + i + '_vnd', c.uV > 0.01 ? fmtPlanMoney('vnd', c.uV) : '—');
+  set('cpcPaid_' + i + '_rmb', c.pR > 0 ? fmtPlanMoneyInt('rmb', c.pR) : '—');
+  set('cpcPaid_' + i + '_usd', c.pU > 0 ? fmtPlanMoneyInt('usd', c.pU) : '—');
+  set('cpcPaid_' + i + '_vnd', c.pV > 0 ? fmtPlanMoneyInt('vnd', c.pV) : '—');
+  set('cpcUnpaid_' + i + '_rmb', c.uR > 0.01 ? fmtPlanMoneyInt('rmb', c.uR) : '—');
+  set('cpcUnpaid_' + i + '_usd', c.uU > 0.01 ? fmtPlanMoneyInt('usd', c.uU) : '—');
+  set('cpcUnpaid_' + i + '_vnd', c.uV > 0.01 ? fmtPlanMoneyInt('vnd', c.uV) : '—');
   var stEl = document.getElementById('cpcSt_' + i);
   if (stEl){
     var s = _commLedgerState(c.needR, c.needU, c.needV, c.theo.rmb, c.theo.usd, c.theo.vnd, c.pR, c.pU, c.pV);
@@ -14283,16 +14290,16 @@ function _commLedgerFootSync(){
   }
   var set = function(id, html){ var el = document.getElementById(id); if (el) el.innerHTML = html; };
   set('cpcFtPct', sumPct.toFixed(4) + '%');
-  set('cpcFtNeed_rmb', sumR > 0 ? fmtPlanMoney('rmb', sumR) : '—');
-  set('cpcFtNeed_usd', sumU > 0 ? fmtPlanMoney('usd', sumU) : '—');
-  set('cpcFtNeed_vnd', sumV > 0 ? fmtPlanMoney('vnd', sumV) : '—');
+  set('cpcFtNeed_rmb', sumR > 0 ? fmtPlanMoneyInt('rmb', sumR) : '—');
+  set('cpcFtNeed_usd', sumU > 0 ? fmtPlanMoneyInt('usd', sumU) : '—');
+  set('cpcFtNeed_vnd', sumV > 0 ? fmtPlanMoneyInt('vnd', sumV) : '—');
   set('cpcFtCnt', totCnt > 0 ? String(totCnt) : '—');
-  set('cpcFtPaid_rmb', totPR > 0 ? fmtPlanMoney('rmb', totPR) : '—');
-  set('cpcFtPaid_usd', totPU > 0 ? fmtPlanMoney('usd', totPU) : '—');
-  set('cpcFtPaid_vnd', totPV > 0 ? fmtPlanMoney('vnd', totPV) : '—');
-  set('cpcFtUnpaid_rmb', totUR > 0.01 ? fmtPlanMoney('rmb', totUR) : '—');
-  set('cpcFtUnpaid_usd', totUU > 0.01 ? fmtPlanMoney('usd', totUU) : '—');
-  set('cpcFtUnpaid_vnd', totUV > 0.01 ? fmtPlanMoney('vnd', totUV) : '—');
+  set('cpcFtPaid_rmb', totPR > 0 ? fmtPlanMoneyInt('rmb', totPR) : '—');
+  set('cpcFtPaid_usd', totPU > 0 ? fmtPlanMoneyInt('usd', totPU) : '—');
+  set('cpcFtPaid_vnd', totPV > 0 ? fmtPlanMoneyInt('vnd', totPV) : '—');
+  set('cpcFtUnpaid_rmb', totUR > 0.01 ? fmtPlanMoneyInt('rmb', totUR) : '—');
+  set('cpcFtUnpaid_usd', totUU > 0.01 ? fmtPlanMoneyInt('usd', totUU) : '—');
+  set('cpcFtUnpaid_vnd', totUV > 0.01 ? fmtPlanMoneyInt('vnd', totUV) : '—');
   var stEl = document.getElementById('cpcFtStatus');
   if (stEl){
     var s = _commLedgerState(sumR, sumU, sumV, totTR, totTU, totTV, totPR, totPU, totPV);
@@ -14371,16 +14378,16 @@ function commPointCheck(){
       +   '<td class="cpc-td-seq">#' + (i + 1) + '</td>'
       +   '<td class="cpc-td-name">' + _escComm(nm || '—') + '</td>'
       +   '<td class="cpc-td-ratio">' + (okP ? fmtPlanRatio4(r.ratio) + '%' : '—') + '</td>'
-      +   '<td class="cpc-rmb">' + (rr > 0 ? fmtPlanMoney('rmb', rr) : '—') + '</td>'
-      +   '<td class="cpc-usd">' + (uu > 0 ? fmtPlanMoney('usd', uu) : '—') + '</td>'
-      +   '<td class="cpc-vnd">' + (vv > 0 ? fmtPlanMoney('vnd', vv) : '—') + '</td>'
+      +   '<td class="cpc-rmb">' + (rr > 0 ? fmtPlanMoneyInt('rmb', rr) : '—') + '</td>'
+      +   '<td class="cpc-usd">' + (uu > 0 ? fmtPlanMoneyInt('usd', uu) : '—') + '</td>'
+      +   '<td class="cpc-vnd">' + (vv > 0 ? fmtPlanMoneyInt('vnd', vv) : '—') + '</td>'
       +   '<td class="cpc-td-cnt" id="cpcCnt_' + i + '">' + (payCnt > 0 ? payCnt : '—') + '</td>'
-      +   '<td class="cpc-rmb" id="cpcPaid_' + i + '_rmb">' + (pR > 0 ? fmtPlanMoney('rmb', pR) : '—') + '</td>'
-      +   '<td class="cpc-usd" id="cpcPaid_' + i + '_usd">' + (pU > 0 ? fmtPlanMoney('usd', pU) : '—') + '</td>'
-      +   '<td class="cpc-vnd" id="cpcPaid_' + i + '_vnd">' + (pV > 0 ? fmtPlanMoney('vnd', pV) : '—') + '</td>'
-      +   '<td class="cpc-rmb" id="cpcUnpaid_' + i + '_rmb">' + (uR > 0.01 ? fmtPlanMoney('rmb', uR) : '—') + '</td>'
-      +   '<td class="cpc-usd" id="cpcUnpaid_' + i + '_usd">' + (uU > 0.01 ? fmtPlanMoney('usd', uU) : '—') + '</td>'
-      +   '<td class="cpc-vnd" id="cpcUnpaid_' + i + '_vnd">' + (uV > 0.01 ? fmtPlanMoney('vnd', uV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcPaid_' + i + '_rmb">' + (pR > 0 ? fmtPlanMoneyInt('rmb', pR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcPaid_' + i + '_usd">' + (pU > 0 ? fmtPlanMoneyInt('usd', pU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcPaid_' + i + '_vnd">' + (pV > 0 ? fmtPlanMoneyInt('vnd', pV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcUnpaid_' + i + '_rmb">' + (uR > 0.01 ? fmtPlanMoneyInt('rmb', uR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcUnpaid_' + i + '_usd">' + (uU > 0.01 ? fmtPlanMoneyInt('usd', uU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcUnpaid_' + i + '_vnd">' + (uV > 0.01 ? fmtPlanMoneyInt('vnd', uV) : '—') + '</td>'
       +   '<td class="' + stCls + '" id="cpcSt_' + i + '">' + stTxt + '</td>'
       + '</tr>';
   }
@@ -14419,16 +14426,16 @@ function commPointCheck(){
       + '<tfoot><tr>'
       +   '<td class="cpc-td-total" colspan="2">' + H('comm_led_total', '总计') + '</td>'
       +   '<td class="cpc-td-ratio" id="cpcFtPct">' + sumPct.toFixed(4) + '%</td>'
-      +   '<td class="cpc-rmb" id="cpcFtNeed_rmb">' + (sumR > 0 ? fmtPlanMoney('rmb', sumR) : '—') + '</td>'
-      +   '<td class="cpc-usd" id="cpcFtNeed_usd">' + (sumU > 0 ? fmtPlanMoney('usd', sumU) : '—') + '</td>'
-      +   '<td class="cpc-vnd" id="cpcFtNeed_vnd">' + (sumV > 0 ? fmtPlanMoney('vnd', sumV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcFtNeed_rmb">' + (sumR > 0 ? fmtPlanMoneyInt('rmb', sumR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcFtNeed_usd">' + (sumU > 0 ? fmtPlanMoneyInt('usd', sumU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcFtNeed_vnd">' + (sumV > 0 ? fmtPlanMoneyInt('vnd', sumV) : '—') + '</td>'
       +   '<td class="cpc-td-cnt" id="cpcFtCnt">' + (totCnt > 0 ? totCnt : '—') + '</td>'
-      +   '<td class="cpc-rmb" id="cpcFtPaid_rmb">' + (totPR > 0 ? fmtPlanMoney('rmb', totPR) : '—') + '</td>'
-      +   '<td class="cpc-usd" id="cpcFtPaid_usd">' + (totPU > 0 ? fmtPlanMoney('usd', totPU) : '—') + '</td>'
-      +   '<td class="cpc-vnd" id="cpcFtPaid_vnd">' + (totPV > 0 ? fmtPlanMoney('vnd', totPV) : '—') + '</td>'
-      +   '<td class="cpc-rmb" id="cpcFtUnpaid_rmb">' + (totUR > 0.01 ? fmtPlanMoney('rmb', totUR) : '—') + '</td>'
-      +   '<td class="cpc-usd" id="cpcFtUnpaid_usd">' + (totUU > 0.01 ? fmtPlanMoney('usd', totUU) : '—') + '</td>'
-      +   '<td class="cpc-vnd" id="cpcFtUnpaid_vnd">' + (totUV > 0.01 ? fmtPlanMoney('vnd', totUV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcFtPaid_rmb">' + (totPR > 0 ? fmtPlanMoneyInt('rmb', totPR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcFtPaid_usd">' + (totPU > 0 ? fmtPlanMoneyInt('usd', totPU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcFtPaid_vnd">' + (totPV > 0 ? fmtPlanMoneyInt('vnd', totPV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcFtUnpaid_rmb">' + (totUR > 0.01 ? fmtPlanMoneyInt('rmb', totUR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcFtUnpaid_usd">' + (totUU > 0.01 ? fmtPlanMoneyInt('usd', totUU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcFtUnpaid_vnd">' + (totUV > 0.01 ? fmtPlanMoneyInt('vnd', totUV) : '—') + '</td>'
       +   '<td class="' + tCls + '" id="cpcFtStatus">' + tTxt + '</td>'
       + '</tr></tfoot></table>';
     // ★COMM-LEDGER-FIT-20261103★ 生成后自动压缩字号，直到横向放得下（无水平滚动条）
@@ -16579,7 +16586,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z264";  // 版本标记：Z264 = 支付明细卡片头部新增两组数据：「需要支付佣金」(取台账该受益人三币金额) 与「待支付佣金」(= 需要支付佣金 − 总计理论付款)，与总计付款/理论/实际并列显示
+const PERM_BUILD = "build 2026-11-03-Z265";  // 版本标记：Z265 = 个人佣金台账表金额全部改为整数显示（新增 fmtPlanMoneyInt 四舍五入、不足 1 显示 —），需要支付/已经支付/待支付三组共 9 列及总计行不再带 4 位小数
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
