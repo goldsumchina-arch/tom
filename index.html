@@ -12851,6 +12851,9 @@ function applyCommissionLang(){
   // commissionAddTitle 不再由 st() 统一翻译：
   // 该标题需按「新增 / 编辑」模式分别取 comm_add_title / comm_edit_title，
   // 已改由 applyCommAddTitle() 在打开弹窗与切换语言时按模式注入（见 openCommissionAddModal）。
+  // ★COMM-ADDTITLE-I18N-20261103★ 这两个元素没有 data-i18n（文案要区分新增/编辑），全局扫描刷不到，
+  // 必须在这里按「当前模式」原地重写，否则切语言后标题与保存按钮停留在旧语言。
+  if (typeof applyCommAddTitle === 'function') applyCommAddTitle();
   st('commLblContract','comm_f_contract','合同编号');
   st('commLblDate','comm_f_date','合同签单日期');
   st('commLblParties','comm_f_parties','签约双方');
@@ -16697,7 +16700,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z220";  // 版本标记：Z220 = 保存成功提示三语(保存成功!/Saved!/Đã lưu!)且 1 秒自动消失；toast 层级提到 100200 避免被弹窗遮挡
+const PERM_BUILD = "build 2026-11-03-Z221";  // 版本标记：Z221 = 佣金弹窗标题「新增/编辑项目产生的佣金记录」与「保存/保存修改」按钮跟随三语联动
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
