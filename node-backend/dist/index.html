@@ -1913,7 +1913,7 @@ function _ovLoadChartLib(cb){
      这次同时把按钮缩小、给按钮留够列宽、并加 ellipsis 兜底（最坏情况是省略号，绝不越界）。 */
   #commissionTable { table-layout:fixed; width:100% !important; min-width:0 !important; max-width:none !important; }
   #commissionTable colgroup col { width:auto !important; }
-  /* ★COMM-OPS-COL-20261103★ 新增「操作」列（复制 / 删除）后共 14 列，列宽重新配平（合计 100%） */
+  /* ★COMM-PAYST-COL-20261103★ 备注右侧新增「付款状态」列、操作列宽度减半 → 共 15 列，列宽重新配平（合计 100%） */
   #commissionTable colgroup col:nth-child(1)  { width:3%    !important; }  /* 序号 */
   #commissionTable colgroup col:nth-child(2)  { width:9%    !important; }  /* 合同编号 */
   #commissionTable colgroup col:nth-child(3)  { width:5.5%  !important; }  /* 签约双方 */
@@ -1926,8 +1926,9 @@ function _ovLoadChartLib(cb){
   #commissionTable colgroup col:nth-child(10) { width:5.5%  !important; }  /* RMB-VND */
   #commissionTable colgroup col:nth-child(11) { width:5.5%  !important; }  /* USD-VND */
   #commissionTable colgroup col:nth-child(12) { width:7.5%  !important; }  /* 编辑 */
-  #commissionTable colgroup col:nth-child(13) { width:13%   !important; }  /* 备注 */
-  #commissionTable colgroup col:nth-child(14) { width:12.5% !important; }  /* 操作（复制/删除） */
+  #commissionTable colgroup col:nth-child(13) { width:11%   !important; }  /* 备注 */
+  #commissionTable colgroup col:nth-child(14) { width:8%    !important; }  /* 付款状态（自动=台账总计行状态） */
+  #commissionTable colgroup col:nth-child(15) { width:6.5%  !important; }  /* 操作（复制/删除）：原 12.5% 的一半 */
   /* 文本列压窄时换行，不裁切、不越界 */
   #commissionTable tbody td { white-space:normal; word-break:break-word; overflow-wrap:anywhere; }
   /* 三币金额再小半号，保证 "₫193,781,000" 这类最长值在 7%/7.5% 列宽内单行显示 */
@@ -1944,14 +1945,21 @@ function _ovLoadChartLib(cb){
   #commissionTable .btn-action-sm::after { display:none !important; }
   #commissionTable td[data-col="11"] { white-space:nowrap; overflow:hidden; }
   /* ★COMM-OPS-COL-20261103★ 操作列（复制 / 删除）：与编辑按钮同尺寸的小按钮 */
-  #commissionTable .comm-ops-cell { white-space:nowrap; text-align:center; }
-  #commissionTable .comm-ops-btn { font-size:9px; padding:2px 5px; margin:0 1px; border:1px solid transparent;
-    border-radius:4px; line-height:1.35; cursor:pointer; vertical-align:middle; max-width:100%;
+  /* ★COMM-PAYST-COL-20261103★ 操作列宽度减半 → 按钮同步缩窄（内边距 5→3px、字号 9→8px），
+     放不下时自动折行，永不外溢、不被裁切 */
+  #commissionTable .comm-ops-cell { white-space:normal; text-align:center; }
+  #commissionTable .comm-ops-btn { font-size:8px; padding:2px 3px; margin:0 1px; border:1px solid transparent;
+    border-radius:3px; line-height:1.3; cursor:pointer; vertical-align:middle; max-width:100%;
     overflow:hidden; text-overflow:ellipsis; }
   #commissionTable .comm-ops-copy { background:#3E7BC8; color:#fff; }
   #commissionTable .comm-ops-copy:hover { background:#3369AC; }
   #commissionTable .comm-ops-del { background:#e23c3c; color:#fff; }
   #commissionTable .comm-ops-del:hover { background:#c62f2f; }
+  /* ★COMM-PAYST-COL-20261103★ 付款状态列：文字颜色与台账「支付状态」完全一致（绿/橙/红） */
+  #commissionTable td.comm-payst { text-align:center; font-weight:700; white-space:nowrap; }
+  #commissionTable td.comm-payst.cpc-st-done { color:#1e9e6a; }
+  #commissionTable td.comm-payst.cpc-st-part { color:#e8720c; }
+  #commissionTable td.comm-payst.cpc-st-none { color:#98a6b5; }
   /* ★COMM-OPS-COL-20261103★ 删除确认气泡：跟随鼠标位置、橙色主题、切语言保持打开 */
   .comm-del-pop { position:fixed; z-index:3000; width:264px; box-sizing:border-box;
     background:#fff; border:1px solid #F5872E; border-radius:10px; padding:12px 14px;
@@ -4512,7 +4520,7 @@ function _ovLoadChartLib(cb){
         <table class="users-table" id="commissionTable">
           <!-- 列宽由 autoFitCommissionTable() 按内容实测后写入（A2：全部列动态） -->
           <colgroup id="commissionCols">
-            <col><col><col><col><col><col><col><col><col><col><col><col><col><col>
+            <col><col><col><col><col><col><col><col><col><col><col><col><col><col><col>
           </colgroup>
           <thead>
             <tr>
@@ -4526,7 +4534,8 @@ function _ovLoadChartLib(cb){
               <th colspan="2" id="commThRate" data-col="9" style="text-align:center;">计算提成的汇率</th>
               <th rowspan="2" id="commThEdit" data-col="11" style="width:110px;">编辑</th>
               <th rowspan="2" id="commThRemark" data-col="13">备注</th>
-              <th rowspan="2" id="commThOps" data-col="14" style="text-align:center;">操作</th>
+              <th rowspan="2" id="commThPayStatus" data-col="14" style="text-align:center;">付款状态</th>
+              <th rowspan="2" id="commThOps" data-col="15" style="text-align:center;">操作</th>
             </tr>
             <tr>
               <th class="comm-sub comm-rmb" id="commThEquipRMB" data-col="6">RMB <span class="sort-indicator" data-skey="equipRMB" data-col="6" onclick="commSort('equipRMB',true)">↕</span></th>
@@ -7063,7 +7072,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     commission_password_cancel:"取消",
     commission_unlocked:"个人佣金入口已解锁",
     commission_unauthorized:"当前账号无权限使用此入口",
-    comm_col_no:"序号", comm_col_contract:"合同编号", comm_col_parties:"签约双方", comm_col_group:"合作集团", comm_col_date:"合同签单日期", comm_col_equip_amt:"合同签订设备金额", comm_col_rate:"计算提成的汇率", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"编辑项目佣金", comm_col_detail:"受益人&秘佣&支付详情", comm_col_remark:"备注", comm_col_ops:"操作", comm_act_copy:"复制", comm_act_delete:"删除", comm_op_copy_tip:"复制该记录，并立即生成一条相同的新记录", comm_op_del_tip:"删除该记录（需输入密码）", comm_del_title:"确定删除吗？", comm_del_hint:"请输入密码", comm_del_wrong:"密码错误", comm_del_ok:"确定", comm_del_cancel:"取消", comm_copy_ok:"已复制该记录", comm_del_ok_toast:"已删除该记录", comm_no_data:"暂无数据",
+    comm_col_no:"序号", comm_col_contract:"合同编号", comm_col_parties:"签约双方", comm_col_group:"合作集团", comm_col_date:"合同签单日期", comm_col_equip_amt:"合同签订设备金额", comm_col_rate:"计算提成的汇率", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"编辑项目佣金", comm_col_detail:"受益人&秘佣&支付详情", comm_col_remark:"备注", comm_col_paystatus:"付款状态", comm_col_ops:"操作", comm_act_copy:"复制", comm_act_delete:"删除", comm_op_copy_tip:"复制该记录，并立即生成一条相同的新记录", comm_op_del_tip:"删除该记录（需输入密码）", comm_del_title:"确定删除吗？", comm_del_hint:"请输入密码", comm_del_wrong:"密码错误", comm_del_ok:"确定", comm_del_cancel:"取消", comm_copy_ok:"已复制该记录", comm_del_ok_toast:"已删除该记录", comm_no_data:"暂无数据",
     comm_btn_add:"新增项目产生的佣金记录", comm_btn_reports:"查看总报告",
     comm_report_all:"全部佣金支付总报告", comm_report_mine:"聚焦个人佣金总报告", comm_report_coming:"报告功能建设中，敬请期待",
     rep_center_title:"个人佣金总报告中心",
@@ -7852,7 +7861,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     commission_password_cancel:"Cancel",
     commission_unlocked:"Personal Commission entry unlocked",
     commission_unauthorized:"Your account is not authorized to access this entry",
-    comm_col_no:"No.", comm_col_contract:"Contract No.", comm_col_parties:"Signing Parties", comm_col_group:"Partner Group", comm_col_date:"Contract Date", comm_col_equip_amt:"Equipment Contract Amount", comm_col_rate:"Commission Calculation Rate", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"Edit Project Commission", comm_col_detail:"Beneficiary & Commission & Payment Details", comm_col_remark:"Remarks", comm_col_ops:"Actions", comm_act_copy:"Copy", comm_act_delete:"Delete", comm_op_copy_tip:"Duplicate this record into a new one immediately", comm_op_del_tip:"Delete this record (password required)", comm_del_title:"Delete this record?", comm_del_hint:"Enter password", comm_del_wrong:"Wrong password", comm_del_ok:"OK", comm_del_cancel:"Cancel", comm_copy_ok:"Record duplicated", comm_del_ok_toast:"Record deleted", comm_no_data:"No data",
+    comm_col_no:"No.", comm_col_contract:"Contract No.", comm_col_parties:"Signing Parties", comm_col_group:"Partner Group", comm_col_date:"Contract Date", comm_col_equip_amt:"Equipment Contract Amount", comm_col_rate:"Commission Calculation Rate", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"Edit Project Commission", comm_col_detail:"Beneficiary & Commission & Payment Details", comm_col_remark:"Remarks", comm_col_paystatus:"Payment Status", comm_col_ops:"Actions", comm_act_copy:"Copy", comm_act_delete:"Delete", comm_op_copy_tip:"Duplicate this record into a new one immediately", comm_op_del_tip:"Delete this record (password required)", comm_del_title:"Delete this record?", comm_del_hint:"Enter password", comm_del_wrong:"Wrong password", comm_del_ok:"OK", comm_del_cancel:"Cancel", comm_copy_ok:"Record duplicated", comm_del_ok_toast:"Record deleted", comm_no_data:"No data",
     comm_btn_add:"Add Project Commission Record", comm_btn_reports:"Summary Reports",
     comm_report_all:"All Commission Payment Report", comm_report_mine:"Focused Personal Commission Report", comm_report_coming:"Report feature coming soon",
     rep_center_title:"Commission Report Center",
@@ -8637,7 +8646,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     commission_password_cancel:"Hủy",
     commission_unlocked:"Cửa Hoa Hồng Cá Nhân đã mở",
     commission_unauthorized:"Tài khoản này không được phép truy cập",
-    comm_col_no:"STT", comm_col_contract:"Số HĐ", comm_col_parties:"Các bên ký kết", comm_col_group:"Tập đoàn hợp tác", comm_col_date:"Ngày ký HĐ", comm_col_equip_amt:"Giá trị thiết bị theo HĐ", comm_col_rate:"Tỷ giá tính tổng hoa hồng", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"Sửa hoa hồng dự án", comm_col_detail:"Người thụ hưởng & hoa hồng & chi tiết TT", comm_col_remark:"Ghi chú", comm_col_ops:"Thao tác", comm_act_copy:"Sao chép", comm_act_delete:"Xóa", comm_op_copy_tip:"Sao chép bản ghi này thành bản ghi mới ngay lập tức", comm_op_del_tip:"Xóa bản ghi này (cần mật khẩu)", comm_del_title:"Xác nhận xóa?", comm_del_hint:"Nhập mật khẩu", comm_del_wrong:"Sai mật khẩu", comm_del_ok:"Xác nhận", comm_del_cancel:"Hủy", comm_copy_ok:"Đã sao chép bản ghi", comm_del_ok_toast:"Đã xóa bản ghi", comm_no_data:"Không có dữ liệu",
+    comm_col_no:"STT", comm_col_contract:"Số HĐ", comm_col_parties:"Các bên ký kết", comm_col_group:"Tập đoàn hợp tác", comm_col_date:"Ngày ký HĐ", comm_col_equip_amt:"Giá trị thiết bị theo HĐ", comm_col_rate:"Tỷ giá tính tổng hoa hồng", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"Sửa hoa hồng dự án", comm_col_detail:"Người thụ hưởng & hoa hồng & chi tiết TT", comm_col_remark:"Ghi chú", comm_col_paystatus:"Trạng thái thanh toán", comm_col_ops:"Thao tác", comm_act_copy:"Sao chép", comm_act_delete:"Xóa", comm_op_copy_tip:"Sao chép bản ghi này thành bản ghi mới ngay lập tức", comm_op_del_tip:"Xóa bản ghi này (cần mật khẩu)", comm_del_title:"Xác nhận xóa?", comm_del_hint:"Nhập mật khẩu", comm_del_wrong:"Sai mật khẩu", comm_del_ok:"Xác nhận", comm_del_cancel:"Hủy", comm_copy_ok:"Đã sao chép bản ghi", comm_del_ok_toast:"Đã xóa bản ghi", comm_no_data:"Không có dữ liệu",
     comm_btn_add:"Thêm bản ghi hoa hồng dự án", comm_btn_reports:"Báo cáo tổng hợp",
     comm_report_all:"Báo cáo tổng tất cả khoản TT hoa hồng", comm_report_mine:"Trọng tâm: Báo cáo tổng hoa hồng cá nhân", comm_report_coming:"Tính năng báo cáo đang xây dựng",
     rep_center_title:"Trung tâm báo cáo hoa hồng",
@@ -12971,7 +12980,8 @@ function applyCommissionLang(){
   st('commThRateUSD','comm_col_rate_usdvnd','USD-VND');
   st('commThEdit','comm_col_edit','编辑');
   st('commThRemark','comm_col_remark','备注');
-  st('commThOps','comm_col_ops','操作');   // ★COMM-OPS-COL-20261103★ 操作列表头
+  st('commThPayStatus','comm_col_paystatus','付款状态');   // ★COMM-PAYST-COL-20261103★ 付款状态列表头
+  st('commThOps','comm_col_ops','操作');   // ★COMM-OPS-COL-20261103★ 操作列表头（在付款状态右侧）
   /* ★COMM-OPS-COL-20261103★ 删除确认气泡开着时切语言：不关闭，只把标题/提示/按钮换成新语言 */
   if (typeof commDelLocalize === 'function') commDelLocalize();
   // 顶部三按钮 + 报告下拉
@@ -13080,7 +13090,7 @@ function renderCommission(){
   if (!tb) return;
   var t = T();
   if (!COMM_RECORDS.length){
-    tb.innerHTML = '<tr><td class="empty-cell" colspan="14" style="text-align:center;">' + (t.comm_no_data || '暂无数据') + '</td></tr>';
+    tb.innerHTML = '<tr><td class="empty-cell" colspan="15" style="text-align:center;">' + (t.comm_no_data || '暂无数据') + '</td></tr>';
     autoFitCommissionTable();   // 空表也按表头重测（切语言后表头长短会变）
     return;
   }
@@ -13100,8 +13110,14 @@ function renderCommission(){
       + '<td data-col="10">' + _escComm(r.rateUSD) + '</td>'
       + '<td data-col="11" style="text-align:center;white-space:nowrap;"><button class="btn-action btn-action-sm" onclick="openCommissionEditModal(' + i + ')">' + (t.comm_col_edit || '编辑') + '</button></td>'
       + '<td data-col="13">' + _escComm(r.remark) + '</td>'
+      /* ★COMM-PAYST-COL-20261103★ 付款状态列：自动计算，口径与「编辑项目佣金」台账总计行状态完全一致
+         （全部付清=完成支付！ / 付了一部分=部分支付 / 一分未付=未支付），三语随词条自动切换 */
+      + (function(){
+          var ps = commRecordPayStatus(r);
+          return '<td class="comm-payst ' + ps.cls + '" data-col="14" title="' + _escAttrComm(ps.txt) + '">' + _escComm(ps.txt) + '</td>';
+        })()
       /* ★COMM-OPS-COL-20261103★ 操作列：复制（即时生成一条相同记录）/ 删除（密码确认） */
-      + '<td class="comm-ops-cell" data-col="14">'
+      + '<td class="comm-ops-cell" data-col="15">'
       +   '<button type="button" class="comm-ops-btn comm-ops-copy" title="' + _escAttrComm(t.comm_op_copy_tip || '复制该记录，并立即生成一条相同的新记录') + '" onclick="commCopyRecord(' + i + ')">' + (t.comm_act_copy || '复制') + '</button>'
       +   '<button type="button" class="comm-ops-btn comm-ops-del" title="' + _escAttrComm(t.comm_op_del_tip || '删除该记录（需输入密码）') + '" onclick="commAskDelete(' + i + ', event)">' + (t.comm_act_delete || '删除') + '</button>'
       + '</td>'
@@ -13109,6 +13125,46 @@ function renderCommission(){
   });
   tb.innerHTML = html;
   autoFitCommissionTable();   // 数据变化 → 重测列宽 + 重算容器高度
+}
+/* ==================== 个人佣金 · 付款状态列（自动计算） ====================
+   ★COMM-PAYST-COL-20261103★ 口径 = 「编辑项目佣金」支付台账总计行右下角的状态：
+     · 需要支付佣金 = 收益分配计划(record.plan) 三币合计
+     · 已支付/理论 = 各受益人支付明细卡片(record.cardPayments) 的「理论应支付金额」合计
+     · 判据与 _commLedgerState 完全一致（任一币种理论 ≥ 需要 → 完成支付；有付款 → 部分支付；否则未支付）
+   无 plan 时回退受益人名录（totalRMB/paidRMB 等），保证历史记录也有状态。
+   ==================================================================== */
+function commRecordPayStatus(rec){
+  var plan = (rec && rec.plan) || [];
+  var cps  = (rec && rec.cardPayments) || {};
+  var nR = 0, nU = 0, nV = 0, tR = 0, tU = 0, tV = 0, pR = 0, pU = 0, pV = 0;
+  var i;
+  if (plan.length){
+    for (i = 0; i < plan.length; i++){
+      var p = plan[i] || {};
+      nR += _commParseNum(p.rmb); nU += _commParseNum(p.usd); nV += _commParseNum(p.vnd);
+      var rows = cps[i] || [];
+      if (rows.length){
+        var s = _benCardSum(rows);          // 与台账同源：已支付取卡片「理论应支付金额」小计
+        tR += s.theo.rmb; tU += s.theo.usd; tV += s.theo.vnd;
+        pR += s.theo.rmb; pU += s.theo.usd; pV += s.theo.vnd;
+      }
+    }
+    if (!tR && !tU && !tV){                 // 卡片还没录：退回受益人名录里的「已支付」
+      var bens0 = (rec && rec.beneficiaries) || [];
+      for (i = 0; i < bens0.length; i++){
+        var b0 = bens0[i] || {};
+        pR += _commParseNum(b0.paidRMB); pU += _commParseNum(b0.paidUSD); pV += _commParseNum(b0.paidVND);
+      }
+    }
+  } else {
+    var bens = (rec && rec.beneficiaries) || [];
+    for (i = 0; i < bens.length; i++){
+      var b = bens[i] || {};
+      nR += _commParseNum(b.totalRMB); nU += _commParseNum(b.totalUSD); nV += _commParseNum(b.totalVND);
+      pR += _commParseNum(b.paidRMB);  pU += _commParseNum(b.paidUSD);  pV += _commParseNum(b.paidVND);
+    }
+  }
+  return _commLedgerState(nR, nU, nV, tR, tU, tV, pR, pU, pV);
 }
 /* ==================== 个人佣金 · 操作列（复制 / 删除） ====================
    ★COMM-OPS-COL-20261103★
@@ -16792,7 +16848,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z274";  // 版本标记：Z274 = 个人佣金表新增「操作」列（复制 / 删除，三语 + 悬停释意）：复制=立即生成一条相同新记录(合同号加 -COPY<n>)，删除=鼠标位置橙色气泡「确定删除吗？」输入密码 money(强制小写/大小写不敏感)后立即删除(内存+后端 DELETE 接口)；切语言时气泡保持打开并自动换语言
+const PERM_BUILD = "build 2026-11-03-Z275";  // 版本标记：Z275 = 个人佣金表新增「付款状态」列（三语，自动计算，口径=编辑项目佣金支付台账总计行右下角状态：完成支付！/部分支付/未支付）+ 操作列宽度减半（12.5%→6.5%，按钮同步缩窄），共 15 列重新配平
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
