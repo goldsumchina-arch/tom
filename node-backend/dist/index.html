@@ -4797,38 +4797,10 @@ function _ovLoadChartLib(cb){
         <div class="cpc-chk" id="commPtRateChk"></div>
         <div class="cpc-chk" id="commPtAmtChk"></div>
       </div>
-      <!-- 受益人&秘密佣金&支付详情：合并标题(#N 自动编号) + 多列表格 + 新增受益人按钮 -->
-      <div class="cf-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <!-- ★COMM-LEDGER-ONLY-20261103★ 按要求移除「受益人明细表(benTable)」与「＋ 新增受益人」按钮：
+           该明细的比率/需要支付/已支付/待支付/次数/状态，已全部由上方台账表承载，避免两处重复维护。 -->
+      <div class="cf-section-title">
         <span><span id="commBenSeq">#1</span> ： <span id="commSecDetail">佣金支付详情</span></span>
-        <button class="btn-action" id="commBtnAddBeneficiary" style="padding:7px 14px;font-size:12px;" onclick="openBeneficiaryModal()">＋ <span id="commBtnAddBenText">新增受益人</span></button>
-      </div>
-      <div class="users-table-wrap">
-        <table class="users-table" id="benTable">
-          <thead>
-            <tr>
-              <th rowspan="2" id="benThNo" style="width:56px;">序号</th>
-              <th rowspan="2" id="benThName">受益人</th>
-              <th colspan="3" id="benThTotal" style="text-align:center;">需支付总金额</th>
-              <th rowspan="2" id="benThSignDate">合同签订时间</th>
-              <th rowspan="2" id="benThDepositDate">定金给付时间</th>
-              <th rowspan="2" id="benThPayCount">支付次数</th>
-              <th rowspan="2" id="benThCurrency">支付货币</th>
-              <th colspan="3" id="benThPaid" style="text-align:center;">支付总金额</th>
-              <th rowspan="2" id="benThNature">支付性质</th>
-              <th rowspan="2" id="benThNote">说明</th>
-              <th rowspan="2" id="benThEdit" style="width:84px;">编辑</th>
-            </tr>
-            <tr>
-              <th class="comm-sub comm-rmb">RMB</th>
-              <th class="comm-sub comm-usd">USD</th>
-              <th class="comm-sub comm-vnd">VND</th>
-              <th class="comm-sub comm-rmb">RMB</th>
-              <th class="comm-sub comm-usd">USD</th>
-              <th class="comm-sub comm-vnd">VND</th>
-            </tr>
-          </thead>
-          <tbody id="benTbody"></tbody>
-        </table>
       </div>
     </div>
     </div>
@@ -17004,7 +16976,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z234";  // 版本标记：Z234 = 台账表表头改橙色背景（分组行 #e8720c、币种子表头 #f08a2a，均白字）
+const PERM_BUILD = "build 2026-11-03-Z235";  // 版本标记：Z235 = 删除「受益人明细表(benTable)」与「＋新增受益人」按钮（信息已由台账表承载；renderBeneficiaryTable 无 #benTbody 时直接 return，逻辑自然停用）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
