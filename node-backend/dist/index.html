@@ -16601,7 +16601,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z269";  // 版本标记：Z269 = 规范「编辑用户权限」弹窗右上角按钮：□ 最大化与 × 关闭放进标题栏 .modal-actions 内联成组（24×24 圆角、白色描边、hover 高亮），不再被搬出容器导致重叠/只剩一个图标
+const PERM_BUILD = "build 2026-11-03-Z270";  // 版本标记：Z270 = 修复弹窗右上角出现两个最大化 □：.modal-mask 遮罩层与内层 .modal 都在可注入选择器里，跳过遮罩只让内层注入，并在 .modal-actions 内做去重
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -32855,6 +32855,10 @@ function _doExportOverviewPDF(){
     // 给每个弹窗标题栏旁注入 □ 最大化按钮（与关闭按钮并排）
     function injectMaxBtn(box) {
       if (!box || box.getAttribute('data-mmax-btn')) return;
+      /* ★MODAL-ACTIONS-DEDUP-20261103★ .modal-mask 只是遮罩包装层，真正的弹窗盒子是它里面的 .modal：
+         两者都在 BOX_SEL 里 → 会给同一个标题栏注入两个 □。这里直接跳过外层遮罩，只让内层盒子注入；
+         最大化作用于内层（.mmax 的样式如 .mmax > .modal-header 也只对内层生效）。 */
+      if (box.classList && box.classList.contains('modal-mask') && box.querySelector('.modal')) return;
       box.setAttribute('data-mmax-btn', '1');
       var btn = document.createElement('button');
       btn.type = 'button';
@@ -32874,6 +32878,11 @@ function _doExportOverviewPDF(){
            旧逻辑会 appendChild 到 .modal 末尾，导致右上角只剩一个孤零零的 □、按钮重叠错位。 */
         var acts = head.querySelector('.modal-actions');
         if (acts) {
+          /* 同一容器内只保留一个 □（其它注入路径可能已加过，避免出现两个最大化按钮） */
+          var olds = acts.querySelectorAll('.mmax-btn');
+          for (var oi = 0; oi < olds.length; oi++) {
+            if (olds[oi] !== btn && olds[oi].parentNode) olds[oi].parentNode.removeChild(olds[oi]);
+          }
           if (btn.parentElement !== acts) acts.insertBefore(btn, acts.firstChild);
           return;
         }
