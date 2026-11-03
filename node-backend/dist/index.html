@@ -2165,7 +2165,8 @@ function _ovLoadChartLib(cb){
 .ben-card { border:2px solid #000; border-radius:8px; background:#fff; overflow:hidden; min-width:0; }
 .ben-card-head { display:flex; align-items:center; justify-content:space-between; padding:6px 10px; background:#f3f6fb; border-bottom:1px solid #e3e8ef; }
 .ben-card-title { font-weight:700; color:#2c3e50; font-size:13px; }
-.ben-card-add { padding:4px 10px; font-size:12px; }
+/* ★BENCARD-BTN-20261103★ 「＋ 增加记录」按钮：更小、字号降两号(13→11px)、橙色改蓝色（用更高优先级压过后面的 .btn-action 定义） */
+.ben-card-head .ben-card-add { padding:2px 8px !important; font-size:11px !important; line-height:14px !important; border-radius:4px !important; background:linear-gradient(135deg,#2e86de,#1f6fc4) !important; color:#fff !important; border:none !important; font-weight:600 !important; }
 .ben-card-scroll { overflow-x:hidden; min-width:0; }
 .ben-card-table { width:100%; max-width:100%; border-collapse:collapse; font-size:8.5px; table-layout:fixed; font-variant-numeric:tabular-nums; }
 .ben-card-table th, .ben-card-table td { border:1px solid #e3e8ef; padding:2px 3px; text-align:center; white-space:nowrap; box-sizing:border-box; }
@@ -16229,7 +16230,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z249";  // 版本标记：Z249 = 支付明细卡片：理论/实际应支付金额数值加粗、字号各 +2（输入框 8→10px，单元格 8.5→10.5px），并全部改为整数显示（四舍五入，无小数点），自动换算结果同样存整数
+const PERM_BUILD = "build 2026-11-03-Z250";  // 版本标记：Z250 = 支付明细卡片：「＋ 增加记录」按钮字号降两号(13→11px)、padding 缩到 2px/8px、背景由橙色渐变改为蓝色渐变(2e86de→1f6fc4)，用 .ben-card-head .ben-card-add 提高优先级压过后面的 .btn-action 定义
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
