@@ -2107,17 +2107,25 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-bar { color:#c6d2de; margin:0 6px; }
   .comm-point-check .cpc-num { color:#e8720c; font-weight:800; font-size:14px; }
   .comm-point-check .cpc-na { color:#a6b3c2; }
-  /* ★COMM-BEN-GRID-20261103★ 受益人名录用「一个 grid + 每行 display:contents」：
-     列宽由所有行共同决定，¥ / $ / ₫ 三个货币符号上下严格对齐 */
-  .comm-point-check .cpc-ben-list { display:grid; align-items:baseline; justify-content:start;
-    grid-template-columns: 26px max-content 74px max-content max-content max-content;
-    column-gap:16px; row-gap:3px; margin:5px 0 7px 0; padding-left:10px;
-    border-left:3px solid #e9eef4; font-size:12.5px; overflow-x:auto; }
-  .comm-point-check .cpc-ben-row { display:contents; }
-  .comm-point-check .cpc-ben-idx { color:#8a9bb0; font-weight:700; }
-  .comm-point-check .cpc-ben-name { color:#2c3e50; font-weight:700; }
-  .comm-point-check .cpc-ben-ratio { color:#44546a; font-weight:700; font-variant-numeric:tabular-nums; }
-  .comm-point-check .cpc-ben-m { font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  /* ★COMM-LEDGER-20261103★ 受益人名录支付台账表：两行分组表头 + 三币分列（¥/$/₫ 天然对齐） */
+  .comm-point-check .cpc-ledger-wrap { margin:6px 0 8px 0; overflow-x:auto; }
+  .comm-point-check .cpc-ledger { width:100%; border-collapse:collapse; font-size:10.5px;
+    font-variant-numeric:tabular-nums; }
+  .comm-point-check .cpc-ledger th, .comm-point-check .cpc-ledger td {
+    border:1px solid #e3eaf2; padding:2px 4px; white-space:nowrap; line-height:1.55; }
+  .comm-point-check .cpc-ledger thead th { background:#f4f8fc; color:#44546a; font-weight:700; text-align:center; }
+  .comm-point-check .cpc-ledger tbody td { color:#2c3e50; font-weight:700; text-align:right; }
+  .comm-point-check .cpc-ledger tbody td.cpc-td-seq,
+  .comm-point-check .cpc-ledger tbody td.cpc-td-ratio,
+  .comm-point-check .cpc-ledger tbody td.cpc-td-cnt { text-align:center; color:#8a9bb0; }
+  .comm-point-check .cpc-ledger tbody td.cpc-td-name { text-align:left; color:#2c3e50; }
+  .comm-point-check .cpc-ledger tbody td.cpc-rmb { color:#d64541; }
+  .comm-point-check .cpc-ledger tbody td.cpc-usd { color:#2e86de; }
+  .comm-point-check .cpc-ledger tbody td.cpc-vnd { color:#1e9e6a; }
+  .comm-point-check .cpc-ledger tbody td.cpc-st-done { text-align:center; color:#1e9e6a; }
+  .comm-point-check .cpc-ledger tbody td.cpc-st-part { text-align:center; color:#e8720c; }
+  .comm-point-check .cpc-ledger tbody td.cpc-st-none { text-align:center; color:#98a6b5; }
+  .comm-point-check .cpc-ledger tbody td.cpc-td-empty { text-align:center; color:#a6b3c2; font-weight:600; }
   .comm-point-check .cpc-chk { padding:3px 0; }
   .comm-point-check .cpc-chk-title { font-size:13px; font-weight:700; color:#5a6b82; }
   .comm-point-check .cpc-chk-body { font-size:12.5px; color:#2c3e50; font-weight:700;
@@ -4750,7 +4758,8 @@ function _ovLoadChartLib(cb){
              ② 受益人 N 名 + 每人名字/比率/三币金额  ③ 总比率 vs 个人合计  ④ 总金额 vs 个人合计 -->
         <div class="cpc-row"><span class="cpc-label" id="commPtExpectLbl">预期佣金（设备金额 × 点数）</span><span class="cpc-val" id="commPtExpect">—</span></div>
         <div class="cpc-row"><span class="cpc-label" id="commPtBenLbl">受益人</span><span class="cpc-val" id="commPtBenCount">—</span></div>
-        <div class="cpc-ben-list" id="commPtBenList"></div>
+        <!-- ★COMM-LEDGER-20261103★ 受益人名录 = 支付台账表（序号/受益人/佣金比率/需要支付佣金/支付次数/已支付/待支付/支付状态），表头两行分组 -->
+        <div class="cpc-ledger-wrap" id="commPtBenList"></div>
         <div class="cpc-chk" id="commPtRateChk"></div>
         <div class="cpc-chk" id="commPtAmtChk"></div>
       </div>
@@ -7054,7 +7063,11 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
   comm_pt_ben_head:"受益人", comm_pt_ben_unit:"%s 名", comm_pt_rate_chk:"总比率校验", comm_pt_amt_chk:"总金额校验",
   comm_pt_total:"总额", comm_pt_self:"个人合计",
   comm_pt_rate_ok:"总比率与个人合计一致", comm_pt_rate_diff:"与个人合计有差额",
-  comm_pt_amt_ok:"总佣金金额与个人合计一致", comm_pt_amt_diff:"与个人合计有差额"
+  comm_pt_amt_ok:"总佣金金额与个人合计一致", comm_pt_amt_diff:"与个人合计有差额",
+  comm_led_seq:"序号", comm_led_ben:"受益人", comm_led_ratio:"佣金比率",
+  comm_led_payable:"需要支付佣金", comm_led_pay_count:"支付次数",
+  comm_led_paid:"已经支付佣金", comm_led_unpaid:"待支付佣金", comm_led_status:"支付状态",
+  comm_led_st_done:"已结清", comm_led_st_part:"部分支付", comm_led_st_none:"未支付"
   },
   en: { 
     // ---- Login page / Reset Password / Forget Password (top-level keys for data-i18n scan) ----
@@ -7837,7 +7850,11 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
   comm_pt_ben_head:"Beneficiaries", comm_pt_ben_unit:"%s person(s)", comm_pt_rate_chk:"Total rate check", comm_pt_amt_chk:"Total amount check",
   comm_pt_total:"Total", comm_pt_self:"Personal sum",
   comm_pt_rate_ok:"Total rate matches personal sum", comm_pt_rate_diff:"Variance vs personal sum",
-  comm_pt_amt_ok:"Total commission matches personal sum", comm_pt_amt_diff:"Variance vs personal sum"
+  comm_pt_amt_ok:"Total commission matches personal sum", comm_pt_amt_diff:"Variance vs personal sum",
+  comm_led_seq:"No.", comm_led_ben:"Beneficiary", comm_led_ratio:"Commission Rate",
+  comm_led_payable:"Commission Payable", comm_led_pay_count:"Payments",
+  comm_led_paid:"Commission Paid", comm_led_unpaid:"Commission Outstanding", comm_led_status:"Status",
+  comm_led_st_done:"Settled", comm_led_st_part:"Partially Paid", comm_led_st_none:"Unpaid"
   },
   vi: { 
     // ---- Trang đăng nhập / Đặt lại mật khẩu / Quên mật khẩu (key cấp cao nhất) ----
@@ -8618,7 +8635,11 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
   comm_pt_ben_head:"Người thụ hưởng", comm_pt_ben_unit:"%s người", comm_pt_rate_chk:"Kiểm tra tổng tỷ lệ", comm_pt_amt_chk:"Kiểm tra tổng số tiền",
   comm_pt_total:"Tổng", comm_pt_self:"Tổng cá nhân",
   comm_pt_rate_ok:"Tổng tỷ lệ khớp tổng cá nhân", comm_pt_rate_diff:"Chênh lệch so với tổng cá nhân",
-  comm_pt_amt_ok:"Tổng hoa hồng khớp tổng cá nhân", comm_pt_amt_diff:"Chênh lệch so với tổng cá nhân"
+  comm_pt_amt_ok:"Tổng hoa hồng khớp tổng cá nhân", comm_pt_amt_diff:"Chênh lệch so với tổng cá nhân",
+  comm_led_seq:"STT", comm_led_ben:"Người thụ hưởng", comm_led_ratio:"Tỷ lệ hoa hồng",
+  comm_led_payable:"Hoa hồng cần trả", comm_led_pay_count:"Số lần thanh toán",
+  comm_led_paid:"Hoa hồng đã trả", comm_led_unpaid:"Hoa hồng chưa trả", comm_led_status:"Trạng thái",
+  comm_led_st_done:"Đã tất toán", comm_led_st_part:"Trả một phần", comm_led_st_none:"Chưa trả"
   }
 };
 
@@ -14234,7 +14255,9 @@ function commPointCheck(){
   if (cEl) cEl.innerHTML = String(t.comm_pt_ben_unit || '%s 名')
     .replace('%s', '<span class="cpc-num">' + n + '</span>');
   var listEl = document.getElementById('commPtBenList');
-  var sumR = 0, sumU = 0, sumV = 0, sumPct = 0, html = '';
+  var bens = window.__beneficiaries || [];
+  var sumR = 0, sumU = 0, sumV = 0, sumPct = 0, bodyHtml = '';
+  var H = function(k, fb){ return t[k] || fb; };
   for (var i = 0; i < n; i++){
     var r = st[i] || { name:'', custom:'', ratio:'', rmb:'', usd:'', vnd:'' };
     var p = parseFloat(String(r.ratio || '').replace(/[^\d.]/g, ''));
@@ -14243,18 +14266,54 @@ function commPointCheck(){
     var rr = _commParseNum(r.rmb), uu = _commParseNum(r.usd), vv = _commParseNum(r.vnd);
     sumR += rr; sumU += uu; sumV += vv;
     var nm = String(r.name === 'OTHER' ? (r.custom || 'OTHER') : (r.name || '')).trim();
-    // ★COMM-BEN-GRID-20261103★ 三币各自独立成列（¥ / $ / ₫ 上下严格对齐），行用 display:contents 共享列宽
-    var hasAmt = rr > 0 || uu > 0 || vv > 0;
-    html += '<div class="cpc-ben-row">'
-      +   '<span class="cpc-ben-idx">#' + (i + 1) + '</span>'
-      +   '<span class="cpc-ben-name">' + _escComm(nm || '—') + '</span>'
-      +   '<span class="cpc-ben-ratio">' + (okP ? fmtPlanRatio4(r.ratio) + '%' : '—') + '</span>'
-      +   '<span class="cpc-ben-m cpc-rmb">' + (hasAmt ? fmtPlanMoney('rmb', rr) : '<span class="cpc-na">—</span>') + '</span>'
-      +   '<span class="cpc-ben-m cpc-usd">' + (hasAmt ? fmtPlanMoney('usd', uu) : '<span class="cpc-na">—</span>') + '</span>'
-      +   '<span class="cpc-ben-m cpc-vnd">' + (hasAmt ? fmtPlanMoney('vnd', vv) : '<span class="cpc-na">—</span>') + '</span>'
-      + '</div>';
+    // 该受益人已录入的收款记录（按 L1/C1/TV/TM/OTHER 同名汇总）
+    var hit = bens.filter(function(b){
+      return String(b.name || '').trim().toUpperCase() === String(r.name || '').trim().toUpperCase();
+    });
+    var payCnt = 0, pR = 0, pU = 0, pV = 0;
+    hit.forEach(function(b){
+      payCnt += Number(b.payCount) || ((b.payments || []).length);
+      pR += _commParseNum(b.paidRMB); pU += _commParseNum(b.paidUSD); pV += _commParseNum(b.paidVND);
+    });
+    var uR = rr - pR, uU = uu - pU, uV = vv - pV;   // 待支付 = 需要支付 − 已经支付
+    var stCls = 'cpc-st-none', stTxt = H('comm_led_st_none', '未支付');
+    if (rr > 0 && pR >= rr - 0.01 && pU >= uu - 0.01 && pV >= vv - 0.01){ stCls = 'cpc-st-done'; stTxt = H('comm_led_st_done', '已结清'); }
+    else if (pR > 0 || pU > 0 || pV > 0){ stCls = 'cpc-st-part'; stTxt = H('comm_led_st_part', '部分支付'); }
+    // ★COMM-LEDGER-20261103★ 需要支付 / 已支付 / 待支付 各占三列（RMB·USD·VND 分列 → 货币符号天然对齐）
+    bodyHtml += '<tr>'
+      +   '<td class="cpc-td-seq">#' + (i + 1) + '</td>'
+      +   '<td class="cpc-td-name">' + _escComm(nm || '—') + '</td>'
+      +   '<td class="cpc-td-ratio">' + (okP ? fmtPlanRatio4(r.ratio) + '%' : '—') + '</td>'
+      +   '<td class="cpc-rmb">' + (rr > 0 ? fmtPlanMoney('rmb', rr) : '—') + '</td>'
+      +   '<td class="cpc-usd">' + (uu > 0 ? fmtPlanMoney('usd', uu) : '—') + '</td>'
+      +   '<td class="cpc-vnd">' + (vv > 0 ? fmtPlanMoney('vnd', vv) : '—') + '</td>'
+      +   '<td class="cpc-td-cnt">' + (payCnt > 0 ? payCnt : '—') + '</td>'
+      +   '<td class="cpc-rmb">' + (pR > 0 ? fmtPlanMoney('rmb', pR) : '—') + '</td>'
+      +   '<td class="cpc-usd">' + (pU > 0 ? fmtPlanMoney('usd', pU) : '—') + '</td>'
+      +   '<td class="cpc-vnd">' + (pV > 0 ? fmtPlanMoney('vnd', pV) : '—') + '</td>'
+      +   '<td class="cpc-rmb">' + (uR > 0.01 ? fmtPlanMoney('rmb', uR) : '—') + '</td>'
+      +   '<td class="cpc-usd">' + (uU > 0.01 ? fmtPlanMoney('usd', uU) : '—') + '</td>'
+      +   '<td class="cpc-vnd">' + (uV > 0.01 ? fmtPlanMoney('vnd', uV) : '—') + '</td>'
+      +   '<td class="' + stCls + '">' + stTxt + '</td>'
+      + '</tr>';
   }
-  if (listEl) listEl.innerHTML = html;
+  if (listEl){
+    listEl.innerHTML = '<table class="cpc-ledger"><thead>'
+      + '<tr>'
+      +   '<th rowspan="2">' + H('comm_led_seq', '序号') + '</th>'
+      +   '<th rowspan="2">' + H('comm_led_ben', '受益人') + '</th>'
+      +   '<th rowspan="2">' + H('comm_led_ratio', '佣金比率') + '</th>'
+      +   '<th colspan="3">' + H('comm_led_payable', '需要支付佣金') + '</th>'
+      +   '<th rowspan="2">' + H('comm_led_pay_count', '支付次数') + '</th>'
+      +   '<th colspan="3">' + H('comm_led_paid', '已经支付佣金') + '</th>'
+      +   '<th colspan="3">' + H('comm_led_unpaid', '待支付佣金') + '</th>'
+      +   '<th rowspan="2">' + H('comm_led_status', '支付状态') + '</th>'
+      + '</tr>'
+      + '<tr><th>RMB</th><th>USD</th><th>VND</th><th>RMB</th><th>USD</th><th>VND</th><th>RMB</th><th>USD</th><th>VND</th></tr>'
+      + '</thead><tbody>'
+      + (bodyHtml || '<tr><td class="cpc-td-empty" colspan="14">—</td></tr>')
+      + '</tbody></table>';
+  }
 
   // ③ 总比率 vs 个人比率合计
   var rateChk = document.getElementById('commPtRateChk');
@@ -16831,7 +16890,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z223";  // 版本标记：Z223 = 受益人名录三币独立成列（¥/$/₫ 货币符号上下严格对齐，一个 grid + 行 display:contents）
+const PERM_BUILD = "build 2026-11-03-Z224";  // 版本标记：Z224 = 受益人名录升级为支付台账表（序号/受益人/佣金比率/需要支付·已支付·待支付各三币/支付次数/支付状态，表头三语联动，一屏放下不滚动）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
