@@ -194,6 +194,21 @@ function buildCrmColGroup() {
   return html;
 }
 
+// ==================== 列宽同帧冻结（防「切进来闪一下「等宽挤压」） ====================
+// ★LG-FREEZE-NOW-20261103★ 现象：切到「潜在项目」时，表格会先按「容器宽 ÷ 48 列」等分绘制
+// 一帧（表头文字竖排、数字挤成一条），约 30~150ms 后列宽突然恢复。
+// 根因：CSS 是 table-layout:fixed，列宽全靠 index.html 的 LG 冻结模块写进 <col style="width">。
+// buildCrmColGroup 建出来的 48 个 <col> 只有前两列带 width 属性，其余为空 → 首帧按等分绘制；
+// 而 renderCrmThead 定义在本文件（window.load 之后才动态加载），LG 启动时的 patchRenderer 抓不到它，
+// 只能等 MutationObserver 30ms 兜底才补冻 → 中间那一帧就是用户看到的闪动。
+// 这里在结构建好后【同一个任务内】主动冻结一次，绘制前列宽已是正确值（不会再有闪动）。
+function _crmFreezeColsNow() {
+  try {
+    var tbl = document.getElementById('crmTable');
+    if (tbl && window.LG && typeof LG.freezeTable === 'function') LG.freezeTable(tbl);
+  } catch (e) {}
+}
+
 // ==================== 列可见性单一事实源（根治表头/数据错位） ====================
 // 根因：renderCrmData 每次重新生成 tbody（新 td 不带 .col-hidden），而 thead/colgroup
 // 的折叠类还在 → 表头与数据可见列数不一致 → 错位。
@@ -573,6 +588,7 @@ function loadCrm(isAuto) {
   } else if (typeof updateCrmTheadTextOnly === 'function') {
     updateCrmTheadTextOnly();
   }
+  _crmFreezeColsNow();   // ★LG-FREEZE-NOW-20261103★ 首帧前补冻列宽（否则固定布局下 48 列先等分绘制一帧）
   updateCrmCollapsedBar();
   // thead 重建后立即按单一事实源恢复列可见性与组头 colspan（含无数据路径）
   if (typeof syncCrmColVisibility === 'function') syncCrmColVisibility();
@@ -666,6 +682,7 @@ function updateCrmTheadTextOnly() {
       th.innerHTML = renderCrmThead();
       if (typeof injectCrmToggleBtns === 'function') injectCrmToggleBtns();
       if (typeof syncCrmColVisibility === 'function') syncCrmColVisibility();
+      _crmFreezeColsNow();   // ★LG-FREEZE-NOW-20261103★ 重建表头后同帧补冻列宽
       return;
     }
     // 真损坏（有内容但一个 th[data-col] 都没有）→ 无从打补丁，只能重建自愈。
@@ -675,6 +692,7 @@ function updateCrmTheadTextOnly() {
       th.innerHTML = renderCrmThead();
       if (typeof injectCrmToggleBtns === 'function') injectCrmToggleBtns();
       if (typeof syncCrmColVisibility === 'function') syncCrmColVisibility();
+      _crmFreezeColsNow();   // ★LG-FREEZE-NOW-20261103★ 重建表头后同帧补冻列宽
       return;
     }
     // 期望文案：同一套渲染函数在【游离 thead】里生成（不进文档流，不触发布局/绘制）

@@ -116,6 +116,19 @@ function buildLostColGroup() {
   return html;
 }
 
+// ==================== 列宽同帧冻结（防「切进来闪一下「等宽挤压」） ====================
+// ★LG-FREEZE-NOW-20261103★ 与 crm_table.js 完全同理：CSS 是 table-layout:fixed，列宽全靠
+// index.html 的 LG 冻结模块写进 <col style="width">；buildLostColGroup 建出的 <col> 只有前两列
+// 带 width，其余留空 → 首帧按「容器宽 ÷ 列数」等分绘制（表头竖排），等 LG 30ms 兜底补冻才恢复。
+// renderLostThead 定义在本文件（window.load 后才动态加载），LG 启动时的 patchRenderer 抓不到 →
+// 必须在结构建好后自己同帧冻结一次。
+function _lostFreezeColsNow() {
+  try {
+    var tbl = document.getElementById('lostTable');
+    if (tbl && window.LG && typeof LG.freezeTable === 'function') LG.freezeTable(tbl);
+  } catch (e) {}
+}
+
 // ==================== 列可见性单一事实源（根治表头/数据错位） ====================
 // 与 CRM/Won 同款修复：renderLostData 再生 tbody 后由包装器自动调用，
 // 全表 49 列按期望隐藏集合统一应用，th/td/col 永远一致。
@@ -535,6 +548,7 @@ function loadLost(isAuto) {
   } else if (typeof updateLostTheadTextOnly === 'function') {
     updateLostTheadTextOnly();
   }
+  _lostFreezeColsNow();   // ★LG-FREEZE-NOW-20261103★ 首帧前补冻列宽（否则固定布局下先等分绘制一帧）
   updateLostCollapsedBar();
   // thead 重建后立即按单一事实源恢复列可见性与组头 colspan（含无数据路径）
   if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
@@ -621,6 +635,7 @@ function updateLostTheadTextOnly() {
       th.innerHTML = renderLostThead();
       if (typeof injectLostToggleBtns === 'function') injectLostToggleBtns();
       if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
+      _lostFreezeColsNow();   // ★LG-FREEZE-NOW-20261103★ 重建表头后同帧补冻列宽
       return;
     }
     // 真损坏（有内容但一个 th[data-col] 都没有）→ 无从打补丁，只能重建自愈。
@@ -630,6 +645,7 @@ function updateLostTheadTextOnly() {
       th.innerHTML = renderLostThead();
       if (typeof injectLostToggleBtns === 'function') injectLostToggleBtns();
       if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
+      _lostFreezeColsNow();   // ★LG-FREEZE-NOW-20261103★ 重建表头后同帧补冻列宽
       return;
     }
     // 期望文案：同一套渲染函数在【游离 thead】里生成（不进文档流，不触发布局/绘制）
