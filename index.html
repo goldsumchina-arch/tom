@@ -2109,19 +2109,19 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-na { color:#a6b3c2; }
   /* ★COMM-LEDGER-20261103★ 受益人名录支付台账表：两行分组表头 + 三币分列（¥/$/₫ 天然对齐） */
   .comm-point-check .cpc-ledger-wrap { margin:6px 0 8px 0; overflow-x:auto; }
-  .comm-point-check .cpc-ledger { width:100%; border-collapse:collapse; font-size:10.5px;
+  .comm-point-check .cpc-ledger { width:100%; border-collapse:collapse; font-size:9px;
     font-variant-numeric:tabular-nums; }
   .comm-point-check .cpc-ledger th, .comm-point-check .cpc-ledger td {
-    border:1px solid #e3eaf2; padding:2px 4px; line-height:1.55; }
+    border:1px solid #e3eaf2; padding:1px 3px; line-height:1.5; }
   .comm-point-check .cpc-ledger td { white-space:nowrap; }
   .comm-point-check .cpc-ledger thead th { background:#f4f8fc; color:#44546a; font-weight:700;
     text-align:center; white-space:normal; word-break:break-word; }
   /* 非金额列固定窄宽 → 表头文字自动分两行（佣金/比率、支付/次数、支付/状态），宽度让给三币金额 */
-  .comm-point-check .cpc-ledger thead th.cpc-th-seq { width:34px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-ben { width:58px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-ratio { width:60px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-cnt { width:50px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-status { width:56px; }
+  .comm-point-check .cpc-ledger thead th.cpc-th-seq { width:28px; }
+  .comm-point-check .cpc-ledger thead th.cpc-th-ben { width:46px; }
+  .comm-point-check .cpc-ledger thead th.cpc-th-ratio { width:50px; }
+  .comm-point-check .cpc-ledger thead th.cpc-th-cnt { width:42px; }
+  .comm-point-check .cpc-ledger thead th.cpc-th-status { width:44px; }
   .comm-point-check .cpc-ledger tfoot td { background:#f7fafd; border-top:2px solid #d7e3ef;
     color:#2c3e50; font-weight:800; text-align:right; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-total { text-align:center; color:#44546a; }
@@ -14245,10 +14245,10 @@ function _commLedgerFit(){
     tbl.style.width = prev || '100%';
     return w;
   };
-  var size = 10.5, guard = 0, min = 8;
+  var size = 9, guard = 0, min = 7;
   tbl.style.fontSize = size + 'px';
-  while (needWidth() > wrap.clientWidth + 1 && size > min && guard++ < 12){
-    size = Math.round((size - 0.5) * 10) / 10;
+  while (needWidth() > wrap.clientWidth + 1 && size > min && guard++ < 16){
+    size = Math.round((size - 0.25) * 100) / 100;
     tbl.style.fontSize = size + 'px';
   }
   if (needWidth() > wrap.clientWidth + 1) wrap.style.overflowX = 'auto';
@@ -16956,7 +16956,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z225";  // 版本标记：Z225 = 台账表列宽重排（非金额列表头自动分行）+ 字号自适应压缩（不出水平滚动条）+ 底部「总计」行（比率/三币/支付次数纵向合计）
+const PERM_BUILD = "build 2026-11-03-Z226";  // 版本标记：Z226 = 台账表整体收紧（9px 字号/1px 内边距/窄列 28·46·50·42·44，14 列真实所需 897px），并保留字号自适应兜底
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
