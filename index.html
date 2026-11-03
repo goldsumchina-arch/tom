@@ -2283,6 +2283,16 @@ function _ovLoadChartLib(cb){
   .commission-form .login-field.req.invalid input,
   .commission-form .login-field.req.invalid select { border-color:#e74c3c !important; box-shadow:0 0 0 3px rgba(231,76,60,.12); }
   .commission-form input { width:100%; box-sizing:border-box; }
+  /* ★COMM-PT-SUF-20261103★ 佣金总点数输入框内嵌「%」视觉后缀：
+     只做展示（pointer-events:none），不进入输入值/数据；输入框右侧留出 24px 避免数字被遮。
+     margin-top:auto 复用 cols-6/cols-8 的「输入框贴底对齐」规则（wrapper 才是 flex 子项）。 */
+  .commission-form .cf-suffix-wrap { position:relative; width:100%; margin-top:auto; }
+  .commission-form .cf-suffix-wrap input { padding-right:24px; }
+  .commission-form .cf-suffix-wrap .cf-suffix {
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    font-size:12px; font-weight:700; color:#8a97a5; pointer-events:none; line-height:1;
+  }
+  .commission-form .cf-suffix-wrap input:focus ~ .cf-suffix { color:#e8720c; }
   /* 合作集团下拉：外观与输入框一致 */
   .commission-form select {
     width:100%; box-sizing:border-box; height:44px; padding:0 14px;
@@ -4543,8 +4553,9 @@ function _ovLoadChartLib(cb){
           </select>
         </div>
         <!-- ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数：放在「签约货币」右侧（第 1 排最后一位）。
-             录入的是百分比数值本体（不带 %），最多 4 位小数，如 2.0913；百分号只出现在标签/占位提示里。 -->
-        <div class="login-field"><label id="commLblPoints">佣金总点数（%）</label><input id="commFPoints" type="text" inputmode="decimal" placeholder="0.0000" autocomplete="off" oninput="commPointsInput(this)"></div>
+             录入的是百分比数值本体（不带 %），最多 4 位小数，如 2.0913。
+             ★COMM-PT-SUF-20261103★ 输入框内右侧常显一个「%」视觉后缀（span，不进数据）。 -->
+        <div class="login-field"><label id="commLblPoints">佣金总点数（%）</label><div class="cf-suffix-wrap"><input id="commFPoints" type="text" inputmode="decimal" placeholder="0.0000" autocomplete="off" oninput="commPointsInput(this)"><span class="cf-suffix" aria-hidden="true">%</span></div></div>
       </div>
       <div class="cf-row cols-6">
         <div class="login-field req"><label id="commLblEquipRMB"><i>*</i>设备金额 RMB</label><input id="commFEquipRMB" type="text" inputmode="numeric" class="cf-money money-rmb" placeholder="¥" autocomplete="off" oninput="commMoneyInput('rmb')"></div>
@@ -15998,7 +16009,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z193";  // 版本标记：用于确认浏览器加载的是最新代码（Z193 = 佣金总点数「展示+反向校验」区块）
+const PERM_BUILD = "build 2026-11-03-Z194";  // 版本标记：用于确认浏览器加载的是最新代码（Z194 = 佣金总点数输入框内嵌 % 后缀）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
