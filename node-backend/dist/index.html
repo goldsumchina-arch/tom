@@ -10551,8 +10551,8 @@ function wonDetailLinkCell(p, field, labelKey) {
  *   4) 异常隔离：任一模块出错不影响其他模块
  */
 function setLangDebug(lang) {
-  /* ★BENCARD-DELPOP-20261103D★ 切语言时刷新删除气泡文案（保留弹窗与已输入内容），而非关闭 */
-  try { if (typeof _benDelLocalize === 'function') _benDelLocalize(); } catch (e) {}
+  /* ★BENCARD-DELPOP-20261103E★ 切语言期间对删除气泡上锁（禁止被外部点击/重渲染滚动关闭），切换完成后刷新其文案 */
+  try { if (typeof _benDelLockFor === 'function') _benDelLockFor(1800); } catch (e) {}
   if(!I18N[lang]) { console.warn('[lang] unsupported:', lang); return; }
 
   // ---- 第零步：备注三语快照（切语言前，此时 CUR_LANG 还是旧语言）----
@@ -10580,6 +10580,8 @@ function setLangDebug(lang) {
   // ---- 第一步：立即切换语言并高亮按钮（用户马上看到反馈）----
   CUR_LANG = lang;
   try { window.__lang = lang; } catch(e){}
+  /* ★BENCARD-DELPOP-20261103E★ CUR_LANG 已更新后，立即把删除气泡文案刷新为新语言（保留弹窗与已输入密码） */
+  try { if (typeof _benDelLocalize === 'function') _benDelLocalize(); } catch(e){}
   // ================================================================
   // ⛔ 已锁定实现 —— V2026.10.30.01 验证通过，禁止删除
   // ================================================================
@@ -14605,10 +14607,14 @@ function renderBenPaymentCards(force){
 }
 /* ★BENCARD-DELPOP-20261103★ 右键单击一行 → 鼠标旁边弹出橙色气泡：确认 → 输入密码 money（强制小写）→ 立即删除；取消则不删 */
 var __benDelState = null;
-function _benDelClose(){
+var __benDelLockUntil = 0;   /* ★BENCARD-DELPOP-20261103E★ 语言切换锁：此时间前禁止外部点击/滚动关闭气泡 */
+function _benDelLockFor(ms){ __benDelLockUntil = Date.now() + (ms || 1500); }
+function _benDelClose(force){
+  if (!force && __benDelLockUntil && Date.now() < __benDelLockUntil) return;
   var p = document.getElementById('benDelPop');
   if (p && p.parentNode) p.parentNode.removeChild(p);
   __benDelState = null;
+  __benDelLockUntil = 0;
 }
 /* ★BENCARD-DELPOP-20261103D★ 切换语言时只刷新气泡文案（保留步骤/已输密码），不关闭 */
 function _benDelLocalize(){
@@ -14629,14 +14635,14 @@ function _benDelDoDelete(){
   var s = __benDelState; if (!s) return;
   var rows = (window.__benCardPayments && window.__benCardPayments[s.i]) || [];
   var i = s.i, j = s.j;
-  _benDelClose();
+  _benDelClose(true);
   if (!rows[j]) return;
   rows.splice(j, 1);
   renderBenPaymentCards(true);
 }
 function benCardRowCtx(ev, i, j){
   if (ev){ try { ev.preventDefault(); ev.stopPropagation(); } catch (e) {} }
-  _benDelClose();
+  _benDelClose(true);
   var H = _benCardHead();
   var L = 'zh';
   try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) L = CUR_LANG; } catch (e) {}
@@ -14693,12 +14699,12 @@ function benCardRowCtx(ev, i, j){
   };
 
   if (ok) ok.onclick = onOk;
-  if (cancel) cancel.onclick = function(){ _benDelClose(); };
+  if (cancel) cancel.onclick = function(){ _benDelClose(true); };
   if (inp){
     inp.oninput = function(){ this.value = String(this.value || '').toLowerCase(); if (__benDelState) __benDelState.pwd = this.value; if (err) err.style.display = 'none'; };
     inp.onkeydown = function(e){
       if (e.key === 'Enter'){ e.preventDefault(); step2(); }
-      else if (e.key === 'Escape'){ e.preventDefault(); _benDelClose(); }
+      else if (e.key === 'Escape'){ e.preventDefault(); _benDelClose(true); }
     };
   }
   return false;
@@ -14709,13 +14715,13 @@ document.addEventListener('mousedown', function(e){
   if (!p) return;
   var t = e.target;
   try {
-    // 语言切换按钮：不关闭气泡，交给 setLangDebug 去刷新文案
-    if (t && t.closest && t.closest('#dbgLangZh,#dbgLangEn,#dbgLangVi,[data-lang],.lang-switch,.lang-btn')) return;
+    // 语言切换控件：不关闭气泡，并上一个短锁，避免随后的重渲染滚动把它关掉
+    if (t && t.closest && t.closest('#dbgLangZh,#dbgLangEn,#dbgLangVi,#loginLangZh,#loginLangEn,#loginLangVi,#langSwitch,#loginLangSwitch,[data-lang],.lang-switch,.lang-btn')) { _benDelLockFor(1500); return; }
   } catch (e2) {}
   if (!p.contains(t)) _benDelClose();
 }, true);
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') _benDelClose();
+  if (e.key === 'Escape') _benDelClose(true);
 });
 window.addEventListener('scroll', function(){ _benDelClose(); }, true);
 function benCardAddRow(i){
@@ -16368,7 +16374,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z256";  // 版本标记：Z256 = 删除气泡在切换语言时保留并跟随语言刷新（而非关闭）：点语言按钮不再触发"点外部关闭"，改为 setLangDebug 调用 _benDelLocalize() 刷新文案并保留已输入密码；状态新增 pwd
+const PERM_BUILD = "build 2026-11-03-Z257";  // 版本标记：Z257 = 修复切换语言时删除气泡仍消失的根因：①语言按钮点击后给气泡加 1.5~1.8s 锁(__benDelLockUntil)，期间外部点击/重渲染滚动不再关闭；②_benDelLocalize 改在 CUR_LANG 更新后调用（原来在之前，刷新成旧语言）；③取消/Esc/删除/重开用 force 关闭
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
