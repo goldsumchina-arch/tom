@@ -2162,7 +2162,7 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-ledger tbody td.cpc-td-empty { text-align:center; color:#a6b3c2; font-weight:600; }
 /* ===== 受益人支付明细卡片（Z239+） ===== */
 .comm-ben-cards { margin:8px 0 4px 0; display:flex; flex-direction:column; gap:10px; }
-.ben-card { border:1px solid #e3e8ef; border-radius:8px; background:#fff; overflow:hidden; min-width:0; }
+.ben-card { border:2px solid #000; border-radius:8px; background:#fff; overflow:hidden; min-width:0; }
 .ben-card-head { display:flex; align-items:center; justify-content:space-between; padding:6px 10px; background:#f3f6fb; border-bottom:1px solid #e3e8ef; }
 .ben-card-title { font-weight:700; color:#2c3e50; font-size:13px; }
 .ben-card-add { padding:4px 10px; font-size:12px; }
@@ -2171,6 +2171,21 @@ function _ovLoadChartLib(cb){
 .ben-card-table th, .ben-card-table td { border:1px solid #e3e8ef; padding:2px 3px; text-align:center; white-space:nowrap; box-sizing:border-box; }
 .ben-card-table thead th { background:#16385c; color:#fff; font-weight:700; white-space:normal; line-height:1.2; word-break:break-word; }
 .ben-card-table thead tr:last-child th { background:#1f4770; }
+/* ★BENCARD-PCT-EXEMPT-20261103★ 14 列百分比列宽（合计 100%），!important 优先于几何锁清除的内联宽度 */
+.ben-card-table colgroup col:nth-child(1)  { width:2%  !important; }
+.ben-card-table colgroup col:nth-child(2)  { width:4%  !important; }
+.ben-card-table colgroup col:nth-child(3)  { width:9%  !important; }
+.ben-card-table colgroup col:nth-child(4)  { width:5%  !important; }
+.ben-card-table colgroup col:nth-child(5)  { width:5%  !important; }
+.ben-card-table colgroup col:nth-child(6)  { width:5%  !important; }
+.ben-card-table colgroup col:nth-child(7)  { width:9%  !important; }
+.ben-card-table colgroup col:nth-child(8)  { width:9%  !important; }
+.ben-card-table colgroup col:nth-child(9)  { width:9%  !important; }
+.ben-card-table colgroup col:nth-child(10) { width:8%  !important; }
+.ben-card-table colgroup col:nth-child(11) { width:9%  !important; }
+.ben-card-table colgroup col:nth-child(12) { width:9%  !important; }
+.ben-card-table colgroup col:nth-child(13) { width:10% !important; }
+.ben-card-table colgroup col:nth-child(14) { width:7%  !important; }
 .ben-card-table td.bc-seq, .ben-card-table td.bc-cnt { color:#8a9bb0; }
 .ben-card-table .bc-inp { width:100%; min-width:0; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:1px 2px; font-size:8.5px; font-family:inherit; }
 .ben-card-table .bc-inp:focus { outline:2px solid #1e9e6a; }
@@ -11363,8 +11378,10 @@ window.LG = (function () {
     // ★COMM-LEDGER-EXEMPT-20261103★ 个人佣金台账表（.cpc-ledger）同样用百分比列宽 + table-layout:fixed，
     // 必须加入豁免：否则本模块会把每列写成 px（14 列合计 ≈1273px）并给表格设 min-width，
     // 表格永远比容器宽 → 右侧「待支付 VND / 支付状态」被裁掉（前几轮改列宽一直"没生效"的真正原因就在这里）。
+    // ★BENCARD-PCT-EXEMPT-20261103★ 支付明细卡片表(.ben-card-table)同样是百分比列宽 + table-layout:fixed，
+    // 必须加入豁免：否则本模块会把 14 列写成 px 并给表格设 min-width，整表被撑出卡片 → 最右「支付日期」被裁掉。
     if (tbl.classList && (tbl.classList.contains('cp-table') || tbl.classList.contains('cm-pay-table')
-        || tbl.classList.contains('cpc-ledger'))) {
+        || tbl.classList.contains('cpc-ledger') || tbl.classList.contains('ben-card-table'))) {
       var cgx = tbl.querySelector('colgroup');
       if (cgx) {
         var colx = cgx.querySelectorAll('col');
@@ -14441,11 +14458,7 @@ function renderBenPaymentCards(force){
       + '<button type="button" class="btn-action ben-card-add" onclick="benCardAddRow(' + i + ')">＋ 增加记录</button></div>'
       + '<div class="ben-card-scroll"><table class="ben-card-table">'
       + '<colgroup>'
-      + '<col style="width:2%"><col style="width:4%"><col style="width:9%"><col style="width:5%">'
-      + '<col style="width:5%"><col style="width:5%">'
-      + '<col style="width:9%"><col style="width:9%"><col style="width:9%">'
-      + '<col style="width:8%">'
-      + '<col style="width:9%"><col style="width:9%"><col style="width:10%"><col style="width:7%">'
+      + '<col><col><col><col><col><col><col><col><col><col><col><col><col><col>'
       + '</colgroup>'
       + '<thead><tr>'
       + '<th rowspan="2">序号</th><th rowspan="2">支付次数</th><th rowspan="2">支付双方</th><th rowspan="2">支付货币</th>'
@@ -16054,7 +16067,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z243";  // 版本标记：Z243 = 支付明细卡片：表头改深蓝底白字；序号列与汇率两列收窄；修复最右「支付日期」不显示——根因是共用 .cp-date-input-wrapper 的 min-width:100px 撑破末列被 overflow:hidden 裁剪，已在卡片内覆盖为 min-width:0，并重排列宽合计100%
+const PERM_BUILD = "build 2026-11-03-Z244";  // 版本标记：Z244 = 支付明细卡片真正修复列宽：根因是语言几何锁 LANG-GEOMETRY-LOCK 的 freezeTable() 把 .ben-card-table 写成 px 并列宽并设 min-width(≈1260px) 撑出卡片→最右支付日期被裁；已把 .ben-card-table 加入豁免名单，列宽改用 CSS col:nth-child !important 百分比(合计100%)，colgroup 改纯 <col>；另每张卡片外围加 2px 黑色线框
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
