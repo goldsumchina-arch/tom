@@ -345,6 +345,42 @@ export async function handleCommission(request, env, url, pathname) {
     return { body: { ok: true, id: rid, saved: bens.length }, status: 200 };
   }
 
+  // ---------- 删除单条佣金记录（含其全部受益人）★COMM-OPS-COL-20261103★ ----------
+  //   DELETE /api/commission/records?contract=xxx   （也支持 body: { contract }）
+  if (pathname === "/api/commission/records" && request.method === "DELETE") {
+    await ensureTable(env);
+    let contract = "";
+    try {
+      contract = String(url.searchParams.get("contract") || "").trim();
+    } catch (e) {
+      contract = "";
+    }
+    if (!contract) {
+      try {
+        const b = await request.json();
+        contract = String((b && b.contract) || "").trim();
+      } catch (e) {
+        /* 无 body 也允许 */
+      }
+    }
+    if (!contract) return { __err: "缺少合同编号", __status: 400 };
+    const row = await env.DB.prepare(
+      "SELECT id FROM commission_records WHERE contract=?"
+    )
+      .bind(contract)
+      .first();
+    if (!row) return { body: { ok: true, deleted: 0 }, status: 200 };
+    await env.DB.prepare(
+      "DELETE FROM commission_beneficiaries WHERE record_id=?"
+    )
+      .bind(row.id)
+      .run();
+    await env.DB.prepare("DELETE FROM commission_records WHERE id=?")
+      .bind(row.id)
+      .run();
+    return { body: { ok: true, deleted: 1, id: row.id }, status: 200 };
+  }
+
   // ---------- 列表 ----------
   if (pathname === base && request.method === "GET") {
     await ensureTable(env);
