@@ -14067,10 +14067,14 @@ function commPlanNameChange(i, el){
   var row = el ? (el.closest ? el.closest('.comm-plan-row') : null) : null;
   if (!row) row = document.querySelector('.comm-plan-row[data-plan-idx="' + i + '"]');
   if (row) row.classList.toggle('has-other', st[i].name === 'OTHER');
+  // ★COMM-SYNC-20261103★ 改名后立即重渲染台账表（受益人列从方案状态读取），否则台账停留旧名
+  if (typeof commPointCheck === 'function') commPointCheck();
 }
 function commPlanCustomInput(i, el){
   var st = commPlanState(); if (!st[i]) return;
   st[i].custom = el ? el.value : '';
+  // ★COMM-SYNC-20261103★ 自定义受益人名实时同步到台账表的受益人列
+  if (typeof commPointCheck === 'function') commPointCheck();
 }
 /* ★COMM-RATIO-4D-20261103★ 佣金比率统一 4 位小数：输入 2 → 显示/保存 2.0000
    输入过程中不强行补零（否则想打 2.5 会被打断），失焦那一下补齐；渲染回填也走这里 */
@@ -14109,6 +14113,8 @@ function commPlanRatioInput(i, el){
   var st = commPlanState(); if (st[i]) st[i].ratio = v;
   fitNumInput(el);     // ★COMM-AUTOFIT-20261103★ 比率数值长 → 自动缩字号
   commPlanCalcAll();   // ★COMM-PLAN-CALC-20261103★ 比率变动 → 重算该行三币金额
+  // ★COMM-SYNC-20261103★ 比率变动同步到台账表（比率列与三币金额列都来自方案状态）
+  if (typeof commPointCheck === 'function') commPointCheck();
 }
 /* ══════════════════════════════════════════════════════════════════════════
    ★COMM-PLAN-CALC-20261103★ 三币金额 = 设备金额(同币种) × 佣金比率(%)
@@ -15190,6 +15196,9 @@ function saveBeneficiary(){
   var _pRecIdx = (editRec != null) ? editRec
     : (typeof window.__commEditIdx === 'number' && window.__commEditIdx >= 0 ? window.__commEditIdx : -1);
   if (_pRecIdx >= 0 && COMM_RECORDS[_pRecIdx]) commPersistRecord(COMM_RECORDS[_pRecIdx]);
+  // ★COMM-SYNC-20261103★ 保存后立即重渲染台账表（commPointCheck 读 window.__beneficiaries 与方案状态），
+  // 否则主界面受益人列 / 支付次数 / 已支付 仍停留在保存前 → 用户感知「改名后没同步」
+  if (typeof commPointCheck === 'function') commPointCheck();
   closeBeneficiaryModal();
   showToast(t.comm_save_ok || '保存成功', 1000);   // ★COMM-TOAST-20261103★ 保存成功：三语 + 1 秒消失
 }
@@ -16976,7 +16985,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z235";  // 版本标记：Z235 = 删除「受益人明细表(benTable)」与「＋新增受益人」按钮（信息已由台账表承载；renderBeneficiaryTable 无 #benTbody 时直接 return，逻辑自然停用）
+const PERM_BUILD = "build 2026-11-03-Z236";  // 版本标记：Z236 = 修复改名/改比率后台账表不实时同步：commPlanNameChange/commPlanCustomInput/commPlanRatioInput/saveBeneficiary 保存或输入后立即重渲染台账表
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
