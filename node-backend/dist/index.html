@@ -677,6 +677,9 @@ function _ovLoadChartLib(cb){
     .modal-overlay.show { display:flex; }
     .modal { background:white; border-radius:14px; padding:24px; width:940px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.3); }
     .modal h2 { margin-bottom:4px; font-size:12.6px; color:#2c3e50; }
+/* ★WARR-TITLE-1.5X-20261102★ 新建签约弹窗标题 ×1.5（12.6px → 18.9px）；只放大标题文字，
+   英文/越南文名与右上角提示不动 */
+#wonModalTitle { font-size:18.9px !important; }
     .modal .modal-sub { font-size:11px; color:#999; margin-bottom:16px; }
     .modal .close { float:right; background:none; border:none; font-size:22px; cursor:pointer; color:#999; margin-top:-8px; }
     .modal .close:hover { color:#333; }
@@ -731,6 +734,12 @@ function _ovLoadChartLib(cb){
     .w-2row .w-cell input, .w-2row .w-cell select { width:100%; padding:5px 8px; border:1px solid #ddd; border-radius:4px; font-size:12px; transition:border .2s; background:white; box-sizing:border-box; }
     .w-2row .w-cell select { cursor:pointer; }
     .w-2row .w-cell input:focus, .w-2row .w-cell select:focus { border-color:#F5872E; outline:none; }
+    /* ★WON-SECTION-BOX-20261102★ 用户要求：签约项目编辑弹窗里「每个大片区」整体一个黑色外框，
+       便于识别——① 基础信息 ② 金额区 ③ 客户付款情况 ④ GS→AGI ⑤ AGI→GS ⑥ 补充协议。
+       只给片区（.form-section）加框，里面各个字段不再单独加框。 */
+    #modalBody .form-section { border:2px solid #000; border-radius:8px; background:#fff; }
+    /* ★CRM-SECTION-BOX-20261102★ 同样逻辑：新建/编辑潜在项目（#crmModalBody）里每个大片区整体一个黑色外框 */
+    #crmModalBody .form-section { border:2px solid #000; border-radius:8px; background:#fff; }
     /* ★WON-SEP-20261031：签约弹窗内各区域之间用深红色虚线分隔 */
     #modalBody .won-sep { border-top:1px dashed #8b0000; margin-top:8px; padding-top:8px; }
     /* ★WON-ACTUAL-RED-20261031：Actual 组（待真实数据发生后才填写）输入框上方的分组标题与字段标签统一改为红色，提示该组数据尚未发生 */
@@ -1071,7 +1080,7 @@ function _ovLoadChartLib(cb){
     }
     @keyframes cpPop { from{transform:translateY(20px);opacity:0;} to{transform:none;opacity:1;} }
     .cp-head { display:flex;align-items:center;justify-content:space-between;padding:8px 15px;background:linear-gradient(135deg,#E53935,#E53935);color:#fff;flex-shrink:0;cursor:move; }
-    .cp-head h2 { margin:0;font-size:9.2px;font-weight:700; }
+    .cp-head h2 { margin:0;font-size:13.8px;font-weight:700; }   /* ★WARR-TITLE-1.5X-20261102★ 二级弹窗标题 ×1.5（原 9.2px，用户反馈太小） */
     .cp-head .cp-close { background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;padding:0 4px; }
     .cp-head .cp-close:hover { opacity:.8; }
     .cp-body { padding:16px 22px;flex:1;overflow-y:auto;overflow-x:hidden; }
@@ -1153,17 +1162,19 @@ function _ovLoadChartLib(cb){
                                实际付款 12.4% + 2.22% = 14.62%
        合计仍是 100%，14 列依旧一屏铺满、无横向滚动。 */
     .cp-table colgroup col:nth-child(1)  { width:1.8%  !important; }  /* # 序号 */
-    .cp-table colgroup col:nth-child(2)  { width:9.2%  !important; }  /* 款项类别（下拉，最长「固定期限固定金额还款」） */
-    .cp-table colgroup col:nth-child(3)  { width:10.8% !important; }  /* 用途说明（长下拉，最长「主体合同设备&运费&安装」） */
+    /* ★CP-NUMFIT2-20261102★ 三组金额列再加宽 1.6~1.9%，从下拉/文字列让出（合计仍 100%）：
+       目的：VND 的 13 位数字（1,988,820,000）必须完整显示，配合 9px 字号 + .cp-amt3 列比例。 */
+    .cp-table colgroup col:nth-child(2)  { width:8.2%  !important; }  /* 款项类别（下拉，最长「固定期限固定金额还款」） */
+    .cp-table colgroup col:nth-child(3)  { width:9.4%  !important; }  /* 用途说明（长下拉，最长「主体合同设备&运费&安装」） */
     .cp-table colgroup col:nth-child(4)  { width:4.2%  !important; }  /* BG? */
-    .cp-table colgroup col:nth-child(5)  { width:4.9%  !important; }  /* BG双方 */
+    .cp-table colgroup col:nth-child(5)  { width:5.4%  !important; }  /* BG双方（9px 字号，AGI→GS 完整显示） */
     .cp-table colgroup col:nth-child(6)  { width:5.44% !important; }  /* BG开始（日期框，累计 -32%） */
     .cp-table colgroup col:nth-child(7)  { width:5.44% !important; }  /* BG到期（日期框，累计 -32%） */
-    .cp-table colgroup col:nth-child(8)  { width:12.4% !important; }  /* 保函金额 RMB/USD/VND */
-    .cp-table colgroup col:nth-child(9)  { width:11.42% !important; } /* 预计付款 RMB/USD/VND（+2.22%） */
+    .cp-table colgroup col:nth-child(8)  { width:12.9% !important; }  /* 保函金额 RMB/USD/VND */
+    .cp-table colgroup col:nth-child(9)  { width:12.2% !important; }  /* 预计付款 RMB/USD/VND */
     .cp-table colgroup col:nth-child(10) { width:5.44% !important; }  /* 预计日期（日期框，累计 -32%） */
-    .cp-table colgroup col:nth-child(11) { width:6.5%  !important; }  /* 付款方式（下拉） */
-    .cp-table colgroup col:nth-child(12) { width:14.62% !important; } /* 实际付款 RMB/USD/VND（+2.22%） */
+    .cp-table colgroup col:nth-child(11) { width:6.1%  !important; }  /* 付款方式（下拉） */
+    .cp-table colgroup col:nth-child(12) { width:15.64% !important; } /* 实际付款 RMB/USD/VND */
     .cp-table colgroup col:nth-child(13) { width:5.44% !important; }  /* 实际日期（日期框，累计 -32%） */
     .cp-table colgroup col:nth-child(14) { width:2.4%  !important; }  /* 删除 */
     .cp-table th, .cp-table td { border:1px solid #e0e0e0;padding:3px 3px;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
@@ -1198,7 +1209,34 @@ function _ovLoadChartLib(cb){
     /* ★CP-DATE-NARROW2-20261102★ 行内样式把日期框和三币种输入框都写死成 11px/2px 4px，
        列再收窄后这些内边距纯属浪费（每格白丢 6px 文字空间）。统一压到 10px / 左右 1px，
        日期列 5.44% 下 "DD-MM-YYYY"、三币种格里的 "4,306,658" 才能完整显示。 */
-    .cp-table td > div > input { font-size:10px !important;padding:2px 1px !important; }
+    /* ★CP-NUMFIT-20261102★ 用户要求「数值缩小，要看到全部数值」：
+       三币种金额格原来 10px/左右 1px 内边距，VND 13 位（1,988,820,000）会被裁成 1,988,820,00。
+       压到 9px + 左右 0 内边距 + 轻微负字距，并配合 .cp-amt3 的 0.95/0.85/1.3 列比例（VND 最宽）。 */
+    .cp-table td > div > input { font-size:9px !important;padding:2px 0 !important;letter-spacing:-0.2px; }
+    /* ★CP-AMT3-20261102★ 保函/预计/实际 三币种格：RMB 与 USD 数字短、VND 长，
+       等分会让 VND 被裁，改成 0.95 : 0.85 : 1.30。 */
+    .cp-table td > div.cp-amt3 { grid-template-columns:0.95fr 0.85fr 1.3fr !important; }
+    /* ★CP-BG-COLOR-20261102★ 保函金额输入框与「预计付款」同配色（粉/蓝/黄）。
+       根因：cpOnBgHasChange() 会把 inline background 重置为 ''（BG=否时写 #f0f0f0），
+       原来颜色只写在 inline style 上，被重置后就永久变白 —— 这里给 CSS 兜底。 */
+    .cp-table input.cp-bg-rmb { background:#fde7ef; border-color:#f8c9db; color:#b8326b; }
+    .cp-table input.cp-bg-usd { background:#e7eefb; border-color:#c2d3f3; color:#2656b3; }
+    .cp-table input.cp-bg-vnd { background:#fbf3d8; border-color:#ecdc9f; color:#9a7420; }
+    .cp-table input.cp-plan-rmb,  .cp-table input.cp-actual-rmb  { color:#b8326b; }
+    .cp-table input.cp-plan-usd,  .cp-table input.cp-actual-usd  { color:#2656b3; }
+    .cp-table input.cp-plan-vnd,  .cp-table input.cp-actual-vnd  { color:#9a7420; }
+    .cp-table input.cp-bg-rmb:disabled, .cp-table input.cp-bg-usd:disabled,
+    .cp-table input.cp-bg-vnd:disabled { background:#f0f0f0 !important; color:#999; }
+    /* ★CP-ALIGN-20261102★ 用户要求：所有录入框的数据左右对齐居中（水平居中 + 垂直居中）。
+       覆盖下拉、日期、金额、备注等全部控件；表格单元格统一 vertical-align:middle。 */
+    .cp-table input, .cp-table select { text-align:center !important; }
+    .cp-table td { vertical-align:middle !important; }
+    .cp-table td > div > input { text-align:center !important; }
+    .cp-table .cp-date-input-wrapper input { text-align:center !important; }
+    /* ★CP-BGPARTY-FIT-20261102★ 「BG双方」列窄，下拉文字 AGI→GS 被裁成「AGI→」。
+       字号压到 9px、内边距左右 1px（列宽同时从 4.5% 放宽到 5.4%）。 */
+    .cp-table select.cp-bg-party { font-size:9px !important; padding:2px 1px !important; }
+    .cp-table select.cp-bg-has { font-size:9px !important; padding:2px 1px !important; }
     .cp-table .cp-date-input-wrapper svg, .cp-table .cp-date-input-wrapper .cp-date-ico { width:10px;height:10px; }
     .cp-add-btn { display:inline-flex;align-items:center;gap:4px;margin-top:8px;background:#FDECEA;color:#E53935;border:1px solid #f0c8a8;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer; }
     .cp-add-btn:hover { background:#E53935;color:#fff; }
@@ -1403,7 +1441,7 @@ function _ovLoadChartLib(cb){
     .cm-modal{background:#fff;width:100%;max-width:900px;border-radius:12px;box-shadow:0 8px 30px rgba(200,120,30,.16);overflow:hidden;animation:cmPop .25s ease;}
     @keyframes cmPop{from{transform:translateY(20px);opacity:0;}to{transform:none;opacity:1;}}
     .cm-head{display:flex;align-items:center;justify-content:space-between;padding:8px 17px;background:linear-gradient(135deg,#D32F2F,#E53935);color:#fff;}
-    .cm-head h2{margin:0;font-size:9.2px;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .cm-head h2{margin:0;font-size:13.8px;font-weight:700;display:flex;align-items:center;gap:10px;}   /* ★WARR-TITLE-1.5X-20261102★ 标题 ×1.5（原 9.2px） */
     .cm-head .cm-sub{font-size:10px;opacity:.85;font-weight:400;}
     .cm-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;}
     .cm-body{padding:22px 24px;max-height:72vh;overflow-y:auto;}
@@ -1857,9 +1895,137 @@ function _ovLoadChartLib(cb){
   #commissionTable tbody td.comm-rmb, #benTable tbody td.comm-rmb { background:#fdf3f3; color:#8a2a2a; }
   #commissionTable tbody td.comm-usd, #benTable tbody td.comm-usd { background:#f2f5fc; color:#2c5fa8; }
   #commissionTable tbody td.comm-vnd, #benTable tbody td.comm-vnd { background:#fbf8ec; color:#9a7b12; }
-  /* 受益人表在弹窗内：紧凑行高 */
-  #benTable th { padding:8px 10px; font-size:12px; }
-  #benTable td { padding:7px 10px; font-size:12px; white-space:nowrap; }
+  /* ★COMM-COMPACT-20261102★ 个人佣金表格整体压缩排版（只作用于 #commissionTable，不影响用户管理等其它 users-table）：
+     字体 13px → 10.5px；单元格内边距 10/16 → 4/5；表头 12/16 → 6/5；子表头同步收窄。
+     目标：1440 宽窗口下 13 列一屏看全，底部不再需要水平滚动条。 */
+  #commissionTable { font-size:10.5px; }
+  #commissionTable thead th { padding:6px 5px; font-size:10.5px; line-height:1.25; }
+  #commissionTable tbody td { padding:4px 5px; font-size:10.5px; line-height:1.3; }
+  #commissionTable th.comm-sub { font-size:10.5px; padding:4px 5px; }
+  #commissionTable tbody td.action-col,
+  #commissionTable thead th.action-th { padding-left:3px; padding-right:3px; }
+  #commissionTable .btn-sm { font-size:10px; padding:3px 7px; min-width:0; }
+  /* ★COMM-FIT-20261102★ 14 列固定百分比列宽（合计 100%）+ table-layout:fixed：
+     表格宽度恒等于容器 → 永远没有底部水平滚动条，同时每一列的宽度是**写死的**，
+     不会因为某个单元格内容长就挤走邻列 → 列与内容严格一一对应。
+     上一版之所以「错位」，是因为「编辑」「受益人&秘佣&支付详情」两个按钮用的是
+     .btn-action / .btn-action-sm（不是 .btn-sm），比列还宽又没裁剪，直接压到隔壁列上。
+     这次同时把按钮缩小、给按钮留够列宽、并加 ellipsis 兜底（最坏情况是省略号，绝不越界）。 */
+  #commissionTable { table-layout:fixed; width:100% !important; min-width:0 !important; max-width:none !important; }
+  #commissionTable colgroup col { width:auto !important; }
+  #commissionTable colgroup col:nth-child(1)  { width:3%    !important; }  /* 序号 */
+  #commissionTable colgroup col:nth-child(2)  { width:9%    !important; }  /* 合同编号 */
+  #commissionTable colgroup col:nth-child(3)  { width:6%    !important; }  /* 签约双方 */
+  #commissionTable colgroup col:nth-child(4)  { width:7%    !important; }  /* 合作集团 */
+  #commissionTable colgroup col:nth-child(5)  { width:7.5%  !important; }  /* 合同签单日期 */
+  #commissionTable colgroup col:nth-child(6)  { width:4.5%  !important; }  /* 签约货币 */
+  #commissionTable colgroup col:nth-child(7)  { width:7%    !important; }  /* RMB */
+  #commissionTable colgroup col:nth-child(8)  { width:7%    !important; }  /* USD */
+  #commissionTable colgroup col:nth-child(9)  { width:7.5%  !important; }  /* VND */
+  #commissionTable colgroup col:nth-child(10) { width:6%    !important; }  /* RMB-VND */
+  #commissionTable colgroup col:nth-child(11) { width:6%    !important; }  /* USD-VND */
+  #commissionTable colgroup col:nth-child(12) { width:8%    !important; }  /* 编辑 */
+  #commissionTable colgroup col:nth-child(13) { width:12%   !important; }  /* 受益人&秘佣&支付详情 */
+  #commissionTable colgroup col:nth-child(14) { width:9.5%  !important; }  /* 备注 */
+  /* 文本列压窄时换行，不裁切、不越界 */
+  #commissionTable tbody td { white-space:normal; word-break:break-word; overflow-wrap:anywhere; }
+  /* 三币金额再小半号，保证 "₫193,781,000" 这类最长值在 7%/7.5% 列宽内单行显示 */
+  #commissionTable td.comm-rmb,
+  #commissionTable td.comm-usd,
+  #commissionTable td.comm-vnd { font-size:10px; }
+  /* 两个操作按钮：缩小 + 永远不超出所在列（超出即省略号） */
+  #commissionTable .btn-action,
+  #commissionTable .btn-action-sm {
+    font-size:9px; padding:2px 5px; line-height:1.35; min-width:0;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; vertical-align:middle;
+  }
+  /* 按钮加了 overflow:hidden 会把 .btn-action-sm::after 的悬浮提示裁掉，佣金表内直接关掉该提示 */
+  #commissionTable .btn-action-sm::after { display:none !important; }
+  #commissionTable td[data-col="11"],
+  #commissionTable td[data-col="12"] { white-space:nowrap; overflow:hidden; }
+  /* ★COMM-CENTER-20261102★ 用户要求：表头与单元格内容统一居中对齐（金额/汇率/编号/日期等全部居中） */
+  #commissionTable thead th,
+  #commissionTable th.comm-sub,
+  #commissionTable tbody td { text-align:center; }
+  /* ★COMM-GRID-20261102★ 用户要求：整表加黑色网格线。
+     表格必须保持 border-collapse:separate（sticky 表头在 collapse 下会丢边框），
+     所以只画「右 + 下」两条单边线，再给首列补左边线、首行补上边线 ——
+     视觉上是完整且均匀的 1px 黑色网格，不会出现相邻边框叠成 2px 的粗细不一。 */
+  #commissionTable thead th,
+  #commissionTable tbody td { border-right:1px solid #000; border-bottom:1px solid #000; }
+  #commissionTable thead tr:first-child th { border-top:1px solid #000; }
+  #commissionTable tr > *:first-child { border-left:1px solid #000; }
+  /* ★COMM-ADD-20261102★ 「新增/编辑佣金记录」弹窗微调（只作用于 #commissionAddModalOverlay）：
+     ① 合同签单日期 / 定金给付时间 改用模态框标准选择器后，输入框与同排字段同高同字号；
+     ② 日历弹层 z-index 抬到 .auth-modal-overlay(100001) 之上 —— 否则日历被弹窗盖在下面，
+        点了日期看起来"毫无反应"（这正是原来那两个日期框点不动的原因）；
+     ③ 设备金额三币 + 两个汇率输入框，内容居中对齐。 */
+  #commissionAddModalOverlay .cp-date-input-wrapper { width:100%; min-width:0; margin-top:auto; }
+  #commissionAddModalOverlay .cp-date-input-wrapper input {
+    height:44px; padding:0 14px; font-size:14px; border-radius:9px;
+    background:#f7f9fb; border:1px solid #d7dee6; color:#23303d;
+  }
+  #commissionAddModalOverlay .cf-money,
+  #commissionAddModalOverlay #commFRateRMB,
+  #commissionAddModalOverlay #commFRateUSD { text-align:center; }
+  #cpCalPopup, #commCalPopup { z-index:100060 !important; }
+  /* ★BEN-COMPACT-20261102★ 「受益人 & 秘佣 & 支付详情」内嵌表 #benTable 压缩：
+     原来 12px + 8/10px 内边距让 15 列撑出弹窗宽度，右边「支付性质/说明/编辑」被截断。
+     现在：字体 10.5px（金额 9.5px）、内边距 4px，并把 15 列改成固定百分比列宽（合计 100%），
+     表格宽度恒等于弹窗宽度 → 一屏看全，不再需要底部横向滚动条。 */
+  #benTable { font-size:10.5px; table-layout:fixed; width:100% !important; min-width:0 !important; max-width:none !important; }
+  #benTable thead th { padding:5px 4px; font-size:10.5px; line-height:1.25; }
+  #benTable th.comm-sub { font-size:10px; padding:4px 3px; }
+  #benTable td { padding:4px 4px; font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #benTable td.comm-rmb, #benTable td.comm-usd, #benTable td.comm-vnd { font-size:9.5px; }
+  #benTable colgroup col { width:auto !important; }
+  #benTable colgroup col:nth-child(1)  { width:3.5% !important; }  /* 序号 */
+  #benTable colgroup col:nth-child(2)  { width:9%   !important; }  /* 受益人 */
+  #benTable colgroup col:nth-child(3)  { width:7%   !important; }  /* 需支付 RMB */
+  #benTable colgroup col:nth-child(4)  { width:6.5% !important; }  /* 需支付 USD */
+  #benTable colgroup col:nth-child(5)  { width:8%   !important; }  /* 需支付 VND */
+  #benTable colgroup col:nth-child(6)  { width:8.5% !important; }  /* 合同签订时间 */
+  #benTable colgroup col:nth-child(7)  { width:8%   !important; }  /* 定金给付时间 */
+  #benTable colgroup col:nth-child(8)  { width:4.5% !important; }  /* 支付次数 */
+  #benTable colgroup col:nth-child(9)  { width:5%   !important; }  /* 支付货币 */
+  #benTable colgroup col:nth-child(10) { width:7%   !important; }  /* 已支付 RMB */
+  #benTable colgroup col:nth-child(11) { width:6.5% !important; }  /* 已支付 USD */
+  #benTable colgroup col:nth-child(12) { width:8%   !important; }  /* 已支付 VND */
+  #benTable colgroup col:nth-child(13) { width:6.5% !important; }  /* 支付性质 */
+  #benTable colgroup col:nth-child(14) { width:7%   !important; }  /* 说明 */
+  #benTable colgroup col:nth-child(15) { width:5%   !important; }  /* 编辑 */
+  #benTable .btn-action, #benTable .btn-action-sm { font-size:9px; padding:2px 4px; min-width:0; max-width:100%; }
+  /* ★BP-COMPACT-20261102★ 受益人弹窗里的「支付明细」表 #benPaymentTable 压缩：
+     原来 min-width:1200px + 11px 字体 + 12px 输入框，14 列必然撑出弹窗 → 底部横向滚动条、右侧「备注/操作」被截。
+     现在：取消 min-width、表宽恒等于容器、字体 9.5px、输入框/下拉/按钮同步缩小、14 列改固定百分比（合计 100%）。 */
+  #benPaymentTable { font-size:9.5px !important; min-width:0 !important; width:100% !important; table-layout:fixed; }
+  #benPaymentTable th, #benPaymentTable td { padding:3px 2px !important; }
+  #benPaymentTable th { font-size:9.5px !important; line-height:1.2; }
+  #benPaymentTable .bp-in, #benPaymentTable .bp-sel,
+  #benPaymentTable input, #benPaymentTable select { font-size:9.5px !important; padding:2px 3px !important; }
+  #benPaymentTable .btn-action, #benPaymentTable .btn-action-sm { font-size:9px; padding:2px 5px; min-width:0; max-width:100%; }
+  /* 表头允许折成两/三行：长字段名（GS/AGI给与的货币币种、兑换后的货币给谁了？等）换行后
+     列可以更窄，右侧「备注 / 操作」才不会被挤出可视区。 */
+  #benPaymentTable th { white-space:normal !important; word-break:break-word; overflow-wrap:anywhere; }
+  /* ★BP-COL-20261102★ 列宽必须同时写 <col> 和 <th>：
+     列宽冻结脚本（LG.freezeTable）会给 <col> 写 px 内联宽度，fixed 布局下 <col> 优先于 th 的百分比，
+     只写 th 会被 px 覆盖 → 表格仍按 px 总宽溢出、底部照样有滚动条。两处一起 !important 才真正 100%。 */
+  #benPaymentTable th:nth-child(1),  #benPaymentTable colgroup col:nth-child(1)  { width:4.5% !important; }   /* 支付次数 */
+  #benPaymentTable th:nth-child(2),  #benPaymentTable colgroup col:nth-child(2)  { width:8.5% !important; }   /* 给与的货币币种 */
+  #benPaymentTable th:nth-child(3),  #benPaymentTable colgroup col:nth-child(3)  { width:7.5% !important; }   /* 给与的金额 */
+  #benPaymentTable th:nth-child(4),  #benPaymentTable colgroup col:nth-child(4)  { width:7.5% !important; }   /* 给与的时间 */
+  #benPaymentTable th:nth-child(5),  #benPaymentTable colgroup col:nth-child(5)  { width:6%   !important; }   /* 有无换汇 */
+  #benPaymentTable th:nth-child(6),  #benPaymentTable colgroup col:nth-child(6)  { width:6.5% !important; }   /* 换汇汇率 */
+  #benPaymentTable th:nth-child(7),  #benPaymentTable colgroup col:nth-child(7)  { width:7%   !important; }   /* 换汇经手人 */
+  #benPaymentTable th:nth-child(8),  #benPaymentTable colgroup col:nth-child(8)  { width:7.5% !important; }   /* 换汇后币种 */
+  #benPaymentTable th:nth-child(9),  #benPaymentTable colgroup col:nth-child(9)  { width:7.5% !important; }   /* 换汇后的金额 */
+  #benPaymentTable th:nth-child(10), #benPaymentTable colgroup col:nth-child(10) { width:8.5% !important; }   /* 兑换后的货币给谁了 */
+  #benPaymentTable th:nth-child(11), #benPaymentTable colgroup col:nth-child(11) { width:8%   !important; }   /* 支付佣金性质 */
+  #benPaymentTable th:nth-child(12), #benPaymentTable colgroup col:nth-child(12) { width:6.5% !important; }   /* 支付结束与否 */
+  #benPaymentTable th:nth-child(13), #benPaymentTable colgroup col:nth-child(13) { width:6.5% !important; }   /* 备注 */
+  #benPaymentTable th:nth-child(14), #benPaymentTable colgroup col:nth-child(14) { width:8%   !important; }   /* 操作 */
+  /* 受益人表在弹窗内：紧凑行高 —— 已由上方 ★BEN-COMPACT-20261102★ 统一接管（旧的 12px/8-10px 规则删除，
+     否则会按"后出现者胜"把压缩设置覆盖回去）。 */
   /* 佣金日期字段：点击弹出可拖动日历 */
   .comm-date { cursor:pointer; }
   /* 极高的 z-index + 强制 pointer-events:auto，避免被任何模态/锁定/二级弹窗抢走点击 */
@@ -1916,6 +2082,20 @@ function _ovLoadChartLib(cb){
   #commissionTable tbody td.cross-hl { background:#ffe680 !important; box-shadow:inset 0 0 0 1.5px #e0a800; }
   #commissionTable tbody tr:nth-child(even) td.row-hl,
   #commissionTable tbody tr:nth-child(even) td.col-hl { background:#ffe89b !important; }
+
+  /* ★COMM-PTCHECK-20261103★ 佣金总点数「展示 + 反向校验」区块（录入点数自动算预期佣金，对比受益人需支付总额） */
+  .comm-point-check { background:#f3f7fd; border:1px solid #d6e2f3; border-radius:8px; padding:10px 14px; margin:2px 0 4px; }
+  .comm-point-check .cpc-row { display:flex; align-items:baseline; gap:10px; padding:3px 0; font-size:13px; }
+  .comm-point-check .cpc-label { color:#5a6b82; min-width:200px; font-weight:600; }
+  .comm-point-check .cpc-val { font-weight:700; color:#2c3e50; font-variant-numeric:tabular-nums; }
+  .comm-point-check .cpc-val.cpc-ok { color:#1e9e6a; }
+  .comm-point-check .cpc-val.cpc-warn { color:#e67e22; }
+  .det-sec .det-point-check { background:#f3f7fd; border:1px solid #d6e2f3; border-radius:8px; padding:10px 14px; margin-top:8px; }
+  .det-point-check .cpc-row { display:flex; align-items:baseline; gap:10px; padding:3px 0; font-size:13px; }
+  .det-point-check .cpc-label { color:#5a6b82; min-width:220px; font-weight:600; }
+  .det-point-check .cpc-val { font-weight:700; color:#2c3e50; font-variant-numeric:tabular-nums; }
+  .det-point-check .cpc-val.cpc-ok { color:#1e9e6a; }
+  .det-point-check .cpc-val.cpc-warn { color:#e67e22; }
 
   /* ===== 用户与授权表：十字高亮（更聚焦：行 #fff6cf / 列 #fff6cf / 交叉 #ffe680 加 2px 橙色描边）=====
      与 WON/CRM 同体系，但交叉格加大描边让用户一眼锁定所在单元格。 */
@@ -2071,12 +2251,6 @@ function _ovLoadChartLib(cb){
   #commExitConfirm .exit-yes:hover { background:#c93030; }
   #commExitConfirm .exit-no { background:#f2f4f7; color:#444; border-color:#d8dee6; }
   #commExitConfirm .exit-no:hover { background:#e6eaf0; }
-  /* 查看与审批：待办角标 */
-  #commBtnAppr { position:relative; }
-  .comm-appr-badge { position:absolute; top:-8px; right:-8px; min-width:18px; height:18px; padding:0 5px;
-    background:#e74c3c; color:#fff; border-radius:9px; font-size:11px; font-weight:800;
-    display:flex; align-items:center; justify-content:center; border:2px solid #fff;
-    box-shadow:0 2px 6px rgba(0,0,0,.25); box-sizing:border-box; z-index:5; }
   .comm-report-wrap { position:relative; }
   .comm-menu { display:none; position:absolute; right:0; top:calc(100% + 6px); background:#fff; border-radius:8px;
                box-shadow:0 6px 24px rgba(0,0,0,.18); min-width:240px; z-index:3000; overflow:hidden; border:1px solid #eee; }
@@ -2091,11 +2265,18 @@ function _ovLoadChartLib(cb){
   .commission-form.comm-4col .cf-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px 16px; }
   .commission-form.comm-4col .cf-row.cols-5 { grid-template-columns:repeat(5, 1fr); }
   .commission-form.comm-4col .cf-row.cols-6 { grid-template-columns:repeat(6, 1fr); gap:10px 12px; }
-  /* 6 列窄格：长标签自动换行，输入框贴底保持整行对齐 */
-  .commission-form.comm-4col .cf-row.cols-6 .login-field { display:flex; flex-direction:column; }
+  /* ★COMM-ACCEPT-POINTS-20261103★ 第 1 排加了「项目验收日期」「佣金总点数」后变 8 列：
+     列更窄，gap 收到 10px，其余对齐规则与 cols-6 完全一致（标签自动换行、输入框贴底对齐）。 */
+  .commission-form.comm-4col .cf-row.cols-8 { grid-template-columns:repeat(8, 1fr); gap:10px 10px; }
+  /* 窄格：长标签自动换行，输入框贴底保持整行对齐 */
+  .commission-form.comm-4col .cf-row.cols-6 .login-field,
+  .commission-form.comm-4col .cf-row.cols-8 .login-field { display:flex; flex-direction:column; }
   .commission-form.comm-4col .cf-row.cols-6 .login-field input,
-  .commission-form.comm-4col .cf-row.cols-6 .login-field select { margin-top:auto; }
-  .commission-form.comm-4col .cf-row.cols-6 label { font-size:12px; line-height:1.35; }
+  .commission-form.comm-4col .cf-row.cols-6 .login-field select,
+  .commission-form.comm-4col .cf-row.cols-8 .login-field input,
+  .commission-form.comm-4col .cf-row.cols-8 .login-field select { margin-top:auto; }
+  .commission-form.comm-4col .cf-row.cols-6 label,
+  .commission-form.comm-4col .cf-row.cols-8 label { font-size:12px; line-height:1.35; }
   .commission-form label { font-size:13px; color:#44546a; font-weight:600; }
   .commission-form label i { color:#e74c3c; font-style:normal; margin-right:3px; }
   /* 必填项校验失败：红框警示 */
@@ -2143,13 +2324,6 @@ function _ovLoadChartLib(cb){
   .cf-block-body { padding:10px 12px; }
   .cf-placeholder { color:#bbb; font-size:12px; text-align:center; padding:14px 0;
                     border:1px dashed #ddd; border-radius:6px; background:#fafafa; }
-  /* 查看与审批：页签 */
-  .comm-appr-tabs { display:flex; gap:6px; margin:4px 0 12px; border-bottom:1px solid #eee; }
-  .comm-appr-tabs button { border:none; background:transparent; padding:9px 16px; font-size:13px; font-weight:600;
-                           color:#666; cursor:pointer; border-bottom:2px solid transparent; }
-  .comm-appr-tabs button.active { color:#F5872E; border-bottom-color:#F5872E; }
-  .comm-appr-body { min-height:180px; overflow-y:auto; flex:1; }
-  .comm-appr-empty { text-align:center; color:#bbb; padding:60px 0; font-size:14px; }
   /* 支付确认弹窗（已支付锁定提示）：淡绿色主题 */
   #commAmtLockOverlay .comm-lock-box {
     background:#f2fbf6; border:1px solid #bfe6d0;
@@ -2165,12 +2339,10 @@ function _ovLoadChartLib(cb){
   #commAmtLockOverlay.anchored .comm-lock-box { position:fixed; margin:0; }
   /* 个人佣金三个模态框：标题栏为拖拽把手，光标提示可移动 */
   #commissionUnlockOverlay .auth-modal > h3,
-  #commissionAddModalOverlay .auth-modal > h3,
-  #commissionApprModalOverlay .auth-modal > h3 { cursor:move; user-select:none; -webkit-user-select:none; }
+  #commissionAddModalOverlay .auth-modal > h3 { cursor:move; user-select:none; -webkit-user-select:none; }
   /* 个人佣金四个模态框：右上角白色 × 关闭按钮（与系统 .modal > .close 一致） */
   #commissionUnlockOverlay .comm-close,
   #commissionAddModalOverlay .comm-close,
-  #commissionApprModalOverlay .comm-close,
   #commissionReportModalOverlay .comm-close,
   #commissionDetailModalOverlay .comm-close,
   #commissionAnalysisModalOverlay .comm-close,
@@ -2181,14 +2353,12 @@ function _ovLoadChartLib(cb){
   }
   #commissionUnlockOverlay .comm-close:hover,
   #commissionAddModalOverlay .comm-close:hover,
-  #commissionApprModalOverlay .comm-close:hover,
   #commissionReportModalOverlay .comm-close:hover,
   #commissionDetailModalOverlay .comm-close:hover,
   #commissionAnalysisModalOverlay .comm-close:hover { color:#ffe3c8; }
   /* 标题右侧留出关闭按钮空间，避免长标题压住按钮 */
   #commissionUnlockOverlay .auth-modal > h3,
   #commissionAddModalOverlay .auth-modal > h3,
-  #commissionApprModalOverlay .auth-modal > h3,
   #commissionReportModalOverlay .auth-modal > h3,
   #commissionDetailModalOverlay .auth-modal > h3,
   #commissionAnalysisModalOverlay .auth-modal > h3 { padding-right:44px; }
@@ -2196,7 +2366,6 @@ function _ovLoadChartLib(cb){
      拖拽/缩放引擎把 left/top 当视口绝对坐标写，relative 流内定位会导致拖动/放大后错位飘走 */
   #commissionUnlockOverlay .auth-modal,
   #commissionAddModalOverlay .auth-modal,
-  #commissionApprModalOverlay .auth-modal,
   #commissionReportModalOverlay .auth-modal,
   #commissionDetailModalOverlay .auth-modal,
   #commissionAnalysisModalOverlay .auth-modal {
@@ -2211,16 +2380,6 @@ function _ovLoadChartLib(cb){
   #commissionAnalysisModalOverlay .auth-modal {
     top:60px; bottom:16px; width:1400px; max-width:96vw;
   }
-  /* 查看与审批弹窗：fixed 居中定位（拖拽/缩放引擎依赖视口绝对坐标）+ 标题栏橙色 */
-  #commissionApprModalOverlay .auth-modal {
-    position:fixed; top:66px; bottom:0; left:0; right:0; margin:auto; width:760px; max-width:97vw;
-  }
-  #commissionApprModalOverlay .auth-modal > h3 {
-    cursor:move; user-select:none; -webkit-user-select:none;
-    background:linear-gradient(180deg,#f5872e,#e8720c); color:#fff;
-    border-radius:8px 8px 0 0; padding:14px 18px; margin:0;
-    padding-right:44px;
-  }
   /* 受益人二级弹窗：同款 fixed 居中定位（拖拽/缩放引擎依赖视口绝对坐标） */
   #beneficiaryModalOverlay .auth-modal { position:fixed; top:66px; bottom:0; left:0; right:0; margin:auto; width:1300px; max-width:98vw; }
   /* 加/受益人两弹窗：标题与×固定、中间内容滚动、底部按钮固定（放大缩小时×始终在头部） */
@@ -2231,13 +2390,14 @@ function _ovLoadChartLib(cb){
   #beneficiaryModalOverlay .auth-modal > h3 { flex:none; }
   #beneficiaryModalOverlay .auth-modal > h3 { cursor:move; user-select:none; -webkit-user-select:none; padding-right:44px; }
   /* 受益人支付明细表：绿色表头 + 行内输入框/下拉占满单元格 */
-  #benPaymentTable { font-size:11px; width:100%; table-layout:fixed; border-collapse:collapse; min-width:1200px; }
+  /* ★BP-COMPACT-20261102★ 去掉 min-width:1200px（横向滚动条的根源），字体 11 → 9.5px */
+#benPaymentTable { font-size:9.5px; width:100%; table-layout:fixed; border-collapse:collapse; min-width:0; }
   #benPaymentTable thead th { background:#1e9e6a !important; color:#fff !important; border-color:#1e9e6a !important; }
   #benPaymentTable th, #benPaymentTable td { padding:6px 4px; min-width:50px; word-break:break-word; vertical-align:middle; }
   #benPaymentTable th { white-space:normal; line-height:1.3; }
   #benPaymentTable td { white-space:nowrap; }
   #benPaymentTable td { padding:2px; }
-  #benPaymentTable .bp-in, #benPaymentTable .bp-sel { width:100%; box-sizing:border-box; border:1px solid transparent; border-radius:5px; background:transparent; font-size:12px; padding:5px 4px; outline:none; color:#23303d; }
+  #benPaymentTable .bp-in, #benPaymentTable .bp-sel { width:100%; box-sizing:border-box; border:1px solid transparent; border-radius:5px; background:transparent; font-size:9.5px; padding:2px 3px; outline:none; color:#23303d; }
   #benPaymentTable .bp-in:focus, #benPaymentTable .bp-sel:focus { background:#fff7ed; border-color:#F5872E; }
   #benPaymentTable .bp-sel { cursor:pointer; }
   #benPaymentTable .comm-date { cursor:pointer; }
@@ -2765,7 +2925,7 @@ function _ovLoadChartLib(cb){
   .dash-chart-lightbox-head { cursor: zoom-in; user-select: none; }
   /* auth-modal 标题栏：无双击放大功能，放大镜光标是残留样式 —— 恢复普通箭头；
      保留 user-select:none（按住标题拖动弹窗时不选中文字）。已注册拖拽的弹窗
-     （查看与审批/受益人）由各自 ID 规则显示 cursor:move，特异度更高不受影响。 */
+     （新增记录/受益人）由各自 ID 规则显示 cursor:move，特异度更高不受影响。 */
   .auth-modal > h3 { cursor: default; user-select: none; -webkit-user-select: none; }
   .mmax > h2, .mmax > h3, .mmax > .modal-header, .mmax > .gsr-head,
   .mmax > .cm-head, .mmax > .cpr-head, .mmax > .rpt-head,
@@ -4028,7 +4188,6 @@ function _ovLoadChartLib(cb){
         <div><h2 id="commissionTitle" data-i18n="commission_title">个人佣金</h2></div>
         <div class="header-btns comm-btns">
           <button class="btn-action" id="commBtnAdd" onclick="openCommissionAddModal()">新增项目产生的佣金记录</button>
-          <button class="comm-btn-ghost" id="commBtnAppr" onclick="openCommissionApprModal()"><span id="commBtnApprText">查看与审批</span><span class="comm-appr-badge" id="commApprBadge" style="display:none;">0</span></button>
           <!-- 查看总报告：直接打开报告模态框（上半=全部个人佣金支付总报告，下半=个人佣金总报告） -->
           <button class="comm-btn-ghost" id="commBtnReports" onclick="openCommissionReportModal()">查看总报告</button>
           <!-- 退出按钮：亮黄色，点击关闭本页 + 同时锁暗门 + 返回看板 -->
@@ -4211,10 +4370,6 @@ function _ovLoadChartLib(cb){
   .bp-modify-btn { background:#2ecc71; color:#fff; border:none; border-radius:5px;
     padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; }
   .bp-modify-btn:hover { background:#27ae60; }
-  .comm-appr-row { border:1px solid #e3e8ee; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
-  .comm-appr-title { font-weight:700; font-size:13px; color:#2c3e50; }
-  .comm-appr-meta { font-size:12px; color:#5f6b76; margin-top:4px; line-height:1.6; }
-  .comm-appr-btns { margin-top:8px; display:flex; gap:8px; }
   .comm-btn-ok { background:#2ecc71; color:#fff; border:none; border-radius:5px;
     padding:5px 16px; font-size:12px; font-weight:600; cursor:pointer; }
   .comm-btn-no { background:#e74c3c; color:#fff; border:none; border-radius:5px;
@@ -4353,10 +4508,16 @@ function _ovLoadChartLib(cb){
     <h3 id="commissionAddTitle">新增项目产生的佣金记录</h3>
     <div class="comm-scroll">
     <div class="commission-form comm-4col">
-      <div class="cf-row cols-6">
+      <!-- ★COMM-ACCEPT-POINTS-20261103★ 第 1 排由 6 列改 8 列（新增「项目验收日期」「佣金总点数」） -->
+      <div class="cf-row cols-8">
         <div class="login-field req"><label id="commLblContract"><i>*</i>合同编号</label><input id="commFContract" type="text" autocomplete="off"></div>
-        <div class="login-field req"><label id="commLblDate"><i>*</i>合同签单日期</label><input id="commFDate" type="text" class="comm-date" placeholder="DD-MM-YYYY" autocomplete="off"></div>
-        <div class="login-field req"><label id="commLblDeposit"><i>*</i>定金给付时间</label><input id="commFDepositDate" type="text" class="comm-date" placeholder="DD-MM-YYYY" autocomplete="off"></div>
+        <!-- ★COMM-ADDDATE-20261102★ 改用模态框内的标准日期选择器（cpOpenCalendar，与签约项目编辑弹窗同一套）：
+             外层 .cp-date-input-wrapper + readonly + onfocus 打开标准日历；去掉 .comm-date 旧钩子，避免两套日历同时弹出 -->
+        <div class="login-field req"><label id="commLblDate"><i>*</i>合同签单日期</label><div class="cp-date-input-wrapper"><input id="commFDate" type="text" placeholder="DD-MM-YYYY" autocomplete="off" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>
+        <div class="login-field req"><label id="commLblDeposit"><i>*</i>定金给付时间</label><div class="cp-date-input-wrapper"><input id="commFDepositDate" type="text" placeholder="DD-MM-YYYY" autocomplete="off" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>
+        <!-- ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期：位置＝定金给付时间右侧、签约双方左侧。
+             与其它日期字段同一套标准日历（cpOpenCalendar）。可选填（项目可能尚未验收），故不加 req。 -->
+        <div class="login-field"><label id="commLblAccept">项目验收日期</label><div class="cp-date-input-wrapper"><input id="commFAcceptDate" type="text" placeholder="DD-MM-YYYY" autocomplete="off" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>
         <div class="login-field req"><label id="commLblParties"><i>*</i>签约双方</label>
           <select id="commFParties">
             <!-- value 固定为业务码（与 COMM_RECORDS.parties 一致），显示文字由 i18n 翻译 -->
@@ -4381,6 +4542,9 @@ function _ovLoadChartLib(cb){
             <option id="commOptVND" value="VND">越南盾 VND</option>
           </select>
         </div>
+        <!-- ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数：放在「签约货币」右侧（第 1 排最后一位）。
+             录入的是百分比数值本体（不带 %），最多 4 位小数，如 2.0913；百分号只出现在标签/占位提示里。 -->
+        <div class="login-field"><label id="commLblPoints">佣金总点数（%）</label><input id="commFPoints" type="text" inputmode="decimal" placeholder="0.0000" autocomplete="off" oninput="commPointsInput(this)"></div>
       </div>
       <div class="cf-row cols-6">
         <div class="login-field req"><label id="commLblEquipRMB"><i>*</i>设备金额 RMB</label><input id="commFEquipRMB" type="text" inputmode="numeric" class="cf-money money-rmb" placeholder="¥" autocomplete="off" oninput="commMoneyInput('rmb')"></div>
@@ -4389,6 +4553,14 @@ function _ovLoadChartLib(cb){
         <div class="login-field req"><label id="commLblRateRMB"><i>*</i>核算总提成使用的汇率 RMB-VND</label><input id="commFRateRMB" type="text" inputmode="numeric" value="3,800" autocomplete="off" oninput="commRateInput(this)"></div>
         <div class="login-field req"><label id="commLblRateUSD"><i>*</i>核算总提成使用的汇率 USD-VND</label><input id="commFRateUSD" type="text" inputmode="numeric" value="26,000" autocomplete="off" oninput="commRateInput(this)"></div>
         <div class="login-field"><label id="commLblRemark">备注</label><input id="commFRemark" type="text" autocomplete="off"></div>
+      </div>
+      <!-- ★COMM-PTCHECK-20261103★ 佣金总点数「展示 + 反向校验」：录入点数自动算预期佣金（设备金额×点数），
+           并对比「受益人需支付总额」，差额一致绿色、不一致橙色提示。不自动改任何金额。 -->
+      <div class="cf-section-title"><span id="commPtCheckTitle">佣金总点数 · 预期佣金与反向校验</span></div>
+      <div class="comm-point-check" id="commPointCheck">
+        <div class="cpc-row"><span class="cpc-label" id="commPtExpectLbl">预期佣金（设备金额 × 点数）</span><span class="cpc-val" id="commPtExpect">—</span></div>
+        <div class="cpc-row"><span class="cpc-label" id="commPtBenLbl">受益人需支付总额</span><span class="cpc-val" id="commPtBen">—</span></div>
+        <div class="cpc-row"><span class="cpc-label" id="commPtDiffLbl">差额（预期 − 受益人）</span><span class="cpc-val" id="commPtDiff">—</span></div>
       </div>
       <!-- 受益人&秘密佣金&支付详情：合并标题(#N 自动编号) + 多列表格 + 新增受益人按钮 -->
       <div class="cf-section-title" style="display:flex;align-items:center;justify-content:space-between;">
@@ -4429,23 +4601,6 @@ function _ovLoadChartLib(cb){
     <div class="auth-modal-btns" style="margin-top:14px;">
       <button class="auth-btn-plain" id="commAddCancelBtn" onclick="closeCommissionAddModal()">取消</button>
       <button class="auth-btn-primary" id="commAddSaveBtn" onclick="saveCommissionRecord()">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ==================== 个人佣金：查看与审批模态框（页签骨架，逻辑后续补充） ==================== -->
-<div id="commissionApprModalOverlay" class="auth-modal-overlay hidden" >
-  <div class="auth-modal" style="width:760px;max-height:90vh;display:flex;flex-direction:column;">
-    <button class="comm-close" onclick="closeCommissionApprModal()" title="Close">×</button>
-    <h3 id="commissionApprTitle" data-i18n="comm_appr_title">查看与审批</h3>
-    <div class="comm-appr-tabs">
-      <button id="commApprTabMine" class="active" onclick="switchCommissionApprTab('mine')">我发起的审批</button>
-      <button id="commApprTabTodo" onclick="switchCommissionApprTab('todo')">待我审批</button>
-      <button id="commApprTabAll" onclick="switchCommissionApprTab('all')">审批记录</button>
-    </div>
-    <div id="commissionApprBody" class="comm-appr-body"></div>
-    <div class="auth-modal-btns" style="margin-top:14px;">
-      <button class="auth-btn-plain" id="commApprCloseBtn" onclick="closeCommissionApprModal()">关闭</button>
     </div>
   </div>
 </div>
@@ -5603,11 +5758,11 @@ function _ovLoadChartLib(cb){
           </div>
           <div id="cpWarrantyFields" style="grid-column:2 / span 5;">
             <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start;">
-              <div class="cp-field"><label id="cpWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
-              <div class="cp-field"><label id="cpWarrantyEndLabel">质保金到期日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
               <div class="cp-field"><label id="cpWarrantyRmbLabel" style="color:#b8326b;">质保金 RMB</label><input class="cp-cur-in" data-cur="rmb" type="text" id="cpWarrantyRmb" placeholder="0" readonly></div>
               <div class="cp-field"><label id="cpWarrantyUsdLabel" style="color:#2656b3;">质保金 USD</label><input class="cp-cur-in" data-cur="usd" type="text" id="cpWarrantyUsd" placeholder="0" readonly></div>
               <div class="cp-field"><label id="cpWarrantyVndLabel" style="color:#9a7420;">质保金 VND</label><input class="cp-cur-in" data-cur="vnd" type="text" id="cpWarrantyVnd" placeholder="0" readonly></div>
+              <div class="cp-field"><label id="cpWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
+              <div class="cp-field"><label id="cpWarrantyEndLabel">质保金结束日期</label><div class="cp-date-input-wrapper"><input type="text" id="cpWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
             </div>
           </div>
         </div>
@@ -5740,8 +5895,11 @@ function _ovLoadChartLib(cb){
              有无质保金 │ 质保金 RMB │ 质保金 USD │ 质保金 VND │ 开始日期 │ 到期日期 -->
         <div class="cp-grid cp-warr-row" style="grid-template-columns:repeat(6,minmax(0,1fr));align-items:start;">
           <div class="cp-field">
-            <label id="agiHasWarrantyLabel">有没有质保金？</label>
-            <input type="text" id="agiHasWarranty" value="" readonly placeholder="—" style="background:#f5f5f5;color:#555;cursor:not-allowed;">
+            <label id="agiHasWarrantyLabel">有无质保金</label>
+            <select id="agiHasWarranty" disabled style="background:#f5f5f5;color:#555;cursor:not-allowed;">
+              <option value="yes" selected id="agiOptYes">是</option>
+              <option value="no" id="agiOptNo">否</option>
+            </select>
           </div>
           <div id="agiWarrantyFields" style="grid-column:2 / span 5;">
             <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:start;">
@@ -5749,7 +5907,7 @@ function _ovLoadChartLib(cb){
               <div class="cp-field"><label id="agiWarrantyUsdLabel" style="color:#2656b3;">质保金 USD</label><input class="cp-cur-in" data-cur="usd" type="text" id="agiWarrantyUsd" placeholder="0" readonly></div>
               <div class="cp-field"><label id="agiWarrantyVndLabel" style="color:#9a7420;">质保金 VND</label><input class="cp-cur-in" data-cur="vnd" type="text" id="agiWarrantyVnd" placeholder="0" readonly></div>
               <div class="cp-field"><label id="agiWarrantyStartLabel">质保金开始日期</label><div class="cp-date-input-wrapper"><input type="text" id="agiWarrantyStart" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
-              <div class="cp-field"><label id="agiWarrantyEndLabel">质保金到期日期</label><div class="cp-date-input-wrapper"><input type="text" id="agiWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
+              <div class="cp-field"><label id="agiWarrantyEndLabel">质保金结束日期</label><div class="cp-date-input-wrapper"><input type="text" id="agiWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="background:#f5f5f5;color:#555;cursor:not-allowed;"></div></div>
             </div>
           </div>
         </div>
@@ -6595,7 +6753,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     commission_unlocked:"个人佣金入口已解锁",
     commission_unauthorized:"当前账号无权限使用此入口",
     comm_col_no:"序号", comm_col_contract:"合同编号", comm_col_parties:"签约双方", comm_col_group:"合作集团", comm_col_date:"合同签单日期", comm_col_equip_amt:"合同签订设备金额", comm_col_rate:"核算总提成使用的汇率", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"编辑项目佣金", comm_col_detail:"受益人&秘佣&支付详情", comm_col_remark:"备注", comm_no_data:"暂无数据",
-    comm_btn_add:"新增项目产生的佣金记录", comm_btn_appr:"查看与审批", comm_btn_reports:"查看总报告",
+    comm_btn_add:"新增项目产生的佣金记录", comm_btn_reports:"查看总报告",
     comm_report_all:"全部佣金支付总报告", comm_report_mine:"聚焦个人佣金总报告", comm_report_coming:"报告功能建设中，敬请期待",
     rep_center_title:"个人佣金总报告中心",
     rep_note_first:"首期预付款", rep_note_mid:"中期进度款", rep_note_final:"尾款结清",
@@ -6616,7 +6774,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     comm_add_title:"新增项目产生的佣金记录", comm_edit_title:"编辑项目产生的佣金记录", comm_save_btn:"保存修改", comm_f_contract:"合同编号", comm_f_parties:"签约双方", comm_f_group:"合作集团", comm_f_date:"合同签单日期", comm_f_equip:"合同签订设备金额", comm_f_rate_rmb:"核算总提成使用的汇率 RMB-VND", comm_f_rate_usd:"核算总提成使用的汇率 USD-VND", comm_f_remark:"备注",
     comm_add_save:"保存", comm_add_cancel:"取消", comm_save_ok:"保存成功", comm_need_contract:"请填写合同编号", comm_required_suffix:"为必填项",
     comm_ph_group_other:"请输入合作集团名称",
-    comm_appr_title:"查看与审批", comm_appr_tab_mine:"我发起的审批", comm_appr_tab_todo:"待我审批", comm_appr_tab_all:"审批记录", comm_appr_empty:"暂无审批", comm_appr_close:"关闭",
+    comm_appr_close:"关闭",
     comm_paid_lock_title:"佣金已支付",
     comm_paid_lock_msg:"金额和给付日期均已实现，证明该佣金已经支付，不得更改！若要更改请发起审批，审批需要经过 cuong、tom、travis 三人审批通过！",
     bp_ex_rate_one_warn:"换汇汇率不能为 1（值为 1 表示没有真实换汇），请修改后再保存！",
@@ -6657,7 +6815,11 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     bp_opt_yes:"有", bp_opt_no:"无", bp_finished_yes:"结束", bp_finished_no:"尚未", bp_nature_advance:"提前预支佣金", bp_nature_normal:"正常支付佣金",
     comm_opt_agi:"AGI-客户", comm_opt_gs:"GS-客户",
     comm_col_currency:"签约货币", comm_f_currency:"签约货币", comm_cur_rmb:"人民币 RMB", comm_cur_usd:"美元 USD", comm_cur_vnd:"越南盾 VND",
-    comm_f_equip_rmb:"设备金额 RMB", comm_f_equip_usd:"设备金额 USD", comm_f_equip_vnd:"设备金额 VND", comm_f_deposit:"定金给付时间"
+    comm_f_equip_rmb:"设备金额 RMB", comm_f_equip_usd:"设备金额 USD", comm_f_equip_vnd:"设备金额 VND", comm_f_deposit:"定金给付时间",
+    comm_f_accept:"项目验收日期", comm_f_points:"佣金总点数（%）",
+    comm_pt_check_title:"佣金总点数 · 预期佣金与反向校验", comm_pt_expect:"预期佣金（设备金额 × 点数）",
+    comm_pt_ben:"受益人需支付总额", comm_pt_diff_lbl:"差额（预期 − 受益人）",
+    comm_pt_check_sec:"佣金总点数 · 预期佣金与反向校验", comm_pt_ok:"点数与受益人总额一致", comm_pt_diff:"差额"
   },
   en: { 
     // ---- Login page / Reset Password / Forget Password (top-level keys for data-i18n scan) ----
@@ -7364,7 +7526,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     commission_unlocked:"Personal Commission entry unlocked",
     commission_unauthorized:"Your account is not authorized to access this entry",
     comm_col_no:"No.", comm_col_contract:"Contract No.", comm_col_parties:"Signing Parties", comm_col_group:"Partner Group", comm_col_date:"Contract Date", comm_col_equip_amt:"Equipment Contract Amount", comm_col_rate:"Commission Calculation Rate", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"Edit Project Commission", comm_col_detail:"Beneficiary & Commission & Payment Details", comm_col_remark:"Remarks", comm_no_data:"No data",
-    comm_btn_add:"Add Project Commission Record", comm_btn_appr:"Review & Approvals", comm_btn_reports:"Summary Reports",
+    comm_btn_add:"Add Project Commission Record", comm_btn_reports:"Summary Reports",
     comm_report_all:"All Commission Payment Report", comm_report_mine:"Focused Personal Commission Report", comm_report_coming:"Report feature coming soon",
     rep_center_title:"Commission Report Center",
     rep_note_first:"First Advance Payment", rep_note_mid:"Mid-term Progress Payment", rep_note_final:"Final Settlement",
@@ -7385,7 +7547,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     comm_add_title:"Add Project Commission Record", comm_edit_title:"Edit Project Commission Record", comm_save_btn:"Save Changes", comm_f_contract:"Contract No.", comm_f_parties:"Signing Parties", comm_f_group:"Partner Group", comm_f_date:"Contract Date", comm_f_equip:"Equipment Contract Amount", comm_f_rate_rmb:"Commission Calculation Rate RMB-VND", comm_f_rate_usd:"Commission Calculation Rate USD-VND", comm_f_remark:"Remarks",
     comm_add_save:"Save", comm_add_cancel:"Cancel", comm_save_ok:"Saved", comm_need_contract:"Please enter the contract number", comm_required_suffix:"is required",
     comm_ph_group_other:"Enter partner group name",
-    comm_appr_title:"Review & Approvals", comm_appr_tab_mine:"Initiated by Me", comm_appr_tab_todo:"Pending My Approval", comm_appr_tab_all:"Approval Records", comm_appr_empty:"No approvals yet", comm_appr_close:"Close",
+    comm_appr_close:"Close",
     comm_paid_lock_title:"Commission Already Paid",
     comm_paid_lock_msg:"Both the amount and payment date have been entered, which proves this commission has already been paid and cannot be changed! To make changes, please initiate an approval - it must be approved by all three: cuong, tom, and travis!",
     bp_ex_rate_one_warn:"Exchange rate cannot be 1 (a rate of 1 means no real exchange happened). Please change it before saving!",
@@ -7424,7 +7586,11 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     bp_opt_yes:"Yes", bp_opt_no:"No", bp_finished_yes:"Finished", bp_finished_no:"Pending", bp_nature_advance:"Advance Commission", bp_nature_normal:"Regular Commission",
     comm_opt_agi:"AGI-Customer", comm_opt_gs:"GS-Customer",
     comm_col_currency:"Contract Currency", comm_f_currency:"Contract Currency", comm_cur_rmb:"CNY (RMB)", comm_cur_usd:"USD", comm_cur_vnd:"VND",
-    comm_f_equip_rmb:"Equip Amount RMB", comm_f_equip_usd:"Equip Amount USD", comm_f_equip_vnd:"Equip Amount VND", comm_f_deposit:"Deposit Payment Date"
+    comm_f_equip_rmb:"Equip Amount RMB", comm_f_equip_usd:"Equip Amount USD", comm_f_equip_vnd:"Equip Amount VND", comm_f_deposit:"Deposit Payment Date",
+    comm_f_accept:"Project Acceptance Date", comm_f_points:"Total Commission Rate (%)",
+    comm_pt_check_title:"Commission Points · Expected & Reverse Check", comm_pt_expect:"Expected Commission (Equip × Rate)",
+    comm_pt_ben:"Beneficiary Total Payable", comm_pt_diff_lbl:"Variance (Expected − Beneficiary)",
+    comm_pt_check_sec:"Commission Points · Expected & Reverse Check", comm_pt_ok:"Rate matches beneficiary total", comm_pt_diff:"Variance"
   },
   vi: { 
     // ---- Trang đăng nhập / Đặt lại mật khẩu / Quên mật khẩu (key cấp cao nhất) ----
@@ -8129,7 +8295,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     commission_unlocked:"Cửa Hoa Hồng Cá Nhân đã mở",
     commission_unauthorized:"Tài khoản này không được phép truy cập",
     comm_col_no:"STT", comm_col_contract:"Số HĐ", comm_col_parties:"Các bên ký kết", comm_col_group:"Tập đoàn hợp tác", comm_col_date:"Ngày ký HĐ", comm_col_equip_amt:"Giá trị thiết bị theo HĐ", comm_col_rate:"Tỷ giá tính tổng hoa hồng", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"Sửa hoa hồng dự án", comm_col_detail:"Người thụ hưởng & hoa hồng & chi tiết TT", comm_col_remark:"Ghi chú", comm_no_data:"Không có dữ liệu",
-    comm_btn_add:"Thêm bản ghi hoa hồng dự án", comm_btn_appr:"Xem & Phê duyệt", comm_btn_reports:"Báo cáo tổng hợp",
+    comm_btn_add:"Thêm bản ghi hoa hồng dự án", comm_btn_reports:"Báo cáo tổng hợp",
     comm_report_all:"Báo cáo tổng tất cả khoản TT hoa hồng", comm_report_mine:"Trọng tâm: Báo cáo tổng hoa hồng cá nhân", comm_report_coming:"Tính năng báo cáo đang xây dựng",
     rep_center_title:"Trung tâm báo cáo hoa hồng",
     rep_note_first:"Ứng trước kỳ đầu", rep_note_mid:"Thanh toán giữa kỳ", rep_note_final:"Thanh toán cuối",
@@ -8150,7 +8316,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     comm_add_title:"Thêm bản ghi hoa hồng dự án", comm_edit_title:"Sửa bản ghi hoa hồng dự án", comm_save_btn:"Lưu thay đổi", comm_f_contract:"Số HĐ", comm_f_parties:"Các bên ký kết", comm_f_group:"Tập đoàn hợp tác", comm_f_date:"Ngày ký HĐ", comm_f_equip:"Giá trị thiết bị theo HĐ", comm_f_rate_rmb:"Tỷ giá tính tổng hoa hồng RMB-VND", comm_f_rate_usd:"Tỷ giá tính tổng hoa hồng USD-VND", comm_f_remark:"Ghi chú",
     comm_add_save:"Lưu", comm_add_cancel:"Hủy", comm_save_ok:"Đã lưu", comm_need_contract:"Vui lòng nhập số HĐ", comm_required_suffix:"là bắt buộc",
     comm_ph_group_other:"Nhập tên tập đoàn hợp tác",
-    comm_appr_title:"Xem & Phê duyệt", comm_appr_tab_mine:"Tôi khởi tạo", comm_appr_tab_todo:"Chờ tôi duyệt", comm_appr_tab_all:"Lịch sử phê duyệt", comm_appr_empty:"Chưa có phê duyệt", comm_appr_close:"Đóng",
+    comm_appr_close:"Đóng",
     comm_paid_lock_title:"Hoa hồng đã thanh toán",
     comm_paid_lock_msg:"Số tiền và ngày chi trả đều đã được nhập, chứng tỏ hoa hồng này đã được thanh toán và không được thay đổi! Nếu muốn thay đổi, vui lòng khởi tạo phê duyệt - phê duyệt phải được cả ba người cuong, tom và travis thông qua!",
     bp_ex_rate_one_warn:"Tỷ giá đổi không được là 1 (tỷ giá 1 nghĩa là không có đổi ngoại tệ thực sự). Vui lòng sửa trước khi lưu!",
@@ -8189,7 +8355,11 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     bp_opt_yes:"Có", bp_opt_no:"Không", bp_finished_yes:"Kết thúc", bp_finished_no:"Chưa", bp_nature_advance:"Ứng trước hoa hồng", bp_nature_normal:"TT hoa hồng bình thường",
     comm_opt_agi:"AGI-Khách hàng", comm_opt_gs:"GS-Khách hàng",
     comm_col_currency:"Loại tiền tệ HĐ", comm_f_currency:"Loại tiền tệ HĐ", comm_cur_rmb:"Nhân dân tệ RMB", comm_cur_usd:"Đô USD", comm_cur_vnd:"Việt Nam đồng VND",
-    comm_f_equip_rmb:"Giá trị TB RMB", comm_f_equip_usd:"Giá trị TB USD", comm_f_equip_vnd:"Giá trị TB VND", comm_f_deposit:"Ngày trả đặt cọc"
+    comm_f_equip_rmb:"Giá trị TB RMB", comm_f_equip_usd:"Giá trị TB USD", comm_f_equip_vnd:"Giá trị TB VND", comm_f_deposit:"Ngày trả đặt cọc",
+    comm_f_accept:"Ngày nghiệm thu dự án", comm_f_points:"Tổng tỷ lệ hoa hồng (%)",
+    comm_pt_check_title:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_expect:"Hoa hồng dự kiến (Thiết bị × Tỷ lệ)",
+    comm_pt_ben:"Tổng thanh toán người thụ hưởng", comm_pt_diff_lbl:"Chênh lệch (Dự kiến − Thụ hưởng)",
+    comm_pt_check_sec:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_ok:"Tỷ lệ khớp tổng thụ hưởng", comm_pt_diff:"Chênh lệch"
   }
 };
 
@@ -8390,6 +8560,18 @@ function formatCurrencyWithSymbol(val, currency) {
   if (currency === 'USD') return '$' + n.toLocaleString('en-US');
   if (currency === 'VND') return '₫' + n.toLocaleString('en-US');
   return n.toLocaleString('en-US');
+}
+/* ★CM-3COLOR-20261102★ 三币种分色（RMB 红 / USD 蓝 / VND 绿）。
+   必须定义在【全局脚本块】：「佣金支付管理」那一大段是 IIFE（function(){...}()），
+   里面的 setSum 能用到全局，但全局的 mirrorGsCommToCmSummary 用不到 IIFE 内部函数 ——
+   之前把本函数放进 IIFE，导致「应支付总佣金金额」镜像时抛 ReferenceError、整行不更新。 */
+function cmMoney3(r,u,v){
+  var s=formatCurrencyWithSymbol;
+  return '<span style="color:#E53935;font-weight:700;">'+s(r,'RMB')+'</span>'
+       + '<span style="color:#c9c9c9;margin:0 3px;">|</span>'
+       + '<span style="color:#2656b3;font-weight:700;">'+s(u,'USD')+'</span>'
+       + '<span style="color:#c9c9c9;margin:0 3px;">|</span>'
+       + '<span style="color:#1e9e5a;font-weight:700;">'+s(v,'VND')+'</span>';
 }
 
 // ===== 报价 Q1-Q7 三币输入：货币符号 + 千分位（无小数点）+ 三币联动 =====
@@ -9806,8 +9988,8 @@ function calcGsComm() {
 // GS 佣金金额 → 子模态框「应支付总佣金金额」镜像（去掉币种符号，按 ¥|$|₫ 格式输出）
 function mirrorGsCommToCmSummary(rmb, usd, vnd) {
   var e = el('cmSumTotalComm'); if (!e) return;
-  var fmtN = function(n){ return Math.round(Number(n||0)).toLocaleString('en-US'); };
-  e.innerHTML = '¥' + fmtN(rmb) + ' | $' + fmtN(usd) + ' | ₫' + fmtN(vnd);
+  /* ★CM-3COLOR-20261102★ 三币种分色（RMB 红 / USD 蓝 / VND 绿），与其余汇总行同一出口 */
+  e.innerHTML = cmMoney3(rmb, usd, vnd);
 }
 
 // ===== AGI 应付总额自动计算：AGI 应付 = 设备&安装总金额（w_total_ei_*，含设备综合+安装预算+VAT） =====
@@ -10728,7 +10910,9 @@ window.LG = (function () {
     // 数据定宽）。旧缓存里的宽度是按"第一次看到它的语言 / 那一刻的行数"量出来的，
     // 必须整体作废重算一次，否则带着历史语言偏差继续用。
     //   ★ACTION-ROW-ONELINE-20261026★ 同理：操作列改为「按钮整排一行」后按新算法重算一次。
-    if (_cache.__stamp !== '20261026c') { _cache = { __stamp: '20261026c' }; saveCache(); }
+    //   ★COMM-COMPACT-20261102★ 个人佣金表字体由 13px 压到 10.5px，旧的列宽缓存是按 13px 量出来的，
+    //   不整体作废的话 minWidth 仍是旧值 → 底部横向滚动条消不掉。这里把 stamp 换代，全体重算一次。
+    if (_cache.__stamp !== '20261102a') { _cache = { __stamp: '20261102a' }; saveCache(); }
     return _cache;
   }
   function saveCache() {
@@ -11713,15 +11897,16 @@ function openEditPermModal(id) { openModal(id); }
 // ==================== 用户新增/编辑模态框 ====================
 // 从 /api/users 拉取数据并映射为原型结构
 function loadUsers(){
-  // 云端模式且无会话 token 时跳过（页面初始加载早于登录/会话恢复，避免无谓 401）；
-  // 本地 Python 版无 token 机制，照常请求。若 sessionStorage 已有 token（刷新恢复会话）则带上。
-  var _opts = {};
-  if (typeof window.__CLOUD_API__ !== 'undefined' && window.__CLOUD_API__) {
-    var _tok = (typeof VAULT_TOKEN !== 'undefined' && VAULT_TOKEN) ? VAULT_TOKEN : '';
-    if (!_tok) { try { _tok = sessionStorage.getItem('won_vault_token') || ''; } catch(e){} }
-    if (!_tok) return Promise.resolve();
-    _opts = { headers: { 'Authorization': 'Bearer ' + _tok } };
-  }
+  /* ★USERS-401-FIX-20261102★ 未登录时不再请求 /api/users，消除控制台 401。
+     原逻辑只在 window.__CLOUD_API__ 为真时才跳过；同源部署的 dist 版本 CLOUD_API 为空，
+     跳过分支根本不走，页面解析期就会裸打 /api/users → 401 Unauthorized。
+     登录成功后（约 26618 行）会重新调用 loadUsers()，不影响用户表 / VIS / 权限加载。 */
+  var _tok = (typeof VAULT_TOKEN !== 'undefined' && VAULT_TOKEN) ? VAULT_TOKEN : '';
+  if (!_tok) { try { _tok = sessionStorage.getItem('won_vault_token') || ''; } catch(e){} }
+  var _loggedIn = (typeof authUser !== 'undefined' && authUser) ||
+                  (function(){ try { return !!sessionStorage.getItem('won_auth_user'); } catch(e){ return false; } })();
+  if (!_tok && !_loggedIn) return Promise.resolve();
+  var _opts = _tok ? { headers: { 'Authorization': 'Bearer ' + _tok } } : {};
   return fetch('/api/users', _opts)
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -12027,7 +12212,9 @@ var _commissionUnlocked = false;
 var _commissionUnlockChecked = false; // 只从 sessionStorage 恢复一次
 function canAccessCommission(){
   if (typeof authUser === 'undefined' || !authUser) return false;
-  var u = String(authUser.username || '').trim().toLowerCase();
+  // ★COMM-EGG-CANFIX-20261102★ 原来只读 authUser.username；某些会话里用户名挂在 login / name 字段上，
+  //   白名单判定就会恒为 false → Logo 暗门「静默无反应」（不弹密码框、无任何提示）。三个字段都兜一遍。
+  var u = String(authUser.username || authUser.login || authUser.name || '').trim().toLowerCase();
   return COMMISSION_WHITELIST.indexOf(u) !== -1;
 }
 function isCommissionUnlocked(){
@@ -12145,7 +12332,7 @@ function reviveCommissionTab(){
 function closeAllCommissionOverlays(){
   // ① .hidden 机制的 9 个佣金模态框
   var COMM_OVS = ['commissionUnlockOverlay','commissionAddModalOverlay',
-                  'commissionApprModalOverlay','commissionReportModalOverlay',
+                  'commissionReportModalOverlay',
                   'commissionDetailModalOverlay','commissionAnalysisModalOverlay',
                   'beneficiaryModalOverlay','commAmtLockOverlay',
                   'commAmtReqOverlay','benDoneOverlay','benReactOverlay'];
@@ -12177,7 +12364,7 @@ function isCommissionContext(target){
   var v = document.getElementById('view-commission');
   if (v && v.classList.contains('active') && (!target || v.contains(target))) return true;
   var COMM_OV = ['commissionUnlockOverlay','commissionAddModalOverlay',
-                 'commissionApprModalOverlay','commissionReportModalOverlay',
+                 'commissionReportModalOverlay',
                  'commissionDetailModalOverlay','commissionAnalysisModalOverlay',
                  'beneficiaryModalOverlay',
                  'commAmtLockOverlay','commAmtReqOverlay','benDoneOverlay','benReactOverlay',
@@ -12417,7 +12604,6 @@ function applyCommissionLang(){
   // 顶部三按钮 + 报告下拉
   st('commBtnAdd','comm_btn_add','新增项目产生的佣金记录');
   st('commBtnExit','comm_btn_exit','退出个人佣金页面');
-  st('commBtnApprText','comm_btn_appr','查看与审批');
   st('commBtnReports','comm_btn_reports','查看总报告');
   // 报告模态框：标题 + 上下两区标题（renderCommissionReports 打开/切语时也会刷新数据区）
   st('commReportModalTitle','rep_center_title','个人佣金总报告中心');
@@ -12456,6 +12642,13 @@ function applyCommissionLang(){
   st('commOptVND','comm_cur_vnd','越南盾 VND');
   st('commLblEquip','comm_f_equip','合同签订设备金额');
   st('commLblRemark','comm_f_remark','备注');
+  st('commLblAccept','comm_f_accept','项目验收日期');           // ★COMM-ACCEPT-POINTS-20261103★
+  st('commLblPoints','comm_f_points','佣金总点数（%）');        // ★COMM-ACCEPT-POINTS-20261103★
+  // ★COMM-PTCHECK-20261103★ 模态框内「佣金总点数 · 预期佣金与反向校验」区块三语
+  st('commPtCheckTitle','comm_pt_check_title','佣金总点数 · 预期佣金与反向校验');
+  st('commPtExpectLbl','comm_pt_expect','预期佣金（设备金额 × 点数）');
+  st('commPtBenLbl','comm_pt_ben','受益人需支付总额');
+  st('commPtDiffLbl','comm_pt_diff_lbl','差额（预期 − 受益人）');
   st('commLblRateRMB','comm_f_rate_rmb','核算总提成使用的汇率 RMB-VND');
   st('commLblRateUSD','comm_f_rate_usd','核算总提成使用的汇率 USD-VND');
   // 受益人&秘密佣金&支付详情（合并标题 + 多列表格）
@@ -12517,12 +12710,6 @@ function applyCommissionLang(){
   // commAddSaveBtn 不再由 st() 统一翻译：其文案需随「新增=保存 / 编辑=保存修改」切换，
   // 已改由 applyCommAddTitle() 按模式注入（与 commissionAddTitle 同源管理，避免相互覆盖）。
   st('commAddCancelBtn','comm_add_cancel','取消');
-  // 查看与审批模态框
-  st('commissionApprTitle','comm_appr_title','查看与审批');
-  st('commApprTabMine','comm_appr_tab_mine','我发起的审批');
-  st('commApprTabTodo','comm_appr_tab_todo','待我审批');
-  st('commApprTabAll','comm_appr_tab_all','审批记录');
-  st('commApprCloseBtn','comm_appr_close','关闭');
   // 报告中心 / 详情报告模态框底部关闭按钮（与其他弹窗统一格式）
   st('commReportCloseBtn','comm_appr_close','关闭');
   st('commDetCloseBtn','comm_appr_close','关闭');
@@ -12535,7 +12722,6 @@ function applyCommissionLang(){
   if (inp && t.commission_password_placeholder) inp.placeholder = t.commission_password_placeholder;
   renderCommission();
   renderBeneficiaryTable();
-  renderCommissionAppr();
   // 放大镜按钮：纯图标按钮，只更新 title 属性（三语），绝不动按钮内容（内容是 SVG 图标）
   var _zb = document.getElementById('repAllZoomBtn');
   if (_zb) _zb.title = t.rep_zoom_title || '查看';
@@ -12944,7 +13130,26 @@ function renderCommissionDetail(idx){
      +   '<div class="det-field"><div class="df-label">' + (t.comm_col_rate || '核算总提成使用的汇率') + ' RMB-VND</div><div class="df-value">' + _escComm(r.rateRMB) + '</div></div>'
      +   '<div class="det-field"><div class="df-label">' + (t.comm_col_rate || '核算总提成使用的汇率') + ' USD-VND</div><div class="df-value">' + _escComm(r.rateUSD) + '</div></div>'
      +   '<div class="det-field"><div class="df-label">' + (t.ben_lbl_deposit_date || '定金给付时间') + '</div><div class="df-value">' + _escComm(r.depositDate) + '</div></div>'
+     +   '<div class="det-field"><div class="df-label">' + (t.comm_f_accept || '项目验收日期') + '</div><div class="df-value">' + _escComm(r.acceptDate) + '</div></div>'
+     +   '<div class="det-field"><div class="df-label">' + (t.comm_f_points || '佣金总点数（%）') + '</div><div class="df-value">' + (_escComm(r.points) ? (_escComm(r.points) + '%') : '—') + '</div></div>'
      + '</div></div>';
+
+  /* ── ①-b 佣金总点数：展示 + 反向校验（预期佣金 = 设备金额 × 点数，对比受益人需支付总额）── */
+  var _pctD = parseFloat(r.points) || 0;
+  var _eR = parseMoney(r.equipRMB), _eU = parseMoney(r.equipUSD), _eV = parseMoney(r.equipVND);
+  var _exp = _pctD > 0 ? { RMB:_eR*_pctD/100, USD:_eU*_pctD/100, VND:_eV*_pctD/100 } : { RMB:0, USD:0, VND:0 };
+  var _bens = r.beneficiaries || [];
+  var _ben = { RMB:0, USD:0, VND:0 };
+  _bens.forEach(function(b){ _ben.RMB += parseFloat(b.totalRMB) || 0; _ben.USD += parseFloat(b.totalUSD) || 0; _ben.VND += parseFloat(b.totalVND) || 0; });
+  var _hasP = _pctD > 0;
+  var _dR = _exp.RMB - _ben.RMB, _dU = _exp.USD - _ben.USD, _dV = _exp.VND - _ben.VND;
+  var _ok = _hasP && Math.abs(_dR) < 1 && Math.abs(_dU) < 1 && Math.abs(_dV) < 1;
+  h += '<div class="det-sec"><div class="det-sec-title">' + (t.comm_pt_check_sec || '佣金总点数 · 预期佣金与反向校验') + '</div>'
+     +   '<div class="det-point-check">'
+     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_expect || '预期佣金（设备金额 × 点数）') + '</span><span class="cpc-val">' + (_hasP ? _fmtCellMoney('RMB', _exp.RMB) + ' · ' + _fmtCellMoney('USD', _exp.USD) + ' · ' + _fmtCellMoney('VND', _exp.VND) : '—') + '</span></div>'
+     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_ben || '受益人需支付总额') + '</span><span class="cpc-val">' + _fmtCellMoney('RMB', _ben.RMB) + ' · ' + _fmtCellMoney('USD', _ben.USD) + ' · ' + _fmtCellMoney('VND', _ben.VND) + '</span></div>'
+     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_diff_lbl || '差额（预期 − 受益人）') + '</span><span class="cpc-val ' + (_hasP ? (_ok ? 'cpc-ok' : 'cpc-warn') : '') + '">' + (_hasP ? ((_ok ? '✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') : '⚠ ' + (t.comm_pt_diff || '差额') + ' ') + _fmtCellMoney('RMB', _dR) + ' · ' + _fmtCellMoney('USD', _dU) + ' · ' + _fmtCellMoney('VND', _dV)) : '—') + '</span></div>'
+     +   '</div></div>';
 
   /* ── ② 受益人给付明细 ── */
   h += '<div class="det-sec"><div class="det-sec-title">' + (t.det_sec_bens || '受益人给付明细') + '</div>';
@@ -13086,7 +13291,10 @@ function fmtMoney(cur, n){
     var _t = a; a = b; b = _t;   // 旧签名：交换 → a=币种, b=数值
   }
   var m = COMM_MONEY[String(a || '').toLowerCase()];
-  var v = isFinite(b) ? Math.round(b) : 0;
+  /* ★FMTMONEY-1ARG-FIX-20261102★ 单参数调用 fmtMoney(329741) 时 b=undefined，
+     isFinite(undefined)=false → v 恒为 0 → 界面金额（质保金/合同总金额/待付金额）全变 0。
+     兼容：b 有效用 b；否则 a 本身是有限数就用 a（单参数旧签名）。 */
+  var v = isFinite(b) ? Math.round(b) : (isFinite(a) ? Math.round(a) : 0);
   return (m ? m.sym : '') + v.toLocaleString('en-US');
 }
 function getCommRate(id){
@@ -13104,6 +13312,7 @@ function commMoneyInput(cur){
   try { el.setSelectionRange(el.value.length, el.value.length); } catch(e){}
   _commMoneySrc = cur;
   commRecalc(cur);
+  commPointCheck();   // ★COMM-PTCHECK-20261103★ 设备金额变动 → 重算预期佣金 + 反向校验
 }
 function commRecalc(src){
   var rRMB = getCommRate('commFRateRMB'), rUSD = getCommRate('commFRateUSD');
@@ -13224,6 +13433,66 @@ function commRateInput(el){
   el.value = el.value.trim() === '' ? '' : n.toLocaleString('en-US');
   commRateChanged();
 }
+/* ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数输入（百分比数值本体，如 2.0913）
+   规则：只留数字和一个小数点；小数点最多 4 位；不补前导 0、不加 % 号（% 只在标签里）。
+   不用 parseMoney（它会补千位逗号、吃小数精度）。 */
+function commPointsInput(el){
+  if (!el) return;
+  var v = String(el.value || '').replace(/[^\d.]/g, '');
+  var dot = v.indexOf('.');
+  if (dot >= 0) {
+    v = v.slice(0, dot + 1) + v.slice(dot + 1).replace(/\./g, '').slice(0, 4);
+  }
+  if (el.value !== v) el.value = v;
+  commPointCheck();   // ★COMM-PTCHECK-20261103★ 点数变动 → 重算预期佣金 + 反向校验
+}
+
+/* ★COMM-PTCHECK-20261103★ 当前弹窗里「受益人需支付总额」的求和（取工作副本 window.__beneficiaries；
+   编辑模式下以 COMM_RECORDS[__commEditIdx].beneficiaries 为准，二者指向同一份）。 */
+function _commBenSum(){
+  var list = window.__beneficiaries || [];
+  if ((typeof window.__commEditIdx === 'number') && window.__commEditIdx >= 0 && COMM_RECORDS[window.__commEditIdx]){
+    list = COMM_RECORDS[window.__commEditIdx].beneficiaries || list;
+  }
+  var s = { RMB:0, USD:0, VND:0 };
+  (list || []).forEach(function(b){
+    s.RMB += parseFloat(b.totalRMB) || 0;
+    s.USD += parseFloat(b.totalUSD) || 0;
+    s.VND += parseFloat(b.totalVND) || 0;
+  });
+  return s;
+}
+
+/* ★COMM-PTCHECK-20261103★ 展示 + 反向校验：
+   预期佣金 = 各币种设备金额 × 佣金总点数(%)；对比「受益人需支付总额」的逐币种求和。
+   一致（每币种差额 < 1）→ 绿色 ✓；否则橙色 ⚠ 显示差额。仅展示与提示，绝不自动改写金额。 */
+function commPointCheck(){
+  var t = T();
+  var pct = parseFloat((document.getElementById('commFPoints') || {}).value || '');
+  var eR = parseMoney((document.getElementById('commFEquipRMB') || {}).value);
+  var eU = parseMoney((document.getElementById('commFEquipUSD') || {}).value);
+  var eV = parseMoney((document.getElementById('commFEquipVND') || {}).value);
+  var hasPct = !isNaN(pct) && pct > 0;
+  var exp = hasPct ? { RMB:eR*pct/100, USD:eU*pct/100, VND:eV*pct/100 } : { RMB:0, USD:0, VND:0 };
+  var ben = _commBenSum();
+  var box = document.getElementById('commPointCheck');
+  if (!box) return;
+  var eEl = document.getElementById('commPtExpect');
+  var bEl = document.getElementById('commPtBen');
+  var dEl = document.getElementById('commPtDiff');
+  if (eEl) eEl.innerHTML = hasPct
+    ? _fmtCellMoney('RMB', exp.RMB) + ' · ' + _fmtCellMoney('USD', exp.USD) + ' · ' + _fmtCellMoney('VND', exp.VND)
+    : '—';
+  if (bEl) bEl.innerHTML =
+    _fmtCellMoney('RMB', ben.RMB) + ' · ' + _fmtCellMoney('USD', ben.USD) + ' · ' + _fmtCellMoney('VND', ben.VND);
+  if (!dEl) return;
+  if (!hasPct){ dEl.innerHTML = '—'; dEl.className = 'cpc-val'; return; }
+  var dR = exp.RMB - ben.RMB, dU = exp.USD - ben.USD, dV = exp.VND - ben.VND;
+  var consistent = Math.abs(dR) < 1 && Math.abs(dU) < 1 && Math.abs(dV) < 1;
+  dEl.innerHTML = (consistent ? '✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') : '⚠ ' + (t.comm_pt_diff || '差额') + ' ')
+    + _fmtCellMoney('RMB', dR) + ' · ' + _fmtCellMoney('USD', dU) + ' · ' + _fmtCellMoney('VND', dV);
+  dEl.className = 'cpc-val ' + (consistent ? 'cpc-ok' : 'cpc-warn');
+}
 // 汇率默认初始值（可修改，每次打开新增弹窗恢复默认）
 var COMM_RATE_DEFAULT = { rmbvnd: '3,800', usdvnd: '26,000' };
 /* ===== 新增个人佣金记录模态框 ===== */
@@ -13232,7 +13501,7 @@ function openCommissionAddModal(){
   var ov = document.getElementById('commissionAddModalOverlay');
   if (!ov) return;
   window.__commEditIdx = null;   // 关键：新增模式清除编辑上下文，确保 saveCommissionRecord 走新增分支
-  ['commFContract','commFDate','commFDepositDate','commFEquipRMB','commFEquipUSD','commFEquipVND','commFRemark'].forEach(function(id){
+  ['commFContract','commFDate','commFDepositDate','commFAcceptDate','commFPoints','commFEquipRMB','commFEquipUSD','commFEquipVND','commFRemark'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   var _rr = document.getElementById('commFRateRMB'); if (_rr) _rr.value = COMM_RATE_DEFAULT.rmbvnd;
@@ -13247,6 +13516,7 @@ function openCommissionAddModal(){
   // 受益人表：新增模式从空表开始（不残留上一条记录的受益人）
   window.__beneficiaries = [];
   renderBeneficiaryTable();
+  commPointCheck();   // ★COMM-PTCHECK-20261103★ 新增模式：点数/设备金额为空 → 显示占位
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
   var first = document.getElementById('commFContract');
@@ -13325,12 +13595,16 @@ function openCommissionEditModal(idx){
   document.getElementById('commFContract').value  = r.contract  || '';
   document.getElementById('commFDate').value      = r.date      || '';
   document.getElementById('commFDepositDate').value = r.depositDate || '';
+  // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期 / 佣金总点数 回填（老记录这两项为空）
+  var _ad = document.getElementById('commFAcceptDate'); if (_ad) _ad.value = r.acceptDate || '';
+  var _pt = document.getElementById('commFPoints');     if (_pt) _pt.value = r.points     || '';
   document.getElementById('commFRemark').value   = r.remark    || '';
   // 标题与按钮按「编辑」模式套用三语（切换语言时由 applyLang → applyCommAddTitle 保持）
   applyCommAddTitle(true);
   // 受益人表：载入该记录已有受益人（工作副本），供「编辑」列逐个修改
   window.__beneficiaries = (r.beneficiaries || []).slice();
   renderBeneficiaryTable();
+  commPointCheck();   // ★COMM-PTCHECK-20261103★ 编辑模式回填点数/设备金额/受益人后 → 重算预期与校验
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
   var first = document.getElementById('commFContract');
@@ -13400,6 +13674,8 @@ function saveCommissionRecord(){
     group: groupVal,
     date: v('commFDate'),
     depositDate: v('commFDepositDate'),   // 定金给付时间（此前漏存 → 编辑后该字段丢失）
+    acceptDate: v('commFAcceptDate'),     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期（可选）
+    points: v('commFPoints'),             // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值，4 位小数）
     currency: v('commFCurrency'),
     equipRMB: parseMoney(v('commFEquipRMB')) || '',
     equipUSD: parseMoney(v('commFEquipUSD')) || '',
@@ -13424,11 +13700,9 @@ function saveCommissionRecord(){
   commPersistRecord(_record);   // 落库：刷新/重启后仍在
   showToast(t.comm_save_ok || '保存成功');
 }
-/* ===== 查看与审批模态框 ===== */
-var _commApprTab = 'mine';
 /* ==================== 个人佣金 · 修改金额审批（后门三人组） ====================
    规则：仅 tom/cuong/travis 可发起；审批发给另外两人；两人都同意 → 通过并自动改金额；
-        任一拒绝 → 作废。只改金额。审批只在「个人佣金 → 查看与审批」里展示。
+        任一拒绝 → 作废。只改金额。审批展示页已于 2026-11-03 随入口一并移除。
    ========================================================================== */
 var COMMISSION_APPROVERS = ['tom', 'cuong', 'travis'];
 var _commAmtCtx = null;   // 当前申请上下文 {idx, contractNo, beneficiary, payNo, currency, oldAmount}
@@ -13646,175 +13920,6 @@ function submitCommAmtRequest() {
     }).catch(function (e) { if (mg) { mg.textContent = String(e); mg.style.color = '#e74c3c'; } });
 }
 
-/* ---- 「查看与审批」按钮角标：统计待我审批的单据数 ---- */
-function updateCommApprBadge(){
-  var badge = document.getElementById('commApprBadge');
-  if (!badge) return;
-  var me = _commUser();
-  var n = 0;
-  (window.__commAmtRequests || []).forEach(function(r){
-    if (r.status !== 'pending') return;
-    var isAppr = String(r.approver1 || '').toLowerCase() === me ||
-                 String(r.approver2 || '').toLowerCase() === me;
-    var myDec = (String(r.approver1 || '').toLowerCase() === me) ? r.dec1
-              : (String(r.approver2 || '').toLowerCase() === me) ? r.dec2 : null;
-    if (isAppr && !myDec) n++;
-  });
-  badge.textContent = n;
-  badge.style.display = n > 0 ? 'flex' : 'none';
-}
-
-/* ---- 审批列表：拉取并渲染（我发起的 / 待我审批 / 已结束） ---- */
-function loadCommissionAppr() {
-  return fetch('/api/commission/amount-requests', { headers: authHeaders() })
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      window.__commAmtRequests = (d && d.items) || [];
-      renderCommissionAppr();
-      updateCommApprBadge();
-      return window.__commAmtRequests;
-    }).catch(function () { window.__commAmtRequests = []; renderCommissionAppr(); updateCommApprBadge(); });
-}
-
-function resolveCommAmtRequest(id, action) {
-  var t = T();
-  fetch('/api/commission/amount-requests/' + id + '/resolve', {
-    method: 'POST', headers: authHeaders(),
-    body: JSON.stringify({ action: action, resolver: _commUser() })
-  }).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
-    .then(function (res) {
-      var d = res.d || {};
-      if (!res.s || res.s >= 400 || !d.ok) { alert(d.error || d.message || '操作失败'); return; }
-      // 两人都同意 → 系统自动把金额改成新值（同步到当前打开的行）
-      if (d.status === 'approved' && d.new_amount) applyCommAmtApproved(id, d.new_amount);
-      loadCommissionAppr();
-    }).catch(function (e) { alert(String(e)); });
-}
-function applyCommAmtApproved(id, newAmt) {
-  var list = window.__commAmtRequests || [];
-  var req = null;
-  for (var i = 0; i < list.length; i++) { if (String(list[i].id) === String(id)) { req = list[i]; break; } }
-  if (!req) return;
-  // 重新激活类审批通过 → 解锁整个受益人表单（不改金额）
-  // 判定优先用后端带回的 reactivate 标志；reason 三语值作兜底
-  if (req.reactivate || req.reason === '重新激活' || req.reason === 'Reactivate' || req.reason === 'Kích hoạt lại') {
-    if (typeof unlockBeneficiaryForm === 'function') unlockBeneficiaryForm();
-    if (typeof renderBenPaymentRows === 'function') renderBenPaymentRows(true);
-    return;
-  }
-  var rows = window.__benPaymentRows || [];
-  for (var j = 0; j < rows.length; j++) {
-    var r = rows[j];
-    if (String(j + 1) === String(req.pay_no)) {
-      if ((r.currency || 'RMB').toLowerCase() === 'rmb') r.givenRMB = newAmt;
-      else r.givenVND = newAmt;
-      r.paidLocked = false;   // 审批通过 → 解锁整行所有字段
-    }
-  }
-  if (typeof renderBenPaymentRows === 'function') renderBenPaymentRows(true);
-}
-
-function openCommissionApprModal(){
-  resetModalGeometry('commissionApprModalOverlay');
-  var ov = document.getElementById('commissionApprModalOverlay');
-  if (ov) ov.classList.remove('hidden');
-  switchCommissionApprTab(_commApprTab || 'mine');
-  loadCommissionAppr();   // 拉取佣金金额修改审批（真实接口）
-}
-function closeCommissionApprModal(){
-  var ov = document.getElementById('commissionApprModalOverlay');
-  if (ov) ov.classList.add('hidden');
-}
-function switchCommissionApprTab(tab){
-  _commApprTab = tab;
-  var t = T();
-  var mine = document.getElementById('commApprTabMine');
-  var todo = document.getElementById('commApprTabTodo');
-  var all = document.getElementById('commApprTabAll');
-  if (mine) mine.classList.toggle('active', tab === 'mine');
-  if (todo) todo.classList.toggle('active', tab === 'todo');
-  if (all) all.classList.toggle('active', tab === 'all');
-  renderCommissionAppr();
-}
-// 审批列表渲染：佣金金额修改审批（只在个人佣金模块内展示，不进全局审批页）
-function renderCommissionAppr(){
-  var body = document.getElementById('commissionApprBody');
-  if (!body) return;
-  var t = T();
-  var list = window.__commAmtRequests || [];
-  var me = _commUser();
-  var tab = _commApprTab || 'mine';
-
-  function iAmApprover(r){
-    return String(r.approver1 || '').toLowerCase() === me ||
-           String(r.approver2 || '').toLowerCase() === me;
-  }
-  function myDecision(r){
-    if (String(r.approver1 || '').toLowerCase() === me) return r.dec1;
-    if (String(r.approver2 || '').toLowerCase() === me) return r.dec2;
-    return null;
-  }
-  // 三页签：mine = 我发起的；todo = 待我审批（我还没表态）；all = 审批记录（我参与过的全部，含已结束）
-  var rows;
-  if (tab === 'mine') {
-    rows = list.filter(function (r) { return String(r.requester || '').toLowerCase() === me; });
-  } else if (tab === 'todo') {
-    rows = list.filter(function (r) { return r.status === 'pending' && iAmApprover(r) && !myDecision(r); });
-  } else {
-    rows = list.filter(function (r) {
-      return String(r.requester || '').toLowerCase() === me || iAmApprover(r);
-    });
-  }
-
-  if (!rows.length) {
-    body.innerHTML = '<div class="comm-appr-empty">' +
-      (t.comm_amt_empty || t.comm_appr_empty || '暂无审批') + '</div>';
-    return;
-  }
-
-  function badge(st) {
-    var cls = 'st-pending', txt = t.comm_amt_pending || '审批中';
-    if (st === 'approved') { cls = 'st-approved'; txt = t.comm_amt_approved || '已通过'; }
-    else if (st === 'rejected') { cls = 'st-rejected'; txt = t.comm_amt_rejected || '已拒绝'; }
-    return '<span class="comm-status ' + cls + '">' + txt + '</span>';
-  }
-
-  var html = '';
-  rows.forEach(function (r) {
-    var pending = (r.status === 'pending');
-    var iAmAppr = iAmApprover(r);
-    var myDec = myDecision(r);
-    // 待我审批页签，或有权限且未表态时，都显示同意/拒绝按钮（我发起的不能自审）
-    var canAct = pending && iAmAppr && !myDec && tab !== 'mine';
-
-    html += '<div class="comm-appr-row">'
-      + '<div class="comm-appr-title">' + (t.comm_amt_by || '申请人') + '：<b>' + r.requester + '</b>'
-      + badge(r.status) + '</div>'
-      + '<div class="comm-appr-meta">'
-      + (r.contract_no ? (r.contract_no + ' · ') : '')
-      + (r.beneficiary || (t.comm_amt_na || '-')) + ' · #' + (r.pay_no || '-') + '<br>'
-      + (t.comm_amt_old || '原金额') + '：<b>' + (r.old_amount || '-') + '</b> → '
-      + (t.comm_amt_new || '新金额') + '：<b style="color:#1e8e3e;">' + (r.new_amount || '-') + '</b>'
-      + (r.reason ? ('<br>' + (t.comm_amt_reason || '原因') + '：' + r.reason) : '')
-      + '<br>' + (t.comm_amt_pending ? '' : '')
-      + (r.approver1 || '') + ' / ' + (r.approver2 || '')
-      + (myDec ? ('（' + (myDec === 'approve'
-            ? (t.comm_amt_approve || '同意')
-            : (t.comm_amt_reject || '拒绝')) + '）') : '')
-      + '</div>';
-
-    if (canAct) {
-      html += '<div class="comm-appr-btns">'
-        + '<button class="comm-btn-ok" onclick="resolveCommAmtRequest(' + r.id + ',\'approve\')">'
-        + (t.comm_amt_approve || '同意') + '</button>'
-        + '<button class="comm-btn-no" onclick="resolveCommAmtRequest(' + r.id + ',\'reject\')">'
-        + (t.comm_amt_reject || '拒绝') + '</button>'
-        + '</div>';
-    }
-    html += '</div>';
-  });
-  body.innerHTML = html;
-}
 /* ===== 新增受益人（二级宽型模态框） ===== */
 function openBeneficiaryModal(){
   resetModalGeometry('beneficiaryModalOverlay');
@@ -14621,6 +14726,7 @@ function renderBeneficiaryTable(){
   if (thEdit) thEdit.style.display = list.length ? '' : 'none';
   if (!list.length){
     tb.innerHTML = '<tr><td class="empty-cell" colspan="15" style="text-align:center;">' + (t.ben_empty || '暂无受益人记录') + '</td></tr>';
+    commPointCheck();   // ★COMM-PTCHECK-20261103★ 受益人清空 → 校验差额随受益人总额归零
     return;
   }
   var html = '';
@@ -14644,6 +14750,7 @@ function renderBeneficiaryTable(){
       + '</tr>';
   });
   tb.innerHTML = html;
+  commPointCheck();   // ★COMM-PTCHECK-20261103★ 受益人明细变动 → 重算校验差额
 }
 /* 受益人表「编辑」列：打开二级受益人弹窗编辑该条明细。
    编辑主记录模式（__commEditIdx 有效）→ 回写 COMM_RECORDS；
@@ -15244,11 +15351,24 @@ function confirmCommissionUnlock(){
 //   3) 同一物理按下会同时派发 pointerdown / mousedown / touchstart，用 50ms 去重避免一次算三下
 //   4) 完全隐身：无任何视觉反馈；触发失败/取消/输错密码后均可无限次重做手势，无次数限制
 (function initCommissionEasterEgg(){
-  var logo = document.querySelector('.tb-logo');
-  if (!logo) return;
   var TAP_WINDOW = 3000;   // 两次点击间隔超过 3 秒 → 重新计数
   var HOLD_MS    = 3000;   // 按住 3 秒触发
   var tapCount = 0, holdTimer = null, resetTimer = null, lastDownTs = 0;
+
+  // ★COMM-EGG-DIAG-20261102★ 诊断：手势没反应时，控制台执行 window.__commEggDiag 能看到卡在哪一环
+  function diag(reason, extra){
+    try {
+      window.__commEggDiag = {
+        reason: reason, at: new Date().toISOString(), extra: extra || null, taps: tapCount,
+        canAccess: (typeof canAccessCommission === 'function') ? canAccessCommission() : 'fn-missing',
+        unlocked: (typeof isCommissionUnlocked === 'function') ? isCommissionUnlocked() : 'fn-missing',
+        dormant: (typeof _commCommissionDormant !== 'undefined') ? _commCommissionDormant : 'undef',
+        user: (typeof authUser !== 'undefined' && authUser) ? (authUser.username || authUser.login || '?') : 'null',
+        bodyClass: document.body.className,
+        logoPE: (function(){ var l = document.querySelector('.tb-logo'); return l ? getComputedStyle(l).pointerEvents : 'no-logo'; })()
+      };
+    } catch(e){}
+  }
 
   function clearTimers(){
     if (holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
@@ -15263,7 +15383,8 @@ function confirmCommissionUnlock(){
     clearTimers();
     tapCount = 0;   // 清零后可立即重新做手势——密码框可无限次调出
     window.__commissionEgg = { taps: 0, armed: false };
-    openCommissionUnlock();
+    diag('fire');
+    if (typeof openCommissionUnlock === 'function') openCommissionUnlock();
   }
   function onDown(e){
     if (e && e.pointerType === 'mouse' && e.button !== 0) return;   // 只响应左键/触摸
@@ -15272,10 +15393,25 @@ function confirmCommissionUnlock(){
     var now = Date.now();
     if (now - lastDownTs < 50) return;
     lastDownTs = now;
-    if (isCommissionUnlocked()){ switchView('commission'); return; } // 已解锁：点 LOGO 直接进
+    if (typeof isCommissionUnlocked === 'function' && isCommissionUnlocked()){
+      // ★COMM-EGG-REVIVE-20261102★ 已解锁：点 LOGO 直接进佣金页。
+      //   但若标签处于「假死」(dormant)，#view-commission 上留着 inline display:none，
+      //   单纯 switchView 会被它压住 → 表现为"点了完全没反应"。这种情形直接走复活。
+      diag('already-unlocked-click');
+      if (typeof _commCommissionDormant !== 'undefined' && _commCommissionDormant
+          && typeof reviveCommissionTab === 'function'){
+        reviveCommissionTab();
+      } else {
+        var vc = document.getElementById('view-commission');
+        if (vc) vc.style.display = '';
+        if (typeof switchView === 'function') switchView('commission');
+      }
+      return;
+    }
     if (resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
     if (tapCount < 5) tapCount++;
     window.__commissionEgg = { taps: tapCount, armed: tapCount >= 5 };
+    diag('tap', tapCount);
     if (tapCount >= 5){
       // 满 5 次后，每一次按下都挂 3 秒长按计时（松开即取消）
       if (holdTimer) clearTimeout(holdTimer);
@@ -15289,11 +15425,48 @@ function confirmCommissionUnlock(){
     if (resetTimer){ clearTimeout(resetTimer); resetTimer = null; }
     resetTimer = setTimeout(resetAll, TAP_WINDOW);                   // 松开后 3 秒内还能继续
   }
-  ['pointerdown','mousedown','touchstart'].forEach(function(ev){ logo.addEventListener(ev, onDown, {passive:false}); });
-  ['pointerup','mouseup','touchend','pointercancel','touchcancel','pointerleave'].forEach(function(ev){ logo.addEventListener(ev, onUp); });
-  logo.addEventListener('contextmenu', function(e){ e.preventDefault(); return false; });
+  // ★COMM-EGG-DELEGATE-20261102★ 关键修复：原来监听器直接绑在 .tb-logo 元素上，
+  //   一旦顶栏被重绘/元素被替换，监听器就永久丢失 → "连点 5 次 + 按住 3 秒完全没反应"。
+  //   改成 document 捕获阶段的事件委托：只要页面上还有 .tb-logo，手势就永远有效。
+  function inLogo(t){
+    try { return !!(t && t.closest && t.closest('.tb-logo')); } catch(e){ return false; }
+  }
+  ['pointerdown','mousedown','touchstart'].forEach(function(ev){
+    document.addEventListener(ev, function(e){ if (inLogo(e.target)) onDown(e); }, {capture:true, passive:false});
+  });
+  ['pointerup','mouseup','touchend','pointercancel','touchcancel','pointerleave'].forEach(function(ev){
+    document.addEventListener(ev, function(e){ if (inLogo(e.target)) onUp(e); }, true);
+  });
+  document.addEventListener('contextmenu', function(e){ if (inLogo(e.target)) { e.preventDefault(); return false; } }, true);
   window.__commissionEgg = { taps: 0, armed: false };
   window.resetCommissionEgg = resetAll;
+  diag('boot');
+
+  // ★COMM-EGG-TOPBAR-HEAL-20261102★ 顶栏兜底自愈：
+  //   body 上残留 .modal-open 时，CSS 会给 .tb-logo 挂 pointer-events:none（顶栏整体变灰不可点），
+  //   表现为"暗门完全没反应"。这里复用与官方观察器同一份遮罩清单做周期性复核：确实没有任何可见遮罩
+  //   却还留着 .modal-open 时把它清掉，让顶栏恢复可点。
+  setInterval(function(){
+    if (!document.body.classList.contains('modal-open')) return;
+    var sel = ['.modal-overlay','.export-confirm-overlay','.pt-editor-overlay','.pm-view-overlay','.detail-view-overlay',
+      '.gsr-overlay','.cpr-overlay','.cm-mask','.cust-pay-overlay','.rpt-overlay',
+      '.addm-overlay','.addm-sum-overlay','.addm-alert-overlay','.dash-chart-lightbox',
+      '.auth-modal-overlay','.appr-confirm-overlay','.appr-drawer-mask','.drawer-mask','.modal-mask',
+      '#commissionUnlockOverlay','#commAmtLockOverlay','#benDoneOverlay','#benReactOverlay',
+      '#commAmtReqOverlay','#commissionAddModalOverlay',
+      '#beneficiaryModalOverlay','#authModalOverlay','#crmMoveToLostModal',
+      '#addmSummaryOverlay','#addendumModal','#addmAlertOverlay',
+      '#delConfirmOverlay','#crmCloseConfirmOverlay','#crmOrangeConfirmOverlay','#copyPwdOverlay','#rptOverlay'].join(',');
+    var any = false, els = document.querySelectorAll(sel);
+    for (var i = 0; i < els.length; i++){
+      var el = els[i];
+      if (el.classList.contains('hidden')) continue;
+      var cs = getComputedStyle(el);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) continue;
+      any = true; break;
+    }
+    if (!any) document.body.classList.remove('modal-open');
+  }, 1500);
 })();
 
 // 审批视图内页签按 APP-L1/L2/L3 显隐，并自动切换到第一个允许的页签
@@ -15825,7 +15998,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-02-Z191";  // 版本标记：用于确认浏览器加载的是最新代码（Z170 = 分期表弹窗拉到屏幕两端 + 字号 10.5/10px + 列宽按内容重排，全部字段与下拉内容可见）
+const PERM_BUILD = "build 2026-11-03-Z193";  // 版本标记：用于确认浏览器加载的是最新代码（Z193 = 佣金总点数「展示+反向校验」区块）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -19071,9 +19244,9 @@ function openDetailView(id, field, labelKey) {
   var displayValue = value ? value.replace(/\n/g, '<br>') : '<span class="dv-empty">' + (t.detail_empty || '（暂无内容）') + '</span>';
 
   // ★ 质保金信息（始终显示：有无/金额/起止日期）
-  var wr = Number(p.warranty_rmb)||0;
-  var wu = Number(p.warranty_usd)||0;
-  var wv = Number(p.warranty_vnd)||0;
+  var wr = warrNum(p.warranty_rmb);
+  var wu = warrNum(p.warranty_usd);
+  var wv = warrNum(p.warranty_vnd);
   var ws = p.warranty_start || '';
   var we = p.warranty_end || '';
   var hasW = wr>0 || wu>0 || wv>0 || ws || we;
@@ -20212,12 +20385,38 @@ function buildWonData() { var N=function(id){ return stripToNumber(el(id).value)
 function saveWon() { var t=T(); var data=buildWonData();
   if(!data.contract_no&&!data.customer){ showSaveOk(t.fillAll); return; }
   var id=el('wonModal').dataset.id;
+  /* ★WON-DUP-GUARD-20261102★ 防止「编辑态丢失 id → 保存变成新建」，从而多出一条重复空壳记录。
+     合同号唯一：当本次是无 id 的新建、但同合同号已存在时，直接改为更新那条。 */
+  if(!id && data.contract_no && typeof globalWonData!=='undefined' && globalWonData){
+    var _dup=null;
+    for(var _i=0;_i<globalWonData.length;_i++){
+      if(String(globalWonData[_i].contract_no||'').trim()===String(data.contract_no).trim()){ _dup=globalWonData[_i]; break; }
+    }
+    if(_dup && _dup.id){
+      id=_dup.id;
+      try{ el('wonModal').dataset.id=id; }catch(e){}
+      console.warn('[WON-DUP-GUARD] 合同号 '+data.contract_no+' 已存在，改为更新 id='+id);
+    }
+  }
   // 注：原 catch 分支会在网络失败时把数据写进 SEED_WON 本地数组并提示"保存成功"，
   // 造成"存进去了其实没进数据库"的假象。SEED_WON 已删除，改为如实提示保存失败。
   fetch('/api/won-projects'+(id?'/'+id:''),{ method:id?'PUT':'POST', credentials:'include', headers:(typeof authHeaders==='function'?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'}), body:JSON.stringify(data)})
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.ok||d.pending||d.id){ showSaveOk(d.pending?t.pending:t.saveOk); closeWonModal(); loadWon(); }
+      if(d.ok||d.pending||d.id){
+        /* ★WON-SAVED-SYNC-20261102★ 用服务端返回的整行就地更新 globalWonData 并立即重渲染，
+           不再只依赖 loadWon() 的网络往返 —— 之前出现过「提示保存成功、总表仍是旧值」。 */
+        var row = (d && d.data && d.data.id) ? d.data : (d && d.id ? d : null);
+        if(row && row.id && typeof globalWonData!=='undefined' && globalWonData){
+          var hit=false;
+          for(var _k=0;_k<globalWonData.length;_k++){
+            if(String(globalWonData[_k].id)===String(row.id)){ globalWonData[_k]=row; hit=true; break; }
+          }
+          if(!hit) globalWonData.push(row);
+          try{ renderWonData(globalWonData); }catch(e){}
+        }
+        showSaveOk(d.pending?t.pending:t.saveOk); closeWonModal(); loadWon();
+      }
       else showSaveOk(d.error||'Error');
     })
     .catch(function(){ var tt=T(); showSaveOk(tt.won_save_fail || '保存失败：无法连接服务器，数据未写入'); }); }
@@ -21301,9 +21500,9 @@ function openCustPayReportFromMain(id) {
     if (mwCust) {
       wr = mwCust.rmb; wu = mwCust.usd; wv = mwCust.vnd; ws = mwCust.start; we = mwCust.end;
     } else {
-      wr = Number(p.warranty_rmb)||0;
-      wu = Number(p.warranty_usd)||0;
-      wv = Number(p.warranty_vnd)||0;
+      wr = warrNum(p.warranty_rmb);
+      wu = warrNum(p.warranty_usd);
+      wv = warrNum(p.warranty_vnd);
       ws = p.warranty_start || '';
       we = p.warranty_end || '';
     }
@@ -21373,12 +21572,14 @@ function openCustPayModal() {
   var setHtml = function(id, html) { var e=el(id); if(e) e.innerHTML = html; };
 
   // 质保金完整状态（有无/三币种金额/起止日期）优先从主模态框同步
-  var mainW = getMainWarrantyState();
+  var mainW = getProjWarranty();   // ★WARR-SYNC-20261102★ 统一读项目质保金（同源只读）
   if (mainW) {
     setVal('cpHasWarranty', mainW.has);
-    setVal('cpWarrantyRmb', mainW.rmb ? fmtMoney(mainW.rmb) : '');
-    setVal('cpWarrantyUsd', mainW.usd ? fmtMoney(mainW.usd) : '');
-    setVal('cpWarrantyVnd', mainW.vnd ? fmtMoney(mainW.vnd) : '');
+    /* ★WARR-SYNC-20261102★ fmtMoney() 对裸数字返回 "0"，这里必须用 toLocaleString */
+    /* ★WARR-SYM-20261102★ 用户要求带货币符号：¥329,741 / $48,640 / ₫1,269,504,000 */
+    setVal('cpWarrantyRmb', warrFmt(mainW.rmb, 'RMB'));
+    setVal('cpWarrantyUsd', warrFmt(mainW.usd, 'USD'));
+    setVal('cpWarrantyVnd', warrFmt(mainW.vnd, 'VND'));
     setVal('cpWarrantyStart', mainW.start);
     setVal('cpWarrantyEnd', mainW.end);
   } else {
@@ -21395,6 +21596,9 @@ function openCustPayModal() {
   syncCpRatesFromParent();
 
   toggleCpWarranty();
+
+  /* ★WARR-SYNC-20261102★ 质保金回填统一放在函数末尾（见下方 applyProjWarrantyToCp()），
+     避免此处写入后被后续行渲染/联动重算覆盖。 */
 
   var tbody = el('cpPayBody');
   if (tbody) {
@@ -21450,11 +21654,12 @@ function applyCpLang() {
   setText('cpTitleText', t2.cp_title || '客户付款明细');
   setText('cpSubTitle', t2.cp_subtitle || 'Customer Payment Details');
   setText('cpWarrantySecTitle', t2.cp_warranty_sec || '质保金信息');
-  setText('cpHasWarrantyLabel', t2.cp_has_warranty || '有没有质保金？');
+  /* ★WARR-SYNC-20261102★ 与「新建签约」用同一套词条，保证三语文案完全一致 */
+  setText('cpHasWarrantyLabel', t2.lbl_warranty_on || '有无质保金');
   setText('cpOptYes', t2.cp_yes || '是');
   setText('cpOptNo', t2.cp_no || '否');
-  setText('cpWarrantyStartLabel', t2.cp_warranty_start || '质保金开始日期');
-  setText('cpWarrantyEndLabel', t2.cp_warranty_end || '质保金到期日期');
+  setText('cpWarrantyStartLabel', t2.lbl_warranty_start || '质保金开始日期');
+  setText('cpWarrantyEndLabel', t2.lbl_warranty_end || '质保金结束日期');
   // ★WON-CPWARR-1ROW-20261102：单行排列后三个币种各自带标签，复用主表单既有三语词条
   setText('cpWarrantyRmbLabel', t2.lbl_warranty_rmb || '质保金 RMB');
   setText('cpWarrantyUsdLabel', t2.lbl_warranty_usd || '质保金 USD');
@@ -21477,6 +21682,8 @@ function applyCpLang() {
   setText('cpThActual', t2.cp_col_actual || '实际付款');
   setText('cpThActualDate', t2.cp_col_actual_date || '实际日期');
   setText('cpAddRowBtn', t2.cp_add_row || '＋ 添加付款行');
+  /* ★WARR-SYNC-20261102★ 所有行渲染/文案设置完成后，最后再把项目质保金写回 6 个只读框 */
+  try { applyProjWarrantyToCp(); } catch (e) {}
   setText('cpSumPlanLabel', t2.cp_sum_plan || '预计合计：');
   setText('cpSumActualLabel', t2.cp_sum_actual || '实际合计：');
   setText('cpSumBgLabel', t2.cp_sum_bg || 'BG合计：');
@@ -21701,7 +21908,13 @@ function cpCalcSum() {
 function toggleCpWarranty() {
   var v = el('cpHasWarranty') ? el('cpHasWarranty').value : 'yes';
   var fields = el('cpWarrantyFields');
-  if (fields) fields.style.display = v==='yes' ? 'block' : 'none';
+  // ★WARR-SYNC-20261102★ 与新建签约一致：6 个框始终可见，选「否」只置灰 + 清空，不再整块隐藏
+  if (fields) fields.style.display = 'block';
+  ['cpWarrantyRmb', 'cpWarrantyUsd', 'cpWarrantyVnd', 'cpWarrantyStart', 'cpWarrantyEnd'].forEach(function (id) {
+    var e = el(id); if (!e) return;
+    if (v === 'no') { e.value = ''; e.style.background = '#f5f5f5'; e.style.color = '#999'; }
+    else { e.style.background = ''; e.style.color = ''; }
+  });
   cpCalcSum();
   if(window.CommissionModal && CommissionModal.syncCmFromCp) CommissionModal.syncCmFromCp();
   // cp"有没有质保金"变化时，同步推送到 agi 质保金区
@@ -21847,19 +22060,19 @@ function addCpPayRow(savedRow) {
   html += '<td><select class="cp-bg-party" style="width:100%;min-width:0;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;">' + partyOptions + '</select></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="cp-bg-start" value="' + (bg.start || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="cp-bg-end" value="' + (bg.end || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
-  html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
+  html += '<td><div class="cp-amt3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
   html += '<input type="text" class="cp-bg-rmb" value="' + (bgAmt.rmb ? Math.round(bgAmt.rmb).toLocaleString() : '') + '" placeholder="RMB" inputmode="numeric" oninput="window.cpOnBgAmtInput(\'rmb\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #f8c9db;border-radius:3px;background:#fde7ef;">';
   html += '<input type="text" class="cp-bg-usd" value="' + (bgAmt.usd ? Math.round(bgAmt.usd).toLocaleString() : '') + '" placeholder="USD" inputmode="numeric" oninput="window.cpOnBgAmtInput(\'usd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #c2d3f3;border-radius:3px;background:#e7eefb;">';
   html += '<input type="text" class="cp-bg-vnd" value="' + (bgAmt.vnd ? Math.round(bgAmt.vnd).toLocaleString() : '') + '" placeholder="VND" inputmode="numeric" oninput="window.cpOnBgAmtInput(\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
   html += '</div></td>';
-  html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
+  html += '<td><div class="cp-amt3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
   html += '<input type="text" class="cp-plan-rmb" value="' + (r.plan && r.plan.rmb ? Math.round(r.plan.rmb).toLocaleString() : '') + '" placeholder="RMB" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'plan\',\'rmb\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #f8c9db;border-radius:3px;background:#fde7ef;">';
   html += '<input type="text" class="cp-plan-usd" value="' + (r.plan && r.plan.usd ? Math.round(r.plan.usd).toLocaleString() : '') + '" placeholder="USD" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'plan\',\'usd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #c2d3f3;border-radius:3px;background:#e7eefb;">';
   html += '<input type="text" class="cp-plan-vnd" value="' + (r.plan && r.plan.vnd ? Math.round(r.plan.vnd).toLocaleString() : '') + '" placeholder="VND" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'plan\',\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
   html += '</div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="cp-plan-date" value="' + (r.planDate || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></div></td>';
   html += '<td><select class="cp-method">' + methodOptions + '</select></td>';
-  html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
+  html += '<td><div class="cp-amt3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
   html += '<input type="text" class="cp-actual-rmb" value="' + (r.actual && r.actual.rmb ? Math.round(r.actual.rmb).toLocaleString() : '') + '" placeholder="RMB" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'actual\',\'rmb\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #f8c9db;border-radius:3px;background:#fde7ef;">';
   html += '<input type="text" class="cp-actual-usd" value="' + (r.actual && r.actual.usd ? Math.round(r.actual.usd).toLocaleString() : '') + '" placeholder="USD" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'actual\',\'usd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #c2d3f3;border-radius:3px;background:#e7eefb;">';
   html += '<input type="text" class="cp-actual-vnd" value="' + (r.actual && r.actual.vnd ? Math.round(r.actual.vnd).toLocaleString() : '') + '" placeholder="VND" inputmode="numeric" oninput="window.cpOnRowAmtInput(\'actual\',\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
@@ -21984,6 +22197,87 @@ function getMainWarrantyState(){
   var en = enEl ? (enEl.value||'') : '';
   if(has==='no'){ rmb=0; usd=0; vnd=0; st=''; en=''; }
   return { has:has, rmb:rmb, usd:usd, vnd:vnd, start:st, end:en };
+}
+
+/* ★WARR-NUM-SAFE-20261102★ 质保金金额容错解析（根因修复）：
+   金额可能以「已格式化的字符串」形式存在于库里（"329,741" / "¥329,741" / "₫1,269,504,000"），
+   Number() 对这类字符串返回 NaN → 0，于是出现「有无质保金、起止日期都正确，唯独三币种金额显示为空」。
+   统一去货币符号/千分位后再解析；数字类型原样返回。 */
+function warrNum(v){
+  if (typeof v === 'number') return isFinite(v) ? v : 0;
+  var s = String(v == null ? '' : v).replace(/[^0-9.\-]/g, '');
+  if (!s) return 0;
+  var n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+/* ★WARR-SYM-20261102★ 质保金金额显示：带货币符号 + 千分位（¥ / $ / ₫），0 或空显示为空 */
+function warrFmt(v, cur){
+  var n = warrNum(v);
+  if (!n) return '';
+  return formatCurrencyWithSymbol(Math.round(n), cur || 'RMB');
+}
+
+/* ★WARR-SYNC-20261102★ 项目质保金的唯一读取入口（三处弹窗共用 → 数据同源）
+   优先级：① 主模态框正在编辑的值 ② 项目已保存的 warranty_* ③ 旧副本（cp/agi）一次性迁移。
+   has 优先取 p.has_warranty，缺失时按「有任何金额或日期即为有」推导，兼容旧数据。 */
+function getProjWarranty() {
+  var mw = getMainWarrantyState();
+  if (mw) return mw;
+  var id = (el('wonModal') && el('wonModal').dataset.id) ||
+           (typeof _custPayCurrentId !== 'undefined' ? _custPayCurrentId : null) ||
+           (typeof _agiPayCurrentId !== 'undefined' ? _agiPayCurrentId : null);
+  var p = null;
+  if (id && typeof globalWonData !== 'undefined' && globalWonData) {
+    for (var i = 0; i < globalWonData.length; i++) {
+      if (globalWonData[i].id === id) { p = globalWonData[i]; break; }
+    }
+  }
+  if (!p) return null;
+  var rmb = warrNum(p.warranty_rmb), usd = warrNum(p.warranty_usd), vnd = warrNum(p.warranty_vnd);
+  var st = p.warranty_start || '', en = p.warranty_end || '';
+  /* 旧数据一次性迁移：项目字段全空时，从 cp / agi 的旧副本搬过来并回写项目（只搬一次） */
+  if (!rmb && !usd && !vnd && !st && !en && !p.__warrMigrated) {
+    var legacy = null;
+    try {
+      if (typeof _custPayStore !== 'undefined' && _custPayStore && _custPayStore.warrantyAmount) {
+        legacy = { r: Number(_custPayStore.warrantyAmount.rmb)||0, u: Number(_custPayStore.warrantyAmount.usd)||0,
+                   v: Number(_custPayStore.warrantyAmount.vnd)||0,
+                   s: _custPayStore.warrantyStart || '', e: _custPayStore.warrantyEnd || '' };
+      } else if (typeof _agiPayStore !== 'undefined' && _agiPayStore && _agiPayStore.warrantyAmount) {
+        legacy = { r: Number(_agiPayStore.warrantyAmount.rmb)||0, u: Number(_agiPayStore.warrantyAmount.usd)||0,
+                   v: Number(_agiPayStore.warrantyAmount.vnd)||0,
+                   s: _agiPayStore.warrantyStart || '', e: _agiPayStore.warrantyEnd || '' };
+      }
+    } catch (e) { legacy = null; }
+    if (legacy && (legacy.r || legacy.u || legacy.v || legacy.s || legacy.e)) {
+      p.warranty_rmb = legacy.r; p.warranty_usd = legacy.u; p.warranty_vnd = legacy.v;
+      p.warranty_start = legacy.s; p.warranty_end = legacy.e;
+      p.has_warranty = 'yes';
+      p.__warrMigrated = true;
+      rmb = legacy.r; usd = legacy.u; vnd = legacy.v; st = legacy.s; en = legacy.e;
+      try {
+        if (typeof saveWonData === 'function') saveWonData();
+        else if (typeof persistWonData === 'function') persistWonData();
+        else if (typeof saveData === 'function') saveData();
+      } catch (e) {}
+    }
+  }
+  var has = p.has_warranty || ((rmb || usd || vnd || st || en) ? 'yes' : 'no');
+  return { has: has, rmb: rmb, usd: usd, vnd: vnd, start: st, end: en };
+}
+
+/* ★WARR-SYNC-20261102★ 把项目质保金写进「客户付款明细」的 6 个只读框（末尾调用，避免被重算覆盖） */
+function applyProjWarrantyToCp() {
+  var mw = getProjWarranty();
+  if (!mw) return;
+  var setV = function (id, v) { var e = document.getElementById(id); if (e) e.value = v; };
+  setV('cpHasWarranty', mw.has || 'yes');
+  /* 注意：fmtMoney() 对纯数字入参会返回 "0"（它按已格式化字符串解析），这里必须用 toLocaleString */
+  setV('cpWarrantyRmb', warrFmt(mw.rmb, 'RMB'));
+  setV('cpWarrantyUsd', warrFmt(mw.usd, 'USD'));
+  setV('cpWarrantyVnd', warrFmt(mw.vnd, 'VND'));
+  setV('cpWarrantyStart', mw.start || '');
+  setV('cpWarrantyEnd', mw.end || '');
 }
 
 function showCpToast(msg) {
@@ -22256,17 +22550,18 @@ function applyAgiLang() {
   setText('agiTitleText', t.detail_agi_payment || 'AGI→GS 付款明细');
   setText('agiSubTitle', 'AGI to GS Payment Details');
   setText('agiWarrantySecTitle', t.cp_warranty_sec || '质保金信息');
-  setText('agiHasWarrantyLabel', t.cp_has_warranty || '有没有质保金？');
+  /* ★WARR-SYNC-20261102★ 标签复用「新建签约」词条；下拉值保持 yes/no（不能再写「有/无」文字） */
+  setText('agiHasWarrantyLabel', t.lbl_warranty_on || '有无质保金');
   var hwEl = document.getElementById('agiHasWarranty');
-  if (hwEl) hwEl.value = agiWarrantyText(agiWarrantyNorm(hwEl.value));
+  if (hwEl) { var hv = agiWarrantyNorm(hwEl.value); hwEl.value = (hv === 'no') ? 'no' : 'yes'; }
   setText('agiOptYes', t.cp_yes || '是');
   setText('agiOptNo', t.cp_no || '否');
   /* ★WON-WARR1ROW-20261102★ 质保金 6 字段单行后，三个币种各自带标签（与「客户付款明细」一致） */
   setText('agiWarrantyRmbLabel', t.lbl_warranty_rmb || '质保金 RMB');
   setText('agiWarrantyUsdLabel', t.lbl_warranty_usd || '质保金 USD');
   setText('agiWarrantyVndLabel', t.lbl_warranty_vnd || '质保金 VND');
-  setText('agiWarrantyStartLabel', t.cp_warranty_start || '质保金开始日期');
-  setText('agiWarrantyEndLabel', t.cp_warranty_end || '质保金到期日期');
+  setText('agiWarrantyStartLabel', t.lbl_warranty_start || '质保金开始日期');
+  setText('agiWarrantyEndLabel', t.lbl_warranty_end || '质保金结束日期');
   setText('agiRateSecTitle', t.cp_rate_sec || '汇率设置（跟随上级输入）');
   setText('agiRateRmbUsdLabel', t.cp_rate_rmb_usd || 'RMB / USD（自动获取，不可修改）');
   setText('agiRateVndUsdLabel', t.cp_rate_vnd_usd || 'VND / USD（自动获取，不可修改）');
@@ -22388,16 +22683,16 @@ function openAgiPayModal(id) {
   var setVal = function(id, val) { var e=document.getElementById(id); if(e) e.value = val; };
 
   // 质保金完整状态（有无/三币种金额/起止日期）优先从主模态框同步
-  var mainW = getMainWarrantyState();
+  var mainW = getProjWarranty();   // ★WARR-SYNC-20261102★ 统一读项目质保金（同源只读，显示原值）
   if (mainW) {
-    setVal('agiHasWarranty', agiWarrantyText(mainW.has));
-    setVal('agiWarrantyRmb', mainW.rmb ? fmtMoney(mainW.rmb) : '');
-    setVal('agiWarrantyUsd', mainW.usd ? fmtMoney(mainW.usd) : '');
-    setVal('agiWarrantyVnd', mainW.vnd ? fmtMoney(mainW.vnd) : '');
+    setVal('agiHasWarranty', mainW.has || 'yes');
+    setVal('agiWarrantyRmb', warrFmt(mainW.rmb, 'RMB'));
+    setVal('agiWarrantyUsd', warrFmt(mainW.usd, 'USD'));
+    setVal('agiWarrantyVnd', warrFmt(mainW.vnd, 'VND'));
     setVal('agiWarrantyStart', mainW.start);
     setVal('agiWarrantyEnd', mainW.end);
   } else {
-    setVal('agiHasWarranty', agiWarrantyText(_agiPayData.hasWarranty || 'yes'));
+    setVal('agiHasWarranty', _agiPayData.hasWarranty || 'yes');
     var wa = _agiPayData.warrantyAmount || {rmb:0,usd:0,vnd:0};
     setVal('agiWarrantyRmb', wa.rmb ? Math.round(wa.rmb).toLocaleString() : '');
     setVal('agiWarrantyUsd', wa.usd ? Math.round(wa.usd).toLocaleString() : '');
@@ -22471,10 +22766,22 @@ function syncAgiRatesFromParent() {
 
 // ===== AGI 质保金切换 =====
 function toggleAgiWarranty() {
-  // agiHasWarranty 现为只读文本，直接读取 cp 同步过来的值（"yes"/"no"）
-  var v = el('agiHasWarranty') ? agiWarrantyNorm(el('agiHasWarranty').value) : 'yes';
+  // ★WARR-SYNC-20261102★ 不再「选否就整块隐藏」：6 个框始终可见（与新建签约一致），
+  // 选「否」时把金额/日期框置灰并清空，避免用户误以为字段缺失。
+  var v = el('agiHasWarranty') ? (el('agiHasWarranty').value || 'yes') : 'yes';
   var fields = el('agiWarrantyFields');
-  if (fields) fields.style.display = v === 'yes' ? 'block' : 'none';
+  if (fields) fields.style.display = 'block';
+  ['agiWarrantyRmb', 'agiWarrantyUsd', 'agiWarrantyVnd', 'agiWarrantyStart', 'agiWarrantyEnd'].forEach(function (id) {
+    var e = el(id); if (!e) return;
+    if (v === 'no') {
+      e.value = '';
+      e.style.background = '#f5f5f5';
+      e.style.color = '#999';
+    } else {
+      e.style.background = '';
+      e.style.color = '';
+    }
+  });
   agiCalcSum();
 }
 
@@ -22486,9 +22793,9 @@ function toggleAgiWarranty() {
 //   agiWarrantyRmb/Usd/Vnd <- cpWarrantyRmb/Usd/Vnd * (1-factor)，三币种各自独立换算
 //   agiWarrantyStart/End   <- cpWarrantyStart/End（只读文本，无日历）
 function syncAgiWarrantyFromCp() {
-  // ★ 优先从主模态框读取质保金信息；主模态框未打开时回退到已保存的 CP/AGI 数据
+  // ★WARR-SYNC-20261102★ 统一读项目质保金（同源只读，显示原值）
   var mainR = 0, mainU = 0, mainV = 0, mainS = '', mainE = '';
-  var mw = getMainWarrantyState();
+  var mw = getProjWarranty();
   if (mw) {
     mainR = mw.rmb; mainU = mw.usd; mainV = mw.vnd; mainS = mw.start; mainE = mw.end;
   } else {
@@ -22501,24 +22808,19 @@ function syncAgiWarrantyFromCp() {
     if (srcData) { mainS = srcData.warrantyStart || ''; mainE = srcData.warrantyEnd || ''; }
   }
 
-  // 1) 同步"有没有质保金？"
+  // 1) 同步"有无质保金"（select，值必须写 yes/no，不能再写「有/无」文字）
   var agiHas = el('agiHasWarranty');
-  if (agiHas) {
-    var hasVal = (mainR>0 || mainU>0 || mainV>0 || mainS || mainE) ? 'yes' : 'no';
-    agiHas.value = agiWarrantyText(hasVal);
-  }
+  /* ★AGI-WARR-SAMEASP-20261102★ 与「客户付款明细」一致：优先用项目记录的 has_warranty */
+  var hasVal = (mw && mw.has) || ((mainR || mainU || mainV || mainS || mainE) ? 'yes' : 'no');
+  if (agiHas) agiHas.value = hasVal;
 
-  // 2) 计算佣金因子
-  var pctEl = el('w_gs_comm_pct');
-  var pctRaw = pctEl ? pctEl.value : '';
-  var pct = parseCommPct(pctRaw); // 0~100 的百分比数值（如 5 表示 5%）
-  var factor = pct >= 1 ? pct / 100 : pct; // 统一为小数
-
-  // 3) 三币种各自乘以 (1-factor)
+  // 2) ★WARR-SYNC-20261102★ 用户要求：AGI→GS 直接显示项目质保金原值，
+  //    不再按 (1 - 佣金比率) 折算（原逻辑保留在下方注释里，便于回溯）。
+  //    var factor = ...; mainR * (1 - factor)
   var agiR = el('agiWarrantyRmb'), agiU = el('agiWarrantyUsd'), agiV = el('agiWarrantyVnd');
-  if (agiR) agiR.value = mainR > 0 ? Math.round(mainR * (1 - factor)).toLocaleString('en-US') : '';
-  if (agiU) agiU.value = mainU > 0 ? Math.round(mainU * (1 - factor)).toLocaleString('en-US') : '';
-  if (agiV) agiV.value = mainV > 0 ? Math.round(mainV * (1 - factor)).toLocaleString('en-US') : '';
+  if (agiR) agiR.value = warrFmt(mainR, 'RMB');
+  if (agiU) agiU.value = warrFmt(mainU, 'USD');
+  if (agiV) agiV.value = warrFmt(mainV, 'VND');
 
   // 4) 同步日期（直接拷贝文本，无日历）
   var agiS = el('agiWarrantyStart'), agiE = el('agiWarrantyEnd');
@@ -22725,19 +23027,19 @@ function addAgiPayRow(savedRow) {
   html += '<td><select class="agi-bg-party" style="' + selStyle + '">' + partyOptions + '</select></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="agi-bg-start" value="' + (bg.start || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="' + inpStyle + '"></div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="agi-bg-end" value="' + (bg.end || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="' + inpStyle + '"></div></td>';
-  html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
+  html += '<td><div class="cp-amt3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
   html += '<input type="text" class="agi-bg-rmb" value="' + (bgAmt.rmb ? formatCurrencyWithSymbol(Math.round(bgAmt.rmb),'RMB') : '') + '" placeholder="RMB" inputmode="numeric" oninput="window.agiOnBgAmtInput(\'rmb\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #f8c9db;border-radius:3px;background:#fde7ef;">';
   html += '<input type="text" class="agi-bg-usd" value="' + (bgAmt.usd ? formatCurrencyWithSymbol(Math.round(bgAmt.usd),'USD') : '') + '" placeholder="USD" inputmode="numeric" oninput="window.agiOnBgAmtInput(\'usd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #c2d3f3;border-radius:3px;background:#e7eefb;">';
   html += '<input type="text" class="agi-bg-vnd" value="' + (bgAmt.vnd ? formatCurrencyWithSymbol(Math.round(bgAmt.vnd),'VND') : '') + '" placeholder="VND" inputmode="numeric" oninput="window.agiOnBgAmtInput(\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
   html += '</div></td>';
-  html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
+  html += '<td><div class="cp-amt3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
   html += '<input type="text" class="agi-plan-rmb" value="' + (r.plan && r.plan.rmb ? formatCurrencyWithSymbol(Math.round(r.plan.rmb),'RMB') : '') + '" placeholder="RMB" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'plan\',\'rmb\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #f8c9db;border-radius:3px;background:#fde7ef;">';
   html += '<input type="text" class="agi-plan-usd" value="' + (r.plan && r.plan.usd ? formatCurrencyWithSymbol(Math.round(r.plan.usd),'USD') : '') + '" placeholder="USD" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'plan\',\'usd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #c2d3f3;border-radius:3px;background:#e7eefb;">';
   html += '<input type="text" class="agi-plan-vnd" value="' + (r.plan && r.plan.vnd ? formatCurrencyWithSymbol(Math.round(r.plan.vnd),'VND') : '') + '" placeholder="VND" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'plan\',\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
   html += '</div></td>';
   html += '<td><div class="cp-date-input-wrapper"><input type="text" class="agi-plan-date" value="' + (r.planDate || '') + '" placeholder="DD-MM-YYYY" readonly onfocus="window.cpOpenCalendar(this)" style="' + inpStyle + '"></div></td>';
   html += '<td><select class="agi-method" style="' + selStyle + '">' + methodOptions + '</select></td>';
-  html += '<td><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
+  html += '<td><div class="cp-amt3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;">';
   html += '<input type="text" class="agi-actual-rmb" value="' + (r.actual && r.actual.rmb ? formatCurrencyWithSymbol(Math.round(r.actual.rmb),'RMB') : '') + '" placeholder="RMB" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'actual\',\'rmb\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #f8c9db;border-radius:3px;background:#fde7ef;">';
   html += '<input type="text" class="agi-actual-usd" value="' + (r.actual && r.actual.usd ? formatCurrencyWithSymbol(Math.round(r.actual.usd),'USD') : '') + '" placeholder="USD" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'actual\',\'usd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #c2d3f3;border-radius:3px;background:#e7eefb;">';
   html += '<input type="text" class="agi-actual-vnd" value="' + (r.actual && r.actual.vnd ? formatCurrencyWithSymbol(Math.round(r.actual.vnd),'VND') : '') + '" placeholder="VND" inputmode="numeric" oninput="window.agiOnRowAmtInput(\'actual\',\'vnd\',this)" style="width:100%;font-size:11px;padding:2px;border:1px solid #ecdc9f;border-radius:3px;background:#fbf3d8;">';
@@ -22988,7 +23290,8 @@ function openAgiPayReportFromMain(id) {
     var factor = pct >= 1 ? pct / 100 : pct;
     if (wr>0 || wu>0 || wv>0 || ws || we) {
       _agiPayStore.hasWarranty = 'yes';
-      _agiPayStore.warrantyAmount = { rmb: Math.round(wr*(1-factor)), usd: Math.round(wu*(1-factor)), vnd: Math.round(wv*(1-factor)) };
+      /* ★WARR-SYNC-20261102★ 与界面一致：存项目质保金原值，不再按 (1-佣金比率) 折算 */
+      _agiPayStore.warrantyAmount = { rmb: Math.round(wr), usd: Math.round(wu), vnd: Math.round(wv) };
       _agiPayStore.warrantyStart = ws;
       _agiPayStore.warrantyEnd = we;
     } else {
@@ -22999,9 +23302,9 @@ function openAgiPayReportFromMain(id) {
     }
   } else if (p && !parsedData) {
     /* 无已保存的 AGI 明细时，回退到主表质保金字段（不扣比率，保持显示） */
-    var wr2 = Number(p.warranty_rmb)||0;
-    var wu2 = Number(p.warranty_usd)||0;
-    var wv2 = Number(p.warranty_vnd)||0;
+    var wr2 = warrNum(p.warranty_rmb);
+    var wu2 = warrNum(p.warranty_usd);
+    var wv2 = warrNum(p.warranty_vnd);
     var ws2 = p.warranty_start || '';
     var we2 = p.warranty_end || '';
     if (wr2>0 || wu2>0 || wv2>0 || ws2 || we2) {
@@ -23852,7 +24155,7 @@ var UI_LOCK_IDS = ['mask','cmMask','drawerMask','apprDrawerMask','wonModal','crm
                    'crmOverviewModal','lostOverviewModal','crmReportModal','wonReportModal',
                    'crmMoveToLostModal','agiPayModal','agiPayReportModal','custPayReportModal',
                    'rptOverlay','gsCommissionReportOverlay','commissionUnlockOverlay',
-                   'commissionAddModalOverlay','commissionApprModalOverlay','beneficiaryModalOverlay'];
+                   'commissionAddModalOverlay','beneficiaryModalOverlay'];
 /**
  * 判断某个遮罩层是否处于"打开"状态。
  *
@@ -23905,7 +24208,7 @@ function isAnyModalOpen(){
   var _authOv = document.getElementById('authModalOverlay');
   if (_authOv && !_authOv.classList.contains('hidden')) return true;
   // 个人佣金四个弹窗：同款 hidden class 反向判定（打开即锁导航，语言切换不受影响）
-  var COMM_LOCK_IDS = ['commissionUnlockOverlay','commissionAddModalOverlay','commissionApprModalOverlay','beneficiaryModalOverlay'];
+  var COMM_LOCK_IDS = ['commissionUnlockOverlay','commissionAddModalOverlay','beneficiaryModalOverlay'];
   for (var k = 0; k < COMM_LOCK_IDS.length; k++){
     var _cov = document.getElementById(COMM_LOCK_IDS[k]);
     if (_cov && !_cov.classList.contains('hidden')) return true;
@@ -24171,7 +24474,6 @@ function switchView(name) {
   // 进入个人佣金视图时：刷新三语表头并渲染（数据源后续接入）
   if (name === 'commission') {
     if (typeof applyCommissionLang === 'function') applyCommissionLang();
-    if (typeof loadCommissionAppr === 'function') loadCommissionAppr();   // 刷新「待我审批」角标
   }
   // 进入审批视图时：确保用户列表已加载（用于显示发起人/审批人姓名），再加载审批
   if (name === 'approvals') {
@@ -27400,11 +27702,8 @@ function submitAuth() {
     // ===== 个人佣金三个模态框：标题栏拖拽 + 右下角/四边缩放（与全系统体验一致） =====
     makeDraggable('#commissionUnlockOverlay', '.auth-modal', '.auth-modal > h3');   // 暗门密码框
     makeDraggable('#commissionAddModalOverlay', '.auth-modal', '.auth-modal > h3'); // 新增记录
-    makeDraggable('#commissionApprModalOverlay', '.auth-modal', '.auth-modal > h3'); // 查看与审批
     makeResizable('#commissionUnlockOverlay', '.auth-modal', null);
     makeResizable('#commissionAddModalOverlay', '.auth-modal', null);
-    makeResizable('#commissionApprModalOverlay', '.auth-modal', null);
-    makeDraggable('#commissionApprModalOverlay', '.auth-modal', '.auth-modal > h3');   // 查看与审批：标题栏拖拽
     makeDraggable('#commissionReportModalOverlay', '.auth-modal', '.auth-modal > h3'); // 查看总报告
     makeResizable('#commissionReportModalOverlay', '.auth-modal', null);
     makeDraggable('#commissionDetailModalOverlay', '.auth-modal', '.auth-modal > h3'); // 详情报告
@@ -27444,14 +27743,17 @@ function submitAuth() {
         <!-- ★WON-WARR1ROW-20261102★ 六个字段排成一行：是否启用 · RMB · USD · VND · 开始日期 · 到期日期 -->
         <div class="cm-grid cm-warr-row">
           <div class="cm-field">
-            <label id="cmLblWarrantyOn">是否启用质保金</label>
-            <input type="text" id="cmWarrantyOn" readonly placeholder="否" style="width:100%;padding:8px 10px;border:1px solid #e8d9c5;border-radius:8px;font-size:13px;color:var(--ink);background:#f6f3ee;cursor:default;">
+            <label id="cmLblWarrantyOn">有无质保金</label>
+            <select id="cmWarrantyOn" disabled style="width:100%;padding:8px 10px;border:1px solid #e8d9c5;border-radius:8px;font-size:13px;color:#555;background:#f6f3ee;cursor:not-allowed;">
+              <option value="yes" selected id="cmWarrantyOptYes">是</option>
+              <option value="no" id="cmWarrantyOptNo">否</option>
+            </select>
           </div>
-          <div class="cm-field"><label>RMB</label><input class="cm-cur-in" data-cur="rmb" type="text" id="cmWarrantyRmb" placeholder="0" inputmode="numeric" readonly></div>
-          <div class="cm-field"><label>USD</label><input class="cm-cur-in" data-cur="usd" type="text" id="cmWarrantyUsd" placeholder="0" inputmode="numeric" readonly></div>
-          <div class="cm-field"><label>VND</label><input class="cm-cur-in" data-cur="vnd" type="text" id="cmWarrantyVnd" placeholder="0" inputmode="numeric" readonly></div>
+          <div class="cm-field"><label>质保金 RMB</label><input class="cm-cur-in" data-cur="rmb" type="text" id="cmWarrantyRmb" placeholder="0" inputmode="numeric" readonly></div>
+          <div class="cm-field"><label>质保金 USD</label><input class="cm-cur-in" data-cur="usd" type="text" id="cmWarrantyUsd" placeholder="0" inputmode="numeric" readonly></div>
+          <div class="cm-field"><label>质保金 VND</label><input class="cm-cur-in" data-cur="vnd" type="text" id="cmWarrantyVnd" placeholder="0" inputmode="numeric" readonly></div>
           <div class="cm-field"><label id="cmLblWarrantyStart">质保金开始日期</label><input type="text" id="cmWarrantyStart" placeholder="DD-MM-YYYY" readonly style="width:100%;padding:8px 10px;border:1px solid #e8d9c5;border-radius:8px;font-size:13px;color:var(--ink);background:#f6f3ee;cursor:default;" autocomplete="off"></div>
-          <div class="cm-field"><label id="cmLblWarrantyEnd">质保金到期日期</label><input type="text" id="cmWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="width:100%;padding:8px 10px;border:1px solid #e8d9c5;border-radius:8px;font-size:13px;color:var(--ink);background:#f6f3ee;cursor:default;" autocomplete="off"></div>
+          <div class="cm-field"><label id="cmLblWarrantyEnd">质保金结束日期</label><input type="text" id="cmWarrantyEnd" placeholder="DD-MM-YYYY" readonly style="width:100%;padding:8px 10px;border:1px solid #e8d9c5;border-radius:8px;font-size:13px;color:var(--ink);background:#f6f3ee;cursor:default;" autocomplete="off"></div>
         </div>
       </div>
 
@@ -27649,17 +27951,21 @@ function applyLang(){
   setText('cmThNo',d.thNo); setText('cmThNature',d.thNature); setText('cmThAmount',d.thAmount); setText('cmThDate',d.thDate); setText('cmThMethod',d.thMethod);
   setText('cmBtnAddRow',d.btnAddRow); setText('cmBtnCancel',d.btnCancel); setText('cmBtnSave',d.btnSave);
   setText('cmLblSumTotal',d.lblSumTotal);
-  setText('cmSecWarranty',d.secWarranty); setText('cmLblWarrantyOn',d.lblWarrantyOn);
+  /* ★WARR-SYNC-20261102★ 质保金标签与「新建签约」统一（复用既有三语词条，不新增 key） */
+  var _tG = (I18N && I18N[CUR_LANG]) || I18N.zh;
+  setText('cmSecWarranty',d.secWarranty); setText('cmLblWarrantyOn', _tG.lbl_warranty_on || d.lblWarrantyOn);
   setText('cmOptYes',d.optYes); setText('cmOptNo',d.optNo);
-  setText('cmLblWarrantyStart',d.lblWarrantyStart); setText('cmLblWarrantyEnd',d.lblWarrantyEnd);
+  setText('cmLblWarrantyStart', _tG.lbl_warranty_start || d.lblWarrantyStart);
+  setText('cmLblWarrantyEnd', _tG.lbl_warranty_end || d.lblWarrantyEnd);
   setText('cmSecRate',d.secRate); setText('cmLblRateRU',d.lblRateRU); setText('cmLblRateVU',d.lblRateVU); setText('cmRateNote',d.rateNote);
   setText('cmSecSummary',d.secSummary); setText('cmLblTotalComm',d.lblTotalComm); setText('cmLblProjEnd',d.lblProjEnd);
   setText('cmLblPaidComm',d.lblPaidComm); setText('cmLblUnpaidNoW',d.lblUnpaidNoW);
   setText('cmLblUnpaidWithW',d.lblUnpaidWithW); setText('cmLblWarrantyIn',d.lblWarrantyIn);
   // 刷新"已支付"下两个斜体子项的前缀标签（保留当前累计数值）
   var _pa=el('cmPaidAdvance'),_pc=el('cmPaidActual');
-  if(_pa){ var _m=_pa.textContent.match(/：¥[\s\S]*$/)||_pa.textContent.match(/: ¥[\s\S]*$/); _pa.textContent=(d.paidAdvance||'佣金预支')+(_m?_m[0]:'：¥0 | $0 | ₫0'); }
-  if(_pc){ var _n=_pc.textContent.match(/：¥[\s\S]*$/)||_pc.textContent.match(/: ¥[\s\S]*$/); _pc.textContent=(d.paidActual||'佣金实际支付')+(_n?_n[0]:'：¥0 | $0 | ₫0'); }
+  /* ★CM-3COLOR-20261102★ 切语言只换前缀，保留金额里的三色 span（用 innerHTML 匹配，不能再用 textContent 重建） */
+  if(_pa){ var _m=_pa.innerHTML.match(/[：:][\s\S]*$/); _pa.innerHTML=(d.paidAdvance||'佣金预支')+(_m?_m[0]:'：'+cmMoney3(0,0,0)); }
+  if(_pc){ var _m2=_pc.innerHTML.match(/[：:][\s\S]*$/); _pc.innerHTML=(d.paidActual||'佣金实际支付')+(_m2?_m2[0]:'：'+cmMoney3(0,0,0)); }
   setText('cmSecRemark',d.secRemark);
   var remark=el('cmRemark'); if(remark) remark.placeholder=d.remarkPH;
   remarkLangRefresh();
@@ -27714,7 +28020,9 @@ function fmt(n){ return Math.round(Number(n||0)).toLocaleString('en-US'); }
 function getNum(el){ return Number((el.value||'').replace(/[^0-9.\-]/g,''))||0; }
 function isValidDateDDMMYYYY(s){ if(!s) return true; var m=s.match(/^(\d{2})-(\d{2})-(\d{4})$/); if(!m) return false; var d=+m[1],mo=+m[2],y=+m[3]; if(d<1||d>31||mo<1||mo>12) return false; return d<=new Date(y,mo,0).getDate(); }
 function getRates(){ return {r2u:7.2,u2v:25400}; }
-function setSum(id,r,u,v){ var e=el(id); if(!e) return; var s=formatCurrencyWithSymbol; e.innerHTML=s(r,'RMB')+' | '+s(u,'USD')+' | '+s(v,'VND'); }
+/* 三币种分色统一走【全局】cmMoney3()（定义在主脚本块 formatCurrencyWithSymbol 之后，
+   本 IIFE 内部不要再定义同名函数，否则全局的 mirrorGsCommToCmSummary 取不到它） */
+function setSum(id,r,u,v){ var e=el(id); if(!e) return; e.innerHTML=cmMoney3(r,u,v); }
 
 /* 三币种联动换算（写入值带币种符号+千位符） */
 function onRowAmtInput(src,inputEl){
@@ -27796,9 +28104,9 @@ function remarkLangRefresh(){
 /* 将主模态框 w_warranty_* 同步到 cm 侧（双向绑定桥梁） */
 function syncCmFromCp(){
   var d=I18N[curLang()]||I18N.zh;
-  // 优先从主模态框读取质保金完整状态；主模态框未打开时回退到已保存的 CP 数据
+  // ★WARR-SYNC-20261102★ 统一读项目质保金（同源只读）
   var mainR=0, mainU=0, mainV=0, mainS='', mainE='';
-  var mw=getMainWarrantyState();
+  var mw=getProjWarranty();
   if (mw) {
     mainR=mw.rmb; mainU=mw.usd; mainV=mw.vnd; mainS=mw.start; mainE=mw.end;
   } else {
@@ -27811,11 +28119,13 @@ function syncCmFromCp(){
     if (srcData) { mainS=srcData.warrantyStart||''; mainE=srcData.warrantyEnd||''; }
   }
   var hasWarranty = mainR>0 || mainU>0 || mainV>0 || mainS || mainE;
-  var cmOn=el('cmWarrantyOn'); if(cmOn){ cmOn.value = hasWarranty ? (d.optYes||'是') : (d.optNo||'否'); }
+  /* ★WARR-SYNC-20261102★ cmWarrantyOn 已改为只读 <select>，value 必须是 yes/no（原来写的是「是/否」文字） */
+  var cmOn=el('cmWarrantyOn'); if(cmOn){ cmOn.value = hasWarranty ? 'yes' : 'no'; }
   var cmR=el('cmWarrantyRmb'), cmU=el('cmWarrantyUsd'), cmV=el('cmWarrantyVnd');
-  if(cmR) cmR.value = mainR ? fmtMoney(mainR) : '';
-  if(cmU) cmU.value = mainU ? fmtMoney(mainU) : '';
-  if(cmV) cmV.value = mainV ? fmtMoney(mainV) : '';
+  /* ★WARR-SYNC-20261102★ fmtMoney() 对裸数字返回 "0"，改用 toLocaleString */
+  if(cmR) cmR.value = warrFmt(mainR, 'RMB');
+  if(cmU) cmU.value = warrFmt(mainU, 'USD');
+  if(cmV) cmV.value = warrFmt(mainV, 'VND');
   var cmS=el('cmWarrantyStart'), cmE=el('cmWarrantyEnd');
   if(cmS) cmS.value = mainS || '';
   if(cmE) cmE.value = mainE || '';
@@ -27839,8 +28149,8 @@ function calcSummary(){
   // ① 已支付佣金总金额 = cmSumTotal 的值（付款计划表合计金额，动态活数据）
   var pr=tr, pu=tu, pv=tv;
   // ② 子项：佣金预支 / 佣金实际支付（斜体，按性质分类累加，用于拆解展示）
-  var pa=el('cmPaidAdvance'); if(pa) pa.textContent=(D().paidAdvance||'佣金预支')+'：¥'+fmt(advR)+' | $'+fmt(advU)+' | ₫'+fmt(advV);
-  var pc=el('cmPaidActual'); if(pc) pc.textContent=(D().paidActual||'佣金实际支付')+'：¥'+fmt(actR)+' | $'+fmt(actU)+' | ₫'+fmt(actV);
+  var pa=el('cmPaidAdvance'); if(pa) pa.innerHTML=(D().paidAdvance||'佣金预支')+'：'+cmMoney3(advR,advU,advV);
+  var pc=el('cmPaidActual'); if(pc) pc.innerHTML=(D().paidActual||'佣金实际支付')+'：'+cmMoney3(actR,actU,actV);
   // ③ 应支付总佣金金额（镜像 w_gs_comm_*；元素仅在详情模态框打开时存在，需空值保护）
   var eR=el('w_gs_comm_rmb'), eU=el('w_gs_comm_usd'), eV=el('w_gs_comm_vnd');
   var vR=eR?eR.value:'', vU=eU?eU.value:'', vV=eV?eV.value:'';
@@ -27864,7 +28174,7 @@ function calcSum(){
   var r=0,u=0,v=0; var body=el('cmPayBody'); if(body){ [].slice.call(body.children).forEach(function(tr){
     r+=getNum(tr.querySelector('.cm-amt-rmb')); u+=getNum(tr.querySelector('.cm-amt-usd')); v+=getNum(tr.querySelector('.cm-amt-vnd'));
   }); }
-  var t=el('cmSumTotal'); if(t) t.innerHTML='<span>¥'+fmt(r)+' | $'+fmt(u)+' | ₫'+fmt(v)+'</span>';
+  var t=el('cmSumTotal'); if(t) t.innerHTML=cmMoney3(r,u,v);
   calcSummary();
 }
 
@@ -29441,9 +29751,9 @@ function openProjectReport(id) {
 
   // ①‑b 质保金信息（优先读主模态框实时值，否则回退主表字段）
   var mwRpt = getMainWarrantyState();
-  var wrRpt = mwRpt ? mwRpt.rmb : (Number(p.warranty_rmb)||0);
-  var wuRpt = mwRpt ? mwRpt.usd : (Number(p.warranty_usd)||0);
-  var wvRpt = mwRpt ? mwRpt.vnd : (Number(p.warranty_vnd)||0);
+  var wrRpt = mwRpt ? mwRpt.rmb : warrNum(p.warranty_rmb);
+  var wuRpt = mwRpt ? mwRpt.usd : warrNum(p.warranty_usd);
+  var wvRpt = mwRpt ? mwRpt.vnd : warrNum(p.warranty_vnd);
   var wsRpt = mwRpt ? mwRpt.start : (p.warranty_start||'');
   var weRpt = mwRpt ? mwRpt.end   : (p.warranty_end||'');
   var hasWRpt = (wrRpt>0 || wuRpt>0 || wvRpt>0 || wsRpt || weRpt);
@@ -31793,7 +32103,7 @@ function _doExportOverviewPDF(){
       '.auth-modal-overlay', '.appr-confirm-overlay', '.appr-drawer-mask',
       '.drawer-mask', '.modal-mask',
       '#commissionUnlockOverlay', '#commAmtLockOverlay', '#benDoneOverlay', '#benReactOverlay',
-      '#commAmtReqOverlay', '#commissionAddModalOverlay', '#commissionApprModalOverlay',
+      '#commAmtReqOverlay', '#commissionAddModalOverlay',
       '#beneficiaryModalOverlay', '#authModalOverlay', '#crmMoveToLostModal',
       '#addmSummaryOverlay', '#addendumModal', '#addmAlertOverlay',
       '#delConfirmOverlay', '#crmCloseConfirmOverlay', '#crmOrangeConfirmOverlay', '#copyPwdOverlay', '#rptOverlay'
@@ -32042,14 +32352,10 @@ function _doExportOverviewPDF(){
         }, 3000); // 长按 3 秒
         return;
       }
-      // 未点 5 次：直接长按 5 秒 → 打开「云端用量报告」（仅限 tom）
-      //   报告里合并显示 D1 今日已用/剩余，并保留「清理残留文件」按钮，
-      //   不再由长按直接触发删除动作，避免误触。
-      if (cleanPressTimer) clearTimeout(cleanPressTimer);
-      cleanPressTimer = setTimeout(function(){
-        cleanTriggered = true;
-        openD1Choose();   // 长按 5 秒 → 先弹选择框（清理 / 查看使用量），不再直接进报告
-      }, 5000); // 长按 5 秒
+      // ★HIDE-DOOR3-20261102★ 用户要求删除暗门③：T 头像「未点满 5 次时直接长按 5 秒 → 云端用量/清理选择框」
+      //   已整段移除。现在未点满 5 次时，长按 T 头像不再有任何动作。
+      //   保留：①Logo 个人佣金、②T 头像连点 5 次 + 长按 3 秒 的私密空间（Vault）、④Dashboard 长按 3 秒。
+      //   说明：openD1Choose / 用量报告 / 清理弹窗本身没有删，仍可从其它入口（返回上一页等）使用。
     }
     function cancelPress(){
       if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
