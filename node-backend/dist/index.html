@@ -2197,7 +2197,9 @@ function _ovLoadChartLib(cb){
 .ben-card-table .bc-cash-wrap { display:flex; align-items:center; gap:1px; justify-content:center; }
 .ben-card-table .bc-cash-wrap .bc-cash { width:calc(100% - 11px); text-align:center; }
 .ben-card-table .bc-pct { color:#e8720c; font-weight:700; }
-.ben-card-table .bc-actual { font-weight:700; text-align:center; }
+.ben-card-table .bc-actual { font-weight:700; text-align:center; font-size:10.5px; }
+/* ★BENCARD-BOLD-20261103★ 理论/实际金额：加粗，字号各 +2（输入框 8→10px，单元格 8.5→10.5px） */
+.ben-card-table .bc-money { font-weight:700 !important; font-size:10px !important; }
 .ben-card-table .bc-actual.bc-rmb, .ben-card-table .bc-money.bc-rmb { color:#d64541; }
 .ben-card-table .bc-actual.bc-usd, .ben-card-table .bc-money.bc-usd { color:#2e86de; }
 .ben-card-table .bc-actual.bc-vnd, .ben-card-table .bc-money.bc-vnd { color:#1e9e6a; }
@@ -14395,7 +14397,7 @@ function _benCardSym(cur){
 function _benCardMoneyDisplay(cur, val){
   var n = parseFloat(String(val == null ? '' : val).replace(/[^\d.]/g, ''));
   if (!(n > 0)) return '';
-  return _benCardSym(cur) + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return _benCardSym(cur) + Math.round(n).toLocaleString('en-US');
 }
 /* ★BENCARD-RATE-20261103★ 汇率显示加千位符（无货币符号），如 3,800 / 26,000 */
 function _benCardRateDisplay(val){
@@ -14412,7 +14414,7 @@ function _benCardActual(theoVal, frac, cur){
   if (!(n > 0)) return '—';
   if (frac >= 1) return '—';
   var v = n / (1 - frac);
-  return _benCardSym(cur) + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return _benCardSym(cur) + Math.round(v).toLocaleString('en-US');
 }
 /* ★COMM-DETAIL-TOGGLE-20261103★ 标题右侧 +/− 折叠开关：展开/收起下方全部支付明细内容 */
 function toggleCommDetail(){
@@ -14649,9 +14651,9 @@ function benCardTheoAutoCalc(i, j, field, val){
   else { vnd = n; }
   if (!(vnd > 0)) return;
   d.theo[field] = val;
-  if (field !== 'vnd') d.theo.vnd = vnd.toFixed(2);
-  if (field !== 'rmb' && r1) d.theo.rmb = (vnd / r1).toFixed(2);
-  if (field !== 'usd' && r2) d.theo.usd = (vnd / r2).toFixed(2);
+  if (field !== 'vnd') d.theo.vnd = String(Math.round(vnd));
+  if (field !== 'rmb' && r1) d.theo.rmb = String(Math.round(vnd / r1));
+  if (field !== 'usd' && r2) d.theo.usd = String(Math.round(vnd / r2));
   d.__lastTheo = field;
   var list = ['rmb', 'usd', 'vnd'];
   for (var k = 0; k < list.length; k++){
@@ -16227,7 +16229,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z248";  // 版本标记：Z248 = 支付明细卡片：①汇率输入加千位符(3,800/26,000，聚焦去逗号、失焦恢复)；②日期输入框缩到 72px/15px、字号 7px 以适配列宽；③全部录入值（金额/汇率/日期/下拉/套现%）左右居中；④理论应支付金额按汇率自动换算：录入任一币种后回填另外两种(RMB→VND 用 rateRmbVnd，USD→VND 用 rateUsdVnd)，汇率改动后按最近录入币种重算
+const PERM_BUILD = "build 2026-11-03-Z249";  // 版本标记：Z249 = 支付明细卡片：理论/实际应支付金额数值加粗、字号各 +2（输入框 8→10px，单元格 8.5→10.5px），并全部改为整数显示（四舍五入，无小数点），自动换算结果同样存整数
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
