@@ -2251,11 +2251,18 @@ function _ovLoadChartLib(cb){
   .commission-form.comm-4col .cf-row { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px 16px; }
   .commission-form.comm-4col .cf-row.cols-5 { grid-template-columns:repeat(5, 1fr); }
   .commission-form.comm-4col .cf-row.cols-6 { grid-template-columns:repeat(6, 1fr); gap:10px 12px; }
-  /* 6 列窄格：长标签自动换行，输入框贴底保持整行对齐 */
-  .commission-form.comm-4col .cf-row.cols-6 .login-field { display:flex; flex-direction:column; }
+  /* ★COMM-ACCEPT-POINTS-20261103★ 第 1 排加了「项目验收日期」「佣金总点数」后变 8 列：
+     列更窄，gap 收到 10px，其余对齐规则与 cols-6 完全一致（标签自动换行、输入框贴底对齐）。 */
+  .commission-form.comm-4col .cf-row.cols-8 { grid-template-columns:repeat(8, 1fr); gap:10px 10px; }
+  /* 窄格：长标签自动换行，输入框贴底保持整行对齐 */
+  .commission-form.comm-4col .cf-row.cols-6 .login-field,
+  .commission-form.comm-4col .cf-row.cols-8 .login-field { display:flex; flex-direction:column; }
   .commission-form.comm-4col .cf-row.cols-6 .login-field input,
-  .commission-form.comm-4col .cf-row.cols-6 .login-field select { margin-top:auto; }
-  .commission-form.comm-4col .cf-row.cols-6 label { font-size:12px; line-height:1.35; }
+  .commission-form.comm-4col .cf-row.cols-6 .login-field select,
+  .commission-form.comm-4col .cf-row.cols-8 .login-field input,
+  .commission-form.comm-4col .cf-row.cols-8 .login-field select { margin-top:auto; }
+  .commission-form.comm-4col .cf-row.cols-6 label,
+  .commission-form.comm-4col .cf-row.cols-8 label { font-size:12px; line-height:1.35; }
   .commission-form label { font-size:13px; color:#44546a; font-weight:600; }
   .commission-form label i { color:#e74c3c; font-style:normal; margin-right:3px; }
   /* 必填项校验失败：红框警示 */
@@ -4487,12 +4494,16 @@ function _ovLoadChartLib(cb){
     <h3 id="commissionAddTitle">新增项目产生的佣金记录</h3>
     <div class="comm-scroll">
     <div class="commission-form comm-4col">
-      <div class="cf-row cols-6">
+      <!-- ★COMM-ACCEPT-POINTS-20261103★ 第 1 排由 6 列改 8 列（新增「项目验收日期」「佣金总点数」） -->
+      <div class="cf-row cols-8">
         <div class="login-field req"><label id="commLblContract"><i>*</i>合同编号</label><input id="commFContract" type="text" autocomplete="off"></div>
         <!-- ★COMM-ADDDATE-20261102★ 改用模态框内的标准日期选择器（cpOpenCalendar，与签约项目编辑弹窗同一套）：
              外层 .cp-date-input-wrapper + readonly + onfocus 打开标准日历；去掉 .comm-date 旧钩子，避免两套日历同时弹出 -->
         <div class="login-field req"><label id="commLblDate"><i>*</i>合同签单日期</label><div class="cp-date-input-wrapper"><input id="commFDate" type="text" placeholder="DD-MM-YYYY" autocomplete="off" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>
         <div class="login-field req"><label id="commLblDeposit"><i>*</i>定金给付时间</label><div class="cp-date-input-wrapper"><input id="commFDepositDate" type="text" placeholder="DD-MM-YYYY" autocomplete="off" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>
+        <!-- ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期：位置＝定金给付时间右侧、签约双方左侧。
+             与其它日期字段同一套标准日历（cpOpenCalendar）。可选填（项目可能尚未验收），故不加 req。 -->
+        <div class="login-field"><label id="commLblAccept">项目验收日期</label><div class="cp-date-input-wrapper"><input id="commFAcceptDate" type="text" placeholder="DD-MM-YYYY" autocomplete="off" readonly onfocus="window.cpOpenCalendar(this)" style="width:100%;cursor:pointer;"></div></div>
         <div class="login-field req"><label id="commLblParties"><i>*</i>签约双方</label>
           <select id="commFParties">
             <!-- value 固定为业务码（与 COMM_RECORDS.parties 一致），显示文字由 i18n 翻译 -->
@@ -4517,6 +4528,9 @@ function _ovLoadChartLib(cb){
             <option id="commOptVND" value="VND">越南盾 VND</option>
           </select>
         </div>
+        <!-- ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数：放在「签约货币」右侧（第 1 排最后一位）。
+             录入的是百分比数值本体（不带 %），最多 4 位小数，如 2.0913；百分号只出现在标签/占位提示里。 -->
+        <div class="login-field"><label id="commLblPoints">佣金总点数（%）</label><input id="commFPoints" type="text" inputmode="decimal" placeholder="0.0000" autocomplete="off" oninput="commPointsInput(this)"></div>
       </div>
       <div class="cf-row cols-6">
         <div class="login-field req"><label id="commLblEquipRMB"><i>*</i>设备金额 RMB</label><input id="commFEquipRMB" type="text" inputmode="numeric" class="cf-money money-rmb" placeholder="¥" autocomplete="off" oninput="commMoneyInput('rmb')"></div>
@@ -6779,7 +6793,8 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     bp_opt_yes:"有", bp_opt_no:"无", bp_finished_yes:"结束", bp_finished_no:"尚未", bp_nature_advance:"提前预支佣金", bp_nature_normal:"正常支付佣金",
     comm_opt_agi:"AGI-客户", comm_opt_gs:"GS-客户",
     comm_col_currency:"签约货币", comm_f_currency:"签约货币", comm_cur_rmb:"人民币 RMB", comm_cur_usd:"美元 USD", comm_cur_vnd:"越南盾 VND",
-    comm_f_equip_rmb:"设备金额 RMB", comm_f_equip_usd:"设备金额 USD", comm_f_equip_vnd:"设备金额 VND", comm_f_deposit:"定金给付时间"
+    comm_f_equip_rmb:"设备金额 RMB", comm_f_equip_usd:"设备金额 USD", comm_f_equip_vnd:"设备金额 VND", comm_f_deposit:"定金给付时间",
+    comm_f_accept:"项目验收日期", comm_f_points:"佣金总点数（%）"
   },
   en: { 
     // ---- Login page / Reset Password / Forget Password (top-level keys for data-i18n scan) ----
@@ -7546,7 +7561,8 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     bp_opt_yes:"Yes", bp_opt_no:"No", bp_finished_yes:"Finished", bp_finished_no:"Pending", bp_nature_advance:"Advance Commission", bp_nature_normal:"Regular Commission",
     comm_opt_agi:"AGI-Customer", comm_opt_gs:"GS-Customer",
     comm_col_currency:"Contract Currency", comm_f_currency:"Contract Currency", comm_cur_rmb:"CNY (RMB)", comm_cur_usd:"USD", comm_cur_vnd:"VND",
-    comm_f_equip_rmb:"Equip Amount RMB", comm_f_equip_usd:"Equip Amount USD", comm_f_equip_vnd:"Equip Amount VND", comm_f_deposit:"Deposit Payment Date"
+    comm_f_equip_rmb:"Equip Amount RMB", comm_f_equip_usd:"Equip Amount USD", comm_f_equip_vnd:"Equip Amount VND", comm_f_deposit:"Deposit Payment Date",
+    comm_f_accept:"Project Acceptance Date", comm_f_points:"Total Commission Rate (%)"
   },
   vi: { 
     // ---- Trang đăng nhập / Đặt lại mật khẩu / Quên mật khẩu (key cấp cao nhất) ----
@@ -8311,7 +8327,8 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     bp_opt_yes:"Có", bp_opt_no:"Không", bp_finished_yes:"Kết thúc", bp_finished_no:"Chưa", bp_nature_advance:"Ứng trước hoa hồng", bp_nature_normal:"TT hoa hồng bình thường",
     comm_opt_agi:"AGI-Khách hàng", comm_opt_gs:"GS-Khách hàng",
     comm_col_currency:"Loại tiền tệ HĐ", comm_f_currency:"Loại tiền tệ HĐ", comm_cur_rmb:"Nhân dân tệ RMB", comm_cur_usd:"Đô USD", comm_cur_vnd:"Việt Nam đồng VND",
-    comm_f_equip_rmb:"Giá trị TB RMB", comm_f_equip_usd:"Giá trị TB USD", comm_f_equip_vnd:"Giá trị TB VND", comm_f_deposit:"Ngày trả đặt cọc"
+    comm_f_equip_rmb:"Giá trị TB RMB", comm_f_equip_usd:"Giá trị TB USD", comm_f_equip_vnd:"Giá trị TB VND", comm_f_deposit:"Ngày trả đặt cọc",
+    comm_f_accept:"Ngày nghiệm thu dự án", comm_f_points:"Tổng tỷ lệ hoa hồng (%)"
   }
 };
 
@@ -12594,6 +12611,8 @@ function applyCommissionLang(){
   st('commOptVND','comm_cur_vnd','越南盾 VND');
   st('commLblEquip','comm_f_equip','合同签订设备金额');
   st('commLblRemark','comm_f_remark','备注');
+  st('commLblAccept','comm_f_accept','项目验收日期');           // ★COMM-ACCEPT-POINTS-20261103★
+  st('commLblPoints','comm_f_points','佣金总点数（%）');        // ★COMM-ACCEPT-POINTS-20261103★
   st('commLblRateRMB','comm_f_rate_rmb','核算总提成使用的汇率 RMB-VND');
   st('commLblRateUSD','comm_f_rate_usd','核算总提成使用的汇率 USD-VND');
   // 受益人&秘密佣金&支付详情（合并标题 + 多列表格）
@@ -13358,6 +13377,18 @@ function commRateInput(el){
   el.value = el.value.trim() === '' ? '' : n.toLocaleString('en-US');
   commRateChanged();
 }
+/* ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数输入（百分比数值本体，如 2.0913）
+   规则：只留数字和一个小数点；小数点最多 4 位；不补前导 0、不加 % 号（% 只在标签里）。
+   不用 parseMoney（它会补千位逗号、吃小数精度）。 */
+function commPointsInput(el){
+  if (!el) return;
+  var v = String(el.value || '').replace(/[^\d.]/g, '');
+  var dot = v.indexOf('.');
+  if (dot >= 0) {
+    v = v.slice(0, dot + 1) + v.slice(dot + 1).replace(/\./g, '').slice(0, 4);
+  }
+  if (el.value !== v) el.value = v;
+}
 // 汇率默认初始值（可修改，每次打开新增弹窗恢复默认）
 var COMM_RATE_DEFAULT = { rmbvnd: '3,800', usdvnd: '26,000' };
 /* ===== 新增个人佣金记录模态框 ===== */
@@ -13366,7 +13397,7 @@ function openCommissionAddModal(){
   var ov = document.getElementById('commissionAddModalOverlay');
   if (!ov) return;
   window.__commEditIdx = null;   // 关键：新增模式清除编辑上下文，确保 saveCommissionRecord 走新增分支
-  ['commFContract','commFDate','commFDepositDate','commFEquipRMB','commFEquipUSD','commFEquipVND','commFRemark'].forEach(function(id){
+  ['commFContract','commFDate','commFDepositDate','commFAcceptDate','commFPoints','commFEquipRMB','commFEquipUSD','commFEquipVND','commFRemark'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   var _rr = document.getElementById('commFRateRMB'); if (_rr) _rr.value = COMM_RATE_DEFAULT.rmbvnd;
@@ -13459,6 +13490,9 @@ function openCommissionEditModal(idx){
   document.getElementById('commFContract').value  = r.contract  || '';
   document.getElementById('commFDate').value      = r.date      || '';
   document.getElementById('commFDepositDate').value = r.depositDate || '';
+  // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期 / 佣金总点数 回填（老记录这两项为空）
+  var _ad = document.getElementById('commFAcceptDate'); if (_ad) _ad.value = r.acceptDate || '';
+  var _pt = document.getElementById('commFPoints');     if (_pt) _pt.value = r.points     || '';
   document.getElementById('commFRemark').value   = r.remark    || '';
   // 标题与按钮按「编辑」模式套用三语（切换语言时由 applyLang → applyCommAddTitle 保持）
   applyCommAddTitle(true);
@@ -13534,6 +13568,8 @@ function saveCommissionRecord(){
     group: groupVal,
     date: v('commFDate'),
     depositDate: v('commFDepositDate'),   // 定金给付时间（此前漏存 → 编辑后该字段丢失）
+    acceptDate: v('commFAcceptDate'),     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期（可选）
+    points: v('commFPoints'),             // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值，4 位小数）
     currency: v('commFCurrency'),
     equipRMB: parseMoney(v('commFEquipRMB')) || '',
     equipUSD: parseMoney(v('commFEquipUSD')) || '',

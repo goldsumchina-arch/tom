@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS commission_records (
   group_name TEXT DEFAULT '',
   sign_date TEXT DEFAULT '',
   deposit_date TEXT DEFAULT '',
+  accept_date TEXT DEFAULT '',
+  comm_points TEXT DEFAULT '',
   currency TEXT DEFAULT '',
   equip_rmb TEXT DEFAULT '',
   equip_usd TEXT DEFAULT '',
@@ -93,6 +95,19 @@ async function ensureTable(env) {
       await env.DB.prepare(sql).run();
     } catch (e) {
       /* 并发建表可能冲突，忽略 */
+    }
+  }
+  // ★COMM-ACCEPT-POINTS-20261103★ 老库补列：CREATE TABLE IF NOT EXISTS 不会给【已存在】的表加列，
+  // 这里对已有库补「项目验收日期 / 佣金总点数」两列。列已存在时 SQLite 会报 duplicate column，
+  // 直接忽略即可（幂等）。新库由上面的 CREATE_REC_SQL 一次建全，这里同样会报错并被忽略。
+  for (const sql of [
+    "ALTER TABLE commission_records ADD COLUMN accept_date TEXT DEFAULT ''",
+    "ALTER TABLE commission_records ADD COLUMN comm_points TEXT DEFAULT ''",
+  ]) {
+    try {
+      await env.DB.prepare(sql).run();
+    } catch (e) {
+      /* 列已存在，忽略 */
     }
   }
 }
@@ -145,6 +160,8 @@ async function recToDict(row, env) {
     group: d.group_name || "",
     date: d.sign_date || "",
     depositDate: d.deposit_date || "",
+    acceptDate: d.accept_date || "",     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期
+    points: d.comm_points || "",         // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值）
     currency: d.currency || "",
     equipRMB: d.equip_rmb || "",
     equipUSD: d.equip_usd || "",
@@ -200,7 +217,7 @@ export async function handleCommission(request, env, url, pathname) {
       rid = exist.id;
       await env.DB.prepare(
         `UPDATE commission_records SET parties=?, group_name=?, sign_date=?,
-         deposit_date=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
+         deposit_date=?, accept_date=?, comm_points=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
          rate_rmb=?, rate_usd=?, remark=?, is_demo=?, updated_at=? WHERE id=?`
       )
         .bind(
@@ -208,6 +225,8 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.group || ""),
           String(rec.date || ""),
           String(rec.depositDate || ""),
+          String(rec.acceptDate || ""),
+          String(rec.points || ""),
           String(rec.currency || ""),
           String(rec.equipRMB || ""),
           String(rec.equipUSD || ""),
@@ -223,9 +242,9 @@ export async function handleCommission(request, env, url, pathname) {
     } else {
       const cur = await env.DB.prepare(
         `INSERT INTO commission_records
-         (contract, parties, group_name, sign_date, deposit_date, currency,
+         (contract, parties, group_name, sign_date, deposit_date, accept_date, comm_points, currency,
           equip_rmb, equip_usd, equip_vnd, rate_rmb, rate_usd, remark, is_demo, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       )
         .bind(
           contract,
@@ -233,6 +252,8 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.group || ""),
           String(rec.date || ""),
           String(rec.depositDate || ""),
+          String(rec.acceptDate || ""),
+          String(rec.points || ""),
           String(rec.currency || ""),
           String(rec.equipRMB || ""),
           String(rec.equipUSD || ""),
