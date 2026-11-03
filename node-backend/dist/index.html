@@ -2310,12 +2310,30 @@ function _ovLoadChartLib(cb){
     font-size:12px; font-weight:700; color:#8a97a5; pointer-events:none; line-height:1;
   }
   .commission-form .cf-suffix-wrap input:focus ~ .cf-suffix { color:#e8720c; }
-  /* ★COMM-PLAN-20261103★ 收益分配计划行：每行 5 列（受益人/佣金比率/RMB/USD/VND），
-     行间用虚线分隔；标签与输入框沿用 cols-5 的自动换行 + 贴底对齐。 */
-  .comm-plan-row { padding:12px 0 2px; border-top:1px dashed #e3e9f1; }
+  /* ★COMM-PLAN-20261103★ 收益分配计划行：单行 flex（受益人 / 佣金比率 / 人民币 / 美元 / 越南盾），
+     行间虚线分隔；整行紧凑（标签 12px、输入框 34px），选 OTHER 时自定义输入框内联在受益人右侧，
+     行内其余字段自动收窄，**永不换行**。 */
+  .comm-plan-row {
+    display:flex; flex-wrap:nowrap; align-items:flex-end; gap:12px;
+    padding:10px 0 2px; border-top:1px dashed #e3e9f1;
+  }
   .comm-plan-row:first-child { border-top:none; padding-top:2px; }
-  .comm-plan-row .comm-plan-custom { margin-top:6px; }
-  .comm-plan-row .cf-suffix-wrap { margin-top:auto; }
+  .comm-plan-row > .login-field { flex:1 1 0; min-width:0; }
+  .comm-plan-row > .login-field > label {
+    font-size:12px; line-height:1.3; font-weight:600; color:#44546a;
+    white-space:normal; word-break:break-word;
+  }
+  .comm-plan-row > .login-field input,
+  .comm-plan-row > .login-field select {
+    height:34px; padding:0 10px; font-size:13px; border-radius:8px; margin-top:4px;
+  }
+  .comm-plan-row .comm-plan-name-body { display:flex; flex-wrap:nowrap; align-items:center; gap:8px; margin-top:4px; }
+  .comm-plan-row .comm-plan-name-body > select { flex:0 1 42%; min-width:76px; margin-top:0; }
+  .comm-plan-row .comm-plan-name-body > .comm-plan-custom { display:none; flex:1 1 0; min-width:0; margin-top:0; }
+  .comm-plan-row.has-other > .login-field.comm-plan-name { flex:2.2 1 0; }
+  .comm-plan-row.has-other .comm-plan-name-body > .comm-plan-custom { display:block; }
+  .comm-plan-row .cf-suffix-wrap { margin-top:4px; }
+  .comm-plan-row .cf-suffix-wrap input { height:34px; }
   .comm-plan-row .comm-plan-idx { font-size:11px; font-weight:700; color:#8a97a5; margin-right:4px; }
   /* 合作集团下拉：外观与输入框一致 */
   .commission-form select {
@@ -4592,6 +4610,15 @@ function _ovLoadChartLib(cb){
         <div class="login-field"><label id="commLblBenCount">受益人数</label><input id="commFBenCount" type="text" inputmode="numeric" placeholder="1-10" autocomplete="off" oninput="commBenCountInput(this)" onblur="commBenCountBlur(this)"></div>
         <div class="login-field"><label id="commLblRemark">备注</label><input id="commFRemark" type="text" autocomplete="off"></div>
       </div>
+      <!-- ★COMM-PLAN-20261103★ 收益分配计划：紧跟在「受益人数」所在这一排下面，人数 N 确认后自动生成 N 行
+           （受益人下拉 L1/C1/TV/TM/OTHER〔选 OTHER 时自定义输入框内联在右侧，整行不换行〕
+            + 佣金比率 4 位小数 % + RMB/USD/VND 三币录入） -->
+      <div class="cf-section-title" id="commPlanSecTitle" style="display:none;">
+        <span id="commPlanTitleText">受益人-人数-收益分配计划</span>
+      </div>
+      <div id="commPlanWrap" style="display:none;">
+        <div id="commPlanRows"></div>
+      </div>
       <!-- ★COMM-PTCHECK-20261103★ 佣金总点数「展示 + 反向校验」：录入点数自动算预期佣金（设备金额×点数），
            并对比「受益人需支付总额」，差额一致绿色、不一致橙色提示。不自动改任何金额。 -->
       <div class="cf-section-title"><span id="commPtCheckTitle">佣金总点数 · 预期佣金与反向校验</span></div>
@@ -4632,14 +4659,6 @@ function _ovLoadChartLib(cb){
           </thead>
           <tbody id="benTbody"></tbody>
         </table>
-      </div>
-      <!-- ★COMM-PLAN-20261103★ 收益分配计划：受益人数(N)确认后，底部按 N 自动生成 N 行
-           （受益人下拉 L1/C1/TV/TM/OTHER + 佣金比率 4 位小数 % + RMB/USD/VND 三币录入） -->
-      <div class="cf-section-title" id="commPlanSecTitle" style="margin-top:16px;display:none;">
-        <span id="commPlanTitleText">受益人-人数-收益分配计划</span>
-      </div>
-      <div id="commPlanWrap" style="display:none;">
-        <div id="commPlanRows"></div>
       </div>
     </div>
     </div>
@@ -13598,12 +13617,13 @@ function commPlanRender(){
     var opts = COMM_PLAN_NAMES.map(function(o){
       return '<option value="' + o + '"' + (r.name === o ? ' selected' : '') + '>' + o + '</option>';
     }).join('');
-    html += '<div class="cf-row cols-5 comm-plan-row" data-plan-idx="' + i + '">'
-      // ① 受益人（下拉 + OTHER 时的自定义输入）
-      +   '<div class="login-field"><label><span class="comm-plan-idx">#' + (i + 1) + '</span>' + _escComm(t.comm_plan_th_name || '受益人') + '</label>'
-      +     '<select onchange="commPlanNameChange(' + i + ',this)">' + opts + '</select>'
-      +     '<input type="text" class="comm-plan-custom" placeholder="' + _escComm(t.comm_plan_custom || '自定义受益人') + '" value="' + _escComm(r.custom || '') + '"'
-      +       (r.name === 'OTHER' ? '' : ' style="display:none;"') + ' oninput="commPlanCustomInput(' + i + ',this)">'
+    html += '<div class="comm-plan-row' + (r.name === 'OTHER' ? ' has-other' : '') + '" data-plan-idx="' + i + '">'
+      // ① 受益人（下拉；选 OTHER 时自定义输入框内联在右侧，整行不换行）
+      +   '<div class="login-field comm-plan-name"><label><span class="comm-plan-idx">#' + (i + 1) + '</span>' + _escComm(t.comm_plan_th_name || '受益人') + '</label>'
+      +     '<div class="comm-plan-name-body">'
+      +       '<select onchange="commPlanNameChange(' + i + ',this)">' + opts + '</select>'
+      +       '<input type="text" class="comm-plan-custom" placeholder="' + _escComm(t.comm_plan_custom || '自定义受益人') + '" value="' + _escComm(r.custom || '') + '" autocomplete="off" oninput="commPlanCustomInput(' + i + ',this)">'
+      +     '</div>'
       +   '</div>'
       // ② 佣金比率（4 位小数 + 内嵌 %）
       +   '<div class="login-field"><label>' + _escComm(t.comm_plan_th_ratio || '佣金比率（%）') + '</label>'
@@ -13623,8 +13643,10 @@ function commPlanRender(){
 function commPlanNameChange(i, el){
   var st = commPlanState(); if (!st[i]) return;
   st[i].name = el ? el.value : 'L1';
-  var box = el && el.parentNode ? el.parentNode.querySelector('.comm-plan-custom') : null;
-  if (box) box.style.display = (st[i].name === 'OTHER') ? '' : 'none';
+  // 选 OTHER → 自定义输入框内联展开（整行保持一行，字段自动收窄）；其它值 → 收起
+  var row = el ? (el.closest ? el.closest('.comm-plan-row') : null) : null;
+  if (!row) row = document.querySelector('.comm-plan-row[data-plan-idx="' + i + '"]');
+  if (row) row.classList.toggle('has-other', st[i].name === 'OTHER');
 }
 function commPlanCustomInput(i, el){
   var st = commPlanState(); if (!st[i]) return;
@@ -16232,7 +16254,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z202";  // 版本标记：Z202 = 受益人数驱动的「收益分配计划」分行（受益人+佣金比率+三币金额）
+const PERM_BUILD = "build 2026-11-03-Z203";  // 版本标记：Z203 = 收益分配计划移到「受益人数」排下方 + 行内紧凑（12px 标签 / 34px 输入框）+ OTHER 自定义框内联不换行
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
