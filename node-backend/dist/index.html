@@ -2107,12 +2107,17 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-bar { color:#c6d2de; margin:0 6px; }
   .comm-point-check .cpc-num { color:#e8720c; font-weight:800; font-size:14px; }
   .comm-point-check .cpc-na { color:#a6b3c2; }
-  .comm-point-check .cpc-ben-list { margin:5px 0 7px 0; padding-left:10px; border-left:3px solid #e9eef4; }
-  .comm-point-check .cpc-ben-row { display:flex; align-items:baseline; gap:10px; padding:2px 0; font-size:12.5px; }
-  .comm-point-check .cpc-ben-idx { min-width:26px; color:#8a9bb0; font-weight:700; }
-  .comm-point-check .cpc-ben-name { min-width:86px; color:#2c3e50; font-weight:700; }
-  .comm-point-check .cpc-ben-ratio { min-width:78px; color:#44546a; font-weight:700; font-variant-numeric:tabular-nums; }
-  .comm-point-check .cpc-ben-amt { font-weight:700; font-variant-numeric:tabular-nums; }
+  /* ★COMM-BEN-GRID-20261103★ 受益人名录用「一个 grid + 每行 display:contents」：
+     列宽由所有行共同决定，¥ / $ / ₫ 三个货币符号上下严格对齐 */
+  .comm-point-check .cpc-ben-list { display:grid; align-items:baseline; justify-content:start;
+    grid-template-columns: 26px max-content 74px max-content max-content max-content;
+    column-gap:16px; row-gap:3px; margin:5px 0 7px 0; padding-left:10px;
+    border-left:3px solid #e9eef4; font-size:12.5px; overflow-x:auto; }
+  .comm-point-check .cpc-ben-row { display:contents; }
+  .comm-point-check .cpc-ben-idx { color:#8a9bb0; font-weight:700; }
+  .comm-point-check .cpc-ben-name { color:#2c3e50; font-weight:700; }
+  .comm-point-check .cpc-ben-ratio { color:#44546a; font-weight:700; font-variant-numeric:tabular-nums; }
+  .comm-point-check .cpc-ben-m { font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
   .comm-point-check .cpc-chk { padding:3px 0; }
   .comm-point-check .cpc-chk-title { font-size:13px; font-weight:700; color:#5a6b82; }
   .comm-point-check .cpc-chk-body { font-size:12.5px; color:#2c3e50; font-weight:700;
@@ -14238,13 +14243,15 @@ function commPointCheck(){
     var rr = _commParseNum(r.rmb), uu = _commParseNum(r.usd), vv = _commParseNum(r.vnd);
     sumR += rr; sumU += uu; sumV += vv;
     var nm = String(r.name === 'OTHER' ? (r.custom || 'OTHER') : (r.name || '')).trim();
+    // ★COMM-BEN-GRID-20261103★ 三币各自独立成列（¥ / $ / ₫ 上下严格对齐），行用 display:contents 共享列宽
+    var hasAmt = rr > 0 || uu > 0 || vv > 0;
     html += '<div class="cpc-ben-row">'
       +   '<span class="cpc-ben-idx">#' + (i + 1) + '</span>'
       +   '<span class="cpc-ben-name">' + _escComm(nm || '—') + '</span>'
       +   '<span class="cpc-ben-ratio">' + (okP ? fmtPlanRatio4(r.ratio) + '%' : '—') + '</span>'
-      +   '<span class="cpc-ben-amt">'
-      +     ((rr > 0 || uu > 0 || vv > 0) ? _commTriHtml4(rr, uu, vv) : '<span class="cpc-na">—</span>')
-      +   '</span>'
+      +   '<span class="cpc-ben-m cpc-rmb">' + (hasAmt ? fmtPlanMoney('rmb', rr) : '<span class="cpc-na">—</span>') + '</span>'
+      +   '<span class="cpc-ben-m cpc-usd">' + (hasAmt ? fmtPlanMoney('usd', uu) : '<span class="cpc-na">—</span>') + '</span>'
+      +   '<span class="cpc-ben-m cpc-vnd">' + (hasAmt ? fmtPlanMoney('vnd', vv) : '<span class="cpc-na">—</span>') + '</span>'
       + '</div>';
   }
   if (listEl) listEl.innerHTML = html;
@@ -16824,7 +16831,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z222";  // 版本标记：Z222 = 佣金校验区块改版：预期佣金带总比率+三币；受益人 N 名逐人明细；总比率/总金额 vs 个人合计双向校验（删「受益人需支付总额」）
+const PERM_BUILD = "build 2026-11-03-Z223";  // 版本标记：Z223 = 受益人名录三币独立成列（¥/$/₫ 货币符号上下严格对齐，一个 grid + 行 display:contents）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
