@@ -2334,11 +2334,12 @@ function _ovLoadChartLib(cb){
   .comm-plan-ghost { flex:1 1 0; min-width:0; align-self:stretch; box-sizing:border-box; }
   /* ★COMM-PLAN-WIDTH-20261103★ 三币框收窄、受益人/佣金比率放开，三语长标签（越南语）不再互相压字 */
   .comm-plan-row > .login-field { flex:1 1 0; min-width:0; }
-  /* 受益人格最宽（下拉整格铺满，不出现右侧豁口） */
-  .comm-plan-row > .login-field.comm-plan-name { flex:1.45 1 0; }
-  .comm-plan-row > .login-field.comm-plan-ratio { flex:1.2 1 0; }
-  /* 三币金额格收窄（只放金额，符号在框上方） */
-  .comm-plan-row > .login-field.comm-plan-money { flex:1 1 0; }
+  /* 受益人格最宽（下拉整格铺满，不出现右侧豁口）
+     ★COMM-AUTOFIT-20261103★ 三币金额是长数值（₫520,000,000.0000），把受益人/比率略收、
+     三币格略放，并减小金额框内边距 —— 多出约 13px 让金额字号不至于缩得太小 */
+  .comm-plan-row > .login-field.comm-plan-name { flex:1.28 1 0; }
+  .comm-plan-row > .login-field.comm-plan-ratio { flex:1.05 1 0; }
+  .comm-plan-row > .login-field.comm-plan-money { flex:1.16 1 0; }
   .comm-plan-row > .login-field > label {
     font-size:12px; line-height:1.3; font-weight:600; color:#44546a;
     white-space:normal; word-break:break-word; overflow-wrap:break-word;
@@ -2368,7 +2369,11 @@ function _ovLoadChartLib(cb){
   }
   /* ★COMM-PLAN-CALC-20261103★ 三币金额是算出来的（设备金额×比率），只读不可编辑 */
   .comm-plan-money > input.comm-plan-calc {
-    cursor:default; text-align:right;
+    cursor:default;
+  }
+  /* ★COMM-AUTOFIT-20261103★ 三币金额框内边距压到 5px，给长数值多留显示宽度（字号由 JS 自适应） */
+  #commissionAddModalOverlay .comm-plan-row > .login-field.comm-plan-money input {
+    padding-left:5px; padding-right:5px;
   }
   .comm-plan-money > input.comm-plan-calc:focus {
     outline:none; box-shadow:none; border-color:inherit;
@@ -13546,6 +13551,7 @@ function commMoneyInput(cur){
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 设备金额变动 → 重算预期佣金 + 反向校验
   // ★COMM-PLAN-CALC-20261103★ 设备金额变了 → 收益分配计划三币金额（设备金额×比率）同步重算
   if (typeof commPlanCalcAll === 'function') commPlanCalcAll();
+  fitNumInput(el);    // ★COMM-AUTOFIT-20261103★ 金额数值长 → 自动缩字号（看全）
 }
 function commRecalc(src){
   var rRMB = getCommRate('commFRateRMB'), rUSD = getCommRate('commFRateUSD');
@@ -13554,9 +13560,9 @@ function commRecalc(src){
   if (src === 'rmb'){ rmb = raw; if (rRMB) vnd = raw * rRMB; if (rRMB && rUSD) usd = vnd / rUSD; }
   else if (src === 'usd'){ usd = raw; if (rUSD) vnd = raw * rUSD; if (rUSD && rRMB) rmb = vnd / rRMB; }
   else { vnd = raw; if (rRMB) rmb = raw / rRMB; if (rUSD) usd = raw / rUSD; }
-  if (src !== 'rmb'){ var e1 = document.getElementById('commFEquipRMB'); if (e1){ e1.dataset.raw = rmb > 0 ? String(Math.round(rmb)) : ''; e1.value = rmb > 0 ? fmtMoney('rmb', rmb) : ''; } }
-  if (src !== 'usd'){ var e2 = document.getElementById('commFEquipUSD'); if (e2){ e2.dataset.raw = usd > 0 ? String(Math.round(usd)) : ''; e2.value = usd > 0 ? fmtMoney('usd', usd) : ''; } }
-  if (src !== 'vnd'){ var e3 = document.getElementById('commFEquipVND'); if (e3){ e3.dataset.raw = vnd > 0 ? String(Math.round(vnd)) : ''; e3.value = vnd > 0 ? fmtMoney('vnd', vnd) : ''; } }
+  if (src !== 'rmb'){ var e1 = document.getElementById('commFEquipRMB'); if (e1){ e1.dataset.raw = rmb > 0 ? String(Math.round(rmb)) : ''; e1.value = rmb > 0 ? fmtMoney('rmb', rmb) : ''; fitNumInput(e1); } }
+  if (src !== 'usd'){ var e2 = document.getElementById('commFEquipUSD'); if (e2){ e2.dataset.raw = usd > 0 ? String(Math.round(usd)) : ''; e2.value = usd > 0 ? fmtMoney('usd', usd) : ''; fitNumInput(e2); } }
+  if (src !== 'vnd'){ var e3 = document.getElementById('commFEquipVND'); if (e3){ e3.dataset.raw = vnd > 0 ? String(Math.round(vnd)) : ''; e3.value = vnd > 0 ? fmtMoney('vnd', vnd) : ''; fitNumInput(e3); } }
 }
 // 受益人三币联动：跟随上级汇率；任何币种编辑 → 另两个按汇率同步
 function benMoneyInput(cur){
@@ -13576,9 +13582,9 @@ function benRecalc(src){
   if (src === 'rmb'){ rmb = raw; if (rRMB) vnd = raw * rRMB; if (rRMB && rUSD) usd = vnd / rUSD; }
   else if (src === 'usd'){ usd = raw; if (rUSD) vnd = raw * rUSD; if (rUSD && rRMB) rmb = vnd / rRMB; }
   else { vnd = raw; if (rRMB) rmb = raw / rRMB; if (rUSD) usd = raw / rUSD; }
-  if (src !== 'rmb'){ var e1 = document.getElementById('benFTotalRMB'); if (e1){ e1.dataset.raw = rmb > 0 ? String(Math.round(rmb)) : ''; e1.value = rmb > 0 ? fmtMoney('rmb', rmb) : ''; } }
-  if (src !== 'usd'){ var e2 = document.getElementById('benFTotalUSD'); if (e2){ e2.dataset.raw = usd > 0 ? String(Math.round(usd)) : ''; e2.value = usd > 0 ? fmtMoney('usd', usd) : ''; } }
-  if (src !== 'vnd'){ var e3 = document.getElementById('benFTotalVND'); if (e3){ e3.dataset.raw = vnd > 0 ? String(Math.round(vnd)) : ''; e3.value = vnd > 0 ? fmtMoney('vnd', vnd) : ''; } }
+  if (src !== 'rmb'){ var e1 = document.getElementById('benFTotalRMB'); if (e1){ e1.dataset.raw = rmb > 0 ? String(Math.round(rmb)) : ''; e1.value = rmb > 0 ? fmtMoney('rmb', rmb) : ''; fitNumInput(e1); } }
+  if (src !== 'usd'){ var e2 = document.getElementById('benFTotalUSD'); if (e2){ e2.dataset.raw = usd > 0 ? String(Math.round(usd)) : ''; e2.value = usd > 0 ? fmtMoney('usd', usd) : ''; fitNumInput(e2); } }
+  if (src !== 'vnd'){ var e3 = document.getElementById('benFTotalVND'); if (e3){ e3.dataset.raw = vnd > 0 ? String(Math.round(vnd)) : ''; e3.value = vnd > 0 ? fmtMoney('vnd', vnd) : ''; fitNumInput(e3); } }
   // 需支付总额变化 → 重算「已支付 / 未支付」
   calcBenPaidTotals();
 }
@@ -13924,7 +13930,8 @@ function commPlanRender(){
   }
   rowsEl.innerHTML = html;
   commPlanApplyExpand();
-  commPlanCalcAll();   // ★COMM-PLAN-CALC-20261103★ 渲染后按当前比率/设备金额补齐三币金额
+  commPlanCalcAll();           // ★COMM-PLAN-CALC-20261103★ 渲染后按当前比率/设备金额补齐三币金额
+  fitNumericFonts(rowsEl);     // ★COMM-AUTOFIT-20261103★ 历史值可能很长 → 渲染后统一适配字号
 }
 /* 单个受益人行（行内 5 个字段，永不换行；选 OTHER 时自定义框内联在受益人右侧） */
 function commPlanRowHtml(i, r, t){
@@ -13973,6 +13980,7 @@ function commPlanApplyExpand(){
 function commPlanToggle(){
   window.__commPlanExpanded = !window.__commPlanExpanded;
   commPlanApplyExpand();
+  setTimeout(function(){ fitNumericFonts(); }, 30);   // ★COMM-AUTOFIT-20261103★ 展开后按真实宽度重新适配
 }
 function commPlanNameChange(i, el){
   var st = commPlanState(); if (!st[i]) return;
@@ -13995,6 +14003,7 @@ function commPlanRatioInput(i, el){
   if (v && parseFloat(v) > 100) v = '100';
   if (el.value !== v) el.value = v;
   var st = commPlanState(); if (st[i]) st[i].ratio = v;
+  fitNumInput(el);     // ★COMM-AUTOFIT-20261103★ 比率数值长 → 自动缩字号
   commPlanCalcAll();   // ★COMM-PLAN-CALC-20261103★ 比率变动 → 重算该行三币金额
 }
 /* ══════════════════════════════════════════════════════════════════════════
@@ -14003,6 +14012,50 @@ function commPlanRatioInput(i, el){
    · 输入框 readonly，用户改不了；比率、设备金额、汇率任一变动都立刻重算
    ══════════════════════════════════════════════════════════════════════════ */
 var COMM_PLAN_SYM = { rmb:'¥', usd:'$', vnd:'₫' };
+/* ══════════════════════════════════════════════════════════════════════════
+   ★COMM-AUTOFIT-20261103★ 数值自适应字号（必须看全，绝不截断）
+   · 金额/比率框宽度固定，数值一长（¥136,842.1000 / ₫520,000,000.0000）就被切掉
+   · 用 canvas 量出真实字宽，按「可用宽度 / 文本宽度」等比缩字号，下限 7.5px
+   · 同时写 title，鼠标悬停也能看全；框变宽（窗口放大 / 展开）后自动还原
+   ══════════════════════════════════════════════════════════════════════════ */
+var COMM_FIT_MIN = 7.5;
+var _fitCtx = null;
+function _fitMeasure(text, cs){
+  try {
+    if (!_fitCtx) _fitCtx = document.createElement('canvas').getContext('2d');
+    _fitCtx.font = (cs.fontStyle || 'normal') + ' ' + (cs.fontWeight || '400') + ' ' +
+                   cs.fontSize + ' ' + (cs.fontFamily || 'sans-serif');
+    return _fitCtx.measureText(text).width;
+  } catch(e){ return 0; }
+}
+function fitNumInput(el){
+  if (!el || !el.style) return;
+  el.style.fontSize = '';                   // 先还原基准字号再量
+  var txt = String(el.value || '');
+  if (!txt){ el.removeAttribute('title'); return; }
+  el.setAttribute('title', txt);            // 兜底：悬停看全
+  var cs;
+  try { cs = getComputedStyle(el); } catch(e){ return; }
+  var base = parseFloat(cs.fontSize) || 13;
+  var avail = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0) - 2;
+  if (avail <= 4) return;                   // 还没排版（隐藏/未展开）→ 等下次
+  var w = _fitMeasure(txt, cs);
+  if (!w || w <= avail) return;
+  var size = Math.max(COMM_FIT_MIN, Math.floor(base * avail / w * 0.97 * 10) / 10);
+  el.style.fontSize = size + 'px';
+}
+/* 批量适配：计划行三币 + 佣金比率 + 设备金额（弹窗内所有数值框） */
+function fitNumericFonts(root){
+  var scope = root || document.getElementById('commissionAddModalOverlay') || document;
+  if (!scope || !scope.querySelectorAll) return;
+  var list = scope.querySelectorAll('.comm-plan-calc, .comm-plan-ratio input, input.cf-money');
+  for (var i = 0; i < list.length; i++) fitNumInput(list[i]);
+}
+/* 窗口尺寸/弹窗宽度变化 → 输入框可用宽度变了 → 重新适配（只注册一次） */
+if (!window.__commFitBound){
+  window.__commFitBound = true;
+  window.addEventListener('resize', function(){ try { fitNumericFonts(); } catch(e){} });
+}
 /* 4 位小数版金额格式化（不用 fmtMoney —— 它 Math.round 会把小数抹平） */
 function fmtPlanMoney(c, n){
   var v = Number(n) || 0;
@@ -14032,7 +14085,7 @@ function commPlanCalcAll(){
       var inp = document.getElementById('commPlan' + c.toUpperCase() + i);
       var val = (ok && equip[c] > 0) ? equip[c] * pct / 100 : 0;
       var disp = val > 0 ? fmtPlanMoney(c, val) : '';
-      if (inp) inp.value = disp;
+      if (inp){ inp.value = disp; fitNumInput(inp); }   // ★COMM-AUTOFIT-20261103★ 长数值自动缩字号
       r[c] = disp;
     }
   }
@@ -14122,6 +14175,7 @@ function openCommissionAddModal(){
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 新增模式：点数/设备金额为空 → 显示占位
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
+  setTimeout(function(){ fitNumericFonts(); }, 30);   // ★COMM-AUTOFIT-20261103★ 弹窗可见后按真实宽度适配字号
   var first = document.getElementById('commFContract');
   if (first) setTimeout(function(){ first.focus(); }, 50);
 }
@@ -14215,6 +14269,7 @@ function openCommissionEditModal(idx){
   commPlanCalcAll();  // ★COMM-PLAN-CALC-20261103★ 设备金额回填完毕 → 计划三币金额（设备金额×比率）重算
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
+  setTimeout(function(){ fitNumericFonts(); }, 30);   // ★COMM-AUTOFIT-20261103★ 弹窗可见后按真实宽度适配字号
   var first = document.getElementById('commFContract');
   if (first) setTimeout(function(){ first.focus(); first.select(); }, 50);
 }
@@ -16609,7 +16664,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z216";  // 版本标记：Z216 = 收益分配计划三币金额 = 设备金额×佣金比率，自动计算(4位小数)且只读
+const PERM_BUILD = "build 2026-11-03-Z217";  // 版本标记：Z217 = 数值框字号自适应（长金额/比率自动缩小，保证完整显示不截断）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
