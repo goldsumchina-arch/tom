@@ -2366,6 +2366,13 @@ function _ovLoadChartLib(cb){
     display:block; width:100%; text-align:center;
     font-size:14px; font-weight:700; line-height:1.2; color:#44546a;
   }
+  /* ★COMM-PLAN-CALC-20261103★ 三币金额是算出来的（设备金额×比率），只读不可编辑 */
+  .comm-plan-money > input.comm-plan-calc {
+    cursor:default; text-align:right;
+  }
+  .comm-plan-money > input.comm-plan-calc:focus {
+    outline:none; box-shadow:none; border-color:inherit;
+  }
   /* 区块标题右侧的「展开 / 收起」按钮：+ 展开全部受益人，− 收起 */
   .comm-plan-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .comm-plan-toggle {
@@ -13537,6 +13544,8 @@ function commMoneyInput(cur){
   _commMoneySrc = cur;
   commRecalc(cur);
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 设备金额变动 → 重算预期佣金 + 反向校验
+  // ★COMM-PLAN-CALC-20261103★ 设备金额变了 → 收益分配计划三币金额（设备金额×比率）同步重算
+  if (typeof commPlanCalcAll === 'function') commPlanCalcAll();
 }
 function commRecalc(src){
   var rRMB = getCommRate('commFRateRMB'), rUSD = getCommRate('commFRateUSD');
@@ -13650,6 +13659,8 @@ function commRateChanged(){
   if (_commMoneySrc) commRecalc(_commMoneySrc);
   // 汇率变了 → 已支付/未支付的三币折算结果也要跟着重新折算
   calcBenPaidTotals();
+  // ★COMM-PLAN-CALC-20261103★ 汇率变了 → 设备金额被折算改写 → 计划三币金额跟着重算
+  if (typeof commPlanCalcAll === 'function') commPlanCalcAll();
 }
 // 汇率输入框格式化：纯数字 + 千分逗号、无小数，然后触发联动重算
 function commRateInput(el){
@@ -13913,6 +13924,7 @@ function commPlanRender(){
   }
   rowsEl.innerHTML = html;
   commPlanApplyExpand();
+  commPlanCalcAll();   // ★COMM-PLAN-CALC-20261103★ 渲染后按当前比率/设备金额补齐三币金额
 }
 /* 单个受益人行（行内 5 个字段，永不换行；选 OTHER 时自定义框内联在受益人右侧） */
 function commPlanRowHtml(i, r, t){
@@ -13932,10 +13944,11 @@ function commPlanRowHtml(i, r, t){
     +     '<div class="cf-suffix-wrap"><input id="commPlanRatio' + i + '" type="text" inputmode="decimal" placeholder="0.0000" value="' + _escComm(r.ratio || '') + '" autocomplete="off" oninput="commPlanRatioInput(' + i + ',this)"><span class="cf-suffix" aria-hidden="true">%</span></div>'
     +   '</div>';
   // ③ RMB / USD / VND（★COMM-PLAN-CURSYM-20261103★ 标签只留货币符号 ¥ / $ / ₫，不再写汉字）
+  //    ★COMM-PLAN-CALC-20261103★ 金额 = 设备金额(同币种) × 佣金比率(%)，自动算出、只读不可改
   for (var k = 0; k < COMM_PLAN_CUR.length; k++){
     var cd = COMM_PLAN_CUR[k];
     html += '<div class="login-field comm-plan-money"><label class="comm-plan-cur-lbl">' + cd.sym + '</label>'
-      +   '<input id="commPlan' + cd.c.toUpperCase() + i + '" type="text" inputmode="numeric" class="cf-money ' + cd.cls + '" placeholder="' + cd.sym + '" value="' + _escComm(r[cd.c] || '') + '" autocomplete="off" oninput="commPlanMoneyInput(' + i + ',\'' + cd.c + '\',this)">'
+      +   '<input id="commPlan' + cd.c.toUpperCase() + i + '" type="text" class="cf-money comm-plan-calc ' + cd.cls + '" placeholder="' + cd.sym + '" value="' + _escComm(r[cd.c] || '') + '" autocomplete="off" readonly tabindex="-1">'
       + '</div>';
   }
   return html + '</div>';
@@ -13982,33 +13995,50 @@ function commPlanRatioInput(i, el){
   if (v && parseFloat(v) > 100) v = '100';
   if (el.value !== v) el.value = v;
   var st = commPlanState(); if (st[i]) st[i].ratio = v;
+  commPlanCalcAll();   // ★COMM-PLAN-CALC-20261103★ 比率变动 → 重算该行三币金额
 }
-/* 三币金额：格式化 + 用弹窗顶部汇率联动另外两个币种（与 commMoneyInput / benMoneyInput 同一套折算） */
-function commPlanMoneyInput(i, cur, el){
-  if (!el) return;
-  var raw = parseMoney(el.value);
-  el.dataset.raw = raw > 0 ? String(raw) : '';
-  el.value = String(el.value || '').trim() === '' ? '' : fmtMoney(cur, raw);
-  try { el.setSelectionRange(el.value.length, el.value.length); } catch(e){}
+/* ══════════════════════════════════════════════════════════════════════════
+   ★COMM-PLAN-CALC-20261103★ 三币金额 = 设备金额(同币种) × 佣金比率(%)
+   · 自动算出并写进输入框，4 位小数，千位逗号 + 货币符号（¥136,842.1000）
+   · 输入框 readonly，用户改不了；比率、设备金额、汇率任一变动都立刻重算
+   ══════════════════════════════════════════════════════════════════════════ */
+var COMM_PLAN_SYM = { rmb:'¥', usd:'$', vnd:'₫' };
+/* 4 位小数版金额格式化（不用 fmtMoney —— 它 Math.round 会把小数抹平） */
+function fmtPlanMoney(c, n){
+  var v = Number(n) || 0;
+  if (!isFinite(v)) v = 0;
+  var s = v.toLocaleString('en-US', { minimumFractionDigits:4, maximumFractionDigits:4 });
+  return (COMM_PLAN_SYM[String(c || '').toLowerCase()] || '') + s;
+}
+/* 读取弹窗顶部「设备金额」原始数值（整数） */
+function commPlanEquipRaw(c){
+  var m = COMM_MONEY[String(c || '').toLowerCase()];
+  var el = m ? document.getElementById(m.id) : null;
+  return el ? parseMoney(el.value) : 0;
+}
+/* 重算所有受益人行（行数 = 受益人数） */
+function commPlanCalcAll(){
+  var rowsEl = document.getElementById('commPlanRows');
+  if (!rowsEl) return;
   var st = commPlanState();
-  if (st[i]) st[i][cur] = el.value;
-  var rRMB = getCommRate('commFRateRMB'), rUSD = getCommRate('commFRateUSD');
-  var rmb = 0, usd = 0, vnd = 0;
-  if (cur === 'rmb'){ rmb = raw; if (rRMB) vnd = raw * rRMB; if (rRMB && rUSD) usd = vnd / rUSD; }
-  else if (cur === 'usd'){ usd = raw; if (rUSD) vnd = raw * rUSD; if (rUSD && rRMB) rmb = vnd / rRMB; }
-  else { vnd = raw; if (rRMB) rmb = raw / rRMB; if (rUSD) usd = raw / rUSD; }
-  var map = { rmb: rmb, usd: usd, vnd: vnd };
-  for (var k = 0; k < COMM_PLAN_CUR.length; k++){
-    var c = COMM_PLAN_CUR[k].c;
-    if (c === cur) continue;
-    var inp = document.getElementById('commPlan' + c.toUpperCase() + i);
-    if (!inp) continue;
-    var val = map[c];
-    inp.dataset.raw = val > 0 ? String(Math.round(val)) : '';
-    inp.value = val > 0 ? fmtMoney(c, val) : '';
-    if (st[i]) st[i][c] = inp.value;
+  var equip = { rmb: commPlanEquipRaw('rmb'), usd: commPlanEquipRaw('usd'), vnd: commPlanEquipRaw('vnd') };
+  for (var i = 0; i < st.length; i++){
+    var r = st[i];
+    if (!r) continue;
+    var pct = parseFloat(String(r.ratio || ''));
+    var ok = isFinite(pct) && pct > 0;
+    for (var k = 0; k < COMM_PLAN_CUR.length; k++){
+      var c = COMM_PLAN_CUR[k].c;
+      var inp = document.getElementById('commPlan' + c.toUpperCase() + i);
+      var val = (ok && equip[c] > 0) ? equip[c] * pct / 100 : 0;
+      var disp = val > 0 ? fmtPlanMoney(c, val) : '';
+      if (inp) inp.value = disp;
+      r[c] = disp;
+    }
   }
 }
+/* 历史调用点兼容（三币已改为只读自动算，任何调用都统一走整体重算） */
+function commPlanMoneyInput(i, cur, el){ commPlanCalcAll(); }
 
 /* ★COMM-PTCHECK-20261103★ 当前弹窗里「受益人需支付总额」的求和（取工作副本 window.__beneficiaries；
    编辑模式下以 COMM_RECORDS[__commEditIdx].beneficiaries 为准，二者指向同一份）。 */
@@ -14182,6 +14212,7 @@ function openCommissionEditModal(idx){
   window.__beneficiaries = (r.beneficiaries || []).slice();
   renderBeneficiaryTable();
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 编辑模式回填点数/设备金额/受益人后 → 重算预期与校验
+  commPlanCalcAll();  // ★COMM-PLAN-CALC-20261103★ 设备金额回填完毕 → 计划三币金额（设备金额×比率）重算
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
   var first = document.getElementById('commFContract');
@@ -16578,7 +16609,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z215";  // 版本标记：Z215 = 确认人数/输入密码两个对话框的三语联动（切语言原地重写标题·正文·提示·按钮·错误提示）
+const PERM_BUILD = "build 2026-11-03-Z216";  // 版本标记：Z216 = 收益分配计划三币金额 = 设备金额×佣金比率，自动计算(4位小数)且只读
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
