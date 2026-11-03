@@ -2316,11 +2316,18 @@ function _ovLoadChartLib(cb){
      行与行之间仍是红色虚线；末尾只有 1 个受益人时用 .comm-plan-ghost 占位，避免拉伸。 */
   #commPlanRows { display:block; }
   .comm-plan-line {
-    display:flex; align-items:flex-end; gap:18px;
+    display:flex; align-items:flex-end; gap:0;
     padding:10px 0 2px; border-top:1px dashed #e74c3c;
   }
   .comm-plan-line:first-child { border-top:none; padding-top:2px; }
-  .comm-plan-row { flex:1 1 0; min-width:0; display:flex; flex-wrap:nowrap; align-items:flex-end; gap:9px; }
+  .comm-plan-row {
+    flex:1 1 0; min-width:0; box-sizing:border-box;
+    display:flex; flex-wrap:nowrap; align-items:flex-end; gap:9px;
+  }
+  /* ★COMM-PLAN-VSEP-20261103★ 左右两个受益人之间：正中黑色垂直虚线分隔 */
+  .comm-plan-line > .comm-plan-row + .comm-plan-row {
+    border-left:1px dashed #000; margin-left:18px; padding-left:18px;
+  }
   .comm-plan-ghost { flex:1 1 0; min-width:0; }
   .comm-plan-row > .login-field { flex:1 1 0; min-width:0; }
   /* 受益人格给多一点宽度（下拉整格铺满，不出现右侧豁口） */
@@ -2367,6 +2374,10 @@ function _ovLoadChartLib(cb){
     .comm-plan-line { gap:0; }
     .comm-plan-ghost { display:none; }
     .comm-plan-row { flex:1 1 100%; }
+    /* 单列时不需要中间的垂直虚线 */
+    .comm-plan-line > .comm-plan-row + .comm-plan-row {
+      border-left:none; margin-left:0; padding-left:0; padding-top:8px; border-top:1px dashed #e74c3c;
+    }
   }
   /* 合作集团下拉：外观与输入框一致 */
   .commission-form select {
@@ -13701,21 +13712,18 @@ function commPlanRowHtml(i, r, t){
   }
   return html + '</div>';
 }
-/* ★COMM-PLAN-2UP-20261103★ 标题右侧「+ / −」：展开全部受益人明细 / 收起为前 2 行 */
+/* ★COMM-PLAN-2UP-20261103★ 标题右侧「+ / −」：展开全部受益人明细 / 收起为前 2 行
+   ★COMM-PLAN-VSEP-20261103★ 按钮常显（人数少时点 + 只是把块内滚动去掉，视觉无跳变） */
 function commPlanApplyExpand(){
   var wrap = document.getElementById('commPlanWrap');
   var btn  = document.getElementById('commPlanToggleBtn');
   var ex = !!window.__commPlanExpanded;
   if (wrap) wrap.classList.toggle('is-expanded', ex);
   if (btn){
+    btn.style.display = '';
     btn.textContent = ex ? '−' : '+';
     btn.setAttribute('title', ex ? '收起受益人明细' : '展开全部受益人明细');
     btn.setAttribute('aria-expanded', ex ? 'true' : 'false');
-    // 行数 ≤ 2 行（即 ≤4 个受益人）时无需展开，隐藏按钮
-    var st = commPlanState();
-    var need = st.length > COMM_PLAN_PER_LINE * 2;
-    btn.style.display = need ? '' : 'none';
-    if (!need && ex){ window.__commPlanExpanded = false; wrap && wrap.classList.remove('is-expanded'); btn.textContent = '+'; }
   }
 }
 function commPlanToggle(){
@@ -16336,7 +16344,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z207";  // 版本标记：Z207 = 收益分配计划每行并排 2 个受益人 + 标题右侧「+/-」展开收起全部受益人
+const PERM_BUILD = "build 2026-11-03-Z208";  // 版本标记：Z208 = 左右受益人之间加黑色垂直虚线 + +/-按钮常显
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
