@@ -16376,7 +16376,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z258";  // 版本标记：Z258 = 套现成本允许录入 0：benCardCashBlur 由 n>0 改为 n>=0（原会把 0 清空），空值仍视为未填；行渲染回显改为 == null 判断，0 值不会被吞成空
+const PERM_BUILD = "build 2026-11-03-Z259";  // 版本标记：Z259 = 修复卡片首行支付日期“日历弹出即自动关闭”：①cpOpenCalendar 先 scrollIntoView 再取坐标；②记录 cpCalOpenedAt，外部点击关闭增加 400ms 保护窗；③点击任意 .cp-date-input-wrapper 不当作外部点击
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -22723,6 +22723,7 @@ document.addEventListener('keydown', function(e){
 // ===== 日历弹出框系统（DD-MM-YYYY） =====
 var cpCalTarget = null;
 var cpCalViewYear, cpCalViewMonth;
+var cpCalOpenedAt = 0;   /* ★CPCAL-RACE-20261103★ 打开时刻：用于屏蔽“刚打开就因同一/串扰点击被判为外部点击而关闭” */
 
 function cpPad(n) { return n < 10 ? '0' + n : '' + n; }
 function cpFmtDDMMYYYY(y, m, d) { return cpPad(d) + '-' + cpPad(m + 1) + '-' + y; }
@@ -22751,6 +22752,10 @@ function cpGetMonthName(m) {
 window.cpOpenCalendar = function(inputEl) {
   if (inputEl && inputEl.disabled) return;
   cpCalTarget = inputEl;
+  cpCalOpenedAt = Date.now();
+  /* ★CPCAL-RACE-20261103★ 先把输入框滚到可见位置（卡片首行常被粘性表头/视口边缘压住，
+     点击时浏览器会二次滚动，导致随后的 click 落在表头而非输入框，日历被误判为“点外部”而关闭） */
+  try { inputEl.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (e) {}
   var rect = inputEl.getBoundingClientRect();
   var popup = document.getElementById('cpCalPopup');
   // popup 为 position:fixed → 必须用视口坐标（不加 scrollY/scrollX），否则页面滚动后会错位
@@ -22866,6 +22871,12 @@ document.addEventListener('click', function(e) {
   if (e.target && e.target.isConnected === false) return;
   if (popup.contains(e.target)) return;
   if (cpCalTarget && cpCalTarget === e.target) return;
+  /* ★CPCAL-RACE-20261103★ 刚打开的 400ms 内不判外部点击：
+     卡片首行日期紧贴粘性表头/视口边缘，focus 触发的滚动会让同一次点击的 target 变成表头，
+     导致日历“弹出即关闭”。此期间一律保留，用户真正点外部时早已超过该窗口。 */
+  if (cpCalOpenedAt && (Date.now() - cpCalOpenedAt) < 400) return;
+  /* 点在任意日期输入框/包装上：交给它的 onfocus 重新定位，不当作外部点击 */
+  if (e.target && e.target.closest && e.target.closest('.cp-date-input-wrapper')) return;
   cpCloseCalendar();
 });
 
