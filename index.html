@@ -2348,6 +2348,18 @@ function _ovLoadChartLib(cb){
     border:1px solid #d7dee6; border-radius:9px; font-size:14px; color:#23303d;
     background:#f7f9fb; outline:none; transition:border-color .2s, box-shadow .2s; cursor:pointer;
   }
+  /* ★COMM-FORM-H-20261103★ 统一录入框高度：弹窗表单里的所有输入框/下拉（含日期框、%后缀框）
+     一律 34px / 13px，与下方「收益分配计划」行内高度一致，视觉统一。
+     注意：只作用于 .cf-row 内的字段，不动受益人表格与其它弹窗。 */
+  .commission-form .cf-row .login-field input,
+  .commission-form .cf-row .login-field select,
+  .commission-form .cf-row .login-field .cp-date-input-wrapper input {
+    height:34px; padding:0 10px; font-size:13px; border-radius:8px;
+  }
+  .commission-form .cf-row .login-field .cf-suffix-wrap input { padding-right:24px; }
+  .commission-form .cf-row .login-field .comm-group-row #commFGroupOther { height:34px; padding:0 10px; font-size:13px; }
+  /* 日期框外层容器贴底对齐（输入框本身已统一 34px，避免与同排输入框上下错位） */
+  .commission-form .cf-row .login-field .cp-date-input-wrapper { margin-top:auto; align-items:center; }
   .commission-form select:focus { border-color:#F5872E; box-shadow:0 0 0 3px rgba(245,135,46,.12); }
   /* 设备金额三币输入框：RMB粉 / USD蓝 / VND黄（与表格子列同色系） */
   .commission-form .cf-money { font-weight:600; }
@@ -16261,7 +16273,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z203";  // 版本标记：Z203 = 收益分配计划移到「受益人数」排下方 + 行内紧凑（12px 标签 / 34px 输入框）+ OTHER 自定义框内联不换行
+const PERM_BUILD = "build 2026-11-03-Z204";  // 版本标记：Z204 = 录入弹窗表单输入框/下拉统一 34px（与收益分配计划行一致）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
