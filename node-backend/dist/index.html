@@ -2172,8 +2172,8 @@ function _ovLoadChartLib(cb){
 .ben-card-table thead th { background:#16385c; color:#fff; font-weight:700; white-space:normal; line-height:1.2; word-break:break-word; }
 .ben-card-table thead tr:last-child th { background:#1f4770; }
 /* ★BENCARD-PCT-EXEMPT-20261103★ 14 列百分比列宽（合计 100%），!important 优先于几何锁清除的内联宽度 */
-.ben-card-table colgroup col:nth-child(1)  { width:2%  !important; }
-.ben-card-table colgroup col:nth-child(2)  { width:4%  !important; }
+.ben-card-table colgroup col:nth-child(1)  { width:1.5% !important; }
+.ben-card-table colgroup col:nth-child(2)  { width:3.5% !important; }
 .ben-card-table colgroup col:nth-child(3)  { width:9%  !important; }
 .ben-card-table colgroup col:nth-child(4)  { width:5%  !important; }
 .ben-card-table colgroup col:nth-child(5)  { width:5%  !important; }
@@ -2185,7 +2185,7 @@ function _ovLoadChartLib(cb){
 .ben-card-table colgroup col:nth-child(11) { width:9%  !important; }
 .ben-card-table colgroup col:nth-child(12) { width:9%  !important; }
 .ben-card-table colgroup col:nth-child(13) { width:10% !important; }
-.ben-card-table colgroup col:nth-child(14) { width:7%  !important; }
+.ben-card-table colgroup col:nth-child(14) { width:8%  !important; }
 .ben-card-table td.bc-seq, .ben-card-table td.bc-cnt { color:#8a9bb0; }
 .ben-card-table .bc-inp { width:100%; min-width:0; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:1px 2px; font-size:8.5px; font-family:inherit; }
 .ben-card-table .bc-inp:focus { outline:2px solid #1e9e6a; }
@@ -10740,6 +10740,8 @@ function setLangDebug(lang) {
   // ---- 第五步（已回滚）----
   // 原后台静默刷新当前视图（loadCrm/Won/Lost）会导致 autoFillRemarks 批量触发
   // /api/translate-remarks 请求风暴 -> Worker 502。I18N 缓存清空保留。
+  // ★BENCARD-I18N-20261103★ 切语言后重渲染「受益人支付明细卡片」，使其表头立即跟随语言
+  try { if (typeof renderBenPaymentCards === 'function') renderBenPaymentCards(true); } catch (e) {}
 }
 // 更新顶部导航栏语言按钮的高亮状态
 function updateLangSwitchUI() {
@@ -14406,6 +14408,34 @@ function resetCommDetailToggle(){
   if (body) body.style.display = 'none';
   if (btn){ btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
 }
+/* ★BENCARD-I18N-20261103★ 卡片表头随系统语言切换：
+   能复用的用中央 T() 词条（序号/支付次数/支付货币/支付日期/RMB-VND/USD-VND），
+   缺失的 5 个词条（支付双方/汇率/理论应支付金额/套现成本/实际应支付金额）用三语兜底。 */
+function _benCardHead(){
+  var d = {};
+  try { d = (typeof T === 'function' ? (T() || {}) : {}); } catch (e) { d = {}; }
+  var L = 'zh';
+  try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) L = CUR_LANG; } catch (e) {}
+  if (L !== 'zh' && L !== 'en' && L !== 'vi') L = (window.CUR_LANG || window.__lang || 'zh');
+  var extra = {
+    zh: { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额' },
+    en: { parties:'Parties', rate:'Exchange Rate', theo:'Theoretical Payable', cash:'Cash-out<br>(AGI/Personal)', actual:'Actual Payable' },
+    vi: { parties:'Bên thanh toán', rate:'Tỷ giá', theo:'Phải trả lý thuyết', cash:'Chi phí quy đổi<br>(AGI/Cá nhân)', actual:'Phải trả thực tế' }
+  }[L] || { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额' };
+  return {
+    no: d.ben_th_no || '序号',
+    cnt: d.ben_th_pay_count || '支付次数',
+    parties: extra.parties,
+    cur: d.ben_th_currency || '支付货币',
+    rate: extra.rate,
+    theo: extra.theo,
+    cash: extra.cash,
+    actual: extra.actual,
+    date: d.gs_rpt_pay_date || '支付日期',
+    rmbvnd: d.comm_col_rate_rmbvnd || 'RMB-VND',
+    usdvnd: d.comm_col_rate_usdvnd || 'USD-VND'
+  };
+}
 function renderBenPaymentCards(force){
   var box = document.getElementById('commBenPayCards');
   if (!box) return;
@@ -14420,6 +14450,7 @@ function renderBenPaymentCards(force){
     return;
   }
   var html = '';
+  var H = _benCardHead();
   for (var i = 0; i < st.length; i++){
     var nm = benCardName(st, i);
     var rows = data[i] || [];
@@ -14461,13 +14492,13 @@ function renderBenPaymentCards(force){
       + '<col><col><col><col><col><col><col><col><col><col><col><col><col><col>'
       + '</colgroup>'
       + '<thead><tr>'
-      + '<th rowspan="2">序号</th><th rowspan="2">支付次数</th><th rowspan="2">支付双方</th><th rowspan="2">支付货币</th>'
-      + '<th colspan="2">汇率</th>'
-      + '<th colspan="3">理论应支付金额</th>'
-      + '<th rowspan="2">套现成本<br>(AGI或个人)</th>'
-      + '<th colspan="3">实际应支付金额</th>'
-      + '<th rowspan="2">支付日期</th>'
-      + '</tr><tr><th>RMB-VND</th><th>USD-VND</th><th>RMB</th><th>USD</th><th>VND</th><th>RMB</th><th>USD</th><th>VND</th></tr></thead>'
+      + '<th rowspan="2">' + H.no + '</th><th rowspan="2">' + H.cnt + '</th><th rowspan="2">' + H.parties + '</th><th rowspan="2">' + H.cur + '</th>'
+      + '<th colspan="2">' + H.rate + '</th>'
+      + '<th colspan="3">' + H.theo + '</th>'
+      + '<th rowspan="2">' + H.cash + '</th>'
+      + '<th colspan="3">' + H.actual + '</th>'
+      + '<th rowspan="2">' + H.date + '</th>'
+      + '</tr><tr><th>' + H.rmbvnd + '</th><th>' + H.usdvnd + '</th><th>RMB</th><th>USD</th><th>VND</th><th>RMB</th><th>USD</th><th>VND</th></tr></thead>'
       + '<tbody>' + rowHtml + '</tbody></table></div></div>';
   }
   box.innerHTML = html;
@@ -16067,7 +16098,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z244";  // 版本标记：Z244 = 支付明细卡片真正修复列宽：根因是语言几何锁 LANG-GEOMETRY-LOCK 的 freezeTable() 把 .ben-card-table 写成 px 并列宽并设 min-width(≈1260px) 撑出卡片→最右支付日期被裁；已把 .ben-card-table 加入豁免名单，列宽改用 CSS col:nth-child !important 百分比(合计100%)，colgroup 改纯 <col>；另每张卡片外围加 2px 黑色线框
+const PERM_BUILD = "build 2026-11-03-Z245";  // 版本标记：Z245 = 支付明细卡片：①序号列 2%→1.5%、支付次数列 4%→3.5%，回收的 1% 给支付日期列(7%→8%)；②表头改为随系统语言(中/英/越)自动切换（复用 T() 词条 + 缺失项三语兜底），并在 setLangDebug 切语言后重渲染卡片
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
