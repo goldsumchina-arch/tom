@@ -2555,6 +2555,12 @@ function _ovLoadChartLib(cb){
   /* 受益人&秘佣&支付详情：三区块分组样式 */
   .cf-section-title { margin:14px 0 8px; font-size:14px; font-weight:700; color:#F5872E;
                       border-left:4px solid #F5872E; padding-left:8px; }
+  /* ★COMM-DETAIL-TOGGLE-20261103★ 支付详情标题栏：标题左、折叠开关右 */
+  .comm-detail-head { display:flex; align-items:center; justify-content:space-between; }
+  .comm-detail-toggle { flex:0 0 auto; width:22px; height:22px; line-height:1; padding:0; border:1px solid #F5872E;
+                        border-radius:50%; background:#fff; color:#F5872E; font-size:16px; font-weight:700;
+                        cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .comm-detail-toggle:hover { background:#F5872E; color:#fff; }
   .cf-block { border:1px solid #ffe2c4; border-radius:8px; margin-bottom:10px; overflow:hidden; }
   .cf-block-head { background:#fff3e8; color:#c75f00; font-size:13px; font-weight:700; padding:8px 12px; }
   .cf-block-body { padding:10px 12px; }
@@ -4826,12 +4832,14 @@ function _ovLoadChartLib(cb){
       </div>
       <!-- ★COMM-LEDGER-ONLY-20261103★ 按要求移除「受益人明细表(benTable)」与「＋ 新增受益人」按钮：
            该明细的比率/需要支付/已支付/待支付/次数/状态，已全部由上方台账表承载，避免两处重复维护。 -->
-      <div class="cf-section-title">
+      <div class="cf-section-title comm-detail-head">
         <!-- ★COMM-TITLE-20261103★ 去掉「#1 ：」序号前缀，改为完整标题（冒号并入文案，三语各自用对应冒号） -->
         <span id="commSecDetail">每一位受益人的佣金支付详情：</span>
+        <!-- ★COMM-DETAIL-TOGGLE-20261103★ 右侧折叠/展开开关：+ 展开下方全部内容并变 −，− 收缩 -->
+        <button type="button" class="comm-detail-toggle" id="commDetailToggle" onclick="toggleCommDetail()" title="展开/收起" aria-expanded="false">+</button>
       </div>
-      <!-- ★COMM-BENCARD-20261103★ 受益人支付明细卡片容器：按收益分配方案的受益人数量自动生成对应卡片 -->
-      <div id="commBenPayCards" class="comm-ben-cards"></div>
+      <!-- ★COMM-BENCARD-20261103★ 受益人支付明细卡片容器：按收益分配方案的受益人数量自动生成对应卡片（默认收起，点标题右侧 + 展开） -->
+      <div id="commBenPayCards" class="comm-ben-cards" style="display:none;"></div>
     </div>
     </div>
     <div class="auth-msg" id="commissionAddMsg" style="margin-top:8px;min-height:20px;"></div>
@@ -14360,6 +14368,26 @@ function _benCardActual(theoVal, frac){
   if (frac >= 1) return '—';
   return _benCardFmt(n / (1 - frac));
 }
+/* ★COMM-DETAIL-TOGGLE-20261103★ 标题右侧 +/− 折叠开关：展开/收起下方全部支付明细内容 */
+function toggleCommDetail(){
+  var body = document.getElementById('commBenPayCards');
+  var btn = document.getElementById('commDetailToggle');
+  if (!body) return;
+  var collapsed = (body.style.display === 'none');
+  if (collapsed){
+    body.style.display = '';
+    if (btn){ btn.textContent = '−'; btn.setAttribute('aria-expanded','true'); }
+  } else {
+    body.style.display = 'none';
+    if (btn){ btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
+  }
+}
+function resetCommDetailToggle(){
+  var body = document.getElementById('commBenPayCards');
+  var btn = document.getElementById('commDetailToggle');
+  if (body) body.style.display = 'none';
+  if (btn){ btn.textContent = '+'; btn.setAttribute('aria-expanded','false'); }
+}
 function renderBenPaymentCards(force){
   var box = document.getElementById('commBenPayCards');
   if (!box) return;
@@ -14487,6 +14515,7 @@ function openCommissionAddModal(){
   window.__beneficiaries = [];
   window.__benCardPayments = {};   // ★COMM-BENCARD-20261103★ 新增模式清空支付明细卡片数据
   window.__benCardSig = null;      // 强制下次重渲染卡片
+  resetCommDetailToggle();         // ★COMM-DETAIL-TOGGLE-20261103★ 每次打开弹窗默认收起支付明细
 
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 新增模式：点数/设备金额为空 → 显示占位
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
@@ -14584,6 +14613,7 @@ function openCommissionEditModal(idx){
   // ★COMM-BENCARD-20261103★ 载入该记录的支付明细卡片数据（按方案索引 i 存储）
   window.__benCardPayments = (r.cardPayments && typeof r.cardPayments === 'object') ? r.cardPayments : {};
   window.__benCardSig = null;      // 强制下次重渲染卡片
+  resetCommDetailToggle();         // ★COMM-DETAIL-TOGGLE-20261103★ 每次打开弹窗默认收起支付明细
 
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 编辑模式回填点数/设备金额/受益人后 → 重算预期与校验
   commPlanCalcAll();  // ★COMM-PLAN-CALC-20261103★ 设备金额回填完毕 → 计划三币金额（设备金额×比率）重算
@@ -16012,7 +16042,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z240";  // 版本标记：Z240 = 新增受益人支付明细卡片（commBenPayCards）：按收益分配方案人数自动生成卡片，每张卡片可「＋增加记录」录入多笔支付（支付双方/货币下拉/汇率/理论5项/套现成本%/实际3项/日期选择器），实际=理论/(1-套现%)，数据按方案索引存入 cardPayments，与台账表独立
+const PERM_BUILD = "build 2026-11-03-Z241";  // 版本标记：Z241 = 「每一位受益人的佣金支付详情：」标题右侧新增 +/− 折叠开关（点 + 展开下方支付明细卡片并变 −，点 − 收起；默认收起，每次打开弹窗重置）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
