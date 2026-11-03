@@ -2110,18 +2110,14 @@ function _ovLoadChartLib(cb){
   /* ★COMM-LEDGER-20261103★ 受益人名录支付台账表：两行分组表头 + 三币分列（¥/$/₫ 天然对齐） */
   .comm-point-check .cpc-ledger-wrap { margin:6px 0 8px 0; overflow-x:auto; }
   .comm-point-check .cpc-ledger { width:100%; border-collapse:collapse; font-size:9px;
-    font-variant-numeric:tabular-nums; }
+    table-layout:fixed; font-variant-numeric:tabular-nums; }
   .comm-point-check .cpc-ledger th, .comm-point-check .cpc-ledger td {
-    border:1px solid #e3eaf2; padding:1px 3px; line-height:1.5; }
+    border:1px solid #e3eaf2; padding:1px 2px; line-height:1.5; overflow:hidden; }
   .comm-point-check .cpc-ledger td { white-space:nowrap; }
   .comm-point-check .cpc-ledger thead th { background:#f4f8fc; color:#44546a; font-weight:700;
     text-align:center; white-space:normal; word-break:break-word; }
-  /* 非金额列固定窄宽 → 表头文字自动分两行（佣金/比率、支付/次数、支付/状态），宽度让给三币金额 */
-  .comm-point-check .cpc-ledger thead th.cpc-th-seq { width:28px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-ben { width:46px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-ratio { width:50px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-cnt { width:42px; }
-  .comm-point-check .cpc-ledger thead th.cpc-th-status { width:44px; }
+  /* ★COMM-LEDGER-WIDTH-20261103★ 非金额列极窄（序号/受益人/比率/次数/状态合计仅 15%），
+     余下 85% 全给 9 个金额列；table-layout:fixed + 百分比列宽 → 任何容器宽度都不溢出 */
   .comm-point-check .cpc-ledger tfoot td { background:#f7fafd; border-top:2px solid #d7e3ef;
     color:#2c3e50; font-weight:800; text-align:right; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-total { text-align:center; color:#44546a; }
@@ -14237,21 +14233,21 @@ function _commLedgerFit(){
   var tbl = wrap.querySelector('.cpc-ledger');
   if (!tbl) return;
   wrap.style.overflowX = 'hidden';
-  // table 宽度是 100%，单元格里的文字溢出时 td 边界不会变 → 临时按 max-content 量真实所需宽度
-  var needWidth = function(){
-    var prev = tbl.style.width;
-    tbl.style.width = 'max-content';
-    var w = tbl.getBoundingClientRect().width;
-    tbl.style.width = prev || '100%';
-    return w;
+  if (tbl.clientWidth <= 0) return;   // 弹窗未显示时量不到真实宽度，等显示后再由 openCommission*Modal 调一次
+  // table-layout:fixed + 百分比列宽 → 表格框永不溢出；只要没有单元格内容被裁，就是「全部可见」
+  var overflow = function(){
+    var cells = tbl.querySelectorAll('th, td');
+    for (var i = 0; i < cells.length; i++){
+      if (cells[i].scrollWidth > cells[i].clientWidth + 1) return true;
+    }
+    return false;
   };
-  var size = 9, guard = 0, min = 7;
+  var size = 9, guard = 0, min = 6.5;
   tbl.style.fontSize = size + 'px';
-  while (needWidth() > wrap.clientWidth + 1 && size > min && guard++ < 16){
+  while (overflow() && size > min && guard++ < 14){
     size = Math.round((size - 0.25) * 100) / 100;
     tbl.style.fontSize = size + 'px';
   }
-  if (needWidth() > wrap.clientWidth + 1) wrap.style.overflowX = 'auto';
 }
 /* ★COMM-PT-DETAIL-20261103★ 佣金总点数 · 预期佣金与反向校验
    ① 预期佣金 = 设备金额 × 总点数（显示总比率 + 三币总额，蓝/红/绿）
@@ -14347,7 +14343,17 @@ function commPointCheck(){
     var tCls = 'cpc-st-none', tTxt = H('comm_led_st_none', '未支付');
     if (sumR > 0 && totPR >= sumR - 0.01 && totPU >= sumU - 0.01 && totPV >= sumV - 0.01){ tCls = 'cpc-st-done'; tTxt = H('comm_led_st_done', '已结清'); }
     else if (totPR > 0 || totPU > 0 || totPV > 0){ tCls = 'cpc-st-part'; tTxt = H('comm_led_st_part', '部分支付'); }
-    listEl.innerHTML = '<table class="cpc-ledger"><thead>'
+    // ★COMM-LEDGER-WIDTH-20261103★ 百分比列宽：序号 1.7 / 受益人 3.0 / 比率 3.3 / 次数 2.6 / 状态 4.4（合计 15%），
+    // 剩余 85% 平分给 9 个金额列（RMB·USD 各 8.5%，VND 11%，VND 位数最长）
+    var colHtml = '<colgroup>'
+      + '<col style="width:1.7%"><col style="width:3%"><col style="width:4.4%">'
+      + '<col style="width:8.2%"><col style="width:8.2%"><col style="width:11.1%">'
+      + '<col style="width:2.6%">'
+      + '<col style="width:8.2%"><col style="width:8.2%"><col style="width:11.1%">'
+      + '<col style="width:8.2%"><col style="width:8.2%"><col style="width:11.1%">'
+      + '<col style="width:5.8%">'
+      + '</colgroup>';
+    listEl.innerHTML = '<table class="cpc-ledger">' + colHtml + '<thead>'
       + '<tr>'
       +   '<th rowspan="2" class="cpc-th-seq">' + H('comm_led_seq', '序号') + '</th>'
       +   '<th rowspan="2" class="cpc-th-ben">' + H('comm_led_ben', '受益人') + '</th>'
@@ -14461,7 +14467,8 @@ function openCommissionAddModal(){
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 新增模式：点数/设备金额为空 → 显示占位
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
-  setTimeout(function(){ fitNumericFonts(); }, 30);   // ★COMM-AUTOFIT-20261103★ 弹窗可见后按真实宽度适配字号
+  // ★COMM-LEDGER-WIDTH-20261103★ 弹窗可见后再量一次台账表（隐藏时量不到宽度）
+  setTimeout(function(){ fitNumericFonts(); if (typeof _commLedgerFit === 'function') _commLedgerFit(); }, 30);
   var first = document.getElementById('commFContract');
   if (first) setTimeout(function(){ first.focus(); }, 50);
 }
@@ -14555,7 +14562,8 @@ function openCommissionEditModal(idx){
   commPlanCalcAll();  // ★COMM-PLAN-CALC-20261103★ 设备金额回填完毕 → 计划三币金额（设备金额×比率）重算
   var msg = document.getElementById('commissionAddMsg'); if (msg) msg.textContent = '';
   ov.classList.remove('hidden');
-  setTimeout(function(){ fitNumericFonts(); }, 30);   // ★COMM-AUTOFIT-20261103★ 弹窗可见后按真实宽度适配字号
+  // ★COMM-LEDGER-WIDTH-20261103★ 弹窗可见后再量一次台账表（隐藏时量不到宽度）
+  setTimeout(function(){ fitNumericFonts(); if (typeof _commLedgerFit === 'function') _commLedgerFit(); }, 30);
   var first = document.getElementById('commFContract');
   if (first) setTimeout(function(){ first.focus(); first.select(); }, 50);
 }
@@ -16956,7 +16964,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z226";  // 版本标记：Z226 = 台账表整体收紧（9px 字号/1px 内边距/窄列 28·46·50·42·44，14 列真实所需 897px），并保留字号自适应兜底
+const PERM_BUILD = "build 2026-11-03-Z227";  // 版本标记：Z227 = 台账表改「table-layout:fixed + 百分比列宽」（序号1.7%·受益人3%·比率4.4%·次数2.6%·状态5.8%，其余85%给三币），任何窗口都完整显示
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
