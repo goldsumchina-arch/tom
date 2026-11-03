@@ -2188,22 +2188,22 @@ function _ovLoadChartLib(cb){
 .ben-card-table colgroup col:nth-child(13) { width:9.5% !important; }
 .ben-card-table colgroup col:nth-child(14) { width:8%   !important; }
 .ben-card-table td.bc-seq, .ben-card-table td.bc-cnt { color:#8a9bb0; }
-/* ★BENCARD-UI-20261103★ 输入框缩小（太高/太宽）：统一 height:16px；date 列限宽并居中 */
-.ben-card-table .bc-inp { width:100%; min-width:0; height:16px; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:0 2px; font-size:8.5px; line-height:14px; font-family:inherit; }
+/* ★BENCARD-UI-20261103C★ 录入框与数值更小；所有录入值左右居中（金额/汇率/日期/下拉） */
+.ben-card-table .bc-inp { width:100%; min-width:0; height:16px !important; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:0 2px; font-size:8px; line-height:14px; font-family:inherit; text-align:center; }
 .ben-card-table .bc-inp:focus { outline:2px solid #1e9e6a; }
-.ben-card-table select.bc-inp { height:16px; padding:0 1px; font-size:8px; }
-.ben-card-table .bc-num { text-align:right; }
-.ben-card-table .bc-parties { text-align:left; }
+.ben-card-table select.bc-inp { height:16px !important; padding:0 1px; font-size:7.5px; text-align:center; text-align-last:center; }
+.ben-card-table .bc-num { text-align:center; }
+.ben-card-table .bc-parties { text-align:center; }
 .ben-card-table .bc-cash-wrap { display:flex; align-items:center; gap:1px; justify-content:center; }
-.ben-card-table .bc-cash-wrap .bc-cash { width:calc(100% - 11px); text-align:right; }
+.ben-card-table .bc-cash-wrap .bc-cash { width:calc(100% - 11px); text-align:center; }
 .ben-card-table .bc-pct { color:#e8720c; font-weight:700; }
-.ben-card-table .bc-actual { font-weight:700; text-align:right; }
+.ben-card-table .bc-actual { font-weight:700; text-align:center; }
 .ben-card-table .bc-actual.bc-rmb, .ben-card-table .bc-money.bc-rmb { color:#d64541; }
 .ben-card-table .bc-actual.bc-usd, .ben-card-table .bc-money.bc-usd { color:#2e86de; }
 .ben-card-table .bc-actual.bc-vnd, .ben-card-table .bc-money.bc-vnd { color:#1e9e6a; }
 .ben-card-table .bc-empty { color:#a6b3c2; padding:6px; }
-.ben-card-table .cp-date-input-wrapper { width:auto; max-width:78px; min-width:0; margin:0 auto; display:block; }
-.ben-card-table .cp-date-input-wrapper input { min-width:0; width:100%; height:16px; padding:0 2px; font-size:8px; line-height:14px; border-radius:2px; }
+.ben-card-table .cp-date-input-wrapper { width:100%; max-width:72px; min-width:0; margin:0 auto; display:block; }
+.ben-card-table .cp-date-input-wrapper input { min-width:0; width:100%; height:15px !important; padding:0 1px !important; font-size:7px !important; line-height:13px !important; border-radius:2px; text-align:center !important; letter-spacing:-0.2px; }
 .ben-card-empty { color:#8a9bb0; font-size:12px; padding:8px 4px; }
   .comm-point-check .cpc-chk { padding:3px 0; }
   .comm-point-check .cpc-chk-title { font-size:13px; font-weight:700; color:#5a6b82; }
@@ -14397,6 +14397,16 @@ function _benCardMoneyDisplay(cur, val){
   if (!(n > 0)) return '';
   return _benCardSym(cur) + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+/* ★BENCARD-RATE-20261103★ 汇率显示加千位符（无货币符号），如 3,800 / 26,000 */
+function _benCardRateDisplay(val){
+  var n = parseFloat(String(val == null ? '' : val).replace(/[^\d.]/g, ''));
+  if (!(n > 0)) return '';
+  return n.toLocaleString('en-US', { maximumFractionDigits: 4 });
+}
+function _benCardRateNum(val){
+  var n = parseFloat(String(val == null ? '' : val).replace(/[^\d.]/g, ''));
+  return (isFinite(n) && n > 0) ? n : 0;
+}
 function _benCardActual(theoVal, frac, cur){
   var n = parseFloat(String(theoVal == null ? '' : theoVal).replace(/[^\d.]/g, ''));
   if (!(n > 0)) return '—';
@@ -14535,11 +14545,11 @@ function renderBenPaymentCards(force){
           +   '<option value="USD"' + (d.currency === 'USD' ? ' selected' : '') + '>USD</option>'
           +   '<option value="VND"' + (d.currency === 'VND' ? ' selected' : '') + '>VND</option>'
           + '</select></td>'
-          + '<td><input class="bc-inp bc-num" value="' + _benEsc(d.rateRmbVnd || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'rateRmbVnd\',this.value)"></td>'
-          + '<td><input class="bc-inp bc-num" value="' + _benEsc(d.rateUsdVnd || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'rateUsdVnd\',this.value)"></td>'
-          + '<td><input class="bc-inp bc-num bc-money bc-rmb" value="' + _benEsc(_benCardMoneyDisplay('rmb', dTheo.rmb)) + '" oninput="benCardInput(' + i + ',' + j + ',\'rmb\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'rmb\')"></td>'
-          + '<td><input class="bc-inp bc-num bc-money bc-usd" value="' + _benEsc(_benCardMoneyDisplay('usd', dTheo.usd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'usd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'usd\')"></td>'
-          + '<td><input class="bc-inp bc-num bc-money bc-vnd" value="' + _benEsc(_benCardMoneyDisplay('vnd', dTheo.vnd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'vnd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'vnd\')"></td>'
+          + '<td><input class="bc-inp bc-num" value="' + _benEsc(_benCardRateDisplay(d.rateRmbVnd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'rateRmbVnd\',this.value)" onfocus="benCardRateFocus(this)" onblur="benCardRateBlur(this)"></td>'
+          + '<td><input class="bc-inp bc-num" value="' + _benEsc(_benCardRateDisplay(d.rateUsdVnd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'rateUsdVnd\',this.value)" onfocus="benCardRateFocus(this)" onblur="benCardRateBlur(this)"></td>'
+          + '<td><input id="bct_' + i + '_' + j + '_rmb" class="bc-inp bc-num bc-money bc-rmb" value="' + _benEsc(_benCardMoneyDisplay('rmb', dTheo.rmb)) + '" oninput="benCardInput(' + i + ',' + j + ',\'rmb\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'rmb\')"></td>'
+          + '<td><input id="bct_' + i + '_' + j + '_usd" class="bc-inp bc-num bc-money bc-usd" value="' + _benEsc(_benCardMoneyDisplay('usd', dTheo.usd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'usd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'usd\')"></td>'
+          + '<td><input id="bct_' + i + '_' + j + '_vnd" class="bc-inp bc-num bc-money bc-vnd" value="' + _benEsc(_benCardMoneyDisplay('vnd', dTheo.vnd)) + '" oninput="benCardInput(' + i + ',' + j + ',\'vnd\',this.value)" onfocus="benCardMoneyFocus(this)" onblur="benCardMoneyBlur(this,\'vnd\')"></td>'
           + '<td><div class="bc-cash-wrap"><input class="bc-inp bc-num bc-cash" value="' + _benEsc(d.cashout || '') + '" oninput="benCardInput(' + i + ',' + j + ',\'cashout\',this.value)" onblur="benCardCashBlur(' + i + ',' + j + ',this)"><span class="bc-pct">%</span></div></td>'
           + '<td class="bc-actual bc-rmb" id="bca_' + i + '_' + j + '_rmb">' + _benCardActual(dTheo.rmb, frac, 'rmb') + '</td>'
           + '<td class="bc-actual bc-usd" id="bca_' + i + '_' + j + '_usd">' + _benCardActual(dTheo.usd, frac, 'usd') + '</td>'
@@ -14584,8 +14594,16 @@ function benCardInput(i, j, field, val){
     if (!d.theo) d.theo = {};
     d.theo[field] = val;
   }
-  // 理论金额 / 套现成本 变动 → 实时刷新本行「实际应支付金额」
-  if (field === 'rmb' || field === 'usd' || field === 'vnd' || field === 'cashout') benCardRecalc(i, j);
+  // 金额录入 → 按汇率自动换算其余两种币种；汇率变动 → 用最近录入的币种重算
+  if (field === 'rmb' || field === 'usd' || field === 'vnd'){
+    benCardTheoAutoCalc(i, j, field, val);
+  } else if (field === 'rateRmbVnd' || field === 'rateUsdVnd'){
+    if (d.__lastTheo && d.theo && d.theo[d.__lastTheo]){
+      benCardTheoAutoCalc(i, j, d.__lastTheo, d.theo[d.__lastTheo]);
+    }
+  }
+  // 理论金额 / 套现成本 / 汇率 变动 → 实时刷新本行「实际应支付金额」
+  if (field === 'rmb' || field === 'usd' || field === 'vnd' || field === 'cashout' || field === 'rateRmbVnd' || field === 'rateUsdVnd') benCardRecalc(i, j);
 }
 function benCardCashBlur(i, j, el){
   var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
@@ -14604,6 +14622,43 @@ function benCardMoneyBlur(el, cur){
   if (!el) return;
   var n = parseFloat(String(el.value || '').replace(/[^\d.]/g, ''));
   el.value = (isFinite(n) && n > 0) ? _benCardMoneyDisplay(cur, n) : '';
+}
+/* ★BENCARD-RATE-20261103★ 汇率输入：聚焦去千位符，失焦恢复 3,800 形式 */
+function benCardRateFocus(el){
+  if (!el) return;
+  el.value = String(el.value || '').replace(/[^\d.\-]/g, '');
+}
+function benCardRateBlur(el){
+  if (!el) return;
+  var n = parseFloat(String(el.value || '').replace(/[^\d.]/g, ''));
+  el.value = (isFinite(n) && n > 0) ? _benCardRateDisplay(n) : '';
+}
+/* ★BENCARD-AUTOCALC-20261103★ 理论应支付金额按汇率自动换算：
+   RMB→VND 用 rateRmbVnd，USD→VND 用 rateUsdVnd；录入任一币种后回填另外两种 */
+function benCardTheoAutoCalc(i, j, field, val){
+  var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
+  var d = rows[j]; if (!d) return;
+  var r1 = _benCardRateNum(d.rateRmbVnd);
+  var r2 = _benCardRateNum(d.rateUsdVnd);
+  var n = parseFloat(String(val == null ? '' : val).replace(/[^\d.]/g, ''));
+  if (!(n > 0)) return;
+  if (!d.theo) d.theo = {};
+  var vnd;
+  if (field === 'rmb'){ if (!r1) return; vnd = n * r1; }
+  else if (field === 'usd'){ if (!r2) return; vnd = n * r2; }
+  else { vnd = n; }
+  if (!(vnd > 0)) return;
+  d.theo[field] = val;
+  if (field !== 'vnd') d.theo.vnd = vnd.toFixed(2);
+  if (field !== 'rmb' && r1) d.theo.rmb = (vnd / r1).toFixed(2);
+  if (field !== 'usd' && r2) d.theo.usd = (vnd / r2).toFixed(2);
+  d.__lastTheo = field;
+  var list = ['rmb', 'usd', 'vnd'];
+  for (var k = 0; k < list.length; k++){
+    var f = list[k]; if (f === field) continue;
+    var el = document.getElementById('bct_' + i + '_' + j + '_' + f);
+    if (el) el.value = _benCardMoneyDisplay(f, d.theo[f]);
+  }
 }
 function benCardRecalc(i, j){
   var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
@@ -16172,7 +16227,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z247";  // 版本标记：Z247 = 支付明细卡片：①输入框统一 height:16px（原太高/太宽），日期列限宽 78px 居中；②支付双方改三选一下拉（公司对公司/公司对个人/个人对个人，三语，存 canonical key，兼容旧自由文本）；③理论/实际金额带货币符号(¥/$/₫)+千位符，RMB红/USD蓝/VND绿；④理论金额输入聚焦去格式化、失焦恢复显示
+const PERM_BUILD = "build 2026-11-03-Z248";  // 版本标记：Z248 = 支付明细卡片：①汇率输入加千位符(3,800/26,000，聚焦去逗号、失焦恢复)；②日期输入框缩到 72px/15px、字号 7px 以适配列宽；③全部录入值（金额/汇率/日期/下拉/套现%）左右居中；④理论应支付金额按汇率自动换算：录入任一币种后回填另外两种(RMB→VND 用 rateRmbVnd，USD→VND 用 rateUsdVnd)，汇率改动后按最近录入币种重算
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
