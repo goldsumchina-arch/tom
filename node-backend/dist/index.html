@@ -12858,8 +12858,9 @@ function applyCommissionLang(){
   // ★COMM-PLAN-20261103★ 收益分配计划：区块标题三语；行内标签随语言重绘
   st('commPlanTitleText','comm_plan_title','受益人-人数-收益分配计划');
   if (typeof commPlanRender === 'function') commPlanRender();
-  // ★COMM-BENLOCK-20261103★ 切语言时刷新「修改」按钮文案与锁定提示
-  if (typeof commBenLockUI === 'function') commBenLockUI(!!window.__commBenLocked);
+  // ★COMM-BENLOCK-I18N-20261103★ 切语言时原地重写「确认人数 / 输入密码」两个对话框的
+  // 标题·正文·提示·按钮，以及「修改」按钮文案与锁定提示（data-i18n 覆盖不到动态文本）
+  if (typeof commBenLocalizeDlg === 'function') commBenLocalizeDlg();
   // ★COMM-PTCHECK-20261103★ 模态框内「佣金总点数 · 预期佣金与反向校验」区块三语
   st('commPtCheckTitle','comm_pt_check_title','佣金总点数 · 预期佣金与反向校验');
   st('commPtExpectLbl','comm_pt_expect','预期佣金（设备金额 × 点数）');
@@ -13731,20 +13732,41 @@ function commBenApplySaved(rec){
   window.__commBenAsking = false;
   commBenLockUI(locked);
 }
-/* 打开「确认受益人数」对话框 */
-function commBenConfirmAsk(val){
+/* ★COMM-BENLOCK-I18N-20261103★ 两个对话框（确认人数 / 输入密码）的统一三语刷新入口。
+   对话框文本是 JS 动态写入的（含 %s 人数、密码错误提示），data-i18n 扫描覆盖不到，
+   所以切语言时（applyCommissionLang → 这里）必须在原地重写一遍文字。 */
+function commBenLocalizeDlg(){
   var t = T();
-  var ov = document.getElementById('commBenConfirmOverlay');
-  if (!ov) return;
-  window.__commBenAsking = true;
-  window.__commBenPending = String(val || '');
-  var ti = document.getElementById('commBenConfirmTitle'); if (ti) ti.textContent = t.comm_ben_confirm_title || '确认受益人数';
+  // ① 确认人数框
+  var ti = document.getElementById('commBenConfirmTitle');
+  if (ti) ti.textContent = t.comm_ben_confirm_title || '确认受益人数';
   var mg = document.getElementById('commBenConfirmMsg');
-  if (mg) mg.textContent = String(t.comm_ben_confirm_msg || '确认受益人数为 %s 人吗？').replace('%s', window.__commBenPending);
+  var pv = String(window.__commBenPending || '');
+  if (mg && pv) mg.textContent = String(t.comm_ben_confirm_msg || '确认受益人数为 %s 人吗？').replace('%s', pv);
   var tp = document.getElementById('commBenConfirmTip');
   if (tp) tp.textContent = t.comm_ben_confirm_tip || '确认后该数值将被锁定，需输入密码才能再次修改。';
   var ok = document.getElementById('commBenConfirmOkBtn'); if (ok) ok.textContent = t.comm_ben_confirm_ok || '确认';
   var cc = document.getElementById('commBenConfirmCancelBtn'); if (cc) cc.textContent = t.comm_ben_cancel || '取消';
+  // ② 输入密码框
+  var pt = document.getElementById('commBenPwdTitle'); if (pt) pt.textContent = t.comm_ben_pwd_title || '修改受益人数';
+  var pp = document.getElementById('commBenPwdPrompt'); if (pp) pp.textContent = t.comm_ben_pwd_prompt || '请输入密码';
+  var pin = document.getElementById('commBenPwdInput');
+  if (pin) pin.setAttribute('placeholder', t.comm_ben_pwd_placeholder || '请输入密码');
+  var pmsg = document.getElementById('commBenPwdMsg');
+  if (pmsg && window.__commBenPwdErr) pmsg.textContent = t.comm_ben_pwd_wrong || '密码错误';
+  var pbtns = document.querySelectorAll('#commBenPwdOverlay .auth-modal-btns button');
+  if (pbtns[0]) pbtns[0].textContent = t.comm_ben_cancel || '取消';
+  if (pbtns[1]) pbtns[1].textContent = t.comm_ben_pwd_ok || '确定';
+  // ③ 「修改」按钮 / 锁定提示
+  commBenLockUI(!!window.__commBenLocked);
+}
+/* 打开「确认受益人数」对话框 */
+function commBenConfirmAsk(val){
+  var ov = document.getElementById('commBenConfirmOverlay');
+  if (!ov) return;
+  window.__commBenAsking = true;
+  window.__commBenPending = String(val || '');
+  commBenLocalizeDlg();     // 标题 / 正文(含人数) / 提示 / 按钮，全部按当前语言写
   ov.classList.remove('hidden');
 }
 /* 确认 → 锁死 */
@@ -13775,14 +13797,13 @@ function commBenConfirmCancel(){
 }
 /* 点「修改」→ 弹密码框 */
 function commBenCountAskPwd(){
-  var t = T();
   var ov = document.getElementById('commBenPwdOverlay');
   var msg = document.getElementById('commBenPwdMsg');
   var inp = document.getElementById('commBenPwdInput');
-  var ti = document.getElementById('commBenPwdTitle'); if (ti) ti.textContent = t.comm_ben_pwd_title || '修改受益人数';
-  var pr = document.getElementById('commBenPwdPrompt'); if (pr) pr.textContent = t.comm_ben_pwd_prompt || '请输入密码';
+  window.__commBenPwdErr = false;
   if (msg) msg.textContent = '';
   if (inp){ inp.value = ''; }
+  commBenLocalizeDlg();     // 标题 / 提示 / 占位符按当前语言写
   if (ov) ov.classList.remove('hidden');
   if (inp) setTimeout(function(){ inp.focus(); }, 50);
 }
@@ -13797,10 +13818,12 @@ function commBenPwdOk(){
   var msg = document.getElementById('commBenPwdMsg');
   var val = String(inp ? inp.value : '').trim().toLowerCase();
   if (val !== COMM_BEN_PWD){
+    window.__commBenPwdErr = true;   // 记住「有错误提示」，切语言时按新语言重写这句
     if (msg){ msg.style.color = '#e74c3c'; msg.textContent = t.comm_ben_pwd_wrong || '密码错误'; }
     if (inp){ inp.value = ''; inp.focus(); }
     return;
   }
+  window.__commBenPwdErr = false;
   closeCommBenPwd();
   // 解锁：可编辑 + 隐藏「修改」按钮，并把焦点交给人数输入框
   window.__commBenLocked = false;
@@ -16555,7 +16578,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z214";  // 版本标记：Z214 = 受益人数「输入→确认(三语)→锁死→密码money解锁」，锁定状态落库(刷新/重开仍锁)
+const PERM_BUILD = "build 2026-11-03-Z215";  // 版本标记：Z215 = 确认人数/输入密码两个对话框的三语联动（切语言原地重写标题·正文·提示·按钮·错误提示）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
