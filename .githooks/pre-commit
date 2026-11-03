@@ -1,0 +1,30 @@
+#!/bin/sh
+# ============================================================================
+# ALL-LOCK-20261103 全面代码逻辑硬锁（pre-commit）
+#   ① check_lang_geom_lock.py —— 切语言几何冻结/顶栏定宽/表头固定 等契约
+#   ② check_all_locks.py       —— 版本标记+dist 同步 / 审批表列宽百分比 / 表格宽度三件套 /
+#                                 操作列居中 / 审批页三段 sticky / 抽屉关闭按钮规范 /
+#                                 语言几何锁豁免名单 / 渲染后同帧补冻 / 关键函数与三语 key /
+#                                 全部内联脚本语法（esprima）
+# 任何一条不过 → 提交被阻止（exit 1）。
+# 安装：cp .githooks/pre-commit .git/hooks/pre-commit（项目已装好）
+# ============================================================================
+root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 1
+cd "$root" || exit 1
+
+PY=python
+command -v python >/dev/null 2>&1 || PY=py
+
+fail=0
+echo "[pre-commit] ALL-LOCK 校验开始 ..."
+"$PY" check_lang_geom_lock.py || fail=1
+"$PY" check_all_locks.py || fail=1
+
+if [ "$fail" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] 硬锁未通过，提交已阻止。修好上面 [x] 列出的条目后重试。"
+  echo "            如需确认锁本身有效：python _lock_reverse_test_all.py"
+  exit 1
+fi
+echo "[pre-commit] ALL-LOCK OK"
+exit 0
