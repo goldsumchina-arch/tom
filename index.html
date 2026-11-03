@@ -2114,8 +2114,9 @@ function _ovLoadChartLib(cb){
     color:#b3bfcc; text-align:right; letter-spacing:.2px; }
   .comm-point-check .cpc-ledger { width:100%; border-collapse:collapse; font-size:9px;
     table-layout:fixed; font-variant-numeric:tabular-nums; }
+  /* ★COMM-LEDGER-BLACK-20261103★ 网格线改黑色（含外框），数据行文字统一居中 */
   .comm-point-check .cpc-ledger th, .comm-point-check .cpc-ledger td {
-    border:1px solid #e3eaf2; padding:1px 2px; line-height:1.5; overflow:hidden; }
+    border:1px solid #1b1b1b; padding:1px 2px; line-height:1.5; overflow:hidden; }
   .comm-point-check .cpc-ledger td { white-space:nowrap; }
   .comm-point-check .cpc-ledger thead th { background:#f4f8fc; color:#44546a; font-weight:700;
     text-align:center; white-space:normal; word-break:break-word; }
@@ -2136,7 +2137,7 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-ledger colgroup col:nth-child(12) { width:7.2%  !important; }  /* 待支付 USD */
   .comm-point-check .cpc-ledger colgroup col:nth-child(13) { width:10.43% !important; } /* 待支付 VND */
   .comm-point-check .cpc-ledger colgroup col:nth-child(14) { width:6.0%  !important; }  /* 支付状态 */
-  .comm-point-check .cpc-ledger tfoot td { background:#f7fafd; border-top:2px solid #d7e3ef;
+  .comm-point-check .cpc-ledger tfoot td { background:#f7fafd; border-top:2px solid #1b1b1b;
     color:#2c3e50; font-weight:800; text-align:right; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-total { text-align:center; color:#44546a; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-ratio { text-align:center; color:#e8720c; }
@@ -2148,7 +2149,8 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-ledger tbody td.cpc-td-seq,
   .comm-point-check .cpc-ledger tbody td.cpc-td-ratio,
   .comm-point-check .cpc-ledger tbody td.cpc-td-cnt { text-align:center; color:#8a9bb0; }
-  .comm-point-check .cpc-ledger tbody td.cpc-td-name { text-align:left; color:#2c3e50; }
+  /* ★COMM-LEDGER-BLACK-20261103★ 受益人列内容与表头一样居中 */
+  .comm-point-check .cpc-ledger tbody td.cpc-td-name { text-align:center; color:#2c3e50; }
   .comm-point-check .cpc-ledger tbody td.cpc-rmb { color:#d64541; }
   .comm-point-check .cpc-ledger tbody td.cpc-usd { color:#2e86de; }
   .comm-point-check .cpc-ledger tbody td.cpc-vnd { color:#1e9e6a; }
@@ -17000,7 +17002,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z231";  // 版本标记：Z231 = 台账表列宽再平衡（金额列收窄：RMB/USD 8.2%→7.2%、VND 11.1%→10.43%；序号 1.7%→3%、受益人 3%→6%、支付次数 2.6%→5.5%、比率 4.4%→5%、状态 5.8%→6%）
+const PERM_BUILD = "build 2026-11-03-Z232";  // 版本标记：Z232 = 台账表网格线改黑色(#1b1b1b, 含表头/总计行) + 受益人列内容居中对齐
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
