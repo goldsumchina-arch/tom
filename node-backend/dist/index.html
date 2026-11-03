@@ -2390,6 +2390,21 @@ function _ovLoadChartLib(cb){
       border-left:none; margin-left:0; padding-left:0; padding-top:8px; border-top:1px dashed #e74c3c;
     }
   }
+  /* ★COMM-BENLOCK-20261103★ 受益人数：确认后锁定，右侧出现「修改」按钮（需密码解锁） */
+  .comm-bencnt-wrap { display:flex; align-items:center; gap:8px; }
+  .comm-bencnt-wrap > input { flex:1 1 auto; min-width:0; }
+  .comm-bencnt-modify {
+    flex:0 0 auto; height:34px; padding:0 12px; margin-top:4px;
+    border:1px solid #F5872E; border-radius:8px; background:#fff6ec; color:#F5872E;
+    font-size:12px; font-weight:700; line-height:1; cursor:pointer; white-space:nowrap;
+    transition:background .15s, color .15s, box-shadow .15s;
+  }
+  .comm-bencnt-modify:hover { background:#F5872E; color:#fff; box-shadow:0 2px 8px rgba(245,135,46,.28); }
+  /* 锁定态：灰底、不可编辑光标，一眼看出已被锁死 */
+  #commFBenCount.comm-bencnt-locked {
+    background:#eef2f6 !important; color:#5b6b7b !important; border-color:#cdd8e3 !important;
+    cursor:not-allowed !important; font-weight:700;
+  }
   /* 合作集团下拉：外观与输入框一致 */
   .commission-form select {
     width:100%; box-sizing:border-box; height:44px; padding:0 14px;
@@ -4674,7 +4689,13 @@ function _ovLoadChartLib(cb){
         <div class="login-field req"><label id="commLblEquipRMB"><i>*</i>设备金额 RMB</label><input id="commFEquipRMB" type="text" inputmode="numeric" class="cf-money money-rmb" placeholder="¥" autocomplete="off" oninput="commMoneyInput('rmb')"></div>
         <div class="login-field req"><label id="commLblEquipUSD"><i>*</i>设备金额 USD</label><input id="commFEquipUSD" type="text" inputmode="numeric" class="cf-money money-usd" placeholder="$" autocomplete="off" oninput="commMoneyInput('usd')"></div>
         <div class="login-field req"><label id="commLblEquipVND"><i>*</i>设备金额 VND</label><input id="commFEquipVND" type="text" inputmode="numeric" class="cf-money money-vnd" placeholder="₫" autocomplete="off" oninput="commMoneyInput('vnd')"></div>
-        <div class="login-field"><label id="commLblBenCount">受益人数</label><input id="commFBenCount" type="text" inputmode="numeric" placeholder="1-10" autocomplete="off" oninput="commBenCountInput(this)" onblur="commBenCountBlur(this)"></div>
+        <div class="login-field comm-bencnt-field"><label id="commLblBenCount">受益人数</label>
+          <div class="comm-bencnt-wrap">
+            <input id="commFBenCount" type="text" inputmode="numeric" placeholder="1-10" autocomplete="off" oninput="commBenCountInput(this)" onblur="commBenCountBlur(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();commBenCountBlur(this);}">
+            <!-- ★COMM-BENLOCK-20261103★ 人数确认后锁定，需密码才能修改（按钮仅锁定时出现） -->
+            <button type="button" class="comm-bencnt-modify" id="commBenModifyBtn" style="display:none;" onclick="commBenCountAskPwd()">修改</button>
+          </div>
+        </div>
         <div class="login-field"><label id="commLblRemark">备注</label><input id="commFRemark" type="text" autocomplete="off"></div>
       </div>
       <!-- ★COMM-PLAN-20261103★ 收益分配计划：紧跟在「受益人数」所在这一排下面，人数 N 确认后自动生成 N 行
@@ -4838,6 +4859,37 @@ function _ovLoadChartLib(cb){
     <div class="auth-modal-btns" style="margin-top:14px;">
       <button class="auth-btn-plain" onclick="closeBeneficiaryModal()" data-i18n="comm_add_cancel">取消</button>
       <button class="auth-btn-primary" onclick="saveBeneficiary()" data-i18n="comm_add_save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 个人佣金：受益人数确认 / 修改密码 弹窗（★COMM-BENLOCK-20261103★） ==================== -->
+<div id="commBenConfirmOverlay" class="auth-modal-overlay hidden">
+  <div class="auth-modal" style="width:480px;">
+    <button class="comm-close" onclick="commBenConfirmCancel()" title="Close">×</button>
+    <h3 id="commBenConfirmTitle" data-i18n="comm_ben_confirm_title">确认受益人数</h3>
+    <p id="commBenConfirmMsg" style="margin:0 0 6px;color:#37475a;font-size:14px;line-height:1.6;"></p>
+    <p id="commBenConfirmTip" style="margin:0;color:#8a97a5;font-size:12px;line-height:1.6;"></p>
+    <div class="auth-modal-btns" style="margin-top:18px;">
+      <button class="auth-btn-plain" id="commBenConfirmCancelBtn" onclick="commBenConfirmCancel()" data-i18n="comm_ben_cancel">取消</button>
+      <button class="auth-btn-primary" id="commBenConfirmOkBtn" onclick="commBenConfirmOk()" data-i18n="comm_ben_confirm_ok">确认</button>
+    </div>
+  </div>
+</div>
+<div id="commBenPwdOverlay" class="auth-modal-overlay hidden">
+  <div class="auth-modal" style="width:420px;">
+    <button class="comm-close" onclick="closeCommBenPwd()" title="Close">×</button>
+    <h3 id="commBenPwdTitle" data-i18n="comm_ben_pwd_title">修改受益人数</h3>
+    <p id="commBenPwdPrompt" style="margin:0 0 14px;color:#555;font-size:14px;" data-i18n="comm_ben_pwd_prompt">请输入密码</p>
+    <div class="login-field">
+      <input id="commBenPwdInput" type="password" autocomplete="off"
+             data-i18n-attr="placeholder:comm_ben_pwd_placeholder" placeholder="请输入密码"
+             onkeydown="if(event.key==='Enter'){event.preventDefault();commBenPwdOk();}">
+    </div>
+    <div class="auth-msg" id="commBenPwdMsg" style="margin-top:8px;min-height:20px;"></div>
+    <div class="auth-modal-btns" style="margin-top:18px;">
+      <button class="auth-btn-plain" onclick="closeCommBenPwd()" data-i18n="comm_ben_cancel">取消</button>
+      <button class="auth-btn-primary" onclick="commBenPwdOk()" data-i18n="comm_ben_pwd_ok">确定</button>
     </div>
   </div>
 </div>
@@ -6953,6 +7005,12 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     comm_f_accept:"项目验收日期", comm_f_points:"佣金总点数（%）", comm_f_ben_count:"受益人数",
     comm_plan_title:"受益人-人数-收益分配计划", comm_plan_th_name:"受益人",
     comm_plan_th_ratio:"佣金比率（%）", comm_plan_custom:"自定义受益人",
+  comm_ben_confirm_title:"确认受益人数", comm_ben_confirm_msg:"确认受益人数为 %s 人吗？",
+  comm_ben_confirm_tip:"确认后该数值将被锁定，需输入密码才能再次修改。",
+  comm_ben_confirm_ok:"确认", comm_ben_cancel:"取消", comm_ben_modify:"修改",
+  comm_ben_locked_tip:"人数已确认锁定，需密码才能修改", comm_ben_locked_ok:"受益人数已确认并锁定：",
+  comm_ben_pwd_title:"修改受益人数", comm_ben_pwd_prompt:"请输入密码", comm_ben_pwd_placeholder:"请输入密码",
+  comm_ben_pwd_ok:"确定", comm_ben_pwd_wrong:"密码错误", comm_ben_unlocked:"已解锁，可重新修改受益人数",
     comm_pt_check_title:"佣金总点数 · 预期佣金与反向校验", comm_pt_expect:"预期佣金（设备金额 × 点数）",
     comm_pt_ben:"受益人需支付总额", comm_pt_diff_lbl:"差额（预期 − 受益人）",
     comm_pt_check_sec:"佣金总点数 · 预期佣金与反向校验", comm_pt_ok:"点数与受益人总额一致", comm_pt_diff:"差额"
@@ -7726,6 +7784,12 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     comm_f_accept:"Project Hand-over Date", comm_f_points:"Total Commission Rate (%)", comm_f_ben_count:"Number of Beneficiaries",
     comm_plan_title:"Beneficiary · Count · Profit Distribution Plan", comm_plan_th_name:"Beneficiary",
     comm_plan_th_ratio:"Commission Ratio (%)", comm_plan_custom:"Custom beneficiary",
+  comm_ben_confirm_title:"Confirm beneficiary count", comm_ben_confirm_msg:"Confirm the beneficiary count as %s?",
+  comm_ben_confirm_tip:"Once confirmed the number is locked; a password is required to change it.",
+  comm_ben_confirm_ok:"Confirm", comm_ben_cancel:"Cancel", comm_ben_modify:"Edit",
+  comm_ben_locked_tip:"Count locked — password required to change", comm_ben_locked_ok:"Beneficiary count confirmed & locked: ",
+  comm_ben_pwd_title:"Change beneficiary count", comm_ben_pwd_prompt:"Enter password", comm_ben_pwd_placeholder:"Enter password",
+  comm_ben_pwd_ok:"OK", comm_ben_pwd_wrong:"Wrong password", comm_ben_unlocked:"Unlocked — you can change the count now",
     comm_pt_check_title:"Commission Points · Expected & Reverse Check", comm_pt_expect:"Expected Commission (Equip × Rate)",
     comm_pt_ben:"Beneficiary Total Payable", comm_pt_diff_lbl:"Variance (Expected − Beneficiary)",
     comm_pt_check_sec:"Commission Points · Expected & Reverse Check", comm_pt_ok:"Rate matches beneficiary total", comm_pt_diff:"Variance"
@@ -8497,6 +8561,12 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     comm_f_accept:"Ngày nghiệm thu dự án", comm_f_points:"Tổng tỷ lệ hoa hồng (%)", comm_f_ben_count:"Số người thụ hưởng",
     comm_plan_title:"Người thụ hưởng · Số lượng · Kế hoạch phân chia lợi nhuận", comm_plan_th_name:"Người thụ hưởng",
     comm_plan_th_ratio:"Tỷ lệ hoa hồng (%)", comm_plan_custom:"Người thụ hưởng tùy chỉnh",
+  comm_ben_confirm_title:"Xác nhận số người thụ hưởng", comm_ben_confirm_msg:"Xác nhận số người thụ hưởng là %s?",
+  comm_ben_confirm_tip:"Sau khi xác nhận, con số này sẽ bị khóa; cần mật khẩu để thay đổi.",
+  comm_ben_confirm_ok:"Xác nhận", comm_ben_cancel:"Hủy", comm_ben_modify:"Sửa",
+  comm_ben_locked_tip:"Số lượng đã khóa — cần mật khẩu để sửa", comm_ben_locked_ok:"Đã xác nhận và khóa số người thụ hưởng: ",
+  comm_ben_pwd_title:"Sửa số người thụ hưởng", comm_ben_pwd_prompt:"Nhập mật khẩu", comm_ben_pwd_placeholder:"Nhập mật khẩu",
+  comm_ben_pwd_ok:"Đồng ý", comm_ben_pwd_wrong:"Mật khẩu sai", comm_ben_unlocked:"Đã mở khóa — có thể sửa số người thụ hưởng",
     comm_pt_check_title:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_expect:"Hoa hồng dự kiến (Thiết bị × Tỷ lệ)",
     comm_pt_ben:"Tổng thanh toán người thụ hưởng", comm_pt_diff_lbl:"Chênh lệch (Dự kiến − Thụ hưởng)",
     comm_pt_check_sec:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_ok:"Tỷ lệ khớp tổng thụ hưởng", comm_pt_diff:"Chênh lệch"
@@ -12788,6 +12858,8 @@ function applyCommissionLang(){
   // ★COMM-PLAN-20261103★ 收益分配计划：区块标题三语；行内标签随语言重绘
   st('commPlanTitleText','comm_plan_title','受益人-人数-收益分配计划');
   if (typeof commPlanRender === 'function') commPlanRender();
+  // ★COMM-BENLOCK-20261103★ 切语言时刷新「修改」按钮文案与锁定提示
+  if (typeof commBenLockUI === 'function') commBenLockUI(!!window.__commBenLocked);
   // ★COMM-PTCHECK-20261103★ 模态框内「佣金总点数 · 预期佣金与反向校验」区块三语
   st('commPtCheckTitle','comm_pt_check_title','佣金总点数 · 预期佣金与反向校验');
   st('commPtExpectLbl','comm_pt_expect','预期佣金（设备金额 × 点数）');
@@ -13601,20 +13673,142 @@ function commPointsInput(el){
    规则：过滤非数字 → 去掉前导 0 → 超过 10 直接收敛为 10；允许暂时为空（未填）。 */
 function commBenCountInput(el){
   if (!el) return;
+  if (window.__commBenLocked){ el.value = window.__commBenLastLocked || ''; return; }   // 锁定态不许改
   var v = String(el.value || '').replace(/[^\d]/g, '').replace(/^0+/, '');
   if (v && parseInt(v, 10) > 10) v = '10';
   if (el.value !== v) el.value = v;
   commPlanRender();   // ★COMM-PLAN-20261103★ 人数变动 → 收益分配计划行数即时同步
 }
-/* 失焦兜底：填了但 <1 视为无效 → 清空；>10 收敛为 10 */
+/* 失焦兜底：填了但 <1 视为无效 → 清空；>10 收敛为 10
+   ★COMM-BENLOCK-20261103★ 填了合法人数且未锁定 → 弹出「确认人数吗？」三语对话框 */
 function commBenCountBlur(el){
   if (!el) return;
+  if (window.__commBenLocked){ el.value = window.__commBenLastLocked || ''; return; }
   var v = String(el.value || '').replace(/[^\d]/g, '');
   if (v === '') { commPlanRender(); return; }
   var n = parseInt(v, 10);
   if (!isFinite(n) || n < 1) { el.value = ''; commPlanRender(); return; }
   el.value = String(Math.min(10, n));
   commPlanRender();
+  if (window.__commBenAsking) return;          // 对话框已开着，别重复弹
+  if (String(window.__commBenLastLocked || '') === el.value) return;  // 与已确认值相同 → 无需再确认
+  commBenConfirmAsk(el.value);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ★COMM-BENLOCK-20261103★ 受益人数「确认 → 锁死 → 密码解锁」
+   · 录入人数后失焦/回车 → 弹「确认受益人数」对话框（中/英/越）
+   · 确认 → 输入框 readonly + 灰底 + 右侧「修改」按钮；人数写入记录并落库，
+     刷新页面后再编辑这条记录，人数依然是锁死的
+   · 点「修改」→ 弹密码框，密码 money（大小写不敏感，自动转小写比较）
+   ══════════════════════════════════════════════════════════════════════════ */
+var COMM_BEN_PWD = 'money';
+window.__commBenLocked = false;        // 当前弹窗里人数是否已锁定
+window.__commBenLastLocked = '';       // 已确认的数值（取消确认时回滚用）
+window.__commBenAsking = false;        // 确认框是否正在显示（防止 blur 反复弹）
+
+/* 同步锁定态到界面：readonly / 灰底 / 「修改」按钮显隐 */
+function commBenLockUI(locked){
+  var el  = document.getElementById('commFBenCount');
+  var btn = document.getElementById('commBenModifyBtn');
+  var t   = T();
+  if (el){
+    el.readOnly = !!locked;
+    el.classList.toggle('comm-bencnt-locked', !!locked);
+    el.setAttribute('title', locked ? (t.comm_ben_locked_tip || '人数已确认锁定，需密码才能修改') : '');
+  }
+  if (btn){
+    btn.style.display = locked ? '' : 'none';
+    btn.textContent = t.comm_ben_modify || '修改';
+    btn.setAttribute('title', t.comm_ben_modify || '修改');
+  }
+}
+/* 应用某条记录的锁定状态（新增模式传 null → 全部解锁并清空） */
+function commBenApplySaved(rec){
+  var locked = !!(rec && (rec.benCountLock === 1 || rec.benCountLock === true || rec.benCountLock === '1'));
+  window.__commBenLocked = locked;
+  window.__commBenLastLocked = locked ? String((rec && rec.benCount) || '') : '';
+  window.__commBenAsking = false;
+  commBenLockUI(locked);
+}
+/* 打开「确认受益人数」对话框 */
+function commBenConfirmAsk(val){
+  var t = T();
+  var ov = document.getElementById('commBenConfirmOverlay');
+  if (!ov) return;
+  window.__commBenAsking = true;
+  window.__commBenPending = String(val || '');
+  var ti = document.getElementById('commBenConfirmTitle'); if (ti) ti.textContent = t.comm_ben_confirm_title || '确认受益人数';
+  var mg = document.getElementById('commBenConfirmMsg');
+  if (mg) mg.textContent = String(t.comm_ben_confirm_msg || '确认受益人数为 %s 人吗？').replace('%s', window.__commBenPending);
+  var tp = document.getElementById('commBenConfirmTip');
+  if (tp) tp.textContent = t.comm_ben_confirm_tip || '确认后该数值将被锁定，需输入密码才能再次修改。';
+  var ok = document.getElementById('commBenConfirmOkBtn'); if (ok) ok.textContent = t.comm_ben_confirm_ok || '确认';
+  var cc = document.getElementById('commBenConfirmCancelBtn'); if (cc) cc.textContent = t.comm_ben_cancel || '取消';
+  ov.classList.remove('hidden');
+}
+/* 确认 → 锁死 */
+function commBenConfirmOk(){
+  var ov = document.getElementById('commBenConfirmOverlay');
+  if (ov) ov.classList.add('hidden');
+  window.__commBenAsking = false;
+  var val = String(window.__commBenPending || '');
+  window.__commBenLocked = true;
+  window.__commBenLastLocked = val;
+  var el = document.getElementById('commFBenCount'); if (el) el.value = val;
+  commBenLockUI(true);
+  commPlanRender();
+  showToast((T().comm_ben_locked_ok || '受益人数已确认并锁定：') + val);
+}
+/* 取消 → 回滚到上一次已确认的值（没有就清空） */
+function commBenConfirmCancel(){
+  var ov = document.getElementById('commBenConfirmOverlay');
+  if (ov) ov.classList.add('hidden');
+  window.__commBenAsking = false;
+  window.__commBenPending = '';
+  var el = document.getElementById('commFBenCount');
+  var keep = String(window.__commBenLastLocked || '');
+  if (el) el.value = keep;
+  if (keep){ window.__commBenLocked = true; commBenLockUI(true); }
+  else { window.__commBenLocked = false; commBenLockUI(false); }
+  commPlanRender();
+}
+/* 点「修改」→ 弹密码框 */
+function commBenCountAskPwd(){
+  var t = T();
+  var ov = document.getElementById('commBenPwdOverlay');
+  var msg = document.getElementById('commBenPwdMsg');
+  var inp = document.getElementById('commBenPwdInput');
+  var ti = document.getElementById('commBenPwdTitle'); if (ti) ti.textContent = t.comm_ben_pwd_title || '修改受益人数';
+  var pr = document.getElementById('commBenPwdPrompt'); if (pr) pr.textContent = t.comm_ben_pwd_prompt || '请输入密码';
+  if (msg) msg.textContent = '';
+  if (inp){ inp.value = ''; }
+  if (ov) ov.classList.remove('hidden');
+  if (inp) setTimeout(function(){ inp.focus(); }, 50);
+}
+function closeCommBenPwd(){
+  var ov = document.getElementById('commBenPwdOverlay');
+  if (ov) ov.classList.add('hidden');
+}
+/* 校验密码：money（大写输入自动转小写比较） */
+function commBenPwdOk(){
+  var t = T();
+  var inp = document.getElementById('commBenPwdInput');
+  var msg = document.getElementById('commBenPwdMsg');
+  var val = String(inp ? inp.value : '').trim().toLowerCase();
+  if (val !== COMM_BEN_PWD){
+    if (msg){ msg.style.color = '#e74c3c'; msg.textContent = t.comm_ben_pwd_wrong || '密码错误'; }
+    if (inp){ inp.value = ''; inp.focus(); }
+    return;
+  }
+  closeCommBenPwd();
+  // 解锁：可编辑 + 隐藏「修改」按钮，并把焦点交给人数输入框
+  window.__commBenLocked = false;
+  window.__commBenAsking = false;
+  commBenLockUI(false);
+  var el = document.getElementById('commFBenCount');
+  if (el){ el.readOnly = false; setTimeout(function(){ el.focus(); el.select && el.select(); }, 60); }
+  showToast(t.comm_ben_unlocked || '已解锁，可重新修改受益人数');
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -13859,6 +14053,7 @@ function openCommissionAddModal(){
   // ★COMM-PTS-DEFAULT-20261103★ 佣金总点数：新增模式回填默认 4.5000%
   var _pp = document.getElementById('commFPoints'); if (_pp) _pp.value = COMM_POINTS_DEFAULT;
   commPlanReset([]);   // ★COMM-PLAN-20261103★ 新增模式：受益人数为空 → 收益分配计划区块隐藏
+  commBenApplySaved(null);   // ★COMM-BENLOCK-20261103★ 新增模式：人数输入框解锁、隐藏「修改」
   var _rr = document.getElementById('commFRateRMB'); if (_rr) _rr.value = COMM_RATE_DEFAULT.rmbvnd;
   var _ru = document.getElementById('commFRateUSD'); if (_ru) _ru.value = COMM_RATE_DEFAULT.usdvnd;
   var _p = document.getElementById('commFParties'); if (_p) _p.selectedIndex = 0;
@@ -13956,6 +14151,7 @@ function openCommissionEditModal(idx){
   // ★COMM-SWAP-BENCNT-20261103★ 受益人数回填（老记录为空）
   var _bc = document.getElementById('commFBenCount');  if (_bc) _bc.value = r.benCount   || '';
   commPlanReset(r.plan);   // ★COMM-PLAN-20261103★ 收益分配计划回填（行数由受益人数决定）
+  commBenApplySaved(r);    // ★COMM-BENLOCK-20261103★ 已确认过的人数额：重新打开/刷新后仍为锁定态
   document.getElementById('commFRemark').value   = r.remark    || '';
   // 标题与按钮按「编辑」模式套用三语（切换语言时由 applyLang → applyCommAddTitle 保持）
   applyCommAddTitle(true);
@@ -14035,6 +14231,7 @@ function saveCommissionRecord(){
     acceptDate: v('commFAcceptDate'),     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期（可选）
     points: v('commFPoints'),             // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值，4 位小数）
     benCount: v('commFBenCount'),         // ★COMM-SWAP-BENCNT-20261103★ 受益人数（整数 1-10，可空）
+    benCountLock: (window.__commBenLocked ? 1 : 0),   // ★COMM-BENLOCK-20261103★ 人数是否已确认锁定（落库，刷新后仍锁）
     plan: commPlanCollect(),              // ★COMM-PLAN-20261103★ 收益分配计划（人数 = 行数）
     currency: v('commFCurrency'),
     equipRMB: parseMoney(v('commFEquipRMB')) || '',
@@ -16358,7 +16555,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z213";  // 版本标记：Z213 = 收益分配计划三币框收窄 + 受益人/佣金比率放开 + 列间距 12px（三语长标签不再压字）
+const PERM_BUILD = "build 2026-11-03-Z214";  // 版本标记：Z214 = 受益人数「输入→确认(三语)→锁死→密码money解锁」，锁定状态落库(刷新/重开仍锁)
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){

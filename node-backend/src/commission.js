@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS commission_records (
   accept_date TEXT DEFAULT '',
   comm_points TEXT DEFAULT '',
   ben_count TEXT DEFAULT '',
+  ben_count_lock INTEGER DEFAULT 0,
   plan_json TEXT DEFAULT '',
   currency TEXT DEFAULT '',
   equip_rmb TEXT DEFAULT '',
@@ -106,6 +107,8 @@ async function ensureTable(env) {
     "ALTER TABLE commission_records ADD COLUMN accept_date TEXT DEFAULT ''",
     "ALTER TABLE commission_records ADD COLUMN comm_points TEXT DEFAULT ''",
     "ALTER TABLE commission_records ADD COLUMN ben_count TEXT DEFAULT ''",
+    // ★COMM-BENLOCK-20261103★ 受益人数确认锁定标记（0/1）
+    "ALTER TABLE commission_records ADD COLUMN ben_count_lock INTEGER DEFAULT 0",
     "ALTER TABLE commission_records ADD COLUMN plan_json TEXT DEFAULT ''",
   ]) {
     try {
@@ -167,6 +170,7 @@ async function recToDict(row, env) {
     acceptDate: d.accept_date || "",     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期
     points: d.comm_points || "",         // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值）
     benCount: d.ben_count || "",         // ★COMM-SWAP-BENCNT-20261103★ 受益人数（整数 1-10）
+    benCountLock: parseInt(d.ben_count_lock, 10) || 0,   // ★COMM-BENLOCK-20261103★ 人数是否已确认锁定
     plan: (function(){                   // ★COMM-PLAN-20261103★ 收益分配计划（人数 = 行数）
       try { var a = JSON.parse(d.plan_json || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
     })(),
@@ -225,7 +229,7 @@ export async function handleCommission(request, env, url, pathname) {
       rid = exist.id;
       await env.DB.prepare(
         `UPDATE commission_records SET parties=?, group_name=?, sign_date=?,
-         deposit_date=?, accept_date=?, comm_points=?, ben_count=?, plan_json=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
+         deposit_date=?, accept_date=?, comm_points=?, ben_count=?, ben_count_lock=?, plan_json=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
          rate_rmb=?, rate_usd=?, remark=?, is_demo=?, updated_at=? WHERE id=?`
       )
         .bind(
@@ -236,6 +240,7 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.acceptDate || ""),
           String(rec.points || ""),
           String(rec.benCount || ""),
+          rec.benCountLock ? 1 : 0,
           JSON.stringify(rec.plan || []),
           String(rec.currency || ""),
           String(rec.equipRMB || ""),
@@ -252,9 +257,9 @@ export async function handleCommission(request, env, url, pathname) {
     } else {
       const cur = await env.DB.prepare(
         `INSERT INTO commission_records
-         (contract, parties, group_name, sign_date, deposit_date, accept_date, comm_points, ben_count, plan_json, currency,
+         (contract, parties, group_name, sign_date, deposit_date, accept_date, comm_points, ben_count, ben_count_lock, plan_json, currency,
           equip_rmb, equip_usd, equip_vnd, rate_rmb, rate_usd, remark, is_demo, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       )
         .bind(
           contract,
@@ -265,6 +270,7 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.acceptDate || ""),
           String(rec.points || ""),
           String(rec.benCount || ""),
+          rec.benCountLock ? 1 : 0,
           JSON.stringify(rec.plan || []),
           String(rec.currency || ""),
           String(rec.equipRMB || ""),
