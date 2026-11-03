@@ -2316,7 +2316,8 @@ function _ovLoadChartLib(cb){
      行内其余字段自动收窄，**永不换行**。 */
   .comm-plan-row {
     display:flex; flex-wrap:nowrap; align-items:flex-end; gap:12px;
-    padding:10px 0 2px; border-top:1px dashed #e3e9f1;
+    /* ★COMM-PLAN-REDLINE-20261103★ 受益人之间用红色虚线分隔，明确区分每一行 */
+    padding:10px 0 2px; border-top:1px dashed #e74c3c;
   }
   .comm-plan-row:first-child { border-top:none; padding-top:2px; }
   .comm-plan-row > .login-field { flex:1 1 0; min-width:0; }
@@ -16274,7 +16275,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z205";  // 版本标记：Z205 = 弹窗内日期框也统一 34px（覆盖 #commissionAddModalOverlay 的高优先级 44px 规则）
+const PERM_BUILD = "build 2026-11-03-Z206";  // 版本标记：Z206 = 收益分配计划行间分隔线改为红色虚线
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
