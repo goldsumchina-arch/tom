@@ -4230,7 +4230,7 @@ function _ovLoadChartLib(cb){
               <th rowspan="2" id="commThDate" data-col="4">合同签单日期 <span class="sort-indicator" data-skey="date" data-col="4" onclick="commSort('date',true)">↕</span></th>
               <th rowspan="2" id="commThCurrency" data-col="5">签约货币 <span class="sort-indicator" data-skey="currency" data-col="5" onclick="commSort('currency',true)">↕</span></th>
               <th colspan="3" id="commThEquipAmt" data-col="6" style="text-align:center;">合同签订设备金额</th>
-              <th colspan="2" id="commThRate" data-col="9" style="text-align:center;">核算总提成使用的汇率</th>
+              <th colspan="2" id="commThRate" data-col="9" style="text-align:center;">计算提成的汇率</th>
               <th rowspan="2" id="commThEdit" data-col="11" style="width:110px;">编辑</th>
               <th rowspan="2" id="commThDetail" data-col="12">受益人&amp;秘佣&amp;支付详情</th>
               <th rowspan="2" id="commThRemark" data-col="13">备注</th>
@@ -4572,8 +4572,8 @@ function _ovLoadChartLib(cb){
         <div class="login-field req"><label id="commLblEquipRMB"><i>*</i>设备金额 RMB</label><input id="commFEquipRMB" type="text" inputmode="numeric" class="cf-money money-rmb" placeholder="¥" autocomplete="off" oninput="commMoneyInput('rmb')"></div>
         <div class="login-field req"><label id="commLblEquipUSD"><i>*</i>设备金额 USD</label><input id="commFEquipUSD" type="text" inputmode="numeric" class="cf-money money-usd" placeholder="$" autocomplete="off" oninput="commMoneyInput('usd')"></div>
         <div class="login-field req"><label id="commLblEquipVND"><i>*</i>设备金额 VND</label><input id="commFEquipVND" type="text" inputmode="numeric" class="cf-money money-vnd" placeholder="₫" autocomplete="off" oninput="commMoneyInput('vnd')"></div>
-        <div class="login-field req"><label id="commLblRateRMB"><i>*</i>核算总提成使用的汇率 RMB-VND</label><input id="commFRateRMB" type="text" inputmode="numeric" value="3,800" autocomplete="off" oninput="commRateInput(this)"></div>
-        <div class="login-field req"><label id="commLblRateUSD"><i>*</i>核算总提成使用的汇率 USD-VND</label><input id="commFRateUSD" type="text" inputmode="numeric" value="26,000" autocomplete="off" oninput="commRateInput(this)"></div>
+        <div class="login-field req"><label id="commLblRateRMB"><i>*</i>计算提成的汇率 RMB-VND</label><input id="commFRateRMB" type="text" inputmode="numeric" value="3,800" autocomplete="off" oninput="commRateInput(this)"></div>
+        <div class="login-field req"><label id="commLblRateUSD"><i>*</i>计算提成的汇率 USD-VND</label><input id="commFRateUSD" type="text" inputmode="numeric" value="26,000" autocomplete="off" oninput="commRateInput(this)"></div>
         <div class="login-field"><label id="commLblRemark">备注</label><input id="commFRemark" type="text" autocomplete="off"></div>
       </div>
       <!-- ★COMM-PTCHECK-20261103★ 佣金总点数「展示 + 反向校验」：录入点数自动算预期佣金（设备金额×点数），
@@ -6774,7 +6774,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     commission_password_cancel:"取消",
     commission_unlocked:"个人佣金入口已解锁",
     commission_unauthorized:"当前账号无权限使用此入口",
-    comm_col_no:"序号", comm_col_contract:"合同编号", comm_col_parties:"签约双方", comm_col_group:"合作集团", comm_col_date:"合同签单日期", comm_col_equip_amt:"合同签订设备金额", comm_col_rate:"核算总提成使用的汇率", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"编辑项目佣金", comm_col_detail:"受益人&秘佣&支付详情", comm_col_remark:"备注", comm_no_data:"暂无数据",
+    comm_col_no:"序号", comm_col_contract:"合同编号", comm_col_parties:"签约双方", comm_col_group:"合作集团", comm_col_date:"合同签单日期", comm_col_equip_amt:"合同签订设备金额", comm_col_rate:"计算提成的汇率", comm_col_rate_rmbvnd:"RMB-VND", comm_col_rate_usdvnd:"USD-VND", comm_col_edit:"编辑项目佣金", comm_col_detail:"受益人&秘佣&支付详情", comm_col_remark:"备注", comm_no_data:"暂无数据",
     comm_btn_add:"新增项目产生的佣金记录", comm_btn_reports:"查看总报告",
     comm_report_all:"全部佣金支付总报告", comm_report_mine:"聚焦个人佣金总报告", comm_report_coming:"报告功能建设中，敬请期待",
     rep_center_title:"个人佣金总报告中心",
@@ -6793,7 +6793,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     rep_pay_rows:"支付明细条数", rep_finished_rows:"已结清条数", rep_ben_rows:"受益人总数",
     rep_progress:"佣金支付比例", rep_th_given:"给与金额", rep_th_time:"给与时间",
     rep_th_after:"换汇后金额", rep_th_finished:"结束与否", rep_th_unpaid:"未支付总额", rep_th_progress2:"佣金支付比例",
-    comm_add_title:"新增项目产生的佣金记录", comm_edit_title:"编辑项目产生的佣金记录", comm_save_btn:"保存修改", comm_f_contract:"合同编号", comm_f_parties:"签约双方", comm_f_group:"合作集团", comm_f_date:"合同签单日期", comm_f_equip:"合同签订设备金额", comm_f_rate_rmb:"核算总提成使用的汇率 RMB-VND", comm_f_rate_usd:"核算总提成使用的汇率 USD-VND", comm_f_remark:"备注",
+    comm_add_title:"新增项目产生的佣金记录", comm_edit_title:"编辑项目产生的佣金记录", comm_save_btn:"保存修改", comm_f_contract:"合同编号", comm_f_parties:"签约双方", comm_f_group:"合作集团", comm_f_date:"合同签单日期", comm_f_equip:"合同签订设备金额", comm_f_rate_rmb:"计算提成的汇率 RMB-VND", comm_f_rate_usd:"计算提成的汇率 USD-VND", comm_f_remark:"备注",
     comm_add_save:"保存", comm_add_cancel:"取消", comm_save_ok:"保存成功", comm_need_contract:"请填写合同编号", comm_required_suffix:"为必填项",
     comm_ph_group_other:"请输入合作集团名称",
     comm_appr_close:"关闭",
@@ -12617,7 +12617,7 @@ function applyCommissionLang(){
   stTh('commThDate','comm_col_date','合同签单日期');
   stTh('commThCurrency','comm_col_currency','签约货币');
   st('commThEquipAmt','comm_col_equip_amt','合同签订设备金额');
-  st('commThRate','comm_col_rate','核算总提成使用的汇率');
+  st('commThRate','comm_col_rate','计算提成的汇率');
   st('commThRateRMB','comm_col_rate_rmbvnd','RMB-VND');
   st('commThRateUSD','comm_col_rate_usdvnd','USD-VND');
   st('commThEdit','comm_col_edit','编辑');
@@ -12671,8 +12671,8 @@ function applyCommissionLang(){
   st('commPtExpectLbl','comm_pt_expect','预期佣金（设备金额 × 点数）');
   st('commPtBenLbl','comm_pt_ben','受益人需支付总额');
   st('commPtDiffLbl','comm_pt_diff_lbl','差额（预期 − 受益人）');
-  st('commLblRateRMB','comm_f_rate_rmb','核算总提成使用的汇率 RMB-VND');
-  st('commLblRateUSD','comm_f_rate_usd','核算总提成使用的汇率 USD-VND');
+  st('commLblRateRMB','comm_f_rate_rmb','计算提成的汇率 RMB-VND');
+  st('commLblRateUSD','comm_f_rate_usd','计算提成的汇率 USD-VND');
   // 受益人&秘密佣金&支付详情（合并标题 + 多列表格）
   st('commSecDetail','comm_sec_detail','受益人 & 秘密佣金 & 支付详情');
   // 受益人表列头：全部走 ben_th_* 专用键（不与区块标题共用，避免 ben_sec_total 被覆盖）
@@ -13156,8 +13156,8 @@ function renderCommissionDetail(idx){
      +   '<div class="det-field df-rmb"><div class="df-label">' + (t.comm_col_equip_amt || '设备金额') + ' RMB</div><div class="df-value">' + _fmtCellMoney('RMB', r.equipRMB) + '</div></div>'
      +   '<div class="det-field df-usd"><div class="df-label">' + (t.comm_col_equip_amt || '设备金额') + ' USD</div><div class="df-value">' + _fmtCellMoney('USD', r.equipUSD) + '</div></div>'
      +   '<div class="det-field df-vnd"><div class="df-label">' + (t.comm_col_equip_amt || '设备金额') + ' VND</div><div class="df-value">' + _fmtCellMoney('VND', r.equipVND) + '</div></div>'
-     +   '<div class="det-field"><div class="df-label">' + (t.comm_col_rate || '核算总提成使用的汇率') + ' RMB-VND</div><div class="df-value">' + _escComm(r.rateRMB) + '</div></div>'
-     +   '<div class="det-field"><div class="df-label">' + (t.comm_col_rate || '核算总提成使用的汇率') + ' USD-VND</div><div class="df-value">' + _escComm(r.rateUSD) + '</div></div>'
+     +   '<div class="det-field"><div class="df-label">' + (t.comm_col_rate || '计算提成的汇率') + ' RMB-VND</div><div class="df-value">' + _escComm(r.rateRMB) + '</div></div>'
+     +   '<div class="det-field"><div class="df-label">' + (t.comm_col_rate || '计算提成的汇率') + ' USD-VND</div><div class="df-value">' + _escComm(r.rateUSD) + '</div></div>'
      +   '<div class="det-field"><div class="df-label">' + (t.ben_lbl_deposit_date || '定金给付时间') + '</div><div class="df-value">' + _escComm(r.depositDate) + '</div></div>'
      +   '<div class="det-field"><div class="df-label">' + (t.comm_f_accept || '项目验收日期') + '</div><div class="df-value">' + _escComm(r.acceptDate) + '</div></div>'
      +   '<div class="det-field"><div class="df-label">' + (t.comm_f_points || '佣金总点数（%）') + '</div><div class="df-value">' + (_escComm(r.points) ? (_escComm(r.points) + '%') : '—') + '</div></div>'
@@ -13665,8 +13665,8 @@ function commValidateRequired(v){
     { id:'commFEquipRMB',  key:'comm_f_equip_rmb', fb:'设备金额 RMB' },
     { id:'commFEquipUSD',  key:'comm_f_equip_usd', fb:'设备金额 USD' },
     { id:'commFEquipVND',  key:'comm_f_equip_vnd', fb:'设备金额 VND' },
-    { id:'commFRateRMB',   key:'comm_f_rate_rmb',  fb:'核算总提成使用的汇率 RMB-VND' },
-    { id:'commFRateUSD',   key:'comm_f_rate_usd',  fb:'核算总提成使用的汇率 USD-VND' }
+    { id:'commFRateRMB',   key:'comm_f_rate_rmb',  fb:'计算提成的汇率 RMB-VND' },
+    { id:'commFRateUSD',   key:'comm_f_rate_usd',  fb:'计算提成的汇率 USD-VND' }
   ];
   var firstBad = null;
   for (var i = 0; i < required.length; i++){
@@ -16028,7 +16028,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z197";  // 版本标记：Z197 = 英文汇率标签改短 + 窄列长标签强制换行
+const PERM_BUILD = "build 2026-11-03-Z198";  // 版本标记：Z198 = 中文汇率标签改为「计算提成的汇率」
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
