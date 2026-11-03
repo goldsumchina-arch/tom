@@ -10551,6 +10551,8 @@ function wonDetailLinkCell(p, field, labelKey) {
  *   4) 异常隔离：任一模块出错不影响其他模块
  */
 function setLangDebug(lang) {
+  /* ★BENCARD-DELPOP-20261103C★ 同步先关闭右键删除气泡：切语言时无论渲染路径如何，气泡立即消失 */
+  try { if (typeof _benDelClose === 'function') _benDelClose(); } catch (e) {}
   if(!I18N[lang]) { console.warn('[lang] unsupported:', lang); return; }
 
   // ---- 第零步：备注三语快照（切语言前，此时 CUR_LANG 还是旧语言）----
@@ -16348,7 +16350,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z254";  // 版本标记：Z254 = 修复切换语言时右键删除气泡残留：renderBenPaymentCards 开头先调用 _benDelClose()，任何重渲染（含 setLangDebug 切语言）都会关闭气泡，不再显示旧语言弹窗
+const PERM_BUILD = "build 2026-11-03-Z255";  // 版本标记：Z255 = 再次修复切换语言气泡不消失：在 setLangDebug 入口同步调用 _benDelClose()（不依赖 setTimeout 内的重渲染路径），切语言时气泡立即消失
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
