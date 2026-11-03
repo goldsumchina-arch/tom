@@ -2102,6 +2102,22 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-rmb, .det-point-check .cpc-rmb { color:#d64541; }
   .comm-point-check .cpc-usd, .det-point-check .cpc-usd { color:#2e86de; }
   .comm-point-check .cpc-vnd, .det-point-check .cpc-vnd { color:#1e9e6a; }
+  /* ★COMM-PT-DETAIL-20261103★ 总比率 / 受益人明细 / 校验块的排版 */
+  .comm-point-check .cpc-pct { color:#e8720c; font-weight:800; }
+  .comm-point-check .cpc-bar { color:#c6d2de; margin:0 6px; }
+  .comm-point-check .cpc-num { color:#e8720c; font-weight:800; font-size:14px; }
+  .comm-point-check .cpc-na { color:#a6b3c2; }
+  .comm-point-check .cpc-ben-list { margin:5px 0 7px 0; padding-left:10px; border-left:3px solid #e9eef4; }
+  .comm-point-check .cpc-ben-row { display:flex; align-items:baseline; gap:10px; padding:2px 0; font-size:12.5px; }
+  .comm-point-check .cpc-ben-idx { min-width:26px; color:#8a9bb0; font-weight:700; }
+  .comm-point-check .cpc-ben-name { min-width:86px; color:#2c3e50; font-weight:700; }
+  .comm-point-check .cpc-ben-ratio { min-width:78px; color:#44546a; font-weight:700; font-variant-numeric:tabular-nums; }
+  .comm-point-check .cpc-ben-amt { font-weight:700; font-variant-numeric:tabular-nums; }
+  .comm-point-check .cpc-chk { padding:3px 0; }
+  .comm-point-check .cpc-chk-title { font-size:13px; font-weight:700; color:#5a6b82; }
+  .comm-point-check .cpc-chk-body { font-size:12.5px; color:#2c3e50; font-weight:700;
+    padding-left:12px; line-height:1.9; font-variant-numeric:tabular-nums; }
+  .comm-point-check .cpc-k { color:#8a9bb0; font-weight:600; }
   .comm-point-check .cpc-status-ok, .det-point-check .cpc-status-ok { color:#1e9e6a; }
   .comm-point-check .cpc-status-warn, .det-point-check .cpc-status-warn { color:#e67e22; }
 
@@ -4725,9 +4741,13 @@ function _ovLoadChartLib(cb){
            并对比「受益人需支付总额」，差额一致绿色、不一致橙色提示。不自动改任何金额。 -->
       <div class="cf-section-title"><span id="commPtCheckTitle">佣金总点数 · 预期佣金与反向校验</span></div>
       <div class="comm-point-check" id="commPointCheck">
+        <!-- ★COMM-PT-DETAIL-20261103★ ① 预期佣金 = 设备金额 × 总点数（带总比率 + 三币总额，蓝红绿）
+             ② 受益人 N 名 + 每人名字/比率/三币金额  ③ 总比率 vs 个人合计  ④ 总金额 vs 个人合计 -->
         <div class="cpc-row"><span class="cpc-label" id="commPtExpectLbl">预期佣金（设备金额 × 点数）</span><span class="cpc-val" id="commPtExpect">—</span></div>
-        <div class="cpc-row"><span class="cpc-label" id="commPtBenLbl">受益人需支付总额</span><span class="cpc-val" id="commPtBen">—</span></div>
-        <div class="cpc-row"><span class="cpc-label" id="commPtDiffLbl">差额（预期 − 受益人）</span><span class="cpc-val" id="commPtDiff">—</span></div>
+        <div class="cpc-row"><span class="cpc-label" id="commPtBenLbl">受益人</span><span class="cpc-val" id="commPtBenCount">—</span></div>
+        <div class="cpc-ben-list" id="commPtBenList"></div>
+        <div class="cpc-chk" id="commPtRateChk"></div>
+        <div class="cpc-chk" id="commPtAmtChk"></div>
       </div>
       <!-- 受益人&秘密佣金&支付详情：合并标题(#N 自动编号) + 多列表格 + 新增受益人按钮 -->
       <div class="cf-section-title" style="display:flex;align-items:center;justify-content:space-between;">
@@ -7025,7 +7045,11 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
   comm_ben_pwd_ok:"确定", comm_ben_pwd_wrong:"密码错误", comm_ben_unlocked:"已解锁，可重新修改受益人数",
     comm_pt_check_title:"佣金总点数 · 预期佣金与反向校验", comm_pt_expect:"预期佣金（设备金额 × 点数）",
     comm_pt_ben:"受益人需支付总额", comm_pt_diff_lbl:"差额（预期 − 受益人）",
-    comm_pt_check_sec:"佣金总点数 · 预期佣金与反向校验", comm_pt_ok:"点数与受益人总额一致", comm_pt_diff:"差额"
+    comm_pt_check_sec:"佣金总点数 · 预期佣金与反向校验", comm_pt_ok:"点数与受益人总额一致", comm_pt_diff:"差额",
+  comm_pt_ben_head:"受益人", comm_pt_ben_unit:"%s 名", comm_pt_rate_chk:"总比率校验", comm_pt_amt_chk:"总金额校验",
+  comm_pt_total:"总额", comm_pt_self:"个人合计",
+  comm_pt_rate_ok:"总比率与个人合计一致", comm_pt_rate_diff:"与个人合计有差额",
+  comm_pt_amt_ok:"总佣金金额与个人合计一致", comm_pt_amt_diff:"与个人合计有差额"
   },
   en: { 
     // ---- Login page / Reset Password / Forget Password (top-level keys for data-i18n scan) ----
@@ -7804,7 +7828,11 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
   comm_ben_pwd_ok:"OK", comm_ben_pwd_wrong:"Wrong password", comm_ben_unlocked:"Unlocked — you can change the count now",
     comm_pt_check_title:"Commission Points · Expected & Reverse Check", comm_pt_expect:"Expected Commission (Equip × Rate)",
     comm_pt_ben:"Beneficiary Total Payable", comm_pt_diff_lbl:"Variance (Expected − Beneficiary)",
-    comm_pt_check_sec:"Commission Points · Expected & Reverse Check", comm_pt_ok:"Rate matches beneficiary total", comm_pt_diff:"Variance"
+    comm_pt_check_sec:"Commission Points · Expected & Reverse Check", comm_pt_ok:"Rate matches beneficiary total", comm_pt_diff:"Variance",
+  comm_pt_ben_head:"Beneficiaries", comm_pt_ben_unit:"%s person(s)", comm_pt_rate_chk:"Total rate check", comm_pt_amt_chk:"Total amount check",
+  comm_pt_total:"Total", comm_pt_self:"Personal sum",
+  comm_pt_rate_ok:"Total rate matches personal sum", comm_pt_rate_diff:"Variance vs personal sum",
+  comm_pt_amt_ok:"Total commission matches personal sum", comm_pt_amt_diff:"Variance vs personal sum"
   },
   vi: { 
     // ---- Trang đăng nhập / Đặt lại mật khẩu / Quên mật khẩu (key cấp cao nhất) ----
@@ -8581,7 +8609,11 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
   comm_ben_pwd_ok:"Đồng ý", comm_ben_pwd_wrong:"Mật khẩu sai", comm_ben_unlocked:"Đã mở khóa — có thể sửa số người thụ hưởng",
     comm_pt_check_title:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_expect:"Hoa hồng dự kiến (Thiết bị × Tỷ lệ)",
     comm_pt_ben:"Tổng thanh toán người thụ hưởng", comm_pt_diff_lbl:"Chênh lệch (Dự kiến − Thụ hưởng)",
-    comm_pt_check_sec:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_ok:"Tỷ lệ khớp tổng thụ hưởng", comm_pt_diff:"Chênh lệch"
+    comm_pt_check_sec:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_ok:"Tỷ lệ khớp tổng thụ hưởng", comm_pt_diff:"Chênh lệch",
+  comm_pt_ben_head:"Người thụ hưởng", comm_pt_ben_unit:"%s người", comm_pt_rate_chk:"Kiểm tra tổng tỷ lệ", comm_pt_amt_chk:"Kiểm tra tổng số tiền",
+  comm_pt_total:"Tổng", comm_pt_self:"Tổng cá nhân",
+  comm_pt_rate_ok:"Tổng tỷ lệ khớp tổng cá nhân", comm_pt_rate_diff:"Chênh lệch so với tổng cá nhân",
+  comm_pt_amt_ok:"Tổng hoa hồng khớp tổng cá nhân", comm_pt_amt_diff:"Chênh lệch so với tổng cá nhân"
   }
 };
 
@@ -12878,9 +12910,9 @@ function applyCommissionLang(){
   if (typeof commBenLocalizeDlg === 'function') commBenLocalizeDlg();
   // ★COMM-PTCHECK-20261103★ 模态框内「佣金总点数 · 预期佣金与反向校验」区块三语
   st('commPtCheckTitle','comm_pt_check_title','佣金总点数 · 预期佣金与反向校验');
-  st('commPtExpectLbl','comm_pt_expect','预期佣金（设备金额 × 点数）');
-  st('commPtBenLbl','comm_pt_ben','受益人需支付总额');
-  st('commPtDiffLbl','comm_pt_diff_lbl','差额（预期 − 受益人）');
+  // ★COMM-PT-DETAIL-20261103★ 该区块的标签/结论全部由 commPointCheck 动态渲染（含受益人明细与两项校验），
+  // 切语言时整块重跑一遍即三语联动（不再逐个 st 覆盖，避免与新结构打架）。
+  if (typeof commPointCheck === 'function') commPointCheck();
   st('commLblRateRMB','comm_f_rate_rmb','计算提成的汇率 RMB-VND');
   st('commLblRateUSD','comm_f_rate_usd','计算提成的汇率 USD-VND');
   // 受益人&秘密佣金&支付详情（合并标题 + 多列表格）
@@ -13309,6 +13341,12 @@ function _commTriHtml(r, u, v){
   return '<span class="cpc-rmb">' + _fmtCellMoney('RMB', r) + '</span> · '
        + '<span class="cpc-usd">' + _fmtCellMoney('USD', u) + '</span> · '
        + '<span class="cpc-vnd">' + _fmtCellMoney('VND', v) + '</span>';
+}
+/* ★COMM-PT-DETAIL-20261103★ 4 位小数版三币（与收益分配计划行同口径，便于总额/个人合计/差额逐位对得上） */
+function _commTriHtml4(r, u, v){
+  return '<span class="cpc-rmb">' + fmtPlanMoney('rmb', r) + '</span> · '
+       + '<span class="cpc-usd">' + fmtPlanMoney('usd', u) + '</span> · '
+       + '<span class="cpc-vnd">' + fmtPlanMoney('vnd', v) + '</span>';
 }
 /* ===== 单条佣金记录详情报告（受益人&秘佣&支付详情按钮） =====
    ① 基础信息（8 字段，不含备注） ② 每位受益人分期给付明细（次数/日期/三币金额/性质/是否结束）
@@ -14119,6 +14157,8 @@ function commPlanCalcAll(){
       r[c] = disp;
     }
   }
+  // ★COMM-PT-DETAIL-20261103★ 个人佣金金额变了 → 下方「总比率/总金额校验」即时刷新
+  if (typeof commPointCheck === 'function') commPointCheck();
 }
 /* 历史调用点兼容（三币已改为只读自动算，任何调用都统一走整体重算） */
 function commPlanMoneyInput(i, cur, el){ commPlanCalcAll(); }
@@ -14142,36 +14182,120 @@ function _commBenSum(){
 /* ★COMM-PTCHECK-20261103★ 展示 + 反向校验：
    预期佣金 = 各币种设备金额 × 佣金总点数(%)；对比「受益人需支付总额」的逐币种求和。
    一致（每币种差额 < 1）→ 绿色 ✓；否则橙色 ⚠ 显示差额。仅展示与提示，绝不自动改写金额。 */
+/* ★COMM-PT-DETAIL-20261103★ 保留小数的数值解析（parseMoney 会 Math.round，计划行是 4 位小数） */
+function _commParseNum(s){
+  var n = parseFloat(String(s == null ? '' : s).replace(/[^\d.\-]/g, ''));
+  return isFinite(n) ? n : 0;
+}
+/* ★COMM-PT-DETAIL-20261103★ 佣金总点数 · 预期佣金与反向校验
+   ① 预期佣金 = 设备金额 × 总点数（显示总比率 + 三币总额，蓝/红/绿）
+   ② 受益人 N 名 + 逐人「#序号 名字 比率 三币金额」
+   ③ 总比率 vs 个人比率合计（一致 ✓ / 差额 ⚠）
+   ④ 总佣金金额 vs 个人佣金合计（一致 ✓ / 差额 ⚠）
+   标签与结论全部走三语，切语言时由 applyCommissionLang → 这里 重写。 */
 function commPointCheck(){
   var t = T();
-  var pct = parseFloat((document.getElementById('commFPoints') || {}).value || '');
-  var eR = parseMoney((document.getElementById('commFEquipRMB') || {}).value);
-  var eU = parseMoney((document.getElementById('commFEquipUSD') || {}).value);
-  var eV = parseMoney((document.getElementById('commFEquipVND') || {}).value);
-  var hasPct = !isNaN(pct) && pct > 0;
-  // 设备金额全空时不显示预期值（避免默认点数 2.5 让空表单误显示「✓ 一致」）
+  var box = document.getElementById('commPointCheck');
+  if (!box) return;
+  var pct = parseFloat(String((document.getElementById('commFPoints') || {}).value || '').replace(/,/g, ''));
+  var eR = _commParseNum((document.getElementById('commFEquipRMB') || {}).value);
+  var eU = _commParseNum((document.getElementById('commFEquipUSD') || {}).value);
+  var eV = _commParseNum((document.getElementById('commFEquipVND') || {}).value);
+  var hasPct = isFinite(pct) && pct > 0;
+  // 设备金额全空时不显示预期值（避免默认点数让空表单误显示「✓ 一致」）
   var hasEquip = eR > 0 || eU > 0 || eV > 0;
   var ready = hasPct && hasEquip;
   var exp = ready ? { RMB:eR*pct/100, USD:eU*pct/100, VND:eV*pct/100 } : { RMB:0, USD:0, VND:0 };
-  var ben = _commBenSum();
-  var box = document.getElementById('commPointCheck');
-  if (!box) return;
+
+  // ① 预期佣金（设备金额 × 点数）：总比率 ｜ 三币总额
+  var lbE = document.getElementById('commPtExpectLbl');
+  if (lbE) lbE.textContent = t.comm_pt_expect || '预期佣金（设备金额 × 点数）';
   var eEl = document.getElementById('commPtExpect');
-  var bEl = document.getElementById('commPtBen');
-  var dEl = document.getElementById('commPtDiff');
-  if (eEl) eEl.innerHTML = ready
-    ? _commTriHtml(exp.RMB, exp.USD, exp.VND)
-    : '—';
-  if (bEl) bEl.innerHTML = _commTriHtml(ben.RMB, ben.USD, ben.VND);
-  if (!dEl) return;
-  if (!ready){ dEl.innerHTML = '—'; dEl.className = 'cpc-val'; return; }
-  var dR = exp.RMB - ben.RMB, dU = exp.USD - ben.USD, dV = exp.VND - ben.VND;
-  var consistent = Math.abs(dR) < 1 && Math.abs(dU) < 1 && Math.abs(dV) < 1;
-  dEl.className = 'cpc-val';
-  dEl.innerHTML = (consistent
-      ? '<span class="cpc-status-ok">✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') + '</span>'
-      : '<span class="cpc-status-warn">⚠ ' + (t.comm_pt_diff || '差额') + '</span>')
-    + ' ' + _commTriHtml(dR, dU, dV);
+  if (eEl){
+    eEl.innerHTML = ready
+      ? '<span class="cpc-pct">' + pct.toFixed(4) + '%</span><span class="cpc-bar">｜</span>'
+        + _commTriHtml4(exp.RMB, exp.USD, exp.VND)
+      : '—';
+  }
+
+  // ② 受益人：N 名 + 逐人明细（名字 / 比率 / 三币金额）
+  var lbB = document.getElementById('commPtBenLbl');
+  if (lbB) lbB.textContent = t.comm_pt_ben_head || '受益人';
+  var st = (typeof commPlanState === 'function') ? commPlanState() : [];
+  var n = parseInt(String((document.getElementById('commFBenCount') || {}).value || ''), 10);
+  if (!isFinite(n) || n < 0) n = 0;
+  if (n > st.length) n = st.length;
+  var cEl = document.getElementById('commPtBenCount');
+  if (cEl) cEl.innerHTML = String(t.comm_pt_ben_unit || '%s 名')
+    .replace('%s', '<span class="cpc-num">' + n + '</span>');
+  var listEl = document.getElementById('commPtBenList');
+  var sumR = 0, sumU = 0, sumV = 0, sumPct = 0, html = '';
+  for (var i = 0; i < n; i++){
+    var r = st[i] || { name:'', custom:'', ratio:'', rmb:'', usd:'', vnd:'' };
+    var p = parseFloat(String(r.ratio || '').replace(/[^\d.]/g, ''));
+    var okP = isFinite(p) && p > 0;
+    if (okP) sumPct += p;
+    var rr = _commParseNum(r.rmb), uu = _commParseNum(r.usd), vv = _commParseNum(r.vnd);
+    sumR += rr; sumU += uu; sumV += vv;
+    var nm = String(r.name === 'OTHER' ? (r.custom || 'OTHER') : (r.name || '')).trim();
+    html += '<div class="cpc-ben-row">'
+      +   '<span class="cpc-ben-idx">#' + (i + 1) + '</span>'
+      +   '<span class="cpc-ben-name">' + _escComm(nm || '—') + '</span>'
+      +   '<span class="cpc-ben-ratio">' + (okP ? fmtPlanRatio4(r.ratio) + '%' : '—') + '</span>'
+      +   '<span class="cpc-ben-amt">'
+      +     ((rr > 0 || uu > 0 || vv > 0) ? _commTriHtml4(rr, uu, vv) : '<span class="cpc-na">—</span>')
+      +   '</span>'
+      + '</div>';
+  }
+  if (listEl) listEl.innerHTML = html;
+
+  // ③ 总比率 vs 个人比率合计
+  var rateChk = document.getElementById('commPtRateChk');
+  if (rateChk){
+    var rateOk = hasPct && Math.abs(pct - sumPct) < 0.00005;
+    var dPct = hasPct ? (pct - sumPct) : 0;
+    rateChk.innerHTML = '<div class="cpc-chk-title">' + (t.comm_pt_rate_chk || '总比率校验')
+      + (hasPct
+          ? (rateOk
+              ? ' <span class="cpc-status-ok">✓ ' + (t.comm_pt_rate_ok || '总比率与个人合计一致') + '</span>'
+              : ' <span class="cpc-status-warn">⚠ ' + (t.comm_pt_rate_diff || '与个人合计有差额') + '</span>')
+          : ' <span class="cpc-na">—</span>')
+      + '</div>'
+      + '<div class="cpc-chk-body">'
+      +   '<span class="cpc-k">' + (t.comm_pt_total || '总额') + '</span> '
+      +   (hasPct ? '<span class="cpc-pct">' + pct.toFixed(4) + '%</span>' : '—')
+      +   '<span class="cpc-bar">｜</span><span class="cpc-k">' + (t.comm_pt_self || '个人合计') + '</span> '
+      +   '<span class="cpc-pct">' + sumPct.toFixed(4) + '%</span>'
+      +   (hasPct && !rateOk
+          ? '<span class="cpc-bar">｜</span><span class="cpc-k">' + (t.comm_pt_diff || '差额') + '</span> '
+            + '<span class="cpc-status-warn">' + dPct.toFixed(4) + '%</span>'
+          : '')
+      + '</div>';
+  }
+
+  // ④ 总佣金金额 vs 个人佣金合计
+  var amtChk = document.getElementById('commPtAmtChk');
+  if (amtChk){
+    var dR = exp.RMB - sumR, dU = exp.USD - sumU, dV = exp.VND - sumV;
+    var amtOk = ready && Math.abs(dR) < 0.01 && Math.abs(dU) < 0.01 && Math.abs(dV) < 0.01;
+    amtChk.innerHTML = '<div class="cpc-chk-title">' + (t.comm_pt_amt_chk || '总金额校验')
+      + (ready
+          ? (amtOk
+              ? ' <span class="cpc-status-ok">✓ ' + (t.comm_pt_amt_ok || '总佣金金额与个人合计一致') + '</span>'
+              : ' <span class="cpc-status-warn">⚠ ' + (t.comm_pt_amt_diff || '与个人合计有差额') + '</span>')
+          : ' <span class="cpc-na">—</span>')
+      + '</div>'
+      + '<div class="cpc-chk-body">'
+      +   '<span class="cpc-k">' + (t.comm_pt_total || '总额') + '</span> '
+      +   (ready ? _commTriHtml4(exp.RMB, exp.USD, exp.VND) : '—')
+      +   '<span class="cpc-bar">｜</span><span class="cpc-k">' + (t.comm_pt_self || '个人合计') + '</span> '
+      +   _commTriHtml4(sumR, sumU, sumV)
+      +   (ready && !amtOk
+          ? '<span class="cpc-bar">｜</span><span class="cpc-k">' + (t.comm_pt_diff || '差额') + '</span> '
+            + _commTriHtml4(dR, dU, dV)
+          : '')
+      + '</div>';
+  }
 }
 // 汇率默认初始值（可修改，每次打开新增弹窗恢复默认）
 var COMM_RATE_DEFAULT = { rmbvnd: '3,800', usdvnd: '26,000' };
@@ -16700,7 +16824,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z221";  // 版本标记：Z221 = 佣金弹窗标题「新增/编辑项目产生的佣金记录」与「保存/保存修改」按钮跟随三语联动
+const PERM_BUILD = "build 2026-11-03-Z222";  // 版本标记：Z222 = 佣金校验区块改版：预期佣金带总比率+三币；受益人 N 名逐人明细；总比率/总金额 vs 个人合计双向校验（删「受益人需支付总额」）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
