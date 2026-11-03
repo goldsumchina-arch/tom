@@ -14242,12 +14242,14 @@ function _commLedgerFit(){
     }
     return false;
   };
-  var size = 9, guard = 0, min = 6.5;
+  var size = 9, guard = 0, min = 6;
   tbl.style.fontSize = size + 'px';
   while (overflow() && size > min && guard++ < 14){
     size = Math.round((size - 0.25) * 100) / 100;
     tbl.style.fontSize = size + 'px';
   }
+  // 极限（容器极窄）仍放不下 → 允许横向滚动，宁可滚动也不让内容凭空消失
+  wrap.style.overflowX = overflow() ? 'auto' : 'hidden';
 }
 /* ★COMM-PT-DETAIL-20261103★ 佣金总点数 · 预期佣金与反向校验
    ① 预期佣金 = 设备金额 × 总点数（显示总比率 + 三币总额，蓝/红/绿）
@@ -16964,7 +16966,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z227";  // 版本标记：Z227 = 台账表改「table-layout:fixed + 百分比列宽」（序号1.7%·受益人3%·比率4.4%·次数2.6%·状态5.8%，其余85%给三币），任何窗口都完整显示
+const PERM_BUILD = "build 2026-11-03-Z228";  // 版本标记：Z228 = 台账表 table-layout:fixed + 百分比列宽（表格恒等于容器宽，绝不右溢出）+ 逐单元格裁切检测缩字号（9→6px 兜底，极限才允许滚动）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
