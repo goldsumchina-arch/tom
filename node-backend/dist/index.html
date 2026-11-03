@@ -2172,20 +2172,21 @@ function _ovLoadChartLib(cb){
 .ben-card-table thead th { background:#16385c; color:#fff; font-weight:700; white-space:normal; line-height:1.2; word-break:break-word; }
 .ben-card-table thead tr:last-child th { background:#1f4770; }
 /* ★BENCARD-PCT-EXEMPT-20261103★ 14 列百分比列宽（合计 100%），!important 优先于几何锁清除的内联宽度 */
-.ben-card-table colgroup col:nth-child(1)  { width:1.5% !important; }
-.ben-card-table colgroup col:nth-child(2)  { width:3.5% !important; }
-.ben-card-table colgroup col:nth-child(3)  { width:9%  !important; }
-.ben-card-table colgroup col:nth-child(4)  { width:5%  !important; }
-.ben-card-table colgroup col:nth-child(5)  { width:5%  !important; }
-.ben-card-table colgroup col:nth-child(6)  { width:5%  !important; }
-.ben-card-table colgroup col:nth-child(7)  { width:9%  !important; }
-.ben-card-table colgroup col:nth-child(8)  { width:9%  !important; }
-.ben-card-table colgroup col:nth-child(9)  { width:9%  !important; }
-.ben-card-table colgroup col:nth-child(10) { width:8%  !important; }
-.ben-card-table colgroup col:nth-child(11) { width:9%  !important; }
-.ben-card-table colgroup col:nth-child(12) { width:9%  !important; }
-.ben-card-table colgroup col:nth-child(13) { width:10% !important; }
-.ben-card-table colgroup col:nth-child(14) { width:8%  !important; }
+/* ★BENCARD-WIDTH-20261103B★ 序号列加宽(1.5%→3%)、支付次数列加宽(3.5%→5%，避免 "Payment Count" 中间断行)；理论/实际金额两组各减一点让出空间，合计仍 100% */
+.ben-card-table colgroup col:nth-child(1)  { width:3%   !important; }
+.ben-card-table colgroup col:nth-child(2)  { width:5%   !important; }
+.ben-card-table colgroup col:nth-child(3)  { width:9%   !important; }
+.ben-card-table colgroup col:nth-child(4)  { width:5%   !important; }
+.ben-card-table colgroup col:nth-child(5)  { width:5%   !important; }
+.ben-card-table colgroup col:nth-child(6)  { width:5%   !important; }
+.ben-card-table colgroup col:nth-child(7)  { width:8.5% !important; }
+.ben-card-table colgroup col:nth-child(8)  { width:8.5% !important; }
+.ben-card-table colgroup col:nth-child(9)  { width:8.5% !important; }
+.ben-card-table colgroup col:nth-child(10) { width:8%   !important; }
+.ben-card-table colgroup col:nth-child(11) { width:8.5% !important; }
+.ben-card-table colgroup col:nth-child(12) { width:8.5% !important; }
+.ben-card-table colgroup col:nth-child(13) { width:9.5% !important; }
+.ben-card-table colgroup col:nth-child(14) { width:8%   !important; }
 .ben-card-table td.bc-seq, .ben-card-table td.bc-cnt { color:#8a9bb0; }
 .ben-card-table .bc-inp { width:100%; min-width:0; box-sizing:border-box; border:1px solid #ccd6e0; border-radius:3px; padding:1px 2px; font-size:8.5px; font-family:inherit; }
 .ben-card-table .bc-inp:focus { outline:2px solid #1e9e6a; }
@@ -14418,10 +14419,22 @@ function _benCardHead(){
   try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) L = CUR_LANG; } catch (e) {}
   if (L !== 'zh' && L !== 'en' && L !== 'vi') L = (window.CUR_LANG || window.__lang || 'zh');
   var extra = {
-    zh: { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额' },
-    en: { parties:'Parties', rate:'Exchange Rate', theo:'Theoretical Payable', cash:'Cash-out<br>(AGI/Personal)', actual:'Actual Payable' },
-    vi: { parties:'Bên thanh toán', rate:'Tỷ giá', theo:'Phải trả lý thuyết', cash:'Chi phí quy đổi<br>(AGI/Cá nhân)', actual:'Phải trả thực tế' }
-  }[L] || { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额' };
+    zh: { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
+          addRecord:'＋ 增加记录', beneficiary:'受益人',
+          emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
+          emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' },
+    en: { parties:'Parties', rate:'Exchange Rate', theo:'Theoretical Payable', cash:'Cash-out<br>(AGI/Personal)', actual:'Actual Payable',
+          addRecord:'＋ Add Record', beneficiary:'Beneficiary',
+          emptyRows:'No payment records yet. Click "＋ Add Record" at top-right to add.',
+          emptyState:'Please set beneficiaries in "Income Distribution Plan" first; payment detail cards will be generated automatically by count.' },
+    vi: { parties:'Bên thanh toán', rate:'Tỷ giá', theo:'Phải trả lý thuyết', cash:'Chi phí quy đổi<br>(AGI/Cá nhân)', actual:'Phải trả thực tế',
+          addRecord:'＋ Thêm bản ghi', beneficiary:'Người thụ hưởng',
+          emptyRows:'Chưa có bản ghi thanh toán. Nhấn "＋ Thêm bản ghi" ở góc trên bên phải để thêm.',
+          emptyState:'Vui lòng thiết lập người thụ hưởng trong "Kế hoạch phân phối thu nhập" trước; thẻ chi tiết thanh toán sẽ được tạo tự động theo số người.' }
+  }[L] || { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
+          addRecord:'＋ 增加记录', beneficiary:'受益人',
+          emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
+          emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' };
   return {
     no: d.ben_th_no || '序号',
     cnt: d.ben_th_pay_count || '支付次数',
@@ -14433,12 +14446,17 @@ function _benCardHead(){
     actual: extra.actual,
     date: d.gs_rpt_pay_date || '支付日期',
     rmbvnd: d.comm_col_rate_rmbvnd || 'RMB-VND',
-    usdvnd: d.comm_col_rate_usdvnd || 'USD-VND'
+    usdvnd: d.comm_col_rate_usdvnd || 'USD-VND',
+    addRecord: extra.addRecord,
+    beneficiary: extra.beneficiary,
+    emptyRows: extra.emptyRows,
+    emptyState: extra.emptyState
   };
 }
 function renderBenPaymentCards(force){
   var box = document.getElementById('commBenPayCards');
   if (!box) return;
+  var H = _benCardHead();
   var st = (typeof commPlanState === 'function') ? commPlanState() : [];
   var sig = _benCardSig();
   if (!force && sig === window.__benCardSig && box.childElementCount > 0) return;
@@ -14446,17 +14464,16 @@ function renderBenPaymentCards(force){
   if (!window.__benCardPayments || typeof window.__benCardPayments !== 'object') window.__benCardPayments = {};
   var data = window.__benCardPayments;
   if (!st.length){
-    box.innerHTML = '<div class="ben-card-empty">请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。</div>';
+    box.innerHTML = '<div class="ben-card-empty">' + H.emptyState + '</div>';
     return;
   }
   var html = '';
-  var H = _benCardHead();
   for (var i = 0; i < st.length; i++){
     var nm = benCardName(st, i);
     var rows = data[i] || [];
     var rowHtml = '';
     if (!rows.length){
-      rowHtml = '<tr><td class="bc-empty" colspan="14">暂无支付记录，点右上角「＋ 增加记录」添加</td></tr>';
+      rowHtml = '<tr><td class="bc-empty" colspan="14">' + H.emptyRows + '</td></tr>';
     } else {
       for (var j = 0; j < rows.length; j++){
         var d = rows[j];
@@ -14485,8 +14502,8 @@ function renderBenPaymentCards(force){
       }
     }
     html += '<div class="ben-card">'
-      + '<div class="ben-card-head"><span class="ben-card-title">' + _benEsc(nm || ('受益人' + (i + 1))) + '</span>'
-      + '<button type="button" class="btn-action ben-card-add" onclick="benCardAddRow(' + i + ')">＋ 增加记录</button></div>'
+      + '<div class="ben-card-head"><span class="ben-card-title">' + _benEsc(nm || (H.beneficiary + (i + 1))) + '</span>'
+      + '<button type="button" class="btn-action ben-card-add" onclick="benCardAddRow(' + i + ')">' + H.addRecord + '</button></div>'
       + '<div class="ben-card-scroll"><table class="ben-card-table">'
       + '<colgroup>'
       + '<col><col><col><col><col><col><col><col><col><col><col><col><col><col>'
@@ -16098,7 +16115,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z245";  // 版本标记：Z245 = 支付明细卡片：①序号列 2%→1.5%、支付次数列 4%→3.5%，回收的 1% 给支付日期列(7%→8%)；②表头改为随系统语言(中/英/越)自动切换（复用 T() 词条 + 缺失项三语兜底），并在 setLangDebug 切语言后重渲染卡片
+const PERM_BUILD = "build 2026-11-03-Z246";  // 版本标记：Z246 = 支付明细卡片：①序号列 1.5%→3%、支付次数列 3.5%→5%（英文 "Payment Count" 不再中间断行），理论/实际金额两组各略减让出空间(合计100%)；②「＋ 增加记录」按钮、空行提示、空状态、受益人兜底文案全部改随系统语言(中/英/越)切换
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
