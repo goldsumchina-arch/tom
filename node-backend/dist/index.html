@@ -2196,7 +2196,7 @@ function _ovLoadChartLib(cb){
 .ben-card-table .bc-num { text-align:center; }
 .ben-card-table .bc-parties { text-align:center; }
 .ben-card-table .bc-cash-wrap { display:flex; align-items:center; gap:1px; justify-content:center; }
-.ben-card-table .bc-cash-wrap .bc-cash { width:calc(100% - 11px); text-align:center; }
+.ben-card-table .bc-cash-wrap .bc-cash { width:calc(100% - 11px); text-align:center; font-weight:700 !important; font-size:10px !important; }
 .ben-card-table .bc-pct { color:#e8720c; font-weight:700; }
 .ben-card-table .bc-actual { font-weight:700; text-align:center; font-size:10.5px; }
 /* ★BENCARD-BOLD-20261103★ 理论/实际金额：加粗，字号各 +2（输入框 8→10px，单元格 8.5→10.5px） */
@@ -2206,7 +2206,7 @@ function _ovLoadChartLib(cb){
 .ben-card-table .bc-actual.bc-vnd, .ben-card-table .bc-money.bc-vnd { color:#1e9e6a; }
 .ben-card-table .bc-empty { color:#a6b3c2; padding:6px; }
 .ben-card-table .cp-date-input-wrapper { width:100%; max-width:72px; min-width:0; margin:0 auto; display:block; }
-.ben-card-table .cp-date-input-wrapper input { min-width:0; width:100%; height:15px !important; padding:0 1px !important; font-size:7px !important; line-height:13px !important; border-radius:2px; text-align:center !important; letter-spacing:-0.2px; }
+.ben-card-table .cp-date-input-wrapper input { min-width:0; width:100%; height:16px !important; padding:0 1px !important; font-size:9px !important; font-weight:700 !important; line-height:14px !important; border-radius:2px; text-align:center !important; letter-spacing:-0.4px; }
 .ben-card-empty { color:#8a9bb0; font-size:12px; padding:8px 4px; }
   .comm-point-check .cpc-chk { padding:3px 0; }
   .comm-point-check .cpc-chk-title { font-size:13px; font-weight:700; color:#5a6b82; }
@@ -14450,21 +14450,25 @@ function _benCardHead(){
     zh: { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
           addRecord:'＋ 增加记录', beneficiary:'受益人',
           partyOpts:['公司对公司','公司对个人','个人对个人'],
+          delConfirm:'是不是要删除这个记录？', delPwd:'请输入密码：', delWrong:'密码错误，记录未删除。',
           emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
           emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' },
     en: { parties:'Parties', rate:'Exchange Rate', theo:'Theoretical Payable', cash:'Cash-out<br>(AGI/Personal)', actual:'Actual Payable',
           addRecord:'＋ Add Record', beneficiary:'Beneficiary',
           partyOpts:['Company to Company','Company to Individual','Individual to Individual'],
+          delConfirm:'Delete this record?', delPwd:'Enter password:', delWrong:'Wrong password. Record not deleted.',
           emptyRows:'No payment records yet. Click "＋ Add Record" at top-right to add.',
           emptyState:'Please set beneficiaries in "Income Distribution Plan" first; payment detail cards will be generated automatically by count.' },
     vi: { parties:'Bên thanh toán', rate:'Tỷ giá', theo:'Phải trả lý thuyết', cash:'Chi phí quy đổi<br>(AGI/Cá nhân)', actual:'Phải trả thực tế',
           addRecord:'＋ Thêm bản ghi', beneficiary:'Người thụ hưởng',
           partyOpts:['Công ty với Công ty','Công ty với Cá nhân','Cá nhân với Cá nhân'],
+          delConfirm:'Xóa bản ghi này?', delPwd:'Nhập mật khẩu:', delWrong:'Sai mật khẩu. Bản ghi không bị xóa.',
           emptyRows:'Chưa có bản ghi thanh toán. Nhấn "＋ Thêm bản ghi" ở góc trên bên phải để thêm.',
           emptyState:'Vui lòng thiết lập người thụ hưởng trong "Kế hoạch phân phối thu nhập" trước; thẻ chi tiết thanh toán sẽ được tạo tự động theo số người.' }
   }[L] || { parties:'支付双方', rate:'汇率', theo:'理论应支付金额', cash:'套现成本<br>(AGI或个人)', actual:'实际应支付金额',
           addRecord:'＋ 增加记录', beneficiary:'受益人',
           partyOpts:['公司对公司','公司对个人','个人对个人'],
+          delConfirm:'是不是要删除这个记录？', delPwd:'请输入密码：', delWrong:'密码错误，记录未删除。',
           emptyRows:'暂无支付记录，点右上角「＋ 增加记录」添加',
           emptyState:'请先在「收益分配计划」中设置受益人，这里将按人数自动生成对应的支付明细卡片。' };
   return {
@@ -14483,7 +14487,10 @@ function _benCardHead(){
     beneficiary: extra.beneficiary,
     emptyRows: extra.emptyRows,
     emptyState: extra.emptyState,
-    partyOpts: extra.partyOpts
+    partyOpts: extra.partyOpts,
+    delConfirm: extra.delConfirm,
+    delPwd: extra.delPwd,
+    delWrong: extra.delWrong
   };
 }
 /* ★BENCARD-PARTY-20261103★ 支付双方改为三选一（存 canonical key，显示随语言）；
@@ -14537,7 +14544,7 @@ function renderBenPaymentCards(force){
         var d = rows[j];
         var dTheo = d.theo || {};
         var frac = (parseFloat(String(d.cashout || '').replace(/[^\d.]/g, '')) || 0) / 100;
-        rowHtml += '<tr>'
+        rowHtml += '<tr oncontextmenu="return benCardRowCtx(event,' + i + ',' + j + ')">'
           + '<td class="bc-seq">' + (j + 1) + '</td>'
           + '<td class="bc-cnt">' + (j + 1) + '</td>'
           + '<td><select class="bc-inp bc-parties" onchange="benCardInput(' + i + ',' + j + ',\'parties\',this.value)">'
@@ -14579,6 +14586,20 @@ function renderBenPaymentCards(force){
       + '<tbody>' + rowHtml + '</tbody></table></div></div>';
   }
   box.innerHTML = html;
+}
+/* ★BENCARD-DELROW-20261103★ 右键单击一行 → 确认 → 输入密码 money（大小写不敏感，统一转小写比较）→ 立即删除该行；取消则不删 */
+function benCardRowCtx(ev, i, j){
+  if (ev){ try { ev.preventDefault(); ev.stopPropagation(); } catch (e) {} }
+  var H = _benCardHead();
+  if (!window.confirm(H.delConfirm)) return false;
+  var p = window.prompt(H.delPwd, '');
+  if (p === null) return false;
+  if (String(p).trim().toLowerCase() !== 'money'){ window.alert(H.delWrong); return false; }
+  var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
+  if (!rows[j]) return false;
+  rows.splice(j, 1);
+  renderBenPaymentCards(true);
+  return false;
 }
 function benCardAddRow(i){
   if (!window.__benCardPayments || typeof window.__benCardPayments !== 'object') window.__benCardPayments = {};
@@ -16230,7 +16251,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z250";  // 版本标记：Z250 = 支付明细卡片：「＋ 增加记录」按钮字号降两号(13→11px)、padding 缩到 2px/8px、背景由橙色渐变改为蓝色渐变(2e86de→1f6fc4)，用 .ben-card-head .ben-card-add 提高优先级压过后面的 .btn-action 定义
+const PERM_BUILD = "build 2026-11-03-Z251";  // 版本标记：Z251 = 支付明细卡片：①支付日期数值字号 +2(7→9px)并加粗；②套现成本数值字号 +2(8→10px)并加粗；③任意行右键 → 确认「是不是要删除这个记录？」→ 输入密码 money（大小写不敏感，强制转小写比较）→ 立即删除该行；取消/密码错误则不删（文案三语）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
