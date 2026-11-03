@@ -5079,7 +5079,7 @@ function _ovLoadChartLib(cb){
   .legend .cat-pill { margin-right:4px; }
 
   /* Toast（橙色主题 / 屏幕居中 / 三语） */
-  .toast-overlay { position:fixed; inset:0; z-index:30000; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  .toast-overlay { position:fixed; inset:0; z-index:100200; display:none; align-items:center; justify-content:center; pointer-events:none; }
   .toast-overlay.show { display:flex; }
   .toast { background:linear-gradient(135deg,#e8720c,#f08c2f); color:#fff; padding:14px 26px; border-radius:10px; font-size:14px; font-weight:600; box-shadow:0 8px 30px rgba(232,114,12,.35); max-width:80vw; text-align:center; line-height:1.5; opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s; }
   .toast.show { opacity:1; transform:translateY(0); }
@@ -6970,7 +6970,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     rep_progress:"佣金支付比例", rep_th_given:"给与金额", rep_th_time:"给与时间",
     rep_th_after:"换汇后金额", rep_th_finished:"结束与否", rep_th_unpaid:"未支付总额", rep_th_progress2:"佣金支付比例",
     comm_add_title:"新增项目产生的佣金记录", comm_edit_title:"编辑项目产生的佣金记录", comm_save_btn:"保存修改", comm_f_contract:"合同编号", comm_f_parties:"签约双方", comm_f_group:"合作集团", comm_f_date:"合同签单日期", comm_f_equip:"合同签订设备金额", comm_f_rate_rmb:"计算提成的汇率 RMB-VND", comm_f_rate_usd:"计算提成的汇率 USD-VND", comm_f_remark:"备注",
-    comm_add_save:"保存", comm_add_cancel:"取消", comm_save_ok:"保存成功", comm_need_contract:"请填写合同编号", comm_required_suffix:"为必填项",
+    comm_add_save:"保存", comm_add_cancel:"取消", comm_save_ok:"保存成功！", comm_need_contract:"请填写合同编号", comm_required_suffix:"为必填项",
     comm_ph_group_other:"请输入合作集团名称",
     comm_appr_close:"关闭",
     comm_paid_lock_title:"佣金已支付",
@@ -7751,7 +7751,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     rep_progress:"Commission Payment Ratio", rep_th_given:"Given Amount", rep_th_time:"Given Time",
     rep_th_after:"Amount After Exchange", rep_th_finished:"Finished?", rep_th_unpaid:"Total Unpaid", rep_th_progress2:"Payment Ratio",
     comm_add_title:"Add Project Commission Record", comm_edit_title:"Edit Project Commission Record", comm_save_btn:"Save Changes", comm_f_contract:"Contract No.", comm_f_parties:"Signing Parties", comm_f_group:"Partner Group", comm_f_date:"Contract Date", comm_f_equip:"Equipment Contract Amount", comm_f_rate_rmb:"Exchange Rate RMB-VN", comm_f_rate_usd:"Exchange Rate USD-VN", comm_f_remark:"Remarks",
-    comm_add_save:"Save", comm_add_cancel:"Cancel", comm_save_ok:"Saved", comm_need_contract:"Please enter the contract number", comm_required_suffix:"is required",
+    comm_add_save:"Save", comm_add_cancel:"Cancel", comm_save_ok:"Saved!", comm_need_contract:"Please enter the contract number", comm_required_suffix:"is required",
     comm_ph_group_other:"Enter partner group name",
     comm_appr_close:"Close",
     comm_paid_lock_title:"Commission Already Paid",
@@ -8528,7 +8528,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     rep_progress:"Tỷ lệ chi trả hoa hồng", rep_th_given:"Số tiền chuyển", rep_th_time:"Thời gian chuyển",
     rep_th_after:"Số tiền sau quy đổi", rep_th_finished:"Kết thúc?", rep_th_unpaid:"Tổng chưa trả", rep_th_progress2:"Tỷ lệ chi trả",
     comm_add_title:"Thêm bản ghi hoa hồng dự án", comm_edit_title:"Sửa bản ghi hoa hồng dự án", comm_save_btn:"Lưu thay đổi", comm_f_contract:"Số HĐ", comm_f_parties:"Các bên ký kết", comm_f_group:"Tập đoàn hợp tác", comm_f_date:"Ngày ký HĐ", comm_f_equip:"Giá trị thiết bị theo HĐ", comm_f_rate_rmb:"Tỷ giá tính tổng hoa hồng RMB-VND", comm_f_rate_usd:"Tỷ giá tính tổng hoa hồng USD-VND", comm_f_remark:"Ghi chú",
-    comm_add_save:"Lưu", comm_add_cancel:"Hủy", comm_save_ok:"Đã lưu", comm_need_contract:"Vui lòng nhập số HĐ", comm_required_suffix:"là bắt buộc",
+    comm_add_save:"Lưu", comm_add_cancel:"Hủy", comm_save_ok:"Đã lưu!", comm_need_contract:"Vui lòng nhập số HĐ", comm_required_suffix:"là bắt buộc",
     comm_ph_group_other:"Nhập tên tập đoàn hợp tác",
     comm_appr_close:"Đóng",
     comm_paid_lock_title:"Hoa hồng đã thanh toán",
@@ -14397,7 +14397,7 @@ function saveCommissionRecord(){
   renderBeneficiaryTable();
   renderCommission();
   commPersistRecord(_record);   // 落库：刷新/重启后仍在
-  showToast(t.comm_save_ok || '保存成功');
+  showToast(t.comm_save_ok || '保存成功', 1000);   // ★COMM-TOAST-20261103★ 保存成功提示：三语 + 1 秒自动消失
 }
 /* ==================== 个人佣金 · 修改金额审批（后门三人组） ====================
    规则：仅 tom/cuong/travis 可发起；审批发给另外两人；两人都同意 → 通过并自动改金额；
@@ -14912,7 +14912,7 @@ function saveBeneficiary(){
     : (typeof window.__commEditIdx === 'number' && window.__commEditIdx >= 0 ? window.__commEditIdx : -1);
   if (_pRecIdx >= 0 && COMM_RECORDS[_pRecIdx]) commPersistRecord(COMM_RECORDS[_pRecIdx]);
   closeBeneficiaryModal();
-  showToast(t.comm_save_ok || '保存成功');
+  showToast(t.comm_save_ok || '保存成功', 1000);   // ★COMM-TOAST-20261103★ 保存成功：三语 + 1 秒消失
 }
 function benAddPaymentRow(){
   if (!window.__benPaymentRows) window.__benPaymentRows = [];
@@ -16697,7 +16697,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z219";  // 版本标记：Z219 = 佣金比率统一 4 位小数（输入 2 → 2.0000，失焦补齐、保存/回填同格式）
+const PERM_BUILD = "build 2026-11-03-Z220";  // 版本标记：Z220 = 保存成功提示三语(保存成功!/Saved!/Đã lưu!)且 1 秒自动消失；toast 层级提到 100200 避免被弹窗遮挡
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -17072,12 +17072,12 @@ function saveModal(){
 }
 
 // ---------- Toast（橙色居中） ----------
-function showToast(msg){
+function showToast(msg, ms){
   const t=document.getElementById("toast");
   const ov=document.getElementById("toastOverlay");
   t.textContent=msg; t.classList.add("show"); if(ov) ov.classList.add("show");
   clearTimeout(window._toastTimer);
-  window._toastTimer=setTimeout(()=>{ t.classList.remove("show"); if(ov) ov.classList.remove("show"); },2400);
+  window._toastTimer=setTimeout(()=>{ t.classList.remove("show"); if(ov) ov.classList.remove("show"); },(ms||2400));
 }
 
 // ---------- 发起审批（真实流程：业务按钮触发 -> 持久化到后端 -> 入待审池）----------
@@ -28928,7 +28928,7 @@ function save(){
 }
 
 /* ---------- Toast（橙色居中） ---------- */
-function showToast(msg){ var t=el('cmToast')||document.getElementById('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); var ov=document.getElementById('toastOverlay'); if(ov) ov.classList.add('show'); clearTimeout(window._toastTimer); window._toastTimer=setTimeout(function(){t.classList.remove('show'); if(ov) ov.classList.remove('show');},2400); }
+function showToast(msg, ms){ var t=el('cmToast')||document.getElementById('toast'); if(!t) return; t.textContent=msg; t.classList.add('show'); var ov=document.getElementById('toastOverlay'); if(ov) ov.classList.add('show'); clearTimeout(window._toastTimer); window._toastTimer=setTimeout(function(){t.classList.remove('show'); if(ov) ov.classList.remove('show');}, (ms||2400)); }
 
 /* ---------- 日历 ---------- */
 var calPopup=el('cmCalPopup'),calTitle=el('cmCalTitle'),calGrid=el('cmCalGrid');
