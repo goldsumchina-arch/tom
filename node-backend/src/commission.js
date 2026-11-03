@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS commission_records (
   deposit_date TEXT DEFAULT '',
   accept_date TEXT DEFAULT '',
   comm_points TEXT DEFAULT '',
+  ben_count TEXT DEFAULT '',
+  plan_json TEXT DEFAULT '',
   currency TEXT DEFAULT '',
   equip_rmb TEXT DEFAULT '',
   equip_usd TEXT DEFAULT '',
@@ -103,6 +105,8 @@ async function ensureTable(env) {
   for (const sql of [
     "ALTER TABLE commission_records ADD COLUMN accept_date TEXT DEFAULT ''",
     "ALTER TABLE commission_records ADD COLUMN comm_points TEXT DEFAULT ''",
+    "ALTER TABLE commission_records ADD COLUMN ben_count TEXT DEFAULT ''",
+    "ALTER TABLE commission_records ADD COLUMN plan_json TEXT DEFAULT ''",
   ]) {
     try {
       await env.DB.prepare(sql).run();
@@ -162,6 +166,10 @@ async function recToDict(row, env) {
     depositDate: d.deposit_date || "",
     acceptDate: d.accept_date || "",     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期
     points: d.comm_points || "",         // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值）
+    benCount: d.ben_count || "",         // ★COMM-SWAP-BENCNT-20261103★ 受益人数（整数 1-10）
+    plan: (function(){                   // ★COMM-PLAN-20261103★ 收益分配计划（人数 = 行数）
+      try { var a = JSON.parse(d.plan_json || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+    })(),
     currency: d.currency || "",
     equipRMB: d.equip_rmb || "",
     equipUSD: d.equip_usd || "",
@@ -217,7 +225,7 @@ export async function handleCommission(request, env, url, pathname) {
       rid = exist.id;
       await env.DB.prepare(
         `UPDATE commission_records SET parties=?, group_name=?, sign_date=?,
-         deposit_date=?, accept_date=?, comm_points=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
+         deposit_date=?, accept_date=?, comm_points=?, ben_count=?, plan_json=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
          rate_rmb=?, rate_usd=?, remark=?, is_demo=?, updated_at=? WHERE id=?`
       )
         .bind(
@@ -227,6 +235,8 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.depositDate || ""),
           String(rec.acceptDate || ""),
           String(rec.points || ""),
+          String(rec.benCount || ""),
+          JSON.stringify(rec.plan || []),
           String(rec.currency || ""),
           String(rec.equipRMB || ""),
           String(rec.equipUSD || ""),
@@ -242,9 +252,9 @@ export async function handleCommission(request, env, url, pathname) {
     } else {
       const cur = await env.DB.prepare(
         `INSERT INTO commission_records
-         (contract, parties, group_name, sign_date, deposit_date, accept_date, comm_points, currency,
+         (contract, parties, group_name, sign_date, deposit_date, accept_date, comm_points, ben_count, plan_json, currency,
           equip_rmb, equip_usd, equip_vnd, rate_rmb, rate_usd, remark, is_demo, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       )
         .bind(
           contract,
@@ -254,6 +264,8 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.depositDate || ""),
           String(rec.acceptDate || ""),
           String(rec.points || ""),
+          String(rec.benCount || ""),
+          JSON.stringify(rec.plan || []),
           String(rec.currency || ""),
           String(rec.equipRMB || ""),
           String(rec.equipUSD || ""),

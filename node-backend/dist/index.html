@@ -2275,14 +2275,20 @@ function _ovLoadChartLib(cb){
   /* ★COMM-ACCEPT-POINTS-20261103★ 第 1 排加了「项目验收日期」「佣金总点数」后变 8 列：
      列更窄，gap 收到 10px，其余对齐规则与 cols-6 完全一致（标签自动换行、输入框贴底对齐）。 */
   .commission-form.comm-4col .cf-row.cols-8 { grid-template-columns:repeat(8, 1fr); gap:10px 10px; }
+  /* ★COMM-SWAP-BENCNT-20261103★ 第 2 排加「受益人数」后变 7 列（规则与 cols-6/cols-8 同源） */
+  .commission-form.comm-4col .cf-row.cols-7 { grid-template-columns:repeat(7, 1fr); gap:10px 12px; }
   /* 窄格：长标签自动换行，输入框贴底保持整行对齐 */
   .commission-form.comm-4col .cf-row.cols-6 .login-field,
+  .commission-form.comm-4col .cf-row.cols-7 .login-field,
   .commission-form.comm-4col .cf-row.cols-8 .login-field { display:flex; flex-direction:column; }
   .commission-form.comm-4col .cf-row.cols-6 .login-field input,
   .commission-form.comm-4col .cf-row.cols-6 .login-field select,
+  .commission-form.comm-4col .cf-row.cols-7 .login-field input,
+  .commission-form.comm-4col .cf-row.cols-7 .login-field select,
   .commission-form.comm-4col .cf-row.cols-8 .login-field input,
   .commission-form.comm-4col .cf-row.cols-8 .login-field select { margin-top:auto; }
   .commission-form.comm-4col .cf-row.cols-6 label,
+  .commission-form.comm-4col .cf-row.cols-7 label,
   .commission-form.comm-4col .cf-row.cols-8 label { font-size:12px; line-height:1.35; }
   .commission-form label { font-size:13px; color:#44546a; font-weight:600; }
   /* ★COMM-LBL-WRAP-20261103★ 窄列下长标签（汇率/验收日期等）必须换行，禁止溢出压到隔壁列：
@@ -2304,6 +2310,13 @@ function _ovLoadChartLib(cb){
     font-size:12px; font-weight:700; color:#8a97a5; pointer-events:none; line-height:1;
   }
   .commission-form .cf-suffix-wrap input:focus ~ .cf-suffix { color:#e8720c; }
+  /* ★COMM-PLAN-20261103★ 收益分配计划行：每行 5 列（受益人/佣金比率/RMB/USD/VND），
+     行间用虚线分隔；标签与输入框沿用 cols-5 的自动换行 + 贴底对齐。 */
+  .comm-plan-row { padding:12px 0 2px; border-top:1px dashed #e3e9f1; }
+  .comm-plan-row:first-child { border-top:none; padding-top:2px; }
+  .comm-plan-row .comm-plan-custom { margin-top:6px; }
+  .comm-plan-row .cf-suffix-wrap { margin-top:auto; }
+  .comm-plan-row .comm-plan-idx { font-size:11px; font-weight:700; color:#8a97a5; margin-right:4px; }
   /* 合作集团下拉：外观与输入框一致 */
   .commission-form select {
     width:100%; box-sizing:border-box; height:44px; padding:0 14px;
@@ -4568,12 +4581,15 @@ function _ovLoadChartLib(cb){
              ★COMM-PT-SUF-20261103★ 输入框内右侧常显一个「%」视觉后缀（span，不进数据）。 -->
         <div class="login-field"><label id="commLblPoints">佣金总点数（%）</label><div class="cf-suffix-wrap"><input id="commFPoints" type="text" inputmode="decimal" value="4.5000" placeholder="0.0000" autocomplete="off" oninput="commPointsInput(this)"><span class="cf-suffix" aria-hidden="true">%</span></div></div>
       </div>
-      <div class="cf-row cols-6">
+      <!-- ★COMM-SWAP-BENCNT-20261103★ 本排字段顺序对调：两个汇率在前、三个设备金额在后；
+           并在「设备金额 VND」右侧新增「受益人数」（整数 1-10），故 6 列 → 7 列。 -->
+      <div class="cf-row cols-7">
+        <div class="login-field req"><label id="commLblRateRMB"><i>*</i>计算提成的汇率 RMB-VND</label><input id="commFRateRMB" type="text" inputmode="numeric" value="3,800" autocomplete="off" oninput="commRateInput(this)"></div>
+        <div class="login-field req"><label id="commLblRateUSD"><i>*</i>计算提成的汇率 USD-VND</label><input id="commFRateUSD" type="text" inputmode="numeric" value="26,000" autocomplete="off" oninput="commRateInput(this)"></div>
         <div class="login-field req"><label id="commLblEquipRMB"><i>*</i>设备金额 RMB</label><input id="commFEquipRMB" type="text" inputmode="numeric" class="cf-money money-rmb" placeholder="¥" autocomplete="off" oninput="commMoneyInput('rmb')"></div>
         <div class="login-field req"><label id="commLblEquipUSD"><i>*</i>设备金额 USD</label><input id="commFEquipUSD" type="text" inputmode="numeric" class="cf-money money-usd" placeholder="$" autocomplete="off" oninput="commMoneyInput('usd')"></div>
         <div class="login-field req"><label id="commLblEquipVND"><i>*</i>设备金额 VND</label><input id="commFEquipVND" type="text" inputmode="numeric" class="cf-money money-vnd" placeholder="₫" autocomplete="off" oninput="commMoneyInput('vnd')"></div>
-        <div class="login-field req"><label id="commLblRateRMB"><i>*</i>计算提成的汇率 RMB-VND</label><input id="commFRateRMB" type="text" inputmode="numeric" value="3,800" autocomplete="off" oninput="commRateInput(this)"></div>
-        <div class="login-field req"><label id="commLblRateUSD"><i>*</i>计算提成的汇率 USD-VND</label><input id="commFRateUSD" type="text" inputmode="numeric" value="26,000" autocomplete="off" oninput="commRateInput(this)"></div>
+        <div class="login-field"><label id="commLblBenCount">受益人数</label><input id="commFBenCount" type="text" inputmode="numeric" placeholder="1-10" autocomplete="off" oninput="commBenCountInput(this)" onblur="commBenCountBlur(this)"></div>
         <div class="login-field"><label id="commLblRemark">备注</label><input id="commFRemark" type="text" autocomplete="off"></div>
       </div>
       <!-- ★COMM-PTCHECK-20261103★ 佣金总点数「展示 + 反向校验」：录入点数自动算预期佣金（设备金额×点数），
@@ -4616,6 +4632,14 @@ function _ovLoadChartLib(cb){
           </thead>
           <tbody id="benTbody"></tbody>
         </table>
+      </div>
+      <!-- ★COMM-PLAN-20261103★ 收益分配计划：受益人数(N)确认后，底部按 N 自动生成 N 行
+           （受益人下拉 L1/C1/TV/TM/OTHER + 佣金比率 4 位小数 % + RMB/USD/VND 三币录入） -->
+      <div class="cf-section-title" id="commPlanSecTitle" style="margin-top:16px;display:none;">
+        <span id="commPlanTitleText">受益人-人数-收益分配计划</span>
+      </div>
+      <div id="commPlanWrap" style="display:none;">
+        <div id="commPlanRows"></div>
       </div>
     </div>
     </div>
@@ -6838,7 +6862,9 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     comm_opt_agi:"AGI-客户", comm_opt_gs:"GS-客户",
     comm_col_currency:"签约货币", comm_f_currency:"签约货币", comm_cur_rmb:"人民币 RMB", comm_cur_usd:"美元 USD", comm_cur_vnd:"越南盾 VND",
     comm_f_equip_rmb:"设备金额 RMB", comm_f_equip_usd:"设备金额 USD", comm_f_equip_vnd:"设备金额 VND", comm_f_deposit:"定金给付时间",
-    comm_f_accept:"项目验收日期", comm_f_points:"佣金总点数（%）",
+    comm_f_accept:"项目验收日期", comm_f_points:"佣金总点数（%）", comm_f_ben_count:"受益人数",
+    comm_plan_title:"受益人-人数-收益分配计划", comm_plan_th_name:"受益人",
+    comm_plan_th_ratio:"佣金比率（%）", comm_plan_custom:"自定义受益人",
     comm_pt_check_title:"佣金总点数 · 预期佣金与反向校验", comm_pt_expect:"预期佣金（设备金额 × 点数）",
     comm_pt_ben:"受益人需支付总额", comm_pt_diff_lbl:"差额（预期 − 受益人）",
     comm_pt_check_sec:"佣金总点数 · 预期佣金与反向校验", comm_pt_ok:"点数与受益人总额一致", comm_pt_diff:"差额"
@@ -7609,7 +7635,9 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     comm_opt_agi:"AGI-Customer", comm_opt_gs:"GS-Customer",
     comm_col_currency:"Contract Currency", comm_f_currency:"Contract Currency", comm_cur_rmb:"CNY (RMB)", comm_cur_usd:"USD", comm_cur_vnd:"VND",
     comm_f_equip_rmb:"Equip Amount RMB", comm_f_equip_usd:"Equip Amount USD", comm_f_equip_vnd:"Equip Amount VND", comm_f_deposit:"Deposit Payment Date",
-    comm_f_accept:"Project Hand-over Date", comm_f_points:"Total Commission Rate (%)",
+    comm_f_accept:"Project Hand-over Date", comm_f_points:"Total Commission Rate (%)", comm_f_ben_count:"Number of Beneficiaries",
+    comm_plan_title:"Beneficiary · Count · Profit Distribution Plan", comm_plan_th_name:"Beneficiary",
+    comm_plan_th_ratio:"Commission Ratio (%)", comm_plan_custom:"Custom beneficiary",
     comm_pt_check_title:"Commission Points · Expected & Reverse Check", comm_pt_expect:"Expected Commission (Equip × Rate)",
     comm_pt_ben:"Beneficiary Total Payable", comm_pt_diff_lbl:"Variance (Expected − Beneficiary)",
     comm_pt_check_sec:"Commission Points · Expected & Reverse Check", comm_pt_ok:"Rate matches beneficiary total", comm_pt_diff:"Variance"
@@ -8378,7 +8406,9 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     comm_opt_agi:"AGI-Khách hàng", comm_opt_gs:"GS-Khách hàng",
     comm_col_currency:"Loại tiền tệ HĐ", comm_f_currency:"Loại tiền tệ HĐ", comm_cur_rmb:"Nhân dân tệ RMB", comm_cur_usd:"Đô USD", comm_cur_vnd:"Việt Nam đồng VND",
     comm_f_equip_rmb:"Giá trị TB RMB", comm_f_equip_usd:"Giá trị TB USD", comm_f_equip_vnd:"Giá trị TB VND", comm_f_deposit:"Ngày trả đặt cọc",
-    comm_f_accept:"Ngày nghiệm thu dự án", comm_f_points:"Tổng tỷ lệ hoa hồng (%)",
+    comm_f_accept:"Ngày nghiệm thu dự án", comm_f_points:"Tổng tỷ lệ hoa hồng (%)", comm_f_ben_count:"Số người thụ hưởng",
+    comm_plan_title:"Người thụ hưởng · Số lượng · Kế hoạch phân chia lợi nhuận", comm_plan_th_name:"Người thụ hưởng",
+    comm_plan_th_ratio:"Tỷ lệ hoa hồng (%)", comm_plan_custom:"Người thụ hưởng tùy chỉnh",
     comm_pt_check_title:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_expect:"Hoa hồng dự kiến (Thiết bị × Tỷ lệ)",
     comm_pt_ben:"Tổng thanh toán người thụ hưởng", comm_pt_diff_lbl:"Chênh lệch (Dự kiến − Thụ hưởng)",
     comm_pt_check_sec:"Tổng điểm hoa hồng · Dự kiến & Kiểm tra ngược", comm_pt_ok:"Tỷ lệ khớp tổng thụ hưởng", comm_pt_diff:"Chênh lệch"
@@ -12666,6 +12696,10 @@ function applyCommissionLang(){
   st('commLblRemark','comm_f_remark','备注');
   st('commLblAccept','comm_f_accept','项目验收日期');           // ★COMM-ACCEPT-POINTS-20261103★
   st('commLblPoints','comm_f_points','佣金总点数（%）');        // ★COMM-ACCEPT-POINTS-20261103★
+  st('commLblBenCount','comm_f_ben_count','受益人数');          // ★COMM-SWAP-BENCNT-20261103★
+  // ★COMM-PLAN-20261103★ 收益分配计划：区块标题三语；行内标签随语言重绘
+  st('commPlanTitleText','comm_plan_title','受益人-人数-收益分配计划');
+  if (typeof commPlanRender === 'function') commPlanRender();
   // ★COMM-PTCHECK-20261103★ 模态框内「佣金总点数 · 预期佣金与反向校验」区块三语
   st('commPtCheckTitle','comm_pt_check_title','佣金总点数 · 预期佣金与反向校验');
   st('commPtExpectLbl','comm_pt_expect','预期佣金（设备金额 × 点数）');
@@ -13475,6 +13509,163 @@ function commPointsInput(el){
   if (el.value !== v) el.value = v;
   commPointCheck();   // ★COMM-PTCHECK-20261103★ 点数变动 → 重算预期佣金 + 反向校验
 }
+/* ★COMM-SWAP-BENCNT-20261103★ 受益人数输入：只允许整数，范围 1-10
+   规则：过滤非数字 → 去掉前导 0 → 超过 10 直接收敛为 10；允许暂时为空（未填）。 */
+function commBenCountInput(el){
+  if (!el) return;
+  var v = String(el.value || '').replace(/[^\d]/g, '').replace(/^0+/, '');
+  if (v && parseInt(v, 10) > 10) v = '10';
+  if (el.value !== v) el.value = v;
+  commPlanRender();   // ★COMM-PLAN-20261103★ 人数变动 → 收益分配计划行数即时同步
+}
+/* 失焦兜底：填了但 <1 视为无效 → 清空；>10 收敛为 10 */
+function commBenCountBlur(el){
+  if (!el) return;
+  var v = String(el.value || '').replace(/[^\d]/g, '');
+  if (v === '') { commPlanRender(); return; }
+  var n = parseInt(v, 10);
+  if (!isFinite(n) || n < 1) { el.value = ''; commPlanRender(); return; }
+  el.value = String(Math.min(10, n));
+  commPlanRender();
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ★COMM-PLAN-20261103★ 受益人数 → 收益分配计划分行
+   · 受益人数 N 确认后，弹窗底部出现「受益人-人数-收益分配计划」区块，按 N 生成 N 行
+   · 每行：受益人下拉（L1/C1/TV/TM/OTHER，选 OTHER 追加自定义输入）
+          + 佣金比率（4 位小数，右侧内嵌 %）
+          + RMB / USD / VND 三币金额（三币按弹窗顶部汇率联动，逻辑与「设备金额 / 受益人需支付总额」一致）
+   · 只做录入与保存，不自动改写其它字段（受益人表、设备金额、点数均不受影响）
+   ══════════════════════════════════════════════════════════════════════════ */
+var COMM_PLAN_MAX = 10;
+var COMM_PLAN_NAMES = ['L1','C1','TV','TM','OTHER'];
+var COMM_PLAN_CUR = [
+  { c:'rmb', labelKey:'comm_cur_rmb',  fb:'人民币 RMB', cls:'money-rmb', sym:'¥' },
+  { c:'usd', labelKey:'comm_cur_usd',  fb:'美元 USD',   cls:'money-usd', sym:'$' },
+  { c:'vnd', labelKey:'comm_cur_vnd',  fb:'越南盾 VND', cls:'money-vnd', sym:'₫' }
+];
+
+function commPlanState(){
+  if (!Array.isArray(window.__commPlan)) window.__commPlan = [];
+  return window.__commPlan;
+}
+function commPlanBlank(){
+  return { name:'L1', custom:'', ratio:'', rmb:'', usd:'', vnd:'' };
+}
+/* 供「新增/编辑」弹窗打开时重置整块计划（plan 为空 → 区块隐藏） */
+function commPlanReset(plan){
+  window.__commPlan = (Array.isArray(plan) ? plan : []).map(function(r){
+    return {
+      name:   (r && r.name)   || 'L1',
+      custom: (r && r.custom) || '',
+      ratio:  (r && r.ratio)  || '',
+      rmb:    (r && r.rmb)    || '',
+      usd:    (r && r.usd)    || '',
+      vnd:    (r && r.vnd)    || ''
+    };
+  });
+  commPlanRender();
+}
+function commPlanCollect(){
+  return commPlanState().map(function(r){
+    return { name:r.name||'', custom:r.custom||'', ratio:r.ratio||'', rmb:r.rmb||'', usd:r.usd||'', vnd:r.vnd||'' };
+  });
+}
+/* 渲染：行数 = 受益人数；人数变小时多余行数据随行一起丢弃（符合「人数即行数」语义） */
+function commPlanRender(){
+  var wrap   = document.getElementById('commPlanWrap');
+  var title  = document.getElementById('commPlanSecTitle');
+  var rowsEl = document.getElementById('commPlanRows');
+  if (!wrap || !rowsEl) return;
+  var t = T();
+  var n = parseInt(String((document.getElementById('commFBenCount') || {}).value || ''), 10);
+  if (!isFinite(n) || n < 1) n = 0;
+  if (n > COMM_PLAN_MAX) n = COMM_PLAN_MAX;
+  var st = commPlanState();
+  while (st.length < n) st.push(commPlanBlank());
+  if (st.length > n) st.length = n;
+  if (!n){
+    wrap.style.display = 'none';
+    if (title) title.style.display = 'none';
+    rowsEl.innerHTML = '';
+    return;
+  }
+  if (title) title.style.display = '';
+  wrap.style.display = '';
+  var html = '';
+  for (var i = 0; i < n; i++){
+    var r = st[i] || commPlanBlank();
+    var opts = COMM_PLAN_NAMES.map(function(o){
+      return '<option value="' + o + '"' + (r.name === o ? ' selected' : '') + '>' + o + '</option>';
+    }).join('');
+    html += '<div class="cf-row cols-5 comm-plan-row" data-plan-idx="' + i + '">'
+      // ① 受益人（下拉 + OTHER 时的自定义输入）
+      +   '<div class="login-field"><label><span class="comm-plan-idx">#' + (i + 1) + '</span>' + _escComm(t.comm_plan_th_name || '受益人') + '</label>'
+      +     '<select onchange="commPlanNameChange(' + i + ',this)">' + opts + '</select>'
+      +     '<input type="text" class="comm-plan-custom" placeholder="' + _escComm(t.comm_plan_custom || '自定义受益人') + '" value="' + _escComm(r.custom || '') + '"'
+      +       (r.name === 'OTHER' ? '' : ' style="display:none;"') + ' oninput="commPlanCustomInput(' + i + ',this)">'
+      +   '</div>'
+      // ② 佣金比率（4 位小数 + 内嵌 %）
+      +   '<div class="login-field"><label>' + _escComm(t.comm_plan_th_ratio || '佣金比率（%）') + '</label>'
+      +     '<div class="cf-suffix-wrap"><input id="commPlanRatio' + i + '" type="text" inputmode="decimal" placeholder="0.0000" value="' + _escComm(r.ratio || '') + '" autocomplete="off" oninput="commPlanRatioInput(' + i + ',this)"><span class="cf-suffix" aria-hidden="true">%</span></div>'
+      +   '</div>';
+    // ③ RMB / USD / VND
+    for (var k = 0; k < COMM_PLAN_CUR.length; k++){
+      var cd = COMM_PLAN_CUR[k];
+      html += '<div class="login-field"><label>' + _escComm(t[cd.labelKey] || cd.fb) + '</label>'
+        +   '<input id="commPlan' + cd.c.toUpperCase() + i + '" type="text" inputmode="numeric" class="cf-money ' + cd.cls + '" placeholder="' + cd.sym + '" value="' + _escComm(r[cd.c] || '') + '" autocomplete="off" oninput="commPlanMoneyInput(' + i + ',\'' + cd.c + '\',this)">'
+        + '</div>';
+    }
+    html += '</div>';
+  }
+  rowsEl.innerHTML = html;
+}
+function commPlanNameChange(i, el){
+  var st = commPlanState(); if (!st[i]) return;
+  st[i].name = el ? el.value : 'L1';
+  var box = el && el.parentNode ? el.parentNode.querySelector('.comm-plan-custom') : null;
+  if (box) box.style.display = (st[i].name === 'OTHER') ? '' : 'none';
+}
+function commPlanCustomInput(i, el){
+  var st = commPlanState(); if (!st[i]) return;
+  st[i].custom = el ? el.value : '';
+}
+/* 佣金比率：只允许数字 + 一个小数点，最多 4 位小数，上限 100 */
+function commPlanRatioInput(i, el){
+  if (!el) return;
+  var v = String(el.value || '').replace(/[^\d.]/g, '');
+  var dot = v.indexOf('.');
+  if (dot >= 0) v = v.slice(0, dot + 1) + v.slice(dot + 1).replace(/\./g, '').slice(0, 4);
+  if (v && parseFloat(v) > 100) v = '100';
+  if (el.value !== v) el.value = v;
+  var st = commPlanState(); if (st[i]) st[i].ratio = v;
+}
+/* 三币金额：格式化 + 用弹窗顶部汇率联动另外两个币种（与 commMoneyInput / benMoneyInput 同一套折算） */
+function commPlanMoneyInput(i, cur, el){
+  if (!el) return;
+  var raw = parseMoney(el.value);
+  el.dataset.raw = raw > 0 ? String(raw) : '';
+  el.value = String(el.value || '').trim() === '' ? '' : fmtMoney(cur, raw);
+  try { el.setSelectionRange(el.value.length, el.value.length); } catch(e){}
+  var st = commPlanState();
+  if (st[i]) st[i][cur] = el.value;
+  var rRMB = getCommRate('commFRateRMB'), rUSD = getCommRate('commFRateUSD');
+  var rmb = 0, usd = 0, vnd = 0;
+  if (cur === 'rmb'){ rmb = raw; if (rRMB) vnd = raw * rRMB; if (rRMB && rUSD) usd = vnd / rUSD; }
+  else if (cur === 'usd'){ usd = raw; if (rUSD) vnd = raw * rUSD; if (rUSD && rRMB) rmb = vnd / rRMB; }
+  else { vnd = raw; if (rRMB) rmb = raw / rRMB; if (rUSD) usd = raw / rUSD; }
+  var map = { rmb: rmb, usd: usd, vnd: vnd };
+  for (var k = 0; k < COMM_PLAN_CUR.length; k++){
+    var c = COMM_PLAN_CUR[k].c;
+    if (c === cur) continue;
+    var inp = document.getElementById('commPlan' + c.toUpperCase() + i);
+    if (!inp) continue;
+    var val = map[c];
+    inp.dataset.raw = val > 0 ? String(Math.round(val)) : '';
+    inp.value = val > 0 ? fmtMoney(c, val) : '';
+    if (st[i]) st[i][c] = inp.value;
+  }
+}
 
 /* ★COMM-PTCHECK-20261103★ 当前弹窗里「受益人需支付总额」的求和（取工作副本 window.__beneficiaries；
    编辑模式下以 COMM_RECORDS[__commEditIdx].beneficiaries 为准，二者指向同一份）。 */
@@ -13536,11 +13727,12 @@ function openCommissionAddModal(){
   var ov = document.getElementById('commissionAddModalOverlay');
   if (!ov) return;
   window.__commEditIdx = null;   // 关键：新增模式清除编辑上下文，确保 saveCommissionRecord 走新增分支
-  ['commFContract','commFDate','commFDepositDate','commFAcceptDate','commFEquipRMB','commFEquipUSD','commFEquipVND','commFRemark'].forEach(function(id){
+  ['commFContract','commFDate','commFDepositDate','commFAcceptDate','commFBenCount','commFEquipRMB','commFEquipUSD','commFEquipVND','commFRemark'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
-  // ★COMM-PTS-DEFAULT-20261103★ 佣金总点数：新增模式回填默认 2.5000%
+  // ★COMM-PTS-DEFAULT-20261103★ 佣金总点数：新增模式回填默认 4.5000%
   var _pp = document.getElementById('commFPoints'); if (_pp) _pp.value = COMM_POINTS_DEFAULT;
+  commPlanReset([]);   // ★COMM-PLAN-20261103★ 新增模式：受益人数为空 → 收益分配计划区块隐藏
   var _rr = document.getElementById('commFRateRMB'); if (_rr) _rr.value = COMM_RATE_DEFAULT.rmbvnd;
   var _ru = document.getElementById('commFRateUSD'); if (_ru) _ru.value = COMM_RATE_DEFAULT.usdvnd;
   var _p = document.getElementById('commFParties'); if (_p) _p.selectedIndex = 0;
@@ -13635,6 +13827,9 @@ function openCommissionEditModal(idx){
   // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期 / 佣金总点数 回填（老记录这两项为空）
   var _ad = document.getElementById('commFAcceptDate'); if (_ad) _ad.value = r.acceptDate || '';
   var _pt = document.getElementById('commFPoints');     if (_pt) _pt.value = r.points     || '';
+  // ★COMM-SWAP-BENCNT-20261103★ 受益人数回填（老记录为空）
+  var _bc = document.getElementById('commFBenCount');  if (_bc) _bc.value = r.benCount   || '';
+  commPlanReset(r.plan);   // ★COMM-PLAN-20261103★ 收益分配计划回填（行数由受益人数决定）
   document.getElementById('commFRemark').value   = r.remark    || '';
   // 标题与按钮按「编辑」模式套用三语（切换语言时由 applyLang → applyCommAddTitle 保持）
   applyCommAddTitle(true);
@@ -13713,6 +13908,8 @@ function saveCommissionRecord(){
     depositDate: v('commFDepositDate'),   // 定金给付时间（此前漏存 → 编辑后该字段丢失）
     acceptDate: v('commFAcceptDate'),     // ★COMM-ACCEPT-POINTS-20261103★ 项目验收日期（可选）
     points: v('commFPoints'),             // ★COMM-ACCEPT-POINTS-20261103★ 佣金总点数（百分比数值，4 位小数）
+    benCount: v('commFBenCount'),         // ★COMM-SWAP-BENCNT-20261103★ 受益人数（整数 1-10，可空）
+    plan: commPlanCollect(),              // ★COMM-PLAN-20261103★ 收益分配计划（人数 = 行数）
     currency: v('commFCurrency'),
     equipRMB: parseMoney(v('commFEquipRMB')) || '',
     equipUSD: parseMoney(v('commFEquipUSD')) || '',
@@ -16035,7 +16232,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z200";  // 版本标记：Z200 = 佣金总点数新增默认改为 4.5000%
+const PERM_BUILD = "build 2026-11-03-Z202";  // 版本标记：Z202 = 受益人数驱动的「收益分配计划」分行（受益人+佣金比率+三币金额）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
