@@ -4983,11 +4983,22 @@ function _ovLoadChartLib(cb){
   .modal-header { background:#ff7a1a; color:#fff; padding:8px 13px; display:flex; align-items:center; justify-content:space-between; cursor:move; user-select:none; }
   .modal-header span { font-size:11.2px; font-weight:600; }
   .modal-header .close { cursor:pointer; font-size:22px; line-height:1; }
-  /* 编辑用户权限弹窗：最大化/关闭按钮放进同一 flex 容器，确保真正一行、垂直居中 */
-  #mask .modal-header .modal-actions { display:inline-flex; align-items:center; gap:6px; }
+  /* ★MODAL-ACTIONS-20261103★ 编辑用户权限弹窗：最大化 □ 与关闭 × 作为一组标准图标按钮，
+     放在标题栏右侧 .modal-actions 容器内（内联、等高、等宽、同一水平线），不再绝对定位漂浮/重叠 */
+  #mask .modal-header .modal-actions { display:inline-flex; align-items:center; gap:8px; flex:0 0 auto; }
   #mask .modal-header .modal-actions .mmax-btn,
-  #mask .modal-header .modal-actions .close { position:static; top:auto; right:auto; margin:0; }
-  #mask .modal-header .modal-actions .close { width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; font-size:20px; }
+  #mask .modal-header .modal-actions .close {
+    position:static !important; top:auto !important; right:auto !important; left:auto !important;
+    float:none !important; margin:0 !important; padding:0 !important;
+    width:24px; height:24px; box-sizing:border-box;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.75);
+    border-radius:6px; color:#fff !important; font-size:14px; line-height:1;
+    cursor:pointer; transition:background .15s ease, border-color .15s ease;
+  }
+  #mask .modal-header .modal-actions .mmax-btn:hover,
+  #mask .modal-header .modal-actions .close:hover { background:rgba(255,255,255,.34); border-color:#fff; }
+  #mask .modal-header .modal-actions .close { font-size:17px; font-weight:600; }
   .modal-tabs { display:flex; background:#fafafa; border-bottom:1px solid #eee; }
   .modal-tabs .tab { padding:10px 16px; cursor:pointer; font-size:14px; color:#666; border-bottom:2px solid transparent; }
   .modal-tabs .tab.active { color:#ff7a1a; border-bottom-color:#ff7a1a; background:#fff; font-weight:600; }
@@ -16590,7 +16601,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z268";  // 版本标记：Z268 = 佣金总表删除「受益人&秘佣&支付详情」列（重复冗余入口，详情改由「编辑项目佣金」进入）：移除表头/行单元格/colgroup 1 列及对应宽度与 i18n 赋值，编辑列与备注列不变
+const PERM_BUILD = "build 2026-11-03-Z269";  // 版本标记：Z269 = 规范「编辑用户权限」弹窗右上角按钮：□ 最大化与 × 关闭放进标题栏 .modal-actions 内联成组（24×24 圆角、白色描边、hover 高亮），不再被搬出容器导致重叠/只剩一个图标
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -32858,6 +32869,14 @@ function _doExportOverviewPDF(){
       // 标题栏可能是 h2/h3 或 .modal-header/.cp-head/.cm-head 等。
       var head = box.querySelector('h2, h3, .modal-header, .cp-head, .cm-head, .cpr-head, .gsr-head, .addm-head, .addm-sum-head, .drawer-header, .appr-drawer-head, .rpt-head, .dash-chart-lightbox-head');
       if (head) {
+        /* ★MODAL-ACTIONS-20261103★ 标题栏若已有 .modal-actions 容器（如「编辑用户权限」弹窗），
+           □ 与 × 就成组放进该容器内（□ 在 × 左侧），不要再把 × 从容器里搬出去——
+           旧逻辑会 appendChild 到 .modal 末尾，导致右上角只剩一个孤零零的 □、按钮重叠错位。 */
+        var acts = head.querySelector('.modal-actions');
+        if (acts) {
+          if (btn.parentElement !== acts) acts.insertBefore(btn, acts.firstChild);
+          return;
+        }
         /* [ZIMODAL-20261029-FIX] ⚠ 绝不能把按钮塞进标题栏内部：
            本系统大量代码用 el('xxxTitle').innerText / innerHTML 重写标题（如 crmModalTitle），
            一旦按钮被放进 <h2>，下次切换语言/重开弹窗时会被整体清掉，
