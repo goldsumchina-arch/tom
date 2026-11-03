@@ -4800,7 +4800,8 @@ function _ovLoadChartLib(cb){
       <!-- ★COMM-LEDGER-ONLY-20261103★ 按要求移除「受益人明细表(benTable)」与「＋ 新增受益人」按钮：
            该明细的比率/需要支付/已支付/待支付/次数/状态，已全部由上方台账表承载，避免两处重复维护。 -->
       <div class="cf-section-title">
-        <span><span id="commBenSeq">#1</span> ： <span id="commSecDetail">佣金支付详情</span></span>
+        <!-- ★COMM-TITLE-20261103★ 去掉「#1 ：」序号前缀，改为完整标题（冒号并入文案，三语各自用对应冒号） -->
+        <span id="commSecDetail">每一位受益人的佣金支付详情：</span>
       </div>
     </div>
     </div>
@@ -7017,7 +7018,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     comm_paid_lock_msg:"金额和给付日期均已实现，证明该佣金已经支付，不得更改！若要更改请发起审批，审批需要经过 cuong、tom、travis 三人审批通过！",
     bp_ex_rate_one_warn:"换汇汇率不能为 1（值为 1 表示没有真实换汇），请修改后再保存！",
     comm_amt_cancel:"取消", comm_amt_confirm:"确认",
-    comm_sec_detail:"佣金支付详情", comm_sec_beneficiary:"① 受益人", comm_sec_secret:"② 秘密佣金", comm_sec_payment:"③ 支付详情", comm_fields_pending:"字段后续添加",
+    comm_sec_detail:"每一位受益人的佣金支付详情：", comm_sec_beneficiary:"① 受益人", comm_sec_secret:"② 秘密佣金", comm_sec_payment:"③ 支付详情", comm_fields_pending:"字段后续添加",
     comm_btn_add_beneficiary:"新增受益人", ben_sec_unpaid:"尚未支付总额",
     ben_sec_total:"受益人 & 需支付佣金总额 & 支付情况结论 & 重新激活",
     ben_lbl_conclusion:"该受益人全部佣金给付情况", ben_con_pending:"尚未完成", ben_con_done:"完成了该受益人的全部佣金支付！",
@@ -7806,7 +7807,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     comm_paid_lock_msg:"Both the amount and payment date have been entered, which proves this commission has already been paid and cannot be changed! To make changes, please initiate an approval - it must be approved by all three: cuong, tom, and travis!",
     bp_ex_rate_one_warn:"Exchange rate cannot be 1 (a rate of 1 means no real exchange happened). Please change it before saving!",
     comm_amt_cancel:"Cancel", comm_amt_confirm:"Confirm",
-    comm_sec_detail:"Commission Payment Details", comm_sec_beneficiary:"① Beneficiary", comm_sec_secret:"② Secret Commission", comm_sec_payment:"③ Payment Details", comm_fields_pending:"Fields to be added later",
+    comm_sec_detail:"Commission payment details for each beneficiary:", comm_sec_beneficiary:"① Beneficiary", comm_sec_secret:"② Secret Commission", comm_sec_payment:"③ Payment Details", comm_fields_pending:"Fields to be added later",
     comm_btn_add_beneficiary:"Add Beneficiary",
     ben_title:"Add Beneficiary", ben_edit_title:"Edit Beneficiary", ben_lbl_no:"No.", ben_lbl_name:"Beneficiary", ben_lbl_currency:"Payment Currency", ben_sec_total:"Total Amount Payable", ben_lbl_sign_date:"Contract Signing Date", ben_lbl_deposit_date:"Deposit Payment Date", ben_lbl_pay_count:"Payment Count", ben_sec_paid:"Total Amount Paid", ben_sec_unpaid:"Total Amount Unpaid",
     ben_sec_total:"Beneficiary & Total Commission Payable & Payment Conclusion & Reactivate",
@@ -8591,7 +8592,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
     comm_paid_lock_msg:"Số tiền và ngày chi trả đều đã được nhập, chứng tỏ hoa hồng này đã được thanh toán và không được thay đổi! Nếu muốn thay đổi, vui lòng khởi tạo phê duyệt - phê duyệt phải được cả ba người cuong, tom và travis thông qua!",
     bp_ex_rate_one_warn:"Tỷ giá đổi không được là 1 (tỷ giá 1 nghĩa là không có đổi ngoại tệ thực sự). Vui lòng sửa trước khi lưu!",
     comm_amt_cancel:"Hủy", comm_amt_confirm:"Xác nhận",
-    comm_sec_detail:"Chi tiết thanh toán hoa hồng", comm_sec_beneficiary:"① Người thụ hưởng", comm_sec_secret:"② Hoa hồng bí mật", comm_sec_payment:"③ Chi tiết thanh toán", comm_fields_pending:"Trường sẽ bổ sung sau",
+    comm_sec_detail:"Chi tiết thanh toán hoa hồng của từng người thụ hưởng:", comm_sec_beneficiary:"① Người thụ hưởng", comm_sec_secret:"② Hoa hồng bí mật", comm_sec_payment:"③ Chi tiết thanh toán", comm_fields_pending:"Trường sẽ bổ sung sau",
     comm_btn_add_beneficiary:"Thêm người thụ hưởng",
     ben_title:"Thêm người thụ hưởng", ben_edit_title:"Sửa ngườ thụ hưởng", ben_lbl_no:"STT", ben_lbl_name:"Người thụ hưởng", ben_lbl_currency:"Loại tiền TT", ben_sec_total:"Tổng số tiền phải trả", ben_lbl_sign_date:"Ngày ký HĐ", ben_lbl_deposit_date:"Ngày trả đặt cọc", ben_lbl_pay_count:"Số lần thanh toán", ben_sec_paid:"Tổng số tiền đã trả", ben_lbl_pay_nature:"Tính chất thanh toán", ben_lbl_note:"Ghi chú", ben_need_name:"Vui lòng nhập người thụ hưởng", ben_lbl_exchange:"Có quy đổi?",
     ben_empty:"Chưa có bản ghi. Nhấn 'Thêm người thụ hưởng' ở góc trên phải.",
@@ -12952,7 +12953,7 @@ function applyCommissionLang(){
   st('commLblRateRMB','comm_f_rate_rmb','计算提成的汇率 RMB-VND');
   st('commLblRateUSD','comm_f_rate_usd','计算提成的汇率 USD-VND');
   // 受益人&秘密佣金&支付详情（合并标题 + 多列表格）
-  st('commSecDetail','comm_sec_detail','佣金支付详情');
+  st('commSecDetail','comm_sec_detail','每一位受益人的佣金支付详情：');
   // 受益人表列头：全部走 ben_th_* 专用键（不与区块标题共用，避免 ben_sec_total 被覆盖）
   st('benThNo','ben_th_no','序号');
   st('benThName','ben_th_name','受益人');
@@ -16985,7 +16986,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z236";  // 版本标记：Z236 = 修复改名/改比率后台账表不实时同步：commPlanNameChange/commPlanCustomInput/commPlanRatioInput/saveBeneficiary 保存或输入后立即重渲染台账表
+const PERM_BUILD = "build 2026-11-03-Z237";  // 版本标记：Z237 = 区块标题去掉「#1 ：」前缀，改为「每一位受益人的佣金支付详情：」（三语：Commission payment details for each beneficiary: / Chi tiết thanh toán hoa hồng của từng người thụ hưởng:）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
