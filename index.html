@@ -2324,11 +2324,14 @@ function _ovLoadChartLib(cb){
     flex:1 1 0; min-width:0; box-sizing:border-box;
     display:flex; flex-wrap:nowrap; align-items:flex-end; gap:9px;
   }
-  /* ★COMM-PLAN-VSEP-20261103★ 左右两个受益人之间：正中黑色垂直虚线分隔 */
-  .comm-plan-line > .comm-plan-row + .comm-plan-row {
+  /* ★COMM-PLAN-VSEP-20261103★ 左右两格之间：正中黑色垂直虚线分隔
+     （右侧没人时用 .comm-plan-ghost 占位，同样画线 —— 1、3、5、7、9 单人行也有中线） */
+  .comm-plan-line > .comm-plan-row + .comm-plan-row,
+  .comm-plan-line > .comm-plan-row + .comm-plan-ghost {
     border-left:1px dashed #000; margin-left:18px; padding-left:18px;
   }
-  .comm-plan-ghost { flex:1 1 0; min-width:0; }
+  /* ghost 没有内容，必须拉伸到整行高度，中线才不会变成一个小点 */
+  .comm-plan-ghost { flex:1 1 0; min-width:0; align-self:stretch; box-sizing:border-box; }
   .comm-plan-row > .login-field { flex:1 1 0; min-width:0; }
   /* 受益人格给多一点宽度（下拉整格铺满，不出现右侧豁口） */
   .comm-plan-row > .login-field.comm-plan-name { flex:1.15 1 0; }
@@ -16344,7 +16347,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z208";  // 版本标记：Z208 = 左右受益人之间加黑色垂直虚线 + +/-按钮常显
+const PERM_BUILD = "build 2026-11-03-Z209";  // 版本标记：Z209 = 单行人(1/3/5/7/9)也画中线黑色垂直虚线
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
