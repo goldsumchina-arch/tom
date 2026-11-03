@@ -5219,6 +5219,8 @@ function _ovLoadChartLib(cb){
   #view-approvals .appr-table-wrap {
     overflow:visible;             /* 关键：不能是 auto，否则 sticky 只相对它生效、不再固定 */
     max-height:none; min-height:0; flex:none;
+    box-sizing:border-box;        /* ★APPR-COL-NOHSCROLL-20261103★ 否则 100% 宽 + 左右各 1px 边框 → 页面多出 2px 横滚 */
+    width:100%;
   }
   #view-approvals table.appr-table thead th {
     position:sticky; top:calc(var(--tb-h, 56px) + 4px + var(--appr-head-h, 116px)); z-index:8;
@@ -5261,17 +5263,22 @@ function _ovLoadChartLib(cb){
   table.appr-table thead th .th-filter { display:flex; }
   table.appr-table thead th input.th-filter-input { width:100%; min-width:70px; box-sizing:border-box; border:1px solid #f1c79f; border-radius:14px; padding:3px 9px; font-size:12px; color:#333; background:#fff7f0; }
   table.appr-table thead th input.th-filter-input::placeholder { color:#c79b78; }
-  /* ★APPR-TABLE-FIT-20261103★ 列宽分配（含序号 56px）：发起人 8% / 发起时间 11% / 待审批内容 23% /
-     审批人 11% / 审批结果 12% / 审批状态 8% / 审批时间 11% / 操作 16% —— 合计 100%，永不出横向滚动条 */
-  table.appr-table thead th:nth-child(1) { width:56px; }
-  table.appr-table thead th:nth-child(2) { width:8%; }
+  /* ★APPR-COL-NOHSCROLL-20261103★ 列宽全部改成百分比且合计 100%（序号也算进去）：
+     序号 5% / 发起人 9% / 发起时间 11% / 待审批内容 22% / 审批人 9% / 审批结果 12% / 审批状态 8% / 审批时间 11% / 操作 13%
+     —— 旧规则里序号是 56px + 其余 100%，合计 100%+56px，table-layout:fixed 会按「列宽之和」撑宽表格，
+        于是底部出现水平滚动条、最右侧「操作」列被切掉。改成纯百分比即彻底消除横向滚动。 */
+  table.appr-table thead th:nth-child(1) { width:5%; }
+  table.appr-table thead th:nth-child(2) { width:9%; }
   table.appr-table thead th:nth-child(3) { width:11%; }
-  table.appr-table thead th:nth-child(4) { width:23%; }
-  table.appr-table thead th:nth-child(5) { width:11%; }
+  table.appr-table thead th:nth-child(4) { width:22%; }
+  table.appr-table thead th:nth-child(5) { width:9%; }
   table.appr-table thead th:nth-child(6) { width:12%; }
   table.appr-table thead th:nth-child(7) { width:8%; }
   table.appr-table thead th:nth-child(8) { width:11%; }
-  table.appr-table thead th:nth-child(9) { width:16%; }
+  table.appr-table thead th:nth-child(9) { width:13%; }
+  /* ★APPR-COL-NOHSCROLL-20261103★ 固定 px 宽（54/150）会把列宽之和顶出 100%，在审批表里必须让位给百分比 */
+  table.appr-table .appr-col-no { width:auto; }
+  table.appr-table .appr-col-action { width:auto; }
   /* 固定列宽后单元格内容必须可换行，否则又会撑破列宽 */
   table.appr-table thead th,
   table.appr-table tbody td { overflow-wrap:anywhere; word-break:break-word; }
@@ -5289,7 +5296,8 @@ function _ovLoadChartLib(cb){
   table.appr-table tbody tr:hover { background:#fff9c4; }
   .appr-col-no { width:54px; text-align:center; }
   .appr-col-action { width:150px; text-align:center; }
-  table.appr-table td.appr-col-action { white-space:nowrap; }
+  /* ★APPR-COL-NOHSCROLL-20261103★ 操作列变窄后允许「通过/拒绝」两个按钮折行，不再把内容挤出列外 */
+  table.appr-table td.appr-col-action { white-space:normal; }
   .appr-cell-title { font-weight:600; color:#333; }
   .appr-cell-avatars { display:flex; flex-wrap:wrap; gap:4px; }
   .appr-cell-avatars .appr-avatar { font-size:11px; }
@@ -5358,7 +5366,9 @@ function _ovLoadChartLib(cb){
   .appr-btn.reject { background:#d23b3b; color:#fff; }
   .appr-btn.reject:hover { background:#b62f2f; }
   .appr-btn:disabled { opacity:.5; cursor:not-allowed; }
-  @media (max-width:640px){ .appr-table-wrap{ border-radius:8px; } table.appr-table{ min-width:760px; } }
+  /* ★APPR-COL-NOHSCROLL-20261103★ 窄屏也不再给表格设 min-width:760px：
+     否则列宽之和 > 容器 → 底部又出现水平滚动条、最右列被切掉。改为纯百分比压缩，永远看得到全部列。 */
+  @media (max-width:640px){ .appr-table-wrap{ border-radius:8px; } table.appr-table{ min-width:0; } }
 
   /* 审批中心抽屉 */
   .drawer-mask { position:fixed; top:56px; left:0; right:0; bottom:0; background:rgba(0,0,0,.3); display:none; z-index:1100; }
@@ -16900,7 +16910,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z278";  // 版本标记：Z278 = 审批页做与用户页相同的改造：去掉表格内部纵向滚动条改用页面最右侧滚动条；标题行（审批+全部/我发起的/待我审批）、统计条、橙色表头三段 sticky 固定在顶栏下方（--appr-h1 / --appr-head-h 实测写入）
+const PERM_BUILD = "build 2026-11-03-Z279";  // 版本标记：Z279 = 审批表列宽改纯百分比合计 100%（序号 5/发起人 9/发起时间 11/待审批内容 22/审批人 9/审批结果 12/审批状态 8/审批时间 11/操作 13），去掉 56px+100% 与 54/150px 固定宽、窄屏 760px min-width、容器 box-sizing 补 border → 底部水平滚动条消失，9 列全部可见
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
