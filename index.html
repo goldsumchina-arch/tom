@@ -2139,15 +2139,17 @@ function _ovLoadChartLib(cb){
   .comm-point-check .cpc-ledger colgroup col:nth-child(12) { width:7.2%  !important; }  /* 待支付 USD */
   .comm-point-check .cpc-ledger colgroup col:nth-child(13) { width:10.43% !important; } /* 待支付 VND */
   .comm-point-check .cpc-ledger colgroup col:nth-child(14) { width:6.0%  !important; }  /* 支付状态 */
+  /* ★COMM-LEDGER-CENTER-20261103★ 底部总计行：金额也左右居中（原来右对齐） */
   .comm-point-check .cpc-ledger tfoot td { background:#f7fafd; border-top:2px solid #1b1b1b;
-    color:#2c3e50; font-weight:800; text-align:right; }
+    color:#2c3e50; font-weight:800; text-align:center; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-total { text-align:center; color:#44546a; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-ratio { text-align:center; color:#e8720c; }
   .comm-point-check .cpc-ledger tfoot td.cpc-td-cnt { text-align:center; color:#44546a; }
   .comm-point-check .cpc-ledger tfoot td.cpc-rmb { color:#d64541; }
   .comm-point-check .cpc-ledger tfoot td.cpc-usd { color:#2e86de; }
   .comm-point-check .cpc-ledger tfoot td.cpc-vnd { color:#1e9e6a; }
-  .comm-point-check .cpc-ledger tbody td { color:#2c3e50; font-weight:700; text-align:right; }
+  /* ★COMM-LEDGER-CENTER-20261103★ 数据行所有单元格（含金额）左右居中，不再右对齐 */
+  .comm-point-check .cpc-ledger tbody td { color:#2c3e50; font-weight:700; text-align:center; }
   .comm-point-check .cpc-ledger tbody td.cpc-td-seq,
   .comm-point-check .cpc-ledger tbody td.cpc-td-ratio,
   .comm-point-check .cpc-ledger tbody td.cpc-td-cnt { text-align:center; color:#8a9bb0; }
@@ -16586,7 +16588,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z265";  // 版本标记：Z265 = 个人佣金台账表金额全部改为整数显示（新增 fmtPlanMoneyInt 四舍五入、不足 1 显示 —），需要支付/已经支付/待支付三组共 9 列及总计行不再带 4 位小数
+const PERM_BUILD = "build 2026-11-03-Z266";  // 版本标记：Z266 = 个人佣金台账表全部单元格（表头/数据行/总计行，含 9 个金额列）改为左右居中显示（原来金额列右对齐）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
