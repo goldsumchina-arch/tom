@@ -13892,7 +13892,8 @@ function commPlanReset(plan){
 }
 function commPlanCollect(){
   return commPlanState().map(function(r){
-    return { name:r.name||'', custom:r.custom||'', ratio:r.ratio||'', rmb:r.rmb||'', usd:r.usd||'', vnd:r.vnd||'' };
+    // ★COMM-RATIO-4D-20261103★ 比率统一 4 位小数存（输入 2 → 2.0000），金额同步重算后取值
+    return { name:r.name||'', custom:r.custom||'', ratio:fmtPlanRatio4(r.ratio), rmb:r.rmb||'', usd:r.usd||'', vnd:r.vnd||'' };
   });
 }
 /* 渲染：行数 = 受益人数；人数变小时多余行数据随行一起丢弃（符合「人数即行数」语义） */
@@ -13948,7 +13949,7 @@ function commPlanRowHtml(i, r, t){
     +   '</div>'
     // ② 佣金比率（4 位小数 + 内嵌 %）
     +   '<div class="login-field comm-plan-ratio"><label>' + _escComm(t.comm_plan_th_ratio || '佣金比率（%）') + '</label>'
-    +     '<div class="cf-suffix-wrap"><input id="commPlanRatio' + i + '" type="text" inputmode="decimal" placeholder="0.0000" value="' + _escComm(r.ratio || '') + '" autocomplete="off" oninput="commPlanRatioInput(' + i + ',this)"><span class="cf-suffix" aria-hidden="true">%</span></div>'
+    +     '<div class="cf-suffix-wrap"><input id="commPlanRatio' + i + '" type="text" inputmode="decimal" placeholder="0.0000" value="' + _escComm(fmtPlanRatio4(r.ratio)) + '" autocomplete="off" oninput="commPlanRatioInput(' + i + ',this)" onblur="commPlanRatioBlur(' + i + ',this)" onfocus="commPlanRatioFocus(this)"><span class="cf-suffix" aria-hidden="true">%</span></div>'
     +   '</div>';
   // ③ RMB / USD / VND（★COMM-PLAN-CURSYM-20261103★ 标签只留货币符号 ¥ / $ / ₫，不再写汉字）
   //    ★COMM-PLAN-CALC-20261103★ 金额 = 设备金额(同币种) × 佣金比率(%)，自动算出、只读不可改
@@ -13993,6 +13994,32 @@ function commPlanNameChange(i, el){
 function commPlanCustomInput(i, el){
   var st = commPlanState(); if (!st[i]) return;
   st[i].custom = el ? el.value : '';
+}
+/* ★COMM-RATIO-4D-20261103★ 佣金比率统一 4 位小数：输入 2 → 显示/保存 2.0000
+   输入过程中不强行补零（否则想打 2.5 会被打断），失焦那一下补齐；渲染回填也走这里 */
+function fmtPlanRatio4(v){
+  var s = String(v == null ? '' : v).trim();
+  if (!s) return '';
+  var n = parseFloat(s);
+  if (!isFinite(n)) return '';
+  if (n < 0) n = 0;
+  if (n > 100) n = 100;
+  return n.toFixed(4);
+}
+/* 失焦 / change：补齐到 4 位小数后回写，并触发金额重算 */
+function commPlanRatioBlur(i, el){
+  if (!el) return;
+  var out = fmtPlanRatio4(el.value);
+  if (el.value !== out) el.value = out;
+  var st = commPlanState(); if (st[i]) st[i].ratio = out;
+  fitNumInput(el);
+  commPlanCalcAll();
+}
+/* 聚焦：值是「2.0000」这种全零小数 → 直接全选，键入即覆盖，省得删 5 个字符 */
+function commPlanRatioFocus(el){
+  if (!el) return;
+  var v = String(el.value || '');
+  if (/^\d+\.0{4}$/.test(v)) setTimeout(function(){ try { el.select(); } catch(e){} }, 0);
 }
 /* 佣金比率：只允许数字 + 一个小数点，最多 4 位小数，上限 100 */
 function commPlanRatioInput(i, el){
@@ -16670,7 +16697,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z218";  // 版本标记：Z218 = 「保存」只保存数据、不关闭弹窗；新增保存后自动转编辑态（不会重复新增）
+const PERM_BUILD = "build 2026-11-03-Z219";  // 版本标记：Z219 = 佣金比率统一 4 位小数（输入 2 → 2.0000，失焦补齐、保存/回填同格式）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
