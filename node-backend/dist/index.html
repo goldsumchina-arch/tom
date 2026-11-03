@@ -7054,7 +7054,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
   comm_led_seq:"序号", comm_led_ben:"受益人", comm_led_ratio:"佣金比率",
   comm_led_payable:"需要支付佣金", comm_led_pay_count:"支付次数",
   comm_led_paid:"已经支付佣金", comm_led_unpaid:"待支付佣金", comm_led_status:"支付状态",
-  comm_led_st_done:"已结清", comm_led_st_part:"部分支付", comm_led_st_none:"未支付", comm_led_total:"总计"
+  comm_led_st_done:"完成支付！", comm_led_st_part:"部分支付", comm_led_st_none:"未支付", comm_led_total:"总计"
   },
   en: { 
     // ---- Login page / Reset Password / Forget Password (top-level keys for data-i18n scan) ----
@@ -7841,7 +7841,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
   comm_led_seq:"No.", comm_led_ben:"Beneficiary", comm_led_ratio:"Commission Rate",
   comm_led_payable:"Commission Payable", comm_led_pay_count:"Payments",
   comm_led_paid:"Commission Paid", comm_led_unpaid:"Commission Outstanding", comm_led_status:"Status",
-  comm_led_st_done:"Settled", comm_led_st_part:"Partially Paid", comm_led_st_none:"Unpaid", comm_led_total:"Total"
+  comm_led_st_done:"Payment Complete!", comm_led_st_part:"Partially Paid", comm_led_st_none:"Unpaid", comm_led_total:"Total"
   },
   vi: { 
     // ---- Trang đăng nhập / Đặt lại mật khẩu / Quên mật khẩu (key cấp cao nhất) ----
@@ -8626,7 +8626,7 @@ crm_yes:"Có", crm_no_yes:"Không", lostRestore:"Chuyển về Dự án Tiềm n
   comm_led_seq:"STT", comm_led_ben:"Người thụ hưởng", comm_led_ratio:"Tỷ lệ hoa hồng",
   comm_led_payable:"Hoa hồng cần trả", comm_led_pay_count:"Số lần thanh toán",
   comm_led_paid:"Hoa hồng đã trả", comm_led_unpaid:"Hoa hồng chưa trả", comm_led_status:"Trạng thái",
-  comm_led_st_done:"Đã tất toán", comm_led_st_part:"Trả một phần", comm_led_st_none:"Chưa trả", comm_led_total:"Tổng cộng"
+  comm_led_st_done:"Đã thanh toán xong!", comm_led_st_part:"Trả một phần", comm_led_st_none:"Chưa trả", comm_led_total:"Tổng cộng"
   }
 };
 
@@ -14201,6 +14201,102 @@ function _commLedgerFit(){
   verEl.textContent = bd + ' · ' + Math.round(tbl.getBoundingClientRect().width)
     + ' / ' + wrap.clientWidth + ' · ' + size + 'px';
 }
+/* ★COMM-LEDGER-CARD-20261103★ 台账 ↔ 支付明细卡片联动
+   ① 支付次数 = 该受益人卡片记录行数（= 卡片顶部「总计付款 N 次」）
+   ② 已经支付佣金 = 卡片「实际应支付金额」小计（RMB/USD/VND 分别求和）
+   ③ 支付状态：卡片「总计理论付款」任一币种 ≥ 需要支付佣金 → 完成支付（绿色）
+   卡片无数据时回退到旧的受益人名录汇总（保持历史记录可用）。 */
+function _commCardStats(i){
+  var rows = (window.__benCardPayments && window.__benCardPayments[i]) || [];
+  var sum = (typeof _benCardSum === 'function') ? _benCardSum(rows)
+    : { cnt: 0, theo: { rmb: 0, usd: 0, vnd: 0 }, act: { rmb: 0, usd: 0, vnd: 0 } };
+  return { cnt: rows.length, theo: sum.theo, act: sum.act, has: rows.length > 0 };
+}
+function _commLedgerState(needR, needU, needV, theoR, theoU, theoV, paidR, paidU, paidV){
+  var t = T();
+  var doneTxt = t.comm_led_st_done || '完成支付！';
+  var partTxt = t.comm_led_st_part || '部分支付';
+  var noneTxt = t.comm_led_st_none || '未支付';
+  if ((needR > 0 && theoR >= needR - 0.01)
+    || (needU > 0 && theoU >= needU - 0.01)
+    || (needV > 0 && theoV >= needV - 0.01)) return { cls: 'cpc-st-done', txt: doneTxt };
+  if (paidR > 0 || paidU > 0 || paidV > 0) return { cls: 'cpc-st-part', txt: partTxt };
+  return { cls: 'cpc-st-none', txt: noneTxt };
+}
+function _commLedgerCells(i){
+  var st = (typeof commPlanState === 'function') ? commPlanState() : [];
+  var r = st[i] || {};
+  var rr = _commParseNum(r.rmb), uu = _commParseNum(r.usd), vv = _commParseNum(r.vnd);
+  var cst = _commCardStats(i);
+  var payCnt = 0, pR = 0, pU = 0, pV = 0;
+  if (cst.has){
+    payCnt = cst.cnt; pR = cst.act.rmb; pU = cst.act.usd; pV = cst.act.vnd;
+  } else {
+    var bens = window.__beneficiaries || [];
+    var key = String(r.name || '').trim().toUpperCase();
+    bens.forEach(function(b){
+      if (String(b.name || '').trim().toUpperCase() !== key) return;
+      payCnt += Number(b.payCount) || ((b.payments || []).length);
+      pR += _commParseNum(b.paidRMB); pU += _commParseNum(b.paidUSD); pV += _commParseNum(b.paidVND);
+    });
+  }
+  return { needR: rr, needU: uu, needV: vv, payCnt: payCnt, pR: pR, pU: pU, pV: pV,
+    uR: rr - pR, uU: uu - pU, uV: vv - pV, theo: cst.theo };
+}
+/* 卡片内金额变动 → 只刷新台账对应行的 支付次数/已支付/待支付/状态，不整表重渲染 */
+function _commLedgerRowSync(i){
+  var c = _commLedgerCells(i);
+  var set = function(id, html){ var el = document.getElementById(id); if (el) el.innerHTML = html; };
+  set('cpcCnt_' + i, c.payCnt > 0 ? String(c.payCnt) : '—');
+  set('cpcPaid_' + i + '_rmb', c.pR > 0 ? fmtPlanMoney('rmb', c.pR) : '—');
+  set('cpcPaid_' + i + '_usd', c.pU > 0 ? fmtPlanMoney('usd', c.pU) : '—');
+  set('cpcPaid_' + i + '_vnd', c.pV > 0 ? fmtPlanMoney('vnd', c.pV) : '—');
+  set('cpcUnpaid_' + i + '_rmb', c.uR > 0.01 ? fmtPlanMoney('rmb', c.uR) : '—');
+  set('cpcUnpaid_' + i + '_usd', c.uU > 0.01 ? fmtPlanMoney('usd', c.uU) : '—');
+  set('cpcUnpaid_' + i + '_vnd', c.uV > 0.01 ? fmtPlanMoney('vnd', c.uV) : '—');
+  var stEl = document.getElementById('cpcSt_' + i);
+  if (stEl){
+    var s = _commLedgerState(c.needR, c.needU, c.needV, c.theo.rmb, c.theo.usd, c.theo.vnd, c.pR, c.pU, c.pV);
+    stEl.className = s.cls; stEl.textContent = s.txt;
+  }
+}
+/* 台账底部总计行同步（按已渲染的行重新汇总） */
+function _commLedgerFootSync(){
+  var st = (typeof commPlanState === 'function') ? commPlanState() : [];
+  var sumPct = 0, sumR = 0, sumU = 0, sumV = 0;
+  var totCnt = 0, totPR = 0, totPU = 0, totPV = 0, totUR = 0, totUU = 0, totUV = 0;
+  var totTR = 0, totTU = 0, totTV = 0;
+  var i = 0, guard = 0;
+  while (document.getElementById('cpcRow_' + i) && guard < 500){
+    _commLedgerRowSync(i);   /* 顺带把该行的 次数/已支付/待支付/状态 一并对齐 */
+    var c = _commLedgerCells(i);
+    var r = st[i] || {};
+    var p = parseFloat(String(r.ratio || '').replace(/[^\d.]/g, ''));
+    if (isFinite(p) && p > 0) sumPct += p;
+    sumR += c.needR; sumU += c.needU; sumV += c.needV;
+    totCnt += c.payCnt; totPR += c.pR; totPU += c.pU; totPV += c.pV;
+    totUR += Math.max(0, c.uR); totUU += Math.max(0, c.uU); totUV += Math.max(0, c.uV);
+    totTR += c.theo.rmb; totTU += c.theo.usd; totTV += c.theo.vnd;
+    i++; guard++;
+  }
+  var set = function(id, html){ var el = document.getElementById(id); if (el) el.innerHTML = html; };
+  set('cpcFtPct', sumPct.toFixed(4) + '%');
+  set('cpcFtNeed_rmb', sumR > 0 ? fmtPlanMoney('rmb', sumR) : '—');
+  set('cpcFtNeed_usd', sumU > 0 ? fmtPlanMoney('usd', sumU) : '—');
+  set('cpcFtNeed_vnd', sumV > 0 ? fmtPlanMoney('vnd', sumV) : '—');
+  set('cpcFtCnt', totCnt > 0 ? String(totCnt) : '—');
+  set('cpcFtPaid_rmb', totPR > 0 ? fmtPlanMoney('rmb', totPR) : '—');
+  set('cpcFtPaid_usd', totPU > 0 ? fmtPlanMoney('usd', totPU) : '—');
+  set('cpcFtPaid_vnd', totPV > 0 ? fmtPlanMoney('vnd', totPV) : '—');
+  set('cpcFtUnpaid_rmb', totUR > 0.01 ? fmtPlanMoney('rmb', totUR) : '—');
+  set('cpcFtUnpaid_usd', totUU > 0.01 ? fmtPlanMoney('usd', totUU) : '—');
+  set('cpcFtUnpaid_vnd', totUV > 0.01 ? fmtPlanMoney('vnd', totUV) : '—');
+  var stEl = document.getElementById('cpcFtStatus');
+  if (stEl){
+    var s = _commLedgerState(sumR, sumU, sumV, totTR, totTU, totTV, totPR, totPU, totPV);
+    stEl.className = s.cls; stEl.textContent = s.txt;
+  }
+}
 /* ★COMM-PT-DETAIL-20261103★ 佣金总点数 · 预期佣金与反向校验
    ① 预期佣金 = 设备金额 × 总点数（显示总比率 + 三币总额，蓝/红/绿）
    ② 受益人 N 名 + 逐人「#序号 名字 比率 三币金额」
@@ -14247,6 +14343,8 @@ function commPointCheck(){
   var sumR = 0, sumU = 0, sumV = 0, sumPct = 0, bodyHtml = '';
   // ★COMM-LEDGER-TOTAL-20261103★ 纵向合计（总计行）：支付次数 / 已支付三币 / 待支付三币
   var totCnt = 0, totPR = 0, totPU = 0, totPV = 0, totUR = 0, totUU = 0, totUV = 0;
+  // ★COMM-LEDGER-CARD-20261103★ 总计行同时累计「理论应支付金额」，用于底部状态判据
+  var totTR = 0, totTU = 0, totTV = 0;
   var H = function(k, fb){ return t[k] || fb; };
   for (var i = 0; i < n; i++){
     var r = st[i] || { name:'', custom:'', ratio:'', rmb:'', usd:'', vnd:'' };
@@ -14256,45 +14354,39 @@ function commPointCheck(){
     var rr = _commParseNum(r.rmb), uu = _commParseNum(r.usd), vv = _commParseNum(r.vnd);
     sumR += rr; sumU += uu; sumV += vv;
     var nm = String(r.name === 'OTHER' ? (r.custom || 'OTHER') : (r.name || '')).trim();
-    // 该受益人已录入的收款记录（按 L1/C1/TV/TM/OTHER 同名汇总）
-    var hit = bens.filter(function(b){
-      return String(b.name || '').trim().toUpperCase() === String(r.name || '').trim().toUpperCase();
-    });
-    var payCnt = 0, pR = 0, pU = 0, pV = 0;
-    hit.forEach(function(b){
-      payCnt += Number(b.payCount) || ((b.payments || []).length);
-      pR += _commParseNum(b.paidRMB); pU += _commParseNum(b.paidUSD); pV += _commParseNum(b.paidVND);
-    });
-    var uR = rr - pR, uU = uu - pU, uV = vv - pV;   // 待支付 = 需要支付 − 已经支付
+    // ★COMM-LEDGER-CARD-20261103★ 支付次数/已支付/状态改为与支付明细卡片联动（无卡片数据时回退旧汇总）
+    var lc = _commLedgerCells(i);
+    var payCnt = lc.payCnt, pR = lc.pR, pU = lc.pU, pV = lc.pV;
+    var uR = lc.uR, uU = lc.uU, uV = lc.uV;   // 待支付 = 需要支付 − 已经支付
     totCnt += payCnt;
     totPR += pR; totPU += pU; totPV += pV;
     totUR += Math.max(0, uR); totUU += Math.max(0, uU); totUV += Math.max(0, uV);
-    var stCls = 'cpc-st-none', stTxt = H('comm_led_st_none', '未支付');
-    if (rr > 0 && pR >= rr - 0.01 && pU >= uu - 0.01 && pV >= vv - 0.01){ stCls = 'cpc-st-done'; stTxt = H('comm_led_st_done', '已结清'); }
-    else if (pR > 0 || pU > 0 || pV > 0){ stCls = 'cpc-st-part'; stTxt = H('comm_led_st_part', '部分支付'); }
+    totTR += lc.theo.rmb; totTU += lc.theo.usd; totTV += lc.theo.vnd;
+    var stObj = _commLedgerState(rr, uu, vv, lc.theo.rmb, lc.theo.usd, lc.theo.vnd, pR, pU, pV);
+    var stCls = stObj.cls, stTxt = stObj.txt;
     // ★COMM-LEDGER-20261103★ 需要支付 / 已支付 / 待支付 各占三列（RMB·USD·VND 分列 → 货币符号天然对齐）
-    bodyHtml += '<tr>'
+    bodyHtml += '<tr id="cpcRow_' + i + '">'
       +   '<td class="cpc-td-seq">#' + (i + 1) + '</td>'
       +   '<td class="cpc-td-name">' + _escComm(nm || '—') + '</td>'
       +   '<td class="cpc-td-ratio">' + (okP ? fmtPlanRatio4(r.ratio) + '%' : '—') + '</td>'
       +   '<td class="cpc-rmb">' + (rr > 0 ? fmtPlanMoney('rmb', rr) : '—') + '</td>'
       +   '<td class="cpc-usd">' + (uu > 0 ? fmtPlanMoney('usd', uu) : '—') + '</td>'
       +   '<td class="cpc-vnd">' + (vv > 0 ? fmtPlanMoney('vnd', vv) : '—') + '</td>'
-      +   '<td class="cpc-td-cnt">' + (payCnt > 0 ? payCnt : '—') + '</td>'
-      +   '<td class="cpc-rmb">' + (pR > 0 ? fmtPlanMoney('rmb', pR) : '—') + '</td>'
-      +   '<td class="cpc-usd">' + (pU > 0 ? fmtPlanMoney('usd', pU) : '—') + '</td>'
-      +   '<td class="cpc-vnd">' + (pV > 0 ? fmtPlanMoney('vnd', pV) : '—') + '</td>'
-      +   '<td class="cpc-rmb">' + (uR > 0.01 ? fmtPlanMoney('rmb', uR) : '—') + '</td>'
-      +   '<td class="cpc-usd">' + (uU > 0.01 ? fmtPlanMoney('usd', uU) : '—') + '</td>'
-      +   '<td class="cpc-vnd">' + (uV > 0.01 ? fmtPlanMoney('vnd', uV) : '—') + '</td>'
-      +   '<td class="' + stCls + '">' + stTxt + '</td>'
+      +   '<td class="cpc-td-cnt" id="cpcCnt_' + i + '">' + (payCnt > 0 ? payCnt : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcPaid_' + i + '_rmb">' + (pR > 0 ? fmtPlanMoney('rmb', pR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcPaid_' + i + '_usd">' + (pU > 0 ? fmtPlanMoney('usd', pU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcPaid_' + i + '_vnd">' + (pV > 0 ? fmtPlanMoney('vnd', pV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcUnpaid_' + i + '_rmb">' + (uR > 0.01 ? fmtPlanMoney('rmb', uR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcUnpaid_' + i + '_usd">' + (uU > 0.01 ? fmtPlanMoney('usd', uU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcUnpaid_' + i + '_vnd">' + (uV > 0.01 ? fmtPlanMoney('vnd', uV) : '—') + '</td>'
+      +   '<td class="' + stCls + '" id="cpcSt_' + i + '">' + stTxt + '</td>'
       + '</tr>';
   }
   if (listEl){
     // 总计行状态：与明细同一判据（全部付清 / 付了一部分 / 一分未付）
-    var tCls = 'cpc-st-none', tTxt = H('comm_led_st_none', '未支付');
-    if (sumR > 0 && totPR >= sumR - 0.01 && totPU >= sumU - 0.01 && totPV >= sumV - 0.01){ tCls = 'cpc-st-done'; tTxt = H('comm_led_st_done', '已结清'); }
-    else if (totPR > 0 || totPU > 0 || totPV > 0){ tCls = 'cpc-st-part'; tTxt = H('comm_led_st_part', '部分支付'); }
+    // ★COMM-LEDGER-CARD-20261103★ 总计行状态：与明细同一判据（理论任一币种 ≥ 需要支付 → 完成支付）
+    var tSt = _commLedgerState(sumR, sumU, sumV, totTR, totTU, totTV, totPR, totPU, totPV);
+    var tCls = tSt.cls, tTxt = tSt.txt;
     // ★COMM-LEDGER-WIDTH-20261103★ 百分比列宽：序号 1.7 / 受益人 3.0 / 比率 3.3 / 次数 2.6 / 状态 4.4（合计 15%），
     // 剩余 85% 平分给 9 个金额列（RMB·USD 各 8.5%，VND 11%，VND 位数最长）
     var colHtml = '<colgroup>'
@@ -14324,18 +14416,18 @@ function commPointCheck(){
       + '</tbody>'
       + '<tfoot><tr>'
       +   '<td class="cpc-td-total" colspan="2">' + H('comm_led_total', '总计') + '</td>'
-      +   '<td class="cpc-td-ratio">' + sumPct.toFixed(4) + '%</td>'
-      +   '<td class="cpc-rmb">' + (sumR > 0 ? fmtPlanMoney('rmb', sumR) : '—') + '</td>'
-      +   '<td class="cpc-usd">' + (sumU > 0 ? fmtPlanMoney('usd', sumU) : '—') + '</td>'
-      +   '<td class="cpc-vnd">' + (sumV > 0 ? fmtPlanMoney('vnd', sumV) : '—') + '</td>'
-      +   '<td class="cpc-td-cnt">' + (totCnt > 0 ? totCnt : '—') + '</td>'
-      +   '<td class="cpc-rmb">' + (totPR > 0 ? fmtPlanMoney('rmb', totPR) : '—') + '</td>'
-      +   '<td class="cpc-usd">' + (totPU > 0 ? fmtPlanMoney('usd', totPU) : '—') + '</td>'
-      +   '<td class="cpc-vnd">' + (totPV > 0 ? fmtPlanMoney('vnd', totPV) : '—') + '</td>'
-      +   '<td class="cpc-rmb">' + (totUR > 0.01 ? fmtPlanMoney('rmb', totUR) : '—') + '</td>'
-      +   '<td class="cpc-usd">' + (totUU > 0.01 ? fmtPlanMoney('usd', totUU) : '—') + '</td>'
-      +   '<td class="cpc-vnd">' + (totUV > 0.01 ? fmtPlanMoney('vnd', totUV) : '—') + '</td>'
-      +   '<td class="' + tCls + '">' + tTxt + '</td>'
+      +   '<td class="cpc-td-ratio" id="cpcFtPct">' + sumPct.toFixed(4) + '%</td>'
+      +   '<td class="cpc-rmb" id="cpcFtNeed_rmb">' + (sumR > 0 ? fmtPlanMoney('rmb', sumR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcFtNeed_usd">' + (sumU > 0 ? fmtPlanMoney('usd', sumU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcFtNeed_vnd">' + (sumV > 0 ? fmtPlanMoney('vnd', sumV) : '—') + '</td>'
+      +   '<td class="cpc-td-cnt" id="cpcFtCnt">' + (totCnt > 0 ? totCnt : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcFtPaid_rmb">' + (totPR > 0 ? fmtPlanMoney('rmb', totPR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcFtPaid_usd">' + (totPU > 0 ? fmtPlanMoney('usd', totPU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcFtPaid_vnd">' + (totPV > 0 ? fmtPlanMoney('vnd', totPV) : '—') + '</td>'
+      +   '<td class="cpc-rmb" id="cpcFtUnpaid_rmb">' + (totUR > 0.01 ? fmtPlanMoney('rmb', totUR) : '—') + '</td>'
+      +   '<td class="cpc-usd" id="cpcFtUnpaid_usd">' + (totUU > 0.01 ? fmtPlanMoney('usd', totUU) : '—') + '</td>'
+      +   '<td class="cpc-vnd" id="cpcFtUnpaid_vnd">' + (totUV > 0.01 ? fmtPlanMoney('vnd', totUV) : '—') + '</td>'
+      +   '<td class="' + tCls + '" id="cpcFtStatus">' + tTxt + '</td>'
       + '</tr></tfoot></table>';
     // ★COMM-LEDGER-FIT-20261103★ 生成后自动压缩字号，直到横向放得下（无水平滚动条）
     _commLedgerFit();
@@ -14506,6 +14598,9 @@ function _benCardUpdateSums(i){
   if (head) head.innerHTML = _benCardSumHtml(sum, H);
   var foot = document.getElementById('bcFoot_' + i);
   if (foot) foot.innerHTML = _benCardFootRows(sum, H);
+  /* ★COMM-LEDGER-CARD-20261103★ 同步台账行与总计行（支付次数 / 已支付 / 待支付 / 状态） */
+  try { if (typeof _commLedgerRowSync === 'function') _commLedgerRowSync(i); } catch (e) {}
+  try { if (typeof _commLedgerFootSync === 'function') _commLedgerFootSync(); } catch (e) {}
 }
 /* ★COMM-DETAIL-TOGGLE-20261103★ 标题右侧 +/− 折叠开关：展开/收起下方全部支付明细内容 */
 function toggleCommDetail(){
@@ -14689,6 +14784,8 @@ function renderBenPaymentCards(force){
       + '</table></div></div>';
   }
   box.innerHTML = html;
+  /* ★COMM-LEDGER-CARD-20261103★ 增删行后重新对齐台账（次数/已支付/状态） */
+  try { _commLedgerFootSync(); } catch (e) {}
 }
 /* ★BENCARD-DELPOP-20261103★ 右键单击一行 → 鼠标旁边弹出橙色气泡：确认 → 输入密码 money（强制小写）→ 立即删除；取消则不删 */
 var __benDelState = null;
@@ -16463,7 +16560,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z261";  // 版本标记：Z261 = 支付明细卡片新增统计：姓名右侧「总计付款 X 次 / 总计理论付款 / 总计实际付款」(按币种着色)，表格底部「小计」行(理论+实际三币合计)，行内金额/套现成本变动实时刷新
+const PERM_BUILD = "build 2026-11-03-Z262";  // 版本标记：Z262 = 台账与支付明细卡片联动：支付次数=卡片记录行数、已经支付佣金=卡片实际应支付小计、支付状态在「理论任一币种 ≥ 需要支付佣金」时显示「完成支付！」(绿色)；卡片变动实时刷新台账行与总计行
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
