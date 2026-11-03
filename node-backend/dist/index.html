@@ -4467,7 +4467,18 @@ function _ovLoadChartLib(cb){
       <div class="appr-drawer-head">
         <span class="appr-drawer-icon">✅</span>
         <h3 id="apprDrawerTitle">审批详情</h3>
-        <button class="appr-drawer-close" id="apprDrawerClose" onclick="closeApprovalDetail()">✕</button>
+        <!-- ★DLG-CLOSE-STD-20261103★ 关闭按钮按全站弹窗规范放进 .modal-actions 容器
+             （inline-flex、右侧 16px、垂直居中、26×26；□ 最大化由脚本自动插到它左边）；
+             图标用内联 SVG 而不是「✕」字形——字体缺字时 ✕ 会显示成空白方块，看起来就像没有关闭按钮。 -->
+        <div class="modal-actions">
+          <button type="button" class="appr-drawer-close" id="apprDrawerClose" onclick="closeApprovalDetail()"
+                  title="关闭" aria-label="关闭">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                 stroke-width="2.6" stroke-linecap="round" aria-hidden="true" focusable="false">
+              <path d="M6 6 L18 18 M18 6 L6 18"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="appr-drawer-body" id="apprDrawerBody"></div>
     </aside>
@@ -5341,11 +5352,27 @@ function _ovLoadChartLib(cb){
   .appr-drawer-mask.show { display:block; }
   .appr-drawer { position:fixed; top:56px; right:0; bottom:0; width:460px; max-width:96vw; background:#fff; box-shadow:-4px 0 20px rgba(255,122,26,.18); z-index:1200; transform:translateX(100%); transition:transform .28s ease; display:flex; flex-direction:column; }
   .appr-drawer.open { transform:translateX(0); }
-  .appr-drawer-head { display:flex; align-items:center; gap:10px; padding:16px 18px; background:var(--appr-orange); color:#fff; }
+  .appr-drawer-head { display:flex; align-items:center; gap:10px; padding:16px 18px; background:var(--appr-orange); color:#fff; position:relative; }
   .appr-drawer-head h3 { margin:0; font-size:16px; flex:1; }
   .appr-drawer-icon { font-size:20px; }
-  .appr-drawer-close { background:rgba(255,255,255,.25); border:none; color:#fff; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:14px; }
-  .appr-drawer-close:hover { background:rgba(255,255,255,.4); }
+  /* ★DLG-CLOSE-STD-20261103★ 审批详情抽屉标题栏按钮规范（与全站弹窗一致）：
+     · 关闭(×) 与 最大化(□) 一律放进 .modal-actions：inline-flex、右 16px、垂直居中、间距 6px、26×26，
+       不再各自绝对定位到 top:4px/11px、也不会再被顶出标题栏导致「没有关闭按钮」；
+     · 关闭图标用内联 SVG 描边绘制（不依赖 ✕ 字形），任何字体环境都能看见；
+     · 标题右侧预留 88px（= 两个按钮 + 间距 + 右内边距），长标题不会压住按钮。 */
+  #apprDrawer .appr-drawer-head { padding-right:88px; }
+  #apprDrawer .appr-drawer-head .modal-actions { display:inline-flex; align-items:center; gap:6px; }
+  #apprDrawer .appr-drawer-head .modal-actions .appr-drawer-close,
+  #apprDrawer .appr-drawer-head .modal-actions .mmax-btn {
+    position:static !important; top:auto !important; right:auto !important; bottom:auto !important; left:auto !important;
+    width:26px !important; height:26px !important; margin:0 !important; padding:0 !important;
+    display:flex; align-items:center; justify-content:center; box-sizing:border-box;
+    background:rgba(255,255,255,.18); border:none; border-radius:5px; cursor:pointer; color:#fff;
+  }
+  #apprDrawer .appr-drawer-head .modal-actions .appr-drawer-close:hover,
+  #apprDrawer .appr-drawer-head .modal-actions .mmax-btn:hover { background:rgba(255,255,255,.34); color:#fff; }
+  #apprDrawer .appr-drawer-head .modal-actions .appr-drawer-close svg { display:block; width:15px; height:15px; pointer-events:none; }
+  #apprDrawer .appr-drawer-head .modal-actions .mmax-btn { font-size:14px; line-height:1; border:1px solid rgba(255,255,255,.55); }
   .appr-drawer-body { padding:18px; overflow-y:auto; flex:1; }
   .appr-field { margin-bottom:16px; }
   .appr-field-label { font-size:12px; color:var(--appr-orange-d); font-weight:600; text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
@@ -16910,7 +16937,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z279";  // 版本标记：Z279 = 审批表列宽改纯百分比合计 100%（序号 5/发起人 9/发起时间 11/待审批内容 22/审批人 9/审批结果 12/审批状态 8/审批时间 11/操作 13），去掉 56px+100% 与 54/150px 固定宽、窄屏 760px min-width、容器 box-sizing 补 border → 底部水平滚动条消失，9 列全部可见
+const PERM_BUILD = "build 2026-11-03-Z280";  // 版本标记：Z280 = 审批详情抽屉补齐关闭按钮并按全站弹窗规范约束按钮布局：关闭(×)与最大化(□)统一放进 .modal-actions（右 16px、垂直居中、26×26、间距 6px、不再各自绝对定位），× 改用内联 SVG（不再依赖 ✕ 字形，避免字体缺字显示成空白方块），标题右留 88px，title/aria-label 三语同步
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -17963,7 +17990,9 @@ function applyApprovalsLang(){
   set('apprTabAll', t.appr_all); set('apprTabMine', t.appr_mine); set('apprTabTodo', t.appr_todo);
   set('apprHint', t.appr_hint); set('apprEmptyText', t.appr_empty);
   var dt = document.getElementById('apprDrawerTitle'); if(dt) dt.textContent = t.appr_detail;
-  var dc = document.getElementById('apprDrawerClose'); if(dc) dc.title = t.appr_close;
+  /* ★DLG-CLOSE-STD-20261103★ 关闭按钮的三语文案同时写 title 与 aria-label（无障碍规范） */
+  var dc = document.getElementById('apprDrawerClose');
+  if (dc){ dc.title = t.appr_close; dc.setAttribute('aria-label', t.appr_close); }
   // 【性能优化】重建审批列表较重，只在审批视图当前可见时才做，
   // 不可见时等用户切过去时再渲染（已标记为数据失效）
   var apprSec = document.getElementById('view-approvals');
