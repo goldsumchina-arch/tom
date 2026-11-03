@@ -158,7 +158,14 @@ class MainActivity : AppCompatActivity() {
         // v110：错行策略定稿（优先往上、行距放大到字高+6、最多上下两行）。⑦ 网页版本 V2026.10.29.04
         // v111：看板 6 张统计卡内容居中 + 鼠标悬停变淡粉色（DASH-CARD-CENTER/PINK-20261029）。
         //      ⑧ 网页版本 V2026.10.29.05
-        private const val WEB_VERSION = 111
+        // v112（2026-11-03）：审批页全面改造（网页版本 V2026.11.03.01，PERM_BUILD Z278~Z283）——
+        //      ① 去掉表格内部纵向滚动条，改用整页滚动；标题行/统计条/橙色表头三段吸顶
+        //      ② 底部水平滚动条彻底消除（语言几何锁 freezeTable 百分比豁免 + 9 列纯百分比合计 100%）
+        //      ③ 「操作」列表头文字与「通过/拒绝」按钮统一居中（原来表头贴左、按钮居中）
+        //      ④ 审批详情抽屉补齐关闭按钮（.modal-actions + 内联 SVG，不再依赖 ✕ 字形）
+        //      ⑤ 版本号三端同源 V2026.11.03.01（网页页脚 / 网页标题 / APK versionName）
+        //      网页内容变更 → 必须 +1，手机端才会自动清 WebView 缓存拉到新页面。
+        private const val WEB_VERSION = 112
 
         private const val PREFS_NAME = "agipm_prefs"
         private const val KEY_LAST_WEB_VERSION = "last_web_version"

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⛔ FROZEN (2026-09-08) V2026.10.30.01：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
+<!-- ⛔ FROZEN (2026-09-08) V2026.11.03.01：本文件全部逻辑已锁定，未经用户明确同意禁止修改。仅 CRM / LOST / WON / 个人佣金 四个模块内的“样板数据 / 演示数据”允许清理（仅删数据、不改逻辑），其余一切逻辑（看板、用户与授权、秘密空间、用量监控、清理残留、语言、表格渲染等）均正确并禁止改动。 -->
 <html lang="en">
 <head>
 <!-- ==================== 同源后端地址（腾讯云版） ====================
@@ -385,13 +385,15 @@ function _ovLoadChartLib(cb){
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <!-- ===== /PWA ===== -->
-  <!-- 版本号：V2026.10.30.01 - 看板 CRM 区移除 RMB-VND / USD-VND 两张汇率图（DASH-DEL-CRM-RATE-20261027） -->
-  <title>签约项目 · AGI-CRM v2026.10.30.01</title>
+  <!-- 版本号：V2026.11.03.01 - 审批页全面改造：表格去内部纵向滚动条（改页面滚动）、标题行/统计条/橙色表头三段吸顶；
+       底部水平滚动条彻底消除（语言几何锁 freezeTable 百分比豁免 + 9 列纯百分比合计 100%）；
+       「操作」列表头与按钮统一居中；审批详情抽屉补齐关闭按钮并按全站弹窗规范布局 -->
+  <title>签约项目 · AGI-CRM v2026.11.03.01</title>
   <script>
     // 版本号标记（仅用于控制台确认代码已更新，不再触发跳转）
     // 说明：原 _bust 强制跳转是本地开发时"改了代码看不到效果"的临时手段，
     // 部署到 同源前端 后每次部署都是新地址，该跳转只会导致重复加载、变慢，已移除。
-    window._DASH_VER = '20261030.01';
+    window._DASH_VER = '20261103.01';
     console.log('[DASH_VER] OK = ' + window._DASH_VER);
   </script>
   <script>
@@ -3820,7 +3822,7 @@ function _ovLoadChartLib(cb){
       <button class="login-link" onclick="openAuthModal('reset')" data-i18n="login_link_reset">Reset Password</button>
       <button class="login-link" onclick="openAuthModal('forget')" data-i18n="login_link_forget">Forget Password</button>
     </div>
-    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.10.30.01</span></div>
+    <div class="login-footer"><span data-i18n="login_footer">AGI-CRM System</span> · <span id="loginVer">V2026.11.03.01</span></div>
   </div>
 </div>
 
@@ -10785,7 +10787,7 @@ function setLangDebug(lang) {
   /* ★BENCARD-DELPOP-20261103E★ CUR_LANG 已更新后，立即把删除气泡文案刷新为新语言（保留弹窗与已输入密码） */
   try { if (typeof _benDelLocalize === 'function') _benDelLocalize(); } catch(e){}
   // ================================================================
-  // ⛔ 已锁定实现 —— V2026.10.30.01 验证通过，禁止删除
+  // ⛔ 已锁定实现 —— V2026.11.03.01 验证通过，禁止删除
   // ================================================================
   // 清空 I18N 代理缓存，避免旧语言代理污染新语言（否则部分按钮/表头仍显示越南语）
   // TBuildProxy 按语言缓存代理对象，不清空则切语言后 T().xxx 可能命中旧语言代理。
@@ -10805,7 +10807,7 @@ function setLangDebug(lang) {
   } catch(e) {}
 
   // 语言切换后的视图刷新策略（消除"切标签页数据滞后"且"切语言不读其它标签"的关键）：
-  //  - V2026.10.30.01：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
+  //  - V2026.11.03.01：切语言【只刷新当前激活的表格标签】；CRM/LOST/WON 中非当前标签
   //    只打轻标 _viewLangStale，切过去时由 switchView 用缓存重渲染（绝不 fetch、不读其它标签的行）。
   //  - 当前激活表格：applyXxxLang 用缓存重渲染表头+行（切过去即新语言，无需重新 fetch）。
   //  - dashboard/users/approvals：保持原 dirty 逻辑（数据小或结构复杂，重新拉取成本低，且仅在切到该标签时触发）。
@@ -10888,7 +10890,7 @@ function setLangDebug(lang) {
   // 停留旧语言（用户实测：EDGE/Chrome/QQ 三浏览器复现，症状完全吻合）。
   // 正确性优先：全部同步执行，消除调度不确定性。
   window.__langHeavyPending = false;
-  // ★ V2026.10.30.01 新要求：切语言只刷新【当前激活的表格标签】，
+  // ★ V2026.11.03.01 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
   var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
@@ -16958,12 +16960,12 @@ function _isObserverPos(u){
 // 血泪教训（曾三次踩坑，改了前端却"用户端看不到效果"）：
 //   · 外部 js 被 ?v=固定值 永久缓存 → 所有修改对用户不可见
 //   · 排查"某模块正常、某模块失败"时，永远先确认：失败的模块是内联还是外部缓存？
-// 历史：V2026.10.30.01（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
+// 历史：V2026.11.03.01（Z104）CRM/LOST 报告真打印——停用 crm_table.js/lost_table.js 里
 //       后加载覆盖同名函数的 html2canvas+jsPDF 旧导出实现，改为真正的 window.print()。
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z282";  // 版本标记：Z282 = 审批表「操作」列表头文字与单元格按钮统一水平居中（th 默认 text-align:left 且 .th-label 为撑满整列的 flex → 需 text-align:center + .th-inner align-items:center + .th-label justify-content:center 三个一起才生效）
+const PERM_BUILD = "build 2026-11-03-Z283";  // 版本标记：Z283 = 版本号统一为 V2026.11.03.01（登录页页脚 + 网页标题 + APK versionName 三端同源），内容=Z278~Z282 的审批页改造汇总（页面滚动/三段吸顶/横向滚动条消除/操作列居中/抽屉关闭按钮）+ ALL-LOCK-20261103 硬锁
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -21715,7 +21717,7 @@ function ptBlur(srcLang){
 }
 window.ptBlur = ptBlur;
 
-// ⛔ 已锁定 —— 三语输入逻辑（V2026.10.30.01）：
+// ⛔ 已锁定 —— 三语输入逻辑（V2026.11.03.01）：
 // 默认三个输入框全部锁死；点击“清空三语”后仅当前系统语言框可输入；
 // 输入后自动翻译并填充另外两语，翻译结果必须按语言标签落入对应框。
 // 未经用户 Tom 明确同意禁止修改。
@@ -25680,7 +25682,7 @@ function loadDashboard(force) {
         localStorage.removeItem('_dash_' + k);
 
         // ==================================================================
-        // ⛔⛔⛔ 已锁定实现 —— V2026.10.30.01 / PERM_BUILD Z58 用户验证通过
+        // ⛔⛔⛔ 已锁定实现 —— V2026.11.03.01 / PERM_BUILD Z58 用户验证通过
         //    【绝对禁止】在本循环内加回 window[k] = null（或任何清空/覆盖
         //     globalCrmData / globalWonData / globalLostData 的语句）
         //    动此段前必须取得用户明确同意；任何"清理缓存/释放内存/优化"理由
@@ -26046,7 +26048,7 @@ function _renderCrmAggChart(bid, list){
         }
       }
       if (titleEl && cfg.titleKey) {
-        // ⛔ 防回退（V2026.10.30.01）：只允许当前语言命中的词条写入标题；
+        // ⛔ 防回退（V2026.11.03.01）：只允许当前语言命中的词条写入标题；
         //    查不到就保留 data-i18n 已刷好的文案，绝不回退写死中文（乱码复发根因）
         var _tt = I18N[CUR_LANG] && I18N[CUR_LANG][cfg.titleKey];
         if (_tt) titleEl.innerText = _tt;
@@ -35401,7 +35403,7 @@ function _doExportOverviewPDF(){
 })();
   </script>
 <script>
-/* ===== V2026.10.30.01 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
+/* ===== V2026.11.03.01 语言跟随总控：弹窗开着切语言，立即刷新文案 ===== */
 window.applyLangRefreshers = function () {
   var t = (window.I18N && window.I18N[window.CUR_LANG]) || {};
   var g = function (id) { return document.getElementById(id); };
