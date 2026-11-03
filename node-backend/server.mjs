@@ -107,7 +107,17 @@ app.set("trust proxy", true);
 // 同源部署版前端：由根目录前端文件构建到 node-backend/dist，CLOUD_API/CLOUD_ONLY/API_BASE 已清空，
 // 所有 /api 请求走本服务器（同源），不再转发 云端。
 const DIST = path.join(ROOT, "dist");
-app.use(express.static(DIST, { extensions: ["html"] }));
+// ★NO-CACHE-HTML-20261103★ 前端 index.html 强制 no-store，避免浏览器/代理缓存旧的 HTML（曾导致用户长时间看到旧版本）。
+app.use(express.static(DIST, {
+  extensions: ["html"],
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".html")) {
+      res.setHeader("Cache-Control", "no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+  }
+}));
 
 app.get("/api/tencent-usage", async (req, res) => {
   const username = authenticateRequest(req, db);
@@ -125,6 +135,9 @@ app.get("/api/tencent-usage", async (req, res) => {
 app.all("*", async (req, res) => {
   // 非 API 请求走 SPA（前端同进程托管）
   if (!req.path.startsWith("/api/")) {
+    res.setHeader("Cache-Control", "no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
     return res.sendFile(path.join(DIST, "index.html"));
   }
   try {
