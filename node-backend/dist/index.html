@@ -2096,6 +2096,13 @@ function _ovLoadChartLib(cb){
   .det-point-check .cpc-val { font-weight:700; color:#2c3e50; font-variant-numeric:tabular-nums; }
   .det-point-check .cpc-val.cpc-ok { color:#1e9e6a; }
   .det-point-check .cpc-val.cpc-warn { color:#e67e22; }
+  /* ★COMM-PT-COLOR-20261103★ 三币金额逐币种着色：RMB 红 / USD 蓝 / VND 绿；
+     状态文字（✓ 一致 / ⚠ 差额）单独用 status-ok / status-warn，不与币种色互相覆盖。 */
+  .comm-point-check .cpc-rmb, .det-point-check .cpc-rmb { color:#d64541; }
+  .comm-point-check .cpc-usd, .det-point-check .cpc-usd { color:#2e86de; }
+  .comm-point-check .cpc-vnd, .det-point-check .cpc-vnd { color:#1e9e6a; }
+  .comm-point-check .cpc-status-ok, .det-point-check .cpc-status-ok { color:#1e9e6a; }
+  .comm-point-check .cpc-status-warn, .det-point-check .cpc-status-warn { color:#e67e22; }
 
   /* ===== 用户与授权表：十字高亮（更聚焦：行 #fff6cf / 列 #fff6cf / 交叉 #ffe680 加 2px 橙色描边）=====
      与 WON/CRM 同体系，但交叉格加大描边让用户一眼锁定所在单元格。 */
@@ -13082,6 +13089,13 @@ function _fmtCellMoney(cur, v){
   var n = parseFloat(v);
   return _escComm(isFinite(n) ? fmtMoney(cur, n) : v);
 }
+/* ★COMM-PT-COLOR-20261103★ 三币金额统一着色拼接：RMB 红 / USD 蓝 / VND 绿。
+   预期佣金、受益人总额、差额三处共用，保证配色一致；只影响展示，不动数值。 */
+function _commTriHtml(r, u, v){
+  return '<span class="cpc-rmb">' + _fmtCellMoney('RMB', r) + '</span> · '
+       + '<span class="cpc-usd">' + _fmtCellMoney('USD', u) + '</span> · '
+       + '<span class="cpc-vnd">' + _fmtCellMoney('VND', v) + '</span>';
+}
 /* ===== 单条佣金记录详情报告（受益人&秘佣&支付详情按钮） =====
    ① 基础信息（8 字段，不含备注） ② 每位受益人分期给付明细（次数/日期/三币金额/性质/是否结束）
    ③ 付款阶段甘特图（合同签单→定金→各期付款的时间轴，绿=已结清 橙=未结清） */
@@ -13157,9 +13171,9 @@ function renderCommissionDetail(idx){
   var _ok = _hasP && Math.abs(_dR) < 1 && Math.abs(_dU) < 1 && Math.abs(_dV) < 1;
   h += '<div class="det-sec"><div class="det-sec-title">' + (t.comm_pt_check_sec || '佣金总点数 · 预期佣金与反向校验') + '</div>'
      +   '<div class="det-point-check">'
-     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_expect || '预期佣金（设备金额 × 点数）') + '</span><span class="cpc-val">' + (_hasP ? _fmtCellMoney('RMB', _exp.RMB) + ' · ' + _fmtCellMoney('USD', _exp.USD) + ' · ' + _fmtCellMoney('VND', _exp.VND) : '—') + '</span></div>'
-     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_ben || '受益人需支付总额') + '</span><span class="cpc-val">' + _fmtCellMoney('RMB', _ben.RMB) + ' · ' + _fmtCellMoney('USD', _ben.USD) + ' · ' + _fmtCellMoney('VND', _ben.VND) + '</span></div>'
-     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_diff_lbl || '差额（预期 − 受益人）') + '</span><span class="cpc-val ' + (_hasP ? (_ok ? 'cpc-ok' : 'cpc-warn') : '') + '">' + (_hasP ? ((_ok ? '✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') : '⚠ ' + (t.comm_pt_diff || '差额') + ' ') + _fmtCellMoney('RMB', _dR) + ' · ' + _fmtCellMoney('USD', _dU) + ' · ' + _fmtCellMoney('VND', _dV)) : '—') + '</span></div>'
+     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_expect || '预期佣金（设备金额 × 点数）') + '</span><span class="cpc-val">' + (_hasP ? _commTriHtml(_exp.RMB, _exp.USD, _exp.VND) : '—') + '</span></div>'
+     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_ben || '受益人需支付总额') + '</span><span class="cpc-val">' + _commTriHtml(_ben.RMB, _ben.USD, _ben.VND) + '</span></div>'
+     +     '<div class="cpc-row"><span class="cpc-label">' + (t.comm_pt_diff_lbl || '差额（预期 − 受益人）') + '</span><span class="cpc-val">' + (_hasP ? ((_ok ? '<span class="cpc-status-ok">✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') + '</span>' : '<span class="cpc-status-warn">⚠ ' + (t.comm_pt_diff || '差额') + '</span>') + ' ' + _commTriHtml(_dR, _dU, _dV)) : '—') + '</span></div>'
      +   '</div></div>';
 
   /* ── ② 受益人给付明细 ── */
@@ -13492,17 +13506,18 @@ function commPointCheck(){
   var bEl = document.getElementById('commPtBen');
   var dEl = document.getElementById('commPtDiff');
   if (eEl) eEl.innerHTML = hasPct
-    ? _fmtCellMoney('RMB', exp.RMB) + ' · ' + _fmtCellMoney('USD', exp.USD) + ' · ' + _fmtCellMoney('VND', exp.VND)
+    ? _commTriHtml(exp.RMB, exp.USD, exp.VND)
     : '—';
-  if (bEl) bEl.innerHTML =
-    _fmtCellMoney('RMB', ben.RMB) + ' · ' + _fmtCellMoney('USD', ben.USD) + ' · ' + _fmtCellMoney('VND', ben.VND);
+  if (bEl) bEl.innerHTML = _commTriHtml(ben.RMB, ben.USD, ben.VND);
   if (!dEl) return;
   if (!hasPct){ dEl.innerHTML = '—'; dEl.className = 'cpc-val'; return; }
   var dR = exp.RMB - ben.RMB, dU = exp.USD - ben.USD, dV = exp.VND - ben.VND;
   var consistent = Math.abs(dR) < 1 && Math.abs(dU) < 1 && Math.abs(dV) < 1;
-  dEl.innerHTML = (consistent ? '✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') : '⚠ ' + (t.comm_pt_diff || '差额') + ' ')
-    + _fmtCellMoney('RMB', dR) + ' · ' + _fmtCellMoney('USD', dU) + ' · ' + _fmtCellMoney('VND', dV);
-  dEl.className = 'cpc-val ' + (consistent ? 'cpc-ok' : 'cpc-warn');
+  dEl.className = 'cpc-val';
+  dEl.innerHTML = (consistent
+      ? '<span class="cpc-status-ok">✓ ' + (t.comm_pt_ok || '点数与受益人总额一致') + '</span>'
+      : '<span class="cpc-status-warn">⚠ ' + (t.comm_pt_diff || '差额') + '</span>')
+    + ' ' + _commTriHtml(dR, dU, dV);
 }
 // 汇率默认初始值（可修改，每次打开新增弹窗恢复默认）
 var COMM_RATE_DEFAULT = { rmbvnd: '3,800', usdvnd: '26,000' };
@@ -16009,7 +16024,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z194";  // 版本标记：用于确认浏览器加载的是最新代码（Z194 = 佣金总点数输入框内嵌 % 后缀）
+const PERM_BUILD = "build 2026-11-03-Z195";  // 版本标记：用于确认浏览器加载的是最新代码（Z195 = 校验区块三币逐币种着色 RMB红/USD蓝/VND绿）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
