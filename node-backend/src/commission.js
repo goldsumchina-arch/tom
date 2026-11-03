@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS commission_records (
   rate_rmb TEXT DEFAULT '',
   rate_usd TEXT DEFAULT '',
   remark TEXT DEFAULT '',
+  card_payments TEXT DEFAULT '',   // ★COMM-BENCARD-PERSIST-20261103★ 受益人支付明细卡片数据（JSON，按方案索引）
   is_demo INTEGER DEFAULT 0,
   created_at TEXT DEFAULT '',
   updated_at TEXT DEFAULT ''
@@ -110,6 +111,8 @@ async function ensureTable(env) {
     // ★COMM-BENLOCK-20261103★ 受益人数确认锁定标记（0/1）
     "ALTER TABLE commission_records ADD COLUMN ben_count_lock INTEGER DEFAULT 0",
     "ALTER TABLE commission_records ADD COLUMN plan_json TEXT DEFAULT ''",
+    // ★COMM-BENCARD-PERSIST-20261103★ 老库补 card_payments 列（新库由 CREATE_REC_SQL 一次建全）
+    "ALTER TABLE commission_records ADD COLUMN card_payments TEXT DEFAULT ''",
   ]) {
     try {
       await env.DB.prepare(sql).run();
@@ -182,6 +185,8 @@ async function recToDict(row, env) {
     rateUSD: d.rate_usd || "",
     remark: d.remark || "",
     isDemo: parseInt(d.is_demo, 10) || 0,
+    // ★COMM-BENCARD-PERSIST-20261103★ 回传支付明细卡片数据（前端 __benCardPayments 据此还原）
+    cardPayments: (function(){ try { var a = JSON.parse(d.card_payments || "{}"); return (a && typeof a === "object") ? a : {}; } catch (e) { return {}; } })(),
     beneficiaries,
   };
 }
@@ -230,7 +235,7 @@ export async function handleCommission(request, env, url, pathname) {
       await env.DB.prepare(
         `UPDATE commission_records SET parties=?, group_name=?, sign_date=?,
          deposit_date=?, accept_date=?, comm_points=?, ben_count=?, ben_count_lock=?, plan_json=?, currency=?, equip_rmb=?, equip_usd=?, equip_vnd=?,
-         rate_rmb=?, rate_usd=?, remark=?, is_demo=?, updated_at=? WHERE id=?`
+         rate_rmb=?, rate_usd=?, remark=?, card_payments=?, is_demo=?, updated_at=? WHERE id=?`
       )
         .bind(
           String(rec.parties || ""),
@@ -249,6 +254,7 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.rateRMB || ""),
           String(rec.rateUSD || ""),
           String(rec.remark || ""),
+          JSON.stringify(rec.cardPayments || {}),
           isDemo,
           nowStr(),
           rid
@@ -258,8 +264,8 @@ export async function handleCommission(request, env, url, pathname) {
       const cur = await env.DB.prepare(
         `INSERT INTO commission_records
          (contract, parties, group_name, sign_date, deposit_date, accept_date, comm_points, ben_count, ben_count_lock, plan_json, currency,
-          equip_rmb, equip_usd, equip_vnd, rate_rmb, rate_usd, remark, is_demo, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+          equip_rmb, equip_usd, equip_vnd, rate_rmb, rate_usd, remark, card_payments, is_demo, created_at, updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       )
         .bind(
           contract,
@@ -279,6 +285,7 @@ export async function handleCommission(request, env, url, pathname) {
           String(rec.rateRMB || ""),
           String(rec.rateUSD || ""),
           String(rec.remark || ""),
+          JSON.stringify(rec.cardPayments || {}),
           isDemo,
           nowStr(),
           nowStr()

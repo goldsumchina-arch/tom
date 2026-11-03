@@ -16376,7 +16376,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-03-Z259";  // 版本标记：Z259 = 修复卡片首行支付日期“日历弹出即自动关闭”：①cpOpenCalendar 先 scrollIntoView 再取坐标；②记录 cpCalOpenedAt，外部点击关闭增加 400ms 保护窗；③点击任意 .cp-date-input-wrapper 不当作外部点击
+const PERM_BUILD = "build 2026-11-03-Z260";  // 版本标记：Z260 = 修复支付明细卡片数据不持久化（刷新即丢）：后端 commission.js 新增 card_payments 列，POST 落库、GET 回传，前端 __benCardPayments 据此还原（此前该字段只发不存）
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
