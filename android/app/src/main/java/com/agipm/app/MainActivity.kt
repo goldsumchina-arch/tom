@@ -165,7 +165,9 @@ class MainActivity : AppCompatActivity() {
         //      ④ 审批详情抽屉补齐关闭按钮（.modal-actions + 内联 SVG，不再依赖 ✕ 字形）
         //      ⑤ 版本号三端同源 V2026.11.03.01（网页页脚 / 网页标题 / APK versionName）
         //      网页内容变更 → 必须 +1，手机端才会自动清 WebView 缓存拉到新页面。
-        private const val WEB_VERSION = 112
+        // v113（2026-11-04）：潜在项目 / 签约项目 / 失败项目 三张表加黑色网格线（GRID-BLACK-20261104，
+        //      网页版本 V2026.11.04.01）—— 单元格四边框、固定列分隔线/内阴影、表容器外框统一 #bbb → #000。
+        private const val WEB_VERSION = 113
 
         private const val PREFS_NAME = "agipm_prefs"
         private const val KEY_LAST_WEB_VERSION = "last_web_version"

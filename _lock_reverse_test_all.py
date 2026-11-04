@@ -48,8 +48,8 @@ CASES = [
      "function apprStickyMeasure(){",
      "function apprStickyMeasure({{{"),
     ("⑩ 版本标记与 dist 不一致",
-     'const PERM_BUILD = "build 2026-11-03-Z283"',
-     'const PERM_BUILD = "build 2026-11-03-Z999"'),
+     'const PERM_BUILD = "build 2026-11-04-Z284"',
+     'const PERM_BUILD = "build 2026-11-04-Z999"'),
 ]
 
 
