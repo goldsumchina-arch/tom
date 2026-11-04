@@ -15,8 +15,14 @@ $Script   = 'C:\gs-project\refresh_prices.ps1'
 
 if (-not (Test-Path $Script)) { Write-Error "missing $Script"; exit 1 }
 
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' `
-          -Argument ('-ExecutionPolicy Bypass -WindowStyle Hidden -File "{0}"' -f $Script)
+# NO-WINDOW rule (see hidden_launcher.vbs):
+#   Never start powershell.exe directly from Task Scheduler - a console program
+#   gets its console window created by Windows BEFORE it reads -WindowStyle Hidden,
+#   so a black window pops up every morning at 08:30. Launch through wscript instead.
+$launcher = Join-Path (Split-Path $Script -Parent) 'hidden_launcher.vbs'
+if (-not (Test-Path $launcher)) { Write-Error "missing $launcher"; exit 1 }
+$action = New-ScheduledTaskAction -Execute 'wscript.exe' `
+          -Argument ('//nologo "{0}" "{1}"' -f $launcher, $Script)
 
 # every Monday 08:30, plus one on the 1st of each month 08:30
 $trigWeekly = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 08:30
