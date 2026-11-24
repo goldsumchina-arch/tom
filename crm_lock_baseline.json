@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-24 13:23:10",
+ "generated": "2026-11-24 13:39:54",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-LAYOUT-20261124: remove start-record row, resize board cards and map\"",
+ "note": "\"INSTALL-BOARD-20261124: remove prod workers, show all projects, add install workers column\"",
  "i18n": {
-  "dict@6776": {
+  "dict@6782": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26099": {
+  "dict@26105": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5437,7 +5437,7 @@
     "wxWindUnit": "cấp"
    }
   },
-  "dict@30267": {
+  "dict@30277": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

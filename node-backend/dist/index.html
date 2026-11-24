@@ -2916,7 +2916,7 @@ function _ovLoadChartLib(cb){
   .ib-top { grid-template-columns: 1.45fr .85fr 1fr; }
   .ib-mid { grid-template-columns: 2fr 1fr; }
   .ib-photo-strip { grid-column: 1 / -1; }
-  .ib-row3 { grid-template-columns: .8fr .8fr 1fr 1fr 1fr; }
+  .ib-row3 { grid-template-columns: .8fr 1fr 1fr 1fr; }
   .ib-card {
     position: relative; min-height: 168px; padding: 11px 13px; border-radius: 6px;
     border: 1px solid rgba(70,190,255,.24); background: linear-gradient(160deg,#123a78,#0b2857);
@@ -2931,10 +2931,19 @@ function _ovLoadChartLib(cb){
   .ib-corner::after { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
   .ib-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 9px; }
   .ib-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #2ee6ff; box-shadow: 0 0 6px #2ee6ff; flex: none; }
-  /* 顶部三卡统一限高 190px：统计卡压缩留白，进度/天气卡内容区可滚动 */
-  .ib-top > .ib-card { height: 190px; min-height: 0; overflow: hidden; }
-  .ib-scroll { max-height: 138px; overflow: auto; }
-  .ib-top > .ib-card:last-child .ib-scroll { max-height: 100px; }
+  /* 顶部三卡不截断：全部项目/全部天气直接展示，卡片随内容自然增高 */
+  .ib-top > .ib-card { height: auto; min-height: 190px; overflow: visible; }
+  /* 安装进度：序号列极窄、项目列尽量宽并完整显示名称、人数列固定 */
+  .ib-progress-card .ib-table { table-layout: fixed; }
+  .ib-progress-card .ib-table th:first-child,
+  .ib-progress-card .ib-table td:first-child { width: 22px; padding-left: 1px; padding-right: 1px; text-align: center; }
+  .ib-progress-card .ib-table th:nth-child(2),
+  .ib-progress-card .ib-table td:nth-child(2) { width: auto; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
+  .ib-progress-card .ib-table th:nth-child(3),
+  .ib-progress-card .ib-table td:nth-child(3) { width: 76px; white-space: nowrap; }
+  .ib-progress-card .ib-table th:last-child,
+  .ib-progress-card .ib-table td:last-child { width: 58px; text-align: right; white-space: nowrap; }
+  .ib-progress-card .ib-table td.ib-num { color: #8fb0d8; }
   .ib-tiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
   .ib-tile { border: 1px solid rgba(90,200,255,.28); border-radius: 5px; padding: 8px 3px; text-align: center; }
   .ib-tile b { display: block; font-size: 22px; color: #2ee6ff; line-height: 1.1; }
@@ -4098,15 +4107,15 @@ function _ovLoadChartLib(cb){
                <div class="ib-tile"><b id="ibBuilding">3</b><span data-ib="building">在建项目</span></div>
              </div>
            </div>
-           <div class="ib-card ib-top-narrow"><i class="ib-corner"></i>
+           <div class="ib-card ib-top-narrow ib-progress-card"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="instProgress">安装进度</div>
-             <div class="ib-scroll"><table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibInstList"></tbody></table></div>
+             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th><th data-ib="workers">安装人数</th></tr></thead><tbody id="ibInstList"></tbody></table>
            </div>
            <div class="ib-card ib-top-narrow"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="dateWeather">日期 · 时间 · 天气</div>
              <div class="ib-clock" id="ibClock">--:--:--</div>
              <div class="ib-date" id="ibDate"></div>
-             <div class="ib-scroll"><div class="ib-wx" id="ibWx"><span data-ib="noData">暂无数据</span></div></div>
+             <div class="ib-wx" id="ibWx"><span data-ib="noData">暂无数据</span></div>
            </div>
          </div>
          <div class="ib-grid ib-mid">
@@ -4129,10 +4138,7 @@ function _ovLoadChartLib(cb){
              <div class="ib-title" data-ib="instWorkers">安装人数</div>
              <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="workers">安装人数</th></tr></thead><tbody id="ibWorkerList"></tbody></table>
            </div>
-           <div class="ib-card"><i class="ib-corner"></i>
-             <div class="ib-title" data-ib="prodWorkers">生产人数</div>
-             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="workers">生产人数</th></tr></thead><tbody id="ibProdWorkerList"></tbody></table>
-           </div>
+
            <div class="ib-card ib-fx" style="min-height:170px"><i class="ib-corner"></i>
              <div class="ib-fx-title">RMB-VND <span class="ib-fx-switch"><button onclick="ibSetFxCur(this)">RMB</button><button onclick="ibSetFxCur(this)">USD</button><button class="on" onclick="ibSetFxCur(this)">VND</button></span></div>
              <div class="ib-fx-chart"><canvas id="ibFx1C"></canvas></div>
@@ -26256,22 +26262,26 @@ function ibRenderProjects() {
   var withInst = list.filter(function (p) { return String(p.include_install || '').toUpperCase() === 'YES'; });
   withInst.sort(function (a, b) { return ibInstallData(b).rate - ibInstallData(a).rate; });
   var rows = function (arr, kind) {
-    if (!arr.length) return '<tr><td colspan="3">' + d.noProject + '</td></tr>';
-    return arr.slice(0, 12).map(function (p, i) {
-      var nm = String(ibName(p) || ('#' + p.id)).replace(/[&<>"]/g, '').slice(0, 24);
+    if (!arr.length) return '<tr><td colspan="' + (kind === 'inst' ? 4 : 3) + '">' + d.noProject + '</td></tr>';
+    return arr.map(function (p, i) {
+      var raw = String(ibName(p) || ('#' + p.id));
+      var nm = (typeof escBd === 'function' ? escBd(raw) : raw.replace(/[&<>"]/g, ''));
       var st = ibInstallData(p);
-      var v = kind === 'inst' ? st.rate.toFixed(1) + '%' : (st.workers || '—');
-      return '<tr><td>' + (i + 1) + '</td><td title="' + nm + '">' + nm + '</td><td>' + v +
-        (kind === 'inst' ? '<div class="ib-bar"><i style="width:' + st.rate + '%"></i></div>' : '') + '</td></tr>';
+      var workers = st.workers || '—';
+      if (kind === 'inst') {
+        return '<tr><td class="ib-num">' + (i + 1) + '</td><td class="ib-proj" title="' + nm + '">' + nm + '</td>' +
+          '<td class="ib-rate">' + st.rate.toFixed(1) + '%<div class="ib-bar"><i style="width:' + st.rate + '%"></i></div></td>' +
+          '<td class="ib-workers">' + workers + '</td></tr>';
+      }
+      return '<tr><td class="ib-num">' + (i + 1) + '</td><td class="ib-proj" title="' + nm + '">' + nm + '</td>' +
+        '<td class="ib-workers">' + workers + '</td></tr>';
     }).join('');
   };
   var el = document.getElementById('ibInstList'); if (el) el.innerHTML = rows(withInst, 'inst');
   var w = document.getElementById('ibWorkerList'); if (w) w.innerHTML = rows(withInst, 'workers');
-  // 「生产人数」不属于安装管理数据，禁止拿安装人数冒充；无生产数据源时明确显示暂无数据
-  var pw = document.getElementById('ibProdWorkerList'); if (pw) pw.innerHTML = '<tr><td colspan="3">' + d.noData + '</td></tr>';
 }
 function ibLoadInstallData() {
-  var list = (IB_PROJECTS || []).slice(0, 30);
+  var list = (IB_PROJECTS || []).slice();
   if (!list.length) return;
   var pending = list.length;
   list.forEach(function (p) {
