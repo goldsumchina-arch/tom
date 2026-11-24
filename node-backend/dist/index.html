@@ -2862,10 +2862,12 @@ function _ovLoadChartLib(cb){
     background: linear-gradient(90deg, #1e5fa8, #2f7fd0);
     box-shadow: 0 2px 10px rgba(0,0,0,.35); font-family: "Segoe UI", Arial, sans-serif;
   }
+  .inst-brand { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.05; min-width: 0; }
   .inst-logo { display: flex; align-items: center; gap: 8px; white-space: nowrap; user-select: none; }
   .inst-logo-mark { font-size: 20px; font-weight: 800; color: #e8720c; letter-spacing: .5px; }
   .inst-logo-name { font-size: 16px; font-weight: 700; color: #fff; }
-  .inst-title { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.28); }
+  /* ★INST-TITLE-UNDER-LOGO-20261124★ 安装管理标题缩小并放到 AGI-CRM logo 下方 */
+  .inst-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; letter-spacing: .5px; padding-left: 0; border-left: none; }
   .inst-spacer { flex: 1 1 auto; }
   .inst-exit-btn {
     border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff;
@@ -2882,7 +2884,7 @@ function _ovLoadChartLib(cb){
   .inst-card .inst-ph { font-size: 14px; color: #78899b; line-height: 1.9; }
   @media (max-width: 900px) {
     .inst-topbar { height: 50px; padding: 0 10px; gap: 8px; }
-    .inst-title { font-size: 13px; padding-left: 6px; }
+    .inst-title { font-size: 10px; }
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
@@ -3938,11 +3940,13 @@ function _ovLoadChartLib(cb){
      本轮内容为占位（无子标签），接口 /api/install/* 已就绪，功能下一轮接入。 -->
 <div id="installOverlay" aria-hidden="true">
   <div class="inst-topbar">
-    <div class="inst-logo">
-      <span class="inst-logo-mark">AGI</span>
-      <span class="inst-logo-name">-CRM</span>
+    <div class="inst-brand">
+      <div class="inst-logo">
+        <span class="inst-logo-mark">AGI</span>
+        <span class="inst-logo-name">-CRM</span>
+      </div>
+      <span class="inst-title" id="instTitle">安装管理</span>
     </div>
-    <span class="inst-title" id="instTitle">安装管理</span>
     <span class="inst-spacer"></span>
     <div class="lang-switch" id="instLangSwitch">
       <button id="instLangZh" onclick="setLangDebug('zh')">中</button>
