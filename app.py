@@ -6342,6 +6342,115 @@ def api_demo_clear():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+# ============================================================================
+# ★INSTALL-MGMT-20261124★ 安装管理（占位数据接口）—— 与线上 node-backend/src/install.js 同构
+# ----------------------------------------------------------------------------
+# 表 install_mgmt(project_id UNIQUE, data TEXT, created_at, updated_at, updated_by)
+# 接口：
+#   GET  /api/install/projects                签约项目列表（id / 合同号 / 客户 / 签约日）
+#   GET  /api/install/mgmt?project_id=<id>    读取某项目的安装管理数据（无记录返回空对象）
+#   PUT  /api/install/mgmt                    写入（{project_id, data, me?}）
+# 说明：本轮页面内容为占位，接口先就绪，下一轮接入真实功能时直接复用。
+# ============================================================================
+def _install_ensure_table(conn):
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS install_mgmt (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id TEXT NOT NULL UNIQUE,
+            data TEXT DEFAULT '{}',
+            created_at TEXT DEFAULT '',
+            updated_at TEXT DEFAULT '',
+            updated_by TEXT DEFAULT ''
+        )
+    """)
+    conn.commit()
+
+
+def _install_now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+@app.route("/api/install/projects", methods=["GET"])
+def api_install_projects():
+    try:
+        conn = get_db()
+        _install_ensure_table(conn)
+        rows = conn.execute(
+            "SELECT id, contract_no, customer, contract_date FROM won_projects ORDER BY id DESC"
+        ).fetchall()
+        conn.close()
+        items = [{
+            "id": r["id"],
+            "contract_no": r["contract_no"] or "",
+            "customer": r["customer"] or "",
+            "contract_date": r["contract_date"] or "",
+        } for r in rows]
+        return jsonify({"ok": True, "items": items})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+@app.route("/api/install/mgmt", methods=["GET", "PUT", "POST"])
+def api_install_mgmt():
+    try:
+        conn = get_db()
+        _install_ensure_table(conn)
+        if request.method == "GET":
+            pid = (request.args.get("project_id") or "").strip()
+            if not pid:
+                conn.close()
+                return jsonify({"ok": False, "error": "缺少 project_id"}), 400
+            row = conn.execute(
+                "SELECT project_id, data, created_at, updated_at, updated_by FROM install_mgmt WHERE project_id=?",
+                (pid,)
+            ).fetchone()
+            conn.close()
+            if not row:
+                return jsonify({"ok": True, "item": {
+                    "project_id": pid, "data": {}, "created_at": "",
+                    "updated_at": "", "updated_by": ""
+                }})
+            try:
+                data = json.loads(row["data"] or "{}")
+            except Exception:
+                data = {}
+            return jsonify({"ok": True, "item": {
+                "project_id": row["project_id"],
+                "data": data if data is not None else {},
+                "created_at": row["created_at"] or "",
+                "updated_at": row["updated_at"] or "",
+                "updated_by": row["updated_by"] or "",
+            }})
+
+        payload_in = request.get_json(force=True, silent=True) or {}
+        pid = str(payload_in.get("project_id") or "").strip()
+        if not pid:
+            conn.close()
+            return jsonify({"ok": False, "error": "缺少 project_id"}), 400
+        payload = json.dumps(payload_in.get("data") if payload_in.get("data") is not None else {},
+                             ensure_ascii=False)
+        who = str(payload_in.get("me") or "").strip()
+        ts = _install_now()
+        conn.execute(
+            "INSERT INTO install_mgmt (project_id, data, created_at, updated_at, updated_by) "
+            "VALUES (?,?,?,?,?) "
+            "ON CONFLICT(project_id) DO UPDATE SET data=excluded.data, "
+            "updated_at=excluded.updated_at, updated_by=excluded.updated_by",
+            (pid, payload, ts, ts, who)
+        )
+        conn.commit()
+        conn.close()
+        try:
+            data_out = json.loads(payload)
+        except Exception:
+            data_out = {}
+        return jsonify({"ok": True, "item": {
+            "project_id": pid, "data": data_out, "updated_at": ts, "updated_by": who
+        }})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 if __name__ == "__main__":
     import logging
     import socket

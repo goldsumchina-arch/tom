@@ -40,6 +40,8 @@ import { handleDashUpdateStatus } from "./dash_update_status.js";
 import { handleDashStats } from "./dash_stats.js";
 import { handleTranslateFill } from "./translate_fill.js";
 import { handleSync } from "./sync.js";
+// ★INSTALL-MGMT-20261124★ 安装管理（占位数据接口 /api/install/*）；仅新增 import，不改既有逻辑
+import { handleInstall } from "./install.js";
 import { getD1Usage, quotaBlocks } from "./usage.js";
 
 const PBKDF2_ITER = 10000; // 迭代次数：兼顾安全与 后端 的 CPU 上限
@@ -880,6 +882,7 @@ export default {
       handleCrm, handleWonLost, handleApproval,
       handleUsers, handleFiles, handlePrices, handleFxLatest,
       handleCommission, handleVault, handlePurge, handleDashUpdateStatus, handleDashStats,
+      handleInstall,   // ★INSTALL-MGMT-20261124★ 安装管理 /api/install/*
     ]) {
       let out = null;
       try {

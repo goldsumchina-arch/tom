@@ -322,3 +322,14 @@ CREATE TABLE livestock_update_log (
 CREATE TABLE metal_cache (
         symbol TEXT, date TEXT, close REAL,
         PRIMARY KEY(symbol, date));
+
+-- ============ ★INSTALL-MGMT-20261124★ 安装管理（新表） ============
+-- 与签约项目按 project_id 关联（won_projects.id）；本轮仅占位数据，接口 /api/install/*
+CREATE TABLE IF NOT EXISTS install_mgmt (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id TEXT NOT NULL UNIQUE,
+        data TEXT DEFAULT '{}',
+        created_at TEXT DEFAULT '',
+        updated_at TEXT DEFAULT '',
+        updated_by TEXT DEFAULT ''
+);

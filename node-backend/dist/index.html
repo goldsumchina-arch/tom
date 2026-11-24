@@ -2847,6 +2847,47 @@ function _ovLoadChartLib(cb){
     white-space:nowrap;   /* ★LANG-GEOMETRY-LOCK：绝不能竖排换行（宽度已冻结） */
   }
   .tb-logout:hover { background:rgba(231,76,60,.85); border-color:transparent; }
+  /* ===== ★INSTALL-MGMT-20261124★ 安装管理：全屏覆盖层（连 AGI 顶栏一起盖住，自带独立顶栏） =====
+     契约：只有点右上角「退出安装管理」才收起；期间原 #topbar/#app 只隐藏不销毁（保持原视图/滚动/数据）。 */
+  #installOverlay {
+    position: fixed; inset: 0; z-index: 100070; display: none; flex-direction: column;
+    background: #f2f5fa; font-family: "Segoe UI", Arial, sans-serif;
+  }
+  #installOverlay.show { display: flex; }
+  body.install-open { overflow: hidden !important; }
+  body.install-open #topbar,
+  body.install-open #app { visibility: hidden !important; pointer-events: none !important; }
+  .inst-topbar {
+    flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+    background: linear-gradient(90deg, #1e5fa8, #2f7fd0);
+    box-shadow: 0 2px 10px rgba(0,0,0,.35); font-family: "Segoe UI", Arial, sans-serif;
+  }
+  .inst-logo { display: flex; align-items: center; gap: 8px; white-space: nowrap; user-select: none; }
+  .inst-logo-mark { font-size: 20px; font-weight: 800; color: #e8720c; letter-spacing: .5px; }
+  .inst-logo-name { font-size: 16px; font-weight: 700; color: #fff; }
+  .inst-title { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.28); }
+  .inst-spacer { flex: 1 1 auto; }
+  .inst-exit-btn {
+    border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff;
+    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    transition: background .15s, border-color .15s; white-space: nowrap;
+  }
+  .inst-exit-btn:hover { background: rgba(231,76,60,.85); border-color: transparent; }
+  .inst-body { flex: 1 1 auto; overflow: auto; padding: 28px 20px; }
+  .inst-card {
+    max-width: 880px; margin: 0 auto; background: #fff; border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(30,60,120,.12); padding: 40px 28px; text-align: center;
+  }
+  .inst-card h2 { font-size: 22px; color: #1e5fa8; font-weight: 700; margin: 0 0 12px; }
+  .inst-card .inst-ph { font-size: 14px; color: #78899b; line-height: 1.9; }
+  @media (max-width: 900px) {
+    .inst-topbar { height: 50px; padding: 0 10px; gap: 8px; }
+    .inst-title { font-size: 13px; padding-left: 6px; }
+    .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
+    .inst-body { padding: 14px 10px; }
+    .inst-card { padding: 24px 16px; }
+    .inst-card h2 { font-size: 18px; }
+  }
   /* ★TOPBAR-RIGHTSLIM-20261102★ 用户要求：顶部标签必须一屏放下、不出现横向滚动条。
      办法是把右侧信息区（语言胶囊 / 用户 / 退出）整体瘦身，省下的约 120px 全部让给标签：
        · 语言胶囊去掉「语言:」字样 —— 中/EN/VI 三个按钮自解释（切语言逻辑完全不受影响）
@@ -3863,6 +3904,8 @@ function _ovLoadChartLib(cb){
     <button class="tb-item" data-view="lost" onclick="switchView('lost')">Failed Projects</button>
     <button class="tb-item" data-view="approvals" onclick="switchView('approvals')"><span class="tb-label">Approvals</span><span class="pend-badge" id="pendBadge">0</span></button>
     <button class="tb-item" data-view="users" onclick="switchView('users')">Users</button>
+    <!-- ★INSTALL-MGMT-20261124★ 安装管理：导航最右侧，点击后全屏覆盖（权限 INST-L1，默认按职位可见） -->
+    <button class="tb-item" data-view="install" id="tbInstall" onclick="openInstallMgmt()"><span class="tb-label">Installation Management</span></button>
     <!-- 个人佣金暗门入口：默认隐藏，只有白名单用户通过 LOGO 手势解锁后才出现 -->
     <button class="tb-item" data-view="commission" id="tbCommission" onclick="switchView('commission')">Commission</button>
   </div>
@@ -3885,6 +3928,41 @@ function _ovLoadChartLib(cb){
     <button class="tb-logout" id="tbLogout" onclick="doLogout()">Logout</button>
   </div>
 </nav>
+
+<!-- ==================== ★INSTALL-MGMT-20261124★ 安装管理（全屏覆盖层） ====================
+     行为契约：
+       · 点导航「安装管理」→ 本层盖住整个页面（含 AGI 顶栏），原页面只隐藏不销毁；
+       · 只有右上角「退出安装管理」能收起，收起后回到进来前的标签页；
+       · 刷新后仍停留在安装管理（sessionStorage: won_install_open=1）；
+       · 本层自带语言切换（与主站同一套 CUR_LANG）+ 用户信息 + 退出按钮。
+     本轮内容为占位（无子标签），接口 /api/install/* 已就绪，功能下一轮接入。 -->
+<div id="installOverlay" aria-hidden="true">
+  <div class="inst-topbar">
+    <div class="inst-logo">
+      <span class="inst-logo-mark">AGI</span>
+      <span class="inst-logo-name">-CRM</span>
+    </div>
+    <span class="inst-title" id="instTitle">安装管理</span>
+    <span class="inst-spacer"></span>
+    <div class="lang-switch" id="instLangSwitch">
+      <button id="instLangZh" onclick="setLangDebug('zh')">中</button>
+      <button id="instLangEn" onclick="setLangDebug('en')">EN</button>
+      <button id="instLangVi" onclick="setLangDebug('vi')">VI</button>
+    </div>
+    <div class="tb-user" id="instUserChip">
+      <span class="tb-user-avatar" id="instUserAvatar">T</span>
+      <span class="tb-user-name" id="instUserName">Tom</span>
+      <span class="tb-user-role" id="instUserRole"></span>
+    </div>
+    <button class="inst-exit-btn" id="instExitBtn" onclick="exitInstallMgmt()">退出安装管理</button>
+  </div>
+  <div class="inst-body">
+    <div class="inst-card">
+      <h2 id="instPageTitle">安装管理</h2>
+      <div class="inst-ph" id="instPagePh">功能开发中，敬请期待</div>
+    </div>
+  </div>
+</div>
 
 <!-- ==================== 私密空间（Vault）入口 PIN 弹窗 ==================== -->
 <div id="vaultPinModal" class="vault-pin-modal hidden">
@@ -5486,10 +5564,14 @@ function _ovLoadChartLib(cb){
             <option value="" data-i18n="user_position_none">— 不选 —</option>
             <option value="销售" data-i18n="user_position_sales">销售</option>
             <option value="销售总监" data-i18n="user_position_sales_dir">销售总监</option>
+            <option value="销售经理" data-i18n="user_position_sales_mgr">销售经理</option>
+            <option value="销售主管" data-i18n="user_position_sales_sup">销售主管</option>
             <option value="总经理" data-i18n="user_position_gm">总经理</option>
             <option value="副总经理" data-i18n="user_position_dgm">副总经理</option>
             <option value="观察者" data-i18n="user_position_observer">观察者</option>
             <option value="财务经理" data-i18n="user_position_finance">财务经理</option>
+            <option value="安装经理" data-i18n="user_position_install_mgr">安装经理</option>
+            <option value="安装主管" data-i18n="user_position_install_sup">安装主管</option>
             <option value="总经理助理" data-i18n="user_position_gm_asst">总经理助理</option>
             <option value="人事经理" data-i18n="user_position_hr">人事经理</option>
           </select>
@@ -6880,9 +6962,9 @@ var I18N = {
     addm_title:"补充协议管理", addm_action:"操作", addm_date:"日期", addm_amt_rmb:"金额(RMB)", addm_amt_usd:"金额(USD)", addm_amt_vnd:"金额(VND)", addm_desc:"说明", addm_file:"附件(PDF)", addm_upload_cnt:"修改次数", addm_add:"＋ 增加补充协议", addm_save:"保存", addm_close:"关闭", addm_del:"删除", addm_clear_desc:"清空三语", addm_no_pdf:"仅支持 PDF 格式", addm_upload_ok:"上传成功", addm_upload_fail:"上传失败", addm_confirm_del:"确定删除该补充协议？", addm_no_data:"暂无补充协议", addm_save_first:"请先保存主表", addm_alert_title:"提示", addm_alert_ok:"确定", addm_count_auto:"（次数自动）", addm_view_title:"查看补充协议", detail_del:"删除",
     d1u_report_title:"Tencent 用量与监控", d1u_title:"腾讯云资源用量", d1u_plan:"腾讯云轻量应用服务器", d1u_limit:"流量包总额：{limit} GB", d1u_used:"已用流量", d1u_remain:"剩余流量", d1u_pct:"占比", d1u_written:"磁盘已用", d1u_date:"更新时间", d1u_refresh:"刷新", d1u_loading:"正在读取腾讯数据…", d1u_unavailable:"暂无法获取腾讯数据（未配置密钥或接口不可用）", d1u_locked:"已达 95% 上限：已限制其他用户，仅管理员可用", d1u_normal:"用量正常", d1u_cleanup_btn:"清理残留文件", d1u_close:"关闭", d1u_choose_title:"Tencent 用量与监控", d1u_choose_usage:"查看用量与监控", d1u_choose_clean:"清理残留文件（含容量报告）", d1u_choose_cancel:"取消", d1u_back:"返回上一页", d1u_back_lvl:"返回上一级",
     clean_title:"清理残留文件", clean_confirm:"确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。", clean_ok:"确认清除", clean_cancel:"取消", clean_success:"清理完成", clean_result:"扫描了 {total} 个 R2 对象，发现 {orphans} 个孤儿文件，已删除 {deleted} 个，跳过 {skipped} 个非受管文件。", clean_no_orphans:"未发现孤儿文件。", clean_forbidden:"仅 Tom 可使用此功能。", clean_error:"清理请求失败：", clean_report_title:"清理报告", clean_report_summary:"本次共删除 {deleted} 个垃圾文件（共发现 {total} 个孤儿文件）。", clean_report_where:"删除位置（相对路径）", clean_report_close:"关闭", clean_report_empty:"未发现可删除的垃圾文件，目录已干净。", clean_report_more:"（仅显示前 50 个，实际共 {total} 个）", clean_storage_title:"腾讯云容量分布", clean_storage_summary:"总容量 {total}，已用 {used}（{usedPct}），剩余 {free}（{freePct}）", clean_storage_won:"WON 附件", clean_storage_crm:"CRM 附件", clean_storage_lost:"LOST 附件", clean_storage_vault:"私密空间文件", clean_storage_snapshots:"数据快照", clean_storage_other:"其它", clean_storage_free:"剩余空间", clean_storage_loading:"正在统计腾讯云容量…", clean_storage_error:"容量统计失败：",
-    nav: { dashboard:"看板", crm:"潜在项目", won:"签约项目", lost:"失败项目", approvals:"审批", users:"用户与授权", commission:"个人佣金", lang:"语言", logout:"退出登录", role_admin:"(管理员)", export_pdf:"导出PDF", fit:"适应", fit_exit:"还原", fit_tip:"把整张表缩放到一屏宽；双击表格或再点一次还原" },
+    nav: { dashboard:"看板", crm:"潜在项目", won:"签约项目", lost:"失败项目", approvals:"审批", users:"用户与授权", commission:"个人佣金", install:"安装管理", install_exit:"退出安装管理", install_ph:"功能开发中，敬请期待", lang:"语言", logout:"退出登录", role_admin:"(管理员)", export_pdf:"导出PDF", fit:"适应", fit_exit:"还原", fit_tip:"把整张表缩放到一屏宽；双击表格或再点一次还原" },
     /* 手机横屏专用短标签：原名太长会挤掉后面的标签，这里用短名保证 6 个标签一屏可见 */
-    nav_short: { dashboard:"看板", crm:"潜在", won:"签约", lost:"失败", approvals:"审批", users:"用户", commission:"佣金" },
+    nav_short: { dashboard:"看板", crm:"潜在", won:"签约", lost:"失败", approvals:"审批", users:"用户", commission:"佣金", install:"安装" },
     empty: { dash_title:"看板", dash_sub:"CRM + 签约 + 失败数据分析", dash_hint:"数据分析面板开发中，敬请期待",
              dash_card_title:"数据看板", dash_refresh:"刷新", dash_loading:"数据加载中…", dash_load_failed:"数据加载失败",
              dash_potential_count:"潜在项目总数", dash_potential_amt:"潜在项目总金额",
@@ -6955,7 +7037,7 @@ var I18N = {
              user_toast_pick_approve:"请先在该行决策下拉选择「发起审批」再指定审批人", user_toast_max_approver:"最多选择 3 位审批人",
              user_save_ok:"保存成功", user_save_fail:"保存失败", user_add_ok:"新增成功", user_add_fail:"新增失败",
              user_alert_empty:"姓名和账号不能为空", user_login_fmt:"请使用小写字母和/或数字的组合！", user_alert_need_approver:"区块 {bid} 选了「发起审批」，请至少选择 1 位审批人",
-             user_position_none:"— 不选 —", user_position_sales:"销售", user_position_sales_dir:"销售总监", sales_lock_tip:"销售/销售总监职位：此权限已被系统锁定为「隐藏该项」，不可修改", observer_lock_tip:"观察者角色：整套权限由系统固定，不可修改", user_position_gm:"总经理", user_position_dgm:"副总经理", user_position_observer:"观察者", user_position_finance:"财务经理", user_position_gm_asst:"总经理助理", user_position_hr:"人事经理", user_active_on:"在职", user_active_off:"离职",
+             user_position_none:"— 不选 —", user_position_sales:"销售", user_position_sales_dir:"销售总监", sales_lock_tip:"销售/销售总监职位：此权限已被系统锁定为「隐藏该项」，不可修改", observer_lock_tip:"观察者角色：整套权限由系统固定，不可修改", user_position_gm:"总经理", user_position_dgm:"副总经理", user_position_observer:"观察者", user_position_finance:"财务经理", user_position_gm_asst:"总经理助理", user_position_hr:"人事经理", user_position_sales_mgr:"销售经理", user_position_sales_sup:"销售主管", user_position_install_mgr:"安装经理", user_position_install_sup:"安装主管", user_active_on:"在职", user_active_off:"离职",
              user_sec_initpwd:"所有新用户的默认初始密码为", user_sec_initpwd_tail:"，用户首次登录后可自行修改",
              user_sec_forgot:"用户在登录界面点击「忘记密码」时，系统会向该用户配置的审批人发送审批请求，任一审批人「通过」后，密码自动重置为初始密码 66668888",
              auth_title_reset:"重置密码", auth_title_forgot:"忘记密码", auth_lbl_username:"用户名", auth_lbl_old_pwd:"旧密码", auth_lbl_new_pwd:"新密码", auth_lbl_confirm_pwd:"确认新密码",
@@ -7664,9 +7746,9 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     addm_title:"Addendum Management", addm_action:"Action", addm_date:"Date", addm_amt_rmb:"Amt RMB", addm_amt_usd:"Amt USD", addm_amt_vnd:"Amt VND", addm_desc:"Description", addm_file:"Attachment(PDF)", addm_upload_cnt:"Mod Count", addm_add:"＋ Add Addendum", addm_save:"Save", addm_close:"Close", addm_del:"Delete", addm_clear_desc:"Clear all", addm_no_pdf:"Only PDF is supported", addm_upload_ok:"Upload successful", addm_upload_fail:"Upload failed", addm_confirm_del:"Delete this addendum?", addm_no_data:"No addendum yet", addm_save_first:"Please save the main form first", addm_alert_title:"Notice", addm_alert_ok:"OK", addm_count_auto:"(count auto)", addm_view_title:"View Addendum", detail_del:"Delete",
     d1u_report_title:"Tencent Usage & Monitoring", d1u_title:"Tencent Cloud Usage", d1u_plan:"Tencent Cloud Lighthouse", d1u_limit:"Traffic package: {limit} GB", d1u_used:"Traffic used", d1u_remain:"Traffic remaining", d1u_pct:"Percentage", d1u_written:"Disk used", d1u_date:"Updated", d1u_refresh:"Refresh", d1u_loading:"Loading Tencent data…", d1u_unavailable:"Tencent data unavailable (credentials not configured or API error)", d1u_locked:"95% limit reached: other users blocked, admin only", d1u_normal:"Usage is normal", d1u_cleanup_btn:"Clean up leftover files", d1u_close:"Close", d1u_choose_title:"Tencent Usage & Monitoring", d1u_choose_usage:"View Usage & Monitoring", d1u_choose_clean:"Clean up leftover files (with storage report)", d1u_choose_cancel:"Cancel", d1u_back:"Back to Previous", d1u_back_lvl:"Back",
     clean_title:"Clean up leftover files", clean_confirm:"Confirm cleanup of invalid files and orphan remnants after deletion? This action cannot be undone.", clean_ok:"Confirm Clean", clean_cancel:"Cancel", clean_success:"Cleanup completed", clean_result:"Scanned {total} R2 objects, found {orphans} orphan files, deleted {deleted}, skipped {skipped} unmanaged files.", clean_no_orphans:"No orphan files found.", clean_forbidden:"Only Tom can use this feature.", clean_error:"Cleanup request failed:", clean_report_title:"Cleanup Report", clean_report_summary:"Deleted {deleted} junk file(s) (found {total} orphan file(s) in total).", clean_report_where:"Deleted location (relative path)", clean_report_close:"Close", clean_report_empty:"No junk files to delete; the directory is already clean.", clean_report_more:"(showing first 50; total {total})", clean_storage_title:"Tencent Cloud Storage", clean_storage_summary:"Total {total}, Used {used} ({usedPct}), Free {free} ({freePct})", clean_storage_won:"WON attachments", clean_storage_crm:"CRM attachments", clean_storage_lost:"LOST attachments", clean_storage_vault:"Vault files", clean_storage_snapshots:"Data snapshots", clean_storage_other:"Other", clean_storage_free:"Free space", clean_storage_loading:"Counting Tencent Cloud storage…", clean_storage_error:"Storage count failed: ",
-    nav: { dashboard:"Dashboard", crm:"Potential Projects", won:"Won Projects", lost:"Failed Projects", approvals:"Approvals", users:"User & Authorization", commission:"Personal Commission", lang:"Lang", logout:"Logout", role_admin:"(admin)", export_pdf:"Export PDF", fit:"Fit", fit_exit:"100%", fit_tip:"Fit table to screen width; double-tap the table or tap again to restore" },
+    nav: { dashboard:"Dashboard", crm:"Potential Projects", won:"Won Projects", lost:"Failed Projects", approvals:"Approvals", users:"User & Authorization", commission:"Personal Commission", install:"Installation Management", install_exit:"Exit Installation Management", install_ph:"Under development, coming soon", lang:"Lang", logout:"Logout", role_admin:"(admin)", export_pdf:"Export PDF", fit:"Fit", fit_exit:"100%", fit_tip:"Fit table to screen width; double-tap the table or tap again to restore" },
     /* Short labels used on phone landscape so all 6 tabs fit on one row */
-    nav_short: { dashboard:"Board", crm:"Potential", won:"Won", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm" },
+    nav_short: { dashboard:"Board", crm:"Potential", won:"Won", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm", install:"Install" },
     empty: { dash_title:"Dashboard", dash_sub:"CRM + Won + Failed Analytics", dash_hint:"Analytics panel under development",
              dash_card_title:"Dashboard", dash_refresh:"Refresh", dash_loading:"Loading…", dash_load_failed:"Failed to load data",
              dash_potential_count:"Total Potential Projects", dash_potential_amt:"Total Potential Project Value",
@@ -7741,7 +7823,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
              user_toast_pick_approve:"Please select 'Initiate Approval' in the row's decision dropdown before assigning approvers", user_toast_max_approver:"Select at most 3 approvers",
              user_save_ok:"Saved successfully", user_save_fail:"Save failed", user_add_ok:"Added successfully", user_add_fail:"Add failed",
              user_alert_empty:"Name and account cannot be empty", user_login_fmt:"Please use lowercase letters and/or numbers only!", user_alert_need_approver:"Block {bid} chose 'Initiate Approval'; please select at least 1 approver",
-             user_position_none:"— None —", user_position_sales:"Sales", user_position_sales_dir:"Sales Director", sales_lock_tip:"Sales / Sales Director position: this permission is locked to 'Hide' by the system and cannot be changed", observer_lock_tip:"Observer role: the permission set is fixed by the system and cannot be changed", user_position_gm:"General Manager", user_position_dgm:"Deputy GM", user_position_observer:"Observer", user_position_finance:"Finance Manager", user_position_gm_asst:"GM Assistant", user_position_hr:"HR Manager", user_active_on:"Active", user_active_off:"Resigned",
+             user_position_none:"— None —", user_position_sales:"Sales", user_position_sales_dir:"Sales Director", sales_lock_tip:"Sales / Sales Director position: this permission is locked to 'Hide' by the system and cannot be changed", observer_lock_tip:"Observer role: the permission set is fixed by the system and cannot be changed", user_position_gm:"General Manager", user_position_dgm:"Deputy GM", user_position_observer:"Observer", user_position_finance:"Finance Manager", user_position_gm_asst:"GM Assistant", user_position_hr:"HR Manager", user_position_sales_mgr:"Sales Manager", user_position_sales_sup:"Sales Supervisor", user_position_install_mgr:"Installation Manager", user_position_install_sup:"Installation Supervisor", user_active_on:"Active", user_active_off:"Resigned",
              user_sec_initpwd:"The default initial password for all new users is", user_sec_initpwd_tail:"; user may change it after first login",
              user_sec_forgot:"When a user clicks 'Forgot Password' on the login screen, the system sends an approval request to this user's configured approvers; once any approver approves, the password resets to the initial 66668888",
              auth_title_reset:"Reset Password", auth_title_forgot:"Forgot Password", auth_lbl_username:"Username", auth_lbl_old_pwd:"Old Password", auth_lbl_new_pwd:"New Password", auth_lbl_confirm_pwd:"Confirm New Password",
@@ -8451,9 +8533,9 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     addm_title:"Quản lý phụ lục hợp đồng", addm_action:"Thao tác", addm_date:"Ngày", addm_amt_rmb:"Tiền(RMB)", addm_amt_usd:"Tiền(USD)", addm_amt_vnd:"Tiền(VND)", addm_desc:"Mô tả", addm_file:"Tệp(PDF)", addm_upload_cnt:"Số lần sửa", addm_add:"＋ Thêm phụ lục", addm_save:"Lưu", addm_close:"Đóng", addm_del:"Xóa", addm_clear_desc:"Xóa 3 ngôn ngữ", addm_no_pdf:"Chỉ hỗ trợ PDF", addm_upload_ok:"Tải lên thành công", addm_upload_fail:"Tải lên thất bại", addm_confirm_del:"Xóa phụ lục này?", addm_no_data:"Chưa có phụ lục", addm_save_first:"Vui lòng lưu form chính trước", addm_alert_title:"Thông báo", addm_alert_ok:"Đồng ý", addm_count_auto:"(tự động)", addm_view_title:"Xem phụ lục", detail_del:"Xóa",
     d1u_report_title:"Tencent Usage & Monitoring", d1u_title:"Mức sử dụng tài nguyên Tencent Cloud", d1u_plan:"Tencent Cloud Lighthouse", d1u_limit:"Gói lưu lượng: {limit} GB", d1u_used:"Lưu lượng đã dùng", d1u_remain:"Lưu lượng còn lại", d1u_pct:"Tỷ lệ", d1u_written:"Đĩa đã dùng", d1u_date:"Cập nhật", d1u_refresh:"Làm mới", d1u_loading:"Đang tải dữ liệu Tencent…", d1u_unavailable:"Không lấy được dữ liệu Tencent (chưa cấu hình khóa hoặc lỗi API)", d1u_locked:"Đã đạt 95% giới hạn: người dùng khác bị chặn, chỉ quản trị viên", d1u_normal:"Mức sử dụng bình thường", d1u_cleanup_btn:"Dọn dẹp file thừa", d1u_close:"Đóng", d1u_choose_title:"Tencent Usage & Monitoring", d1u_choose_usage:"Xem mức sử dụng & giám sát", d1u_choose_clean:"Dọn dẹp file thừa (kèm báo cáo dung lượng)", d1u_choose_cancel:"Hủy", d1u_back:"Quay lại trang trước", d1u_back_lvl:"Quay lại",
     clean_title:"Dọn dẹp file thừa", clean_confirm:"Xác nhận xóa file không hợp lệ và file thừa còn sót sau khi xóa? Thao tác này không thể hoàn tác.", clean_ok:"Xác nhận xóa", clean_cancel:"Hủy", clean_success:"Dọn dẹp hoàn tất", clean_result:"Đã quét {total} đối tượng R2, tìm thấy {orphans} file thừa, đã xóa {deleted}, bỏ qua {skipped} file không được quản lý.", clean_no_orphans:"Không tìm thấy file thừa.", clean_forbidden:"Chỉ Tom mới có thể sử dụng tính năng này.", clean_error:"Yêu cầu dọn dẹp thất bại:", clean_report_title:"Báo cáo dọn dẹp", clean_report_summary:"Đã xóa {deleted} file rác (tìm thấy tổng cộng {total} file thừa).", clean_report_where:"Vị trí đã xóa (đường dẫn tương đối)", clean_report_close:"Đóng", clean_report_empty:"Không tìm thấy file rác để xóa; thư mục đã sạch.", clean_report_more:"(chỉ hiển thị 50 đầu; tổng {total})", clean_storage_title:"Dung lượng Tencent Cloud", clean_storage_summary:"Tổng {total}, Đã dùng {used} ({usedPct}), Còn trống {free} ({freePct})", clean_storage_won:"Tệp đính kèm WON", clean_storage_crm:"Tệp đính kèm CRM", clean_storage_lost:"Tệp đính kèm LOST", clean_storage_vault:"Tệp Vault", clean_storage_snapshots:"Snapshot dữ liệu", clean_storage_other:"Khác", clean_storage_free:"Còn trống", clean_storage_loading:"Đang thống kê dung lượng Tencent Cloud…", clean_storage_error:"Thống kê thất bại: ",
-    nav: { dashboard:"Bảng điều khiển", crm:"Dự án tiềm năng", won:"Dự án Thắng", lost:"Dự án thất bại", approvals:"Phê duyệt", users:"Người dùng & Ủy quyền", commission:"Hoa Hồng Cá Nhân", lang:"Ngôn ngữ", logout:"Đăng xuất", role_admin:"(quản trị)", export_pdf:"Xuất PDF", fit:"Vừa", fit_exit:"100%", fit_tip:"Thu nhỏ bảng vừa màn hình; nhấn đúp vào bảng để trở lại" },
+    nav: { dashboard:"Bảng điều khiển", crm:"Dự án tiềm năng", won:"Dự án Thắng", lost:"Dự án thất bại", approvals:"Phê duyệt", users:"Người dùng & Ủy quyền", commission:"Hoa Hồng Cá Nhân", install:"Quản lý lắp đặt", install_exit:"Thoát quản lý lắp đặt", install_ph:"Đang phát triển, vui lòng chờ", lang:"Ngôn ngữ", logout:"Đăng xuất", role_admin:"(quản trị)", export_pdf:"Xuất PDF", fit:"Vừa", fit_exit:"100%", fit_tip:"Thu nhỏ bảng vừa màn hình; nhấn đúp vào bảng để trở lại" },
     /* Nhãn ngắn dùng cho màn hình ngang để 6 tab vừa một hàng */
-    nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH" },
+    nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH", install:"Lắp đặt" },
     empty: { dash_title:"Bảng điều khiển", dash_sub:"Phân tích CRM + Thắng + Thất bại", dash_hint:"Bảng phân tích đang phát triển",
              dash_card_title:"Bảng dữ liệu", dash_refresh:"Làm mới", dash_loading:"Đang tải…", dash_load_failed:"Tải dữ liệu thất bại",
              dash_potential_count:"Tổng số dự án tiềm năng", dash_potential_amt:"Tổng giá trị dự án tiềm năng",
@@ -8528,7 +8610,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
              user_toast_pick_approve:"Vui lòng chọn 'Khởi tạo phê duyệt' trong menu quyết định của hàng trước khi chỉ định người phê duyệt", user_toast_max_approver:"Chọn tối đa 3 người phê duyệt",
              user_save_ok:"Lưu thành công", user_save_fail:"Lưu thất bại", user_add_ok:"Thêm thành công", user_add_fail:"Thêm thất bại",
              user_alert_empty:"Tên và tài khoản không được để trống", user_login_fmt:"Vui lòng chỉ dùng chữ cái thường và/hoặc số!", user_alert_need_approver:"Khối {bid} chọn 'Khởi tạo phê duyệt'; vui lòng chọn ít nhất 1 người phê duyệt",
-             user_position_none:"— Không chọn —", user_position_sales:"Bán hàng", user_position_sales_dir:"Giám đốc bán hàng", sales_lock_tip:"Vị trí Bán hàng / Giám đốc bán hàng: quyền này đã bị hệ thống khóa ở mức 'Ẩn', không thể thay đổi", observer_lock_tip:"Vai trò Người theo dõi: bộ quyền đã được hệ thống cố định, không thể thay đổi", user_position_gm:"Tổng giám đốc", user_position_dgm:"Phó tổng giám đốc", user_position_observer:"Ngườitheo dõi", user_position_finance:"Giám đốc tài chính", user_position_gm_asst:"Trợ lý TGĐ", user_position_hr:"Giám đốc nhân sự", user_active_on:"Đang làm việc", user_active_off:"Nghỉ việc",
+             user_position_none:"— Không chọn —", user_position_sales:"Bán hàng", user_position_sales_dir:"Giám đốc bán hàng", sales_lock_tip:"Vị trí Bán hàng / Giám đốc bán hàng: quyền này đã bị hệ thống khóa ở mức 'Ẩn', không thể thay đổi", observer_lock_tip:"Vai trò Người theo dõi: bộ quyền đã được hệ thống cố định, không thể thay đổi", user_position_gm:"Tổng giám đốc", user_position_dgm:"Phó tổng giám đốc", user_position_observer:"Ngườitheo dõi", user_position_finance:"Giám đốc tài chính", user_position_gm_asst:"Trợ lý TGĐ", user_position_hr:"Giám đốc nhân sự", user_position_sales_mgr:"Trưởng phòng bán hàng", user_position_sales_sup:"Giám sát bán hàng", user_position_install_mgr:"Trưởng phòng lắp đặt", user_position_install_sup:"Giám sát lắp đặt", user_active_on:"Đang làm việc", user_active_off:"Nghỉ việc",
              user_sec_initpwd:"Mật khẩu ban đầu mặc định cho tất cả người dùng mới là", user_sec_initpwd_tail:", người dùng có thể đổi sau lần đăng nhập đầu",
              user_sec_forgot:"Khi người dùng nhấn 'Quên mật khẩu' trên màn hình đăng nhập, hệ thống gửi yêu cầu phê duyệt đến những người phê duyệt đã cấu hình; sau khi bất kỳ người nào phê duyệt, mật khẩu tự đặt lại về mật khẩu ban đầu 66668888",
              auth_title_reset:"Đặt lại mật khẩu", auth_title_forgot:"Quên mật khẩu", auth_lbl_username:"Tài khoản", auth_lbl_old_pwd:"Mật khẩu cũ", auth_lbl_new_pwd:"Mật khẩu mới", auth_lbl_confirm_pwd:"Xác nhận mật khẩu mới",
@@ -10991,7 +11073,7 @@ function applyTopbarLang() {
   // 盒子宽度由 LG.freezeTopbar 按「三语最长文案」算定，所以文案变、盒子不变 → 不闪跳。
   var _langNow = (window.CUR_LANG || CUR_LANG);
   var shortNav = (topbarCompact() && _langNow !== 'zh' && t.nav_short) ? t.nav_short : null;
-  var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', lost:'lost', approvals:'approvals', users:'users', commission:'commission' };
+  var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', lost:'lost', approvals:'approvals', users:'users', commission:'commission', install:'install' };
   for (var k in menuMap) {
     var b = document.querySelector('.tb-item[data-view="'+menuMap[k]+'"]');
     var txt = (shortNav && shortNav[k]) ? shortNav[k] : nav[k];
@@ -11004,6 +11086,8 @@ function applyTopbarLang() {
   }
   // 个人佣金视图标题/占位文案随语言刷新
   if (typeof applyCommissionLang === 'function') applyCommissionLang();
+  // ★INSTALL-MGMT-20261124★ 安装管理覆盖层文案（标签/标题/占位/退出按钮/用户信息）随语言刷新
+  if (typeof applyInstallLang === 'function') applyInstallLang();
   var lbl = document.querySelector('.lang-switch-label');
   if (lbl && nav.lang) lbl.textContent = nav.lang + ':';
   var lg = el('tbLogout');
@@ -12276,7 +12360,10 @@ function applyUsersLang() {
       '\u9500\u552e':u.user_position_sales||'\u9500\u552e','\u9500\u552e\u603b\u76d1':u.user_position_sales_dir||'\u9500\u552e\u603b\u76d1',
       '\u603b\u7ecf\u7406':u.user_position_gm||'\u603b\u7ecf\u7406','\u526f\u603b\u7ecf\u7406':u.user_position_dgm||'\u526f\u603b\u7ecf\u7406',
       '\u89c2\u5bdf\u8005':u.user_position_observer||'\u89c2\u5bdf\u8005','\u8d22\u52a1\u7ecf\u7406':u.user_position_finance||'\u8d22\u52a1\u7ecf\u7406',
-      '\u603b\u7ecf\u7406\u52a9\u7406':u.user_position_gm_asst||'\u603b\u7ecf\u7406\u52a9\u7406','\u4eba\u4e8b\u7ecf\u7406':u.user_position_hr||'\u4eba\u4e8b\u7ecf\u7406'
+      '\u603b\u7ecf\u7406\u52a9\u7406':u.user_position_gm_asst||'\u603b\u7ecf\u7406\u52a9\u7406','\u4eba\u4e8b\u7ecf\u7406':u.user_position_hr||'\u4eba\u4e8b\u7ecf\u7406',
+      /* ★INSTALL-MGMT-20261124★ 新增 4 个职位（三语标签） */
+      '\u9500\u552e\u7ecf\u7406':u.user_position_sales_mgr||'\u9500\u552e\u7ecf\u7406','\u9500\u552e\u4e3b\u7ba1':u.user_position_sales_sup||'\u9500\u552e\u4e3b\u7ba1',
+      '\u5b89\u88c5\u7ecf\u7406':u.user_position_install_mgr||'\u5b89\u88c5\u7ecf\u7406','\u5b89\u88c5\u4e3b\u7ba1':u.user_position_install_sup||'\u5b89\u88c5\u4e3b\u7ba1'
     };
     selPos.querySelectorAll('option').forEach(function(opt){
       if(!opt.value) opt.textContent=u.user_position_none||'— 不选 —';
@@ -12504,6 +12591,12 @@ const PERMS = [
     ["USR-D2","新增用户","S", "隐藏该项=不显示「新增用户」按钮（默认） · 允许新增=可新增，提交后生成报告，经 tom/cuong/james 任一人审批后正式激活"],
     ["USR-D3","删除/停用用户","S", "隐藏该项=不显示「删除/停用」按钮（默认） · 允许删除/停用=可发起，经 tom/cuong/james 任一人同意后执行"]
   ]},
+  /* ★INSTALL-MGMT-20261124★ 安装管理：导航标签 + 全屏页面入口（权限区块 INST-L1）
+     缺省规则：管理员、tom/james/cuong，以及职位为 观察者/安装经理/安装主管/财务经理/销售经理/销售主管/销售总监/销售（=销售员）的人默认可见；
+     管理员仍可在「用户与授权」里对任意用户改为「特别授权看全公司」（可见）或「隐藏该项」（不可见）。 */
+  {gid:"安装管理",rows:[
+    ["INST-L1","安装管理（导航标签 + 全屏页面）","C", "保留默认=按职位白名单可见（管理员、观察者、安装经理、安装主管、财务经理、销售经理、销售主管、销售总监、销售） · 特别授权=任何职位都可见 · 隐藏该项=完全不可见"]
+  ]},
 ];
 
 // ===== 权限拦截核心：根据 authUser.perms[bid].decision 真正控制界面与操作 =====
@@ -12568,6 +12661,19 @@ function _isSalesPos(u){
   var p = String(u.position||'').trim();
   return p === '销售' || p === '销售总监';
 }
+/* ★INSTALL-MGMT-20261124★ 安装管理（INST-L1）缺省可见白名单
+   职位：观察者 / 安装经理 / 安装主管 / 财务经理 / 销售经理 / 销售主管 / 销售总监 / 销售（销售员等同「销售」）
+   账号：tom / james / cuong（与三人审批组一致）
+   管理员已在 defaultVisible() 里直通；管理员对某个用户显式保存过的决策（隐藏/特别授权）优先级最高。 */
+var INSTALL_DEFAULT_POS = ['观察者','安装经理','安装主管','财务经理','销售经理','销售主管','销售总监','销售'];
+var INSTALL_DEFAULT_USERS = ['tom','james','cuong'];
+function _isInstallDefaultPos(u){
+  if(!u) return false;
+  var un = String(u.username||u.login||u.name||'').trim().toLowerCase();
+  if(un && INSTALL_DEFAULT_USERS.indexOf(un) >= 0) return true;
+  var p = String(u.position||'').trim();
+  return INSTALL_DEFAULT_POS.indexOf(p) >= 0;
+}
 // 最终可见性（决策覆盖默认）
 function permVisible(bid){
   // tom/cuong/james 三人组：用户与权限管理四个区块全部直接可见（与管理员同级直通）
@@ -12583,6 +12689,8 @@ function permVisible(bid){
   if (dec === 'hide') return false;
   if (dec === 'all') return true;             // 特别授权：即使默认隐藏也显示
   if (dec === 'approve') return true;         // 发起审批：入口可见，操作受拦截
+  // ★INSTALL-MGMT-20261124★ 安装管理缺省可见（C 类默认隐藏 + 职位/账号白名单例外）
+  if (dec === 'def' && bid === 'INST-L1' && _isInstallDefaultPos(authUser)) return true;
   return defaultVisible(bid);                 // 保留默认 / 未配置
 }
 // 显示/隐藏某个 DOM 元素（按 id 或元素）
@@ -12664,7 +12772,8 @@ var VIEW_PERM_MAP = {
   crm: 'CRM-L1',
   won: 'WON-L1',
   lost: 'LOST-L1',
-  users: 'USR-L1'
+  users: 'USR-L1',
+  install: 'INST-L1'   // ★INSTALL-MGMT-20261124★ 安装管理（缺省可见性见 _isInstallDefaultPos）
 };
 function viewAllowed(name){
   if (typeof authUser === 'undefined' || !authUser) return false;
@@ -16500,6 +16609,12 @@ function applyAllPermVisibility(){
   if (usersTab) usersTab.style.display = usrVisible ? 'inline-block' : 'none';
   // 审批视图页签
   applyApprovalTabPerms();
+  // ★INSTALL-MGMT-20261124★ 权限刷新后若安装管理已不可见，正在打开的覆盖层必须立刻收起
+  if (typeof installIsOpen === 'function' && installIsOpen() &&
+      (typeof viewAllowed !== 'function' || !viewAllowed('install')) &&
+      typeof exitInstallMgmt === 'function') {
+    exitInstallMgmt();
+  }
   // 标签显隐变化后重新计算字号/间距，让尽量多的标签在一屏内显示
   if (typeof fitTopbarFonts === 'function') {
     setTimeout(fitTopbarFonts, 0);
@@ -25108,6 +25223,11 @@ function hideMainContent() {
   var app = document.getElementById('app');
   if (top) top.classList.add('hidden');
   if (app) app.classList.add('hidden');
+  // ★INSTALL-MGMT-20261124★ 回到登录页时覆盖层必须收起（不在这里清 sessionStorage 记忆，
+  //   否则「会话过期 → 重新登录」会丢掉”刷新仍停留在安装管理“的语义；清记忆在 doLogout 里做）
+  var instOv = document.getElementById('installOverlay');
+  if (instOv) { instOv.classList.remove('show'); instOv.setAttribute('aria-hidden', 'true'); }
+  document.body.classList.remove('install-open');
 }
 function showMainContent() {
   var top = document.getElementById('topbar');
@@ -25122,6 +25242,89 @@ function showMainContent() {
   if (typeof applyAllPermVisibility === 'function') applyAllPermVisibility();
   // 个人佣金暗门：登录后若已解锁则恢复标签
   if (typeof applyCommissionTabState === 'function') applyCommissionTabState();
+  // ★INSTALL-MGMT-20261124★ 刷新/重新登录后若上次停在安装管理，自动恢复（sessionStorage 记忆）
+  if (typeof installRestoreOnBoot === 'function') installRestoreOnBoot();
+}
+
+/* ==================== ★INSTALL-MGMT-20261124★ 安装管理（全屏覆盖层） ====================
+   行为契约（勿改动）：
+     · 打开 = 盖住整个页面（含 AGI 顶栏）；原 #app / #topbar 只 visibility:hidden，不销毁、不改 currentView；
+     · 关闭 = 只收起覆盖层 → 自然回到进来前的标签页（底部视图从头到尾没有被切过）；
+     · sessionStorage['won_install_open']='1' → 刷新 / 重新登录后自动恢复；
+     · 权限区块 INST-L1：viewAllowed('install') 控制导航标签显隐，openInstallMgmt 再做一次拦截兜底。 */
+var INSTALL_SESSION_KEY = 'won_install_open';
+
+function installOverlayEl() { return document.getElementById('installOverlay'); }
+function installIsOpen() {
+  var ov = installOverlayEl();
+  return !!(ov && ov.classList.contains('show'));
+}
+function openInstallMgmt() {
+  if (typeof authUser === 'undefined' || !authUser) return;
+  if (typeof viewAllowed === 'function' && !viewAllowed('install')) {
+    if (typeof showToast === 'function') {
+      showToast((T().empty && T().empty.user_view_denied) || '无权限：该视图/模块已被限制');
+    }
+    return;
+  }
+  var ov = installOverlayEl();
+  if (!ov) return;
+  if (typeof closeAllModals === 'function') closeAllModals();
+  ov.classList.add('show');
+  ov.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('install-open');
+  try { sessionStorage.setItem(INSTALL_SESSION_KEY, '1'); } catch (e) {}
+  if (typeof applyInstallLang === 'function') applyInstallLang();
+}
+function exitInstallMgmt() {
+  var ov = installOverlayEl();
+  if (!ov) return;
+  ov.classList.remove('show');
+  ov.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('install-open');
+  try { sessionStorage.removeItem(INSTALL_SESSION_KEY); } catch (e) {}
+}
+function installRestoreOnBoot() {
+  if (installIsOpen()) return;
+  var want = false;
+  try { want = sessionStorage.getItem(INSTALL_SESSION_KEY) === '1'; } catch (e) {}
+  if (!want) return;
+  if (typeof authUser === 'undefined' || !authUser) return;
+  if (typeof viewAllowed !== 'function' || !viewAllowed('install')) {
+    try { sessionStorage.removeItem(INSTALL_SESSION_KEY); } catch (e) {}
+    return;
+  }
+  openInstallMgmt();
+}
+function applyInstallLang() {
+  var ov = installOverlayEl();
+  if (!ov) return;
+  var t = (typeof T === 'function') ? (T() || {}) : {};
+  var nav = t.nav || {};
+  function setTxt(id, txt) { var el = document.getElementById(id); if (el && txt) el.textContent = txt; }
+  setTxt('instTitle', nav.install);
+  setTxt('instPageTitle', nav.install);
+  setTxt('instPagePh', nav.install_ph);
+  setTxt('instExitBtn', nav.install_exit);
+  // 用户胶囊（与主顶栏同源 authUser）
+  var u = (typeof authUser !== 'undefined' && authUser) ? authUser : null;
+  var nm = u ? String(u.real_name || u.name || u.username || '') : '';
+  var nameEl = document.getElementById('instUserName');
+  var avEl = document.getElementById('instUserAvatar');
+  var roleEl = document.getElementById('instUserRole');
+  if (nameEl) nameEl.textContent = nm;
+  if (avEl) avEl.textContent = nm ? nm.charAt(0).toUpperCase() : '';
+  if (roleEl) {
+    if (u && u.is_admin) roleEl.textContent = nav.role_admin || '(管理员)';
+    else if (u && u.role) roleEl.textContent = '(' + u.role + ')';
+    else roleEl.textContent = '';
+  }
+  // 语言按钮高亮（与 setLangDebug 共用 CUR_LANG，切语言后两边同步）
+  var cur = (window.CUR_LANG || CUR_LANG);
+  [['zh', 'Zh'], ['en', 'En'], ['vi', 'Vi']].forEach(function (p) {
+    var b = document.getElementById('instLang' + p[1]);
+    if (b) b.classList.toggle('active', cur === p[0]);
+  });
 }
 
 /* ===== 视图切换：点击顶部菜单切换对应视图 ===== */
@@ -27778,6 +27981,7 @@ function doLogout() {
     sessionStorage.removeItem('won_auth_user');
     sessionStorage.removeItem('won_vault_token');
     sessionStorage.removeItem('won_current_view');
+    sessionStorage.removeItem('won_install_open');   // ★INSTALL-MGMT-20261124★ 退出登录清掉“刷新保持”
     sessionStorage.removeItem('__commission_unlocked');
     // 清除任何遗留的"记住登录"痕迹（旧版本可能写过）
     localStorage.removeItem('won_auth_user');
