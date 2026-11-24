@@ -2912,10 +2912,10 @@ function _ovLoadChartLib(cb){
     .inst-title { font-size: 10px; }
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
     .inst-tabs { margin-left: 8px; gap: 5px; }
-    .inst-brand { width: auto; flex: 0 0 auto; }
+    /* 窄屏同样锁死品牌区宽度（只留 logo，隐藏标题），保证切语言时标签零位移 */
+    .inst-brand { width: 88px; flex: 0 0 88px; }
+    .inst-title { display: none; }
     .inst-tab { font-size: 11px; padding: 4px 8px; border-radius: 5px; }
-    /* 窄屏（手机横/竖屏）放弃固定宽度，改为按内容自适应，保证 4 个标签都能点到 */
-    .inst-tab[data-itab] { width: auto; }
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
     .inst-card h2 { font-size: 18px; }
