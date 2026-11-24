@@ -2875,19 +2875,21 @@ function _ovLoadChartLib(cb){
     transition: background .15s, border-color .15s; white-space: nowrap;
   }
   .inst-exit-btn:hover { background: rgba(231,76,60,.85); border-color: transparent; }
-  /* ★INST-TABS-20261125★ 安装管理领航标签（4 个专属标签，点击进入各自页面） */
+  /* ★INST-TABS-20261125★ 安装管理领航标签：位于蓝色顶栏内，选中项白底、每项带外框线 + 间隔 */
   .inst-tabs {
-    flex: none; display: flex; align-items: stretch; gap: 2px; padding: 0 12px;
-    background: #fff; border-bottom: 1px solid #dfe6ee; overflow-x: auto; overflow-y: hidden;
-    box-shadow: 0 1px 5px rgba(30,60,120,.07); -webkit-overflow-scrolling: touch;
+    display: flex; align-items: center; gap: 7px; margin-left: 18px; padding: 0 2px;
+    min-width: 0; flex: 0 1 auto; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
+  .inst-tabs::-webkit-scrollbar { height: 0; }
   .inst-tab {
-    border: none; background: transparent; color: #46617d; font-size: 13px; font-weight: 600;
-    padding: 11px 16px; cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent;
-    transition: color .15s, border-color .15s, background .15s; font-family: inherit;
+    flex: 0 0 auto; border: 1px solid rgba(255,255,255,.55); border-radius: 6px;
+    background: rgba(255,255,255,.10); color: #fff; font-size: 12px; font-weight: 600;
+    padding: 6px 10px; cursor: pointer; white-space: nowrap; font-family: inherit;
+    transition: background .15s, color .15s, border-color .15s;
   }
-  .inst-tab:hover { color: #1e5fa8; background: #f3f7fc; }
-  .inst-tab.active { color: #1e5fa8; border-bottom-color: #2f7fd0; font-weight: 700; background: #eef5fd; }
+  .inst-tab:hover { background: rgba(255,255,255,.26); border-color: #fff; }
+  .inst-tab.active { background: #fff; color: #1e5fa8; border-color: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
   .inst-panel { display: none; }
   .inst-panel.active { display: block; }
   .inst-body { flex: 1 1 auto; overflow: auto; padding: 28px 20px; }
@@ -2901,8 +2903,8 @@ function _ovLoadChartLib(cb){
     .inst-topbar { height: 50px; padding: 0 10px; gap: 8px; }
     .inst-title { font-size: 10px; }
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
-    .inst-tabs { padding: 0 6px; }
-    .inst-tab { font-size: 12px; padding: 9px 10px; }
+    .inst-tabs { margin-left: 8px; gap: 5px; }
+    .inst-tab { font-size: 11px; padding: 4px 8px; border-radius: 5px; }
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
     .inst-card h2 { font-size: 18px; }
@@ -3965,6 +3967,12 @@ function _ovLoadChartLib(cb){
        </div>
        <span class="inst-title" id="instTitle">安装管理</span>
        </div>
+       <div class="inst-tabs" id="instTabs" role="tablist">
+         <button class="inst-tab active" data-itab="board" role="tab" onclick="instSwitchTab('board')"><span class="tb-label">安装项目进度看板</span></button>
+         <button class="inst-tab" data-itab="detail" role="tab" onclick="instSwitchTab('detail')"><span class="tb-label">安装详情管理</span></button>
+         <button class="inst-tab" data-itab="files" role="tab" onclick="instSwitchTab('files')"><span class="tb-label">项目专属资料</span></button>
+         <button class="inst-tab" data-itab="shared" role="tab" onclick="instSwitchTab('shared')"><span class="tb-label">安装相关公共共享资料</span></button>
+       </div>
        <span class="inst-spacer"></span>
        <div class="lang-switch" id="instLangSwitch">
        <button id="instLangZh" onclick="setLangDebug('zh')">中</button>
@@ -3977,12 +3985,6 @@ function _ovLoadChartLib(cb){
        <span class="tb-user-role" id="instUserRole"></span>
        </div>
        <button class="inst-exit-btn" id="instExitBtn" onclick="exitInstallMgmt()">退出安装管理</button>
-       </div>
-       <div class="inst-tabs" id="instTabs" role="tablist">
-       <button class="inst-tab active" data-itab="board" role="tab" onclick="instSwitchTab('board')"><span class="tb-label">安装项目进度看板</span></button>
-       <button class="inst-tab" data-itab="detail" role="tab" onclick="instSwitchTab('detail')"><span class="tb-label">安装详情管理</span></button>
-       <button class="inst-tab" data-itab="files" role="tab" onclick="instSwitchTab('files')"><span class="tb-label">项目专属资料</span></button>
-       <button class="inst-tab" data-itab="shared" role="tab" onclick="instSwitchTab('shared')"><span class="tb-label">安装相关公共共享资料</span></button>
        </div>
        <div class="inst-body" id="instBody">
        <div class="inst-panel active" data-itab="board" role="tabpanel">
