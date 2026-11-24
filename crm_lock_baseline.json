@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-24 12:48:04",
+ "generated": "2026-11-24 13:12:32",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-BOARD-20261124: install dashboard i18n + map port\"",
+ "note": "\"INSTALL-BOARD-20261124: final map label stagger and fx global switch\"",
  "i18n": {
-  "dict@6765": {
+  "dict@6772": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26073": {
+  "dict@26095": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5309,7 +5309,18 @@
     "lastLogin": "最后登录",
     "loginMonthly": "全员登录次数（月 / 季）",
     "noProject": "暂无项目",
-    "demoProject": "示例项目"
+    "demoProject": "示例项目",
+    "wxClear": "晴",
+    "wxCloudy": "多云",
+    "wxFog": "雾",
+    "wxRain": "雨",
+    "wxSnow": "雪",
+    "wxShower": "阵雨",
+    "wxStorm": "暴雨",
+    "wxNa": "未知",
+    "wxHum": "湿度",
+    "wxWind": "风力",
+    "wxWindUnit": "级"
    },
    "en": {
     "title": "Installation Progress Dashboard",
@@ -5355,7 +5366,18 @@
     "lastLogin": "Last login",
     "loginMonthly": "All Staff Logins (Month / Quarter)",
     "noProject": "No project",
-    "demoProject": "Sample project"
+    "demoProject": "Sample project",
+    "wxClear": "Clear",
+    "wxCloudy": "Cloudy",
+    "wxFog": "Fog",
+    "wxRain": "Rain",
+    "wxSnow": "Snow",
+    "wxShower": "Showers",
+    "wxStorm": "Storm",
+    "wxNa": "N/A",
+    "wxHum": "Humidity",
+    "wxWind": "Wind",
+    "wxWindUnit": ""
    },
    "vi": {
     "title": "Bảng tiến độ lắp đặt",
@@ -5401,10 +5423,21 @@
     "lastLogin": "Đăng nhập cuối",
     "loginMonthly": "Số lần đăng nhập toàn thể (Tháng / Quý)",
     "noProject": "Chưa có dự án",
-    "demoProject": "Dự án mẫu"
+    "demoProject": "Dự án mẫu",
+    "wxClear": "Quang trời",
+    "wxCloudy": "Nhiều mây",
+    "wxFog": "Sương mù",
+    "wxRain": "Mưa",
+    "wxSnow": "Tuyết",
+    "wxShower": "Mưa rào",
+    "wxStorm": "Bão",
+    "wxNa": "Không rõ",
+    "wxHum": "Độ ẩm",
+    "wxWind": "Gió",
+    "wxWindUnit": "cấp"
    }
   },
-  "dict@30070": {
+  "dict@30263": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

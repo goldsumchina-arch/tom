@@ -2940,25 +2940,42 @@ function _ovLoadChartLib(cb){
   .ib-bar > i { display: block; height: 100%; background: linear-gradient(90deg,#1fd1ff,#57e6a5); border-radius: 4px; }
   .ib-clock { font-size: 25px; font-weight: 800; color: #3ae0ff; letter-spacing: 1px; line-height: 1.1; }
   .ib-date { font-size: 11px; color: #bcd8f5; margin: 3px 0 8px; }
-  .ib-wx { font-size: 10px; color: #cfe4ff; line-height: 1.65; }
-  .ib-wx b { color: #ffd166; font-weight: 600; }
-  .ib-map { height: 285px; display: flex; align-items: center; justify-content: center; }
+  .ib-wx { font-size: 11px; color: #cfe4ff; line-height: 1.7; }
+  .ib-wx b { color: #39e6ff; font-weight: 700; }
+  .ib-wx-chip { border-radius: 8px; padding: 2px 7px; margin-bottom: 3px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); }
+  .ib-map { height: 355px; display: flex; align-items: center; justify-content: center; }
   .ib-map svg { height: 265px; filter: drop-shadow(0 0 4px #2ee6ff); }
   .ib-empty { color: #8fb0d8; font-size: 12px; text-align: center; padding-top: 80px; }
-  .ib-cal-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #fff; }
-  .ib-cal-nav { background: #174a8d; color: #d9ecff; border: 1px solid rgba(120,200,255,.3); border-radius: 4px; font-size: 10px; padding: 2px 6px; cursor: pointer; }
-  .ib-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-top: 7px; }
-  .ib-cal-grid span { text-align: center; font-size: 9px; padding: 3px 0; color: #bcd6f5; border: 1px solid rgba(100,180,240,.14); border-radius: 2px; }
-  .ib-cal-grid span.wd { color: #6fd8ff; border: none; }
-  .ib-cal-grid span.today { color: #fff; background: #e53935; border-color: #ff6b6b; font-weight: 700; }
-  .ib-legend { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-  .ib-legend span { font-size: 8px; color: #c9e0ff; border: 1px solid rgba(120,190,255,.25); border-radius: 8px; padding: 1px 5px; white-space: nowrap; }
-  .ib-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 3px; }
-  .ib-fx-switch { display: flex; gap: 2px; margin-left: auto; }
-  .ib-fx-switch b { font-size: 8px; padding: 1px 4px; border: 1px solid rgba(140,200,255,.3); border-radius: 6px; color: #a9c9ea; }
-  .ib-fx-switch b.on { background: #e53935; color: #fff; border-color: #e53935; }
-  .ib-fx svg { width: 100%; height: 60px; display: block; margin-top: 4px; }
-  .ib-fx-val { text-align: center; font-size: 12px; color: #39e0ff; font-weight: 700; margin-top: 1px; }
+  /* ★INSTALL-CAL-20261124★ 日历完全复用 choice-lite 的中越法定假日逻辑 */
+  .ib-cal-body { flex: 1; min-width: 0; }
+  .ib-cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; color: #eceff2; font-size: 12px; }
+  .ib-cal-nav > span:last-child { display: flex; gap: 6px; align-items: center; }
+  .ib-cal-nav button { background: #092475; color: #eceff2; border: 1px solid rgba(57,230,255,.35); border-radius: 6px; width: 26px; height: 23px; cursor: pointer; font-size: 11px; }
+  .ib-cal-nav button.ib-cal-today-btn { width: auto; padding: 0 8px; }
+  .ib-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .ib-cal-dows div { text-align: center; font-size: 11px; color: #aab4c0; padding: 2px 0; }
+  .ib-cal-cell { text-align: center; font-size: 12px; color: #eceff2; padding: 6px 0; border-radius: 6px; position: relative; border: 1px solid rgba(57,230,255,.16); }
+  .ib-cal-empty { background: transparent; border-color: transparent; }
+  .ib-cal-today { box-shadow: inset 0 0 0 2px #ff3b3b !important; color: #ff8b8b !important; font-weight: 800 !important; }
+  .ib-hol-legend-header { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #aab4c0; }
+  .ib-hol-legend-wrap { overflow: hidden; transition: max-height .25s ease; margin-top: 4px; }
+  .ib-hol-legend-wrap.collapsed { max-height: 26px; }
+  .ib-hol-legend { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ib-hol-chip { display: inline-flex; align-items: center; gap: 5px; background: #092475; border: 1px solid rgba(57,230,255,.35); border-radius: 8px; padding: 3px 7px; font-size: 11px; color: #eceff2; }
+  .ib-hol-chip i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .ib-hol-toggle { background: #092475; color: #eceff2; border: 1px solid rgba(57,230,255,.35); border-radius: 6px; width: 26px; height: 23px; cursor: pointer; }
+  .ib-cal-legend { font-size: 11px; color: #aab4c0; margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ib-leg-vn, .ib-leg-cn { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .ib-leg-vn { background: #ff5d73; } .ib-leg-cn { background: #4da3ff; }
+  /* ★INSTALL-FX-20261124★ 汇率卡完全复用 choice-lite：Chart.js 折线 + 坐标轴/网格 + 三币种切换 */
+  .ib-fx-switch { display: inline-flex; gap: 2px; margin-left: auto; background: rgba(255,255,255,.10); border-radius: 8px; padding: 2px; flex: none; }
+  .ib-fx-switch button { background: transparent; border: none; color: #aab4c0; font-size: 9px; line-height: 1; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+  .ib-fx-switch button:hover { color: #eceff2; }
+  .ib-fx-switch button.on { background: #e53e3e; color: #fff; font-weight: 700; }
+  .ib-fx-chart { height: 105px; position: relative; margin-top: 2px; }
+  .ib-fx-chart canvas { width: 100% !important; height: 100% !important; }
+  .ib-fx-val { text-align: center; font-size: 13px; color: #39e6ff; font-weight: 700; padding: 2px 0; }
+  .ib-fx-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #eceff2; }
   .ib-tbl { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 6px; }
   .ib-tbl th, .ib-tbl td { border: 1px solid rgba(110,180,240,.18); padding: 4px 6px; text-align: center; color: #cfe3fb; }
   .ib-tbl th { color: #8fc6f2; font-weight: 600; background: rgba(20,70,140,.5); }
@@ -4084,9 +4101,9 @@ function _ovLoadChartLib(cb){
            </div>
          </div>
          <div class="ib-grid ib-mid">
-           <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
+           <div class="ib-card" style="min-height:430px"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="mapTitle">项目分布地图（越南）</div>
-             <div class="ib-map" id="ibMapBody" style="width:100%;height:285px">
+             <div class="ib-map" id="ibMapBody" style="width:100%;height:355px">
                <span style="color:#8fb0d8;font-size:11px">地图加载中…</span>
              </div>
            </div>
@@ -4094,18 +4111,8 @@ function _ovLoadChartLib(cb){
              <div class="ib-title" data-ib="photos">现场图片</div>
              <div class="ib-empty" data-ib="noData">暂无数据</div>
            </div>
-           <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
-             <div class="ib-cal-head">
-               <span class="ib-title" style="margin:0" data-ib="calendar">日历（中越法定假日）</span>
-               <span><button class="ib-cal-nav" onclick="ibCalShift(-1)">‹</button> <b id="ibCalMonth"></b> <button class="ib-cal-nav" onclick="ibCalShift(1)">›</button> <button class="ib-cal-nav" data-ib="backToday" onclick="ibCalToday()">回到当天</button></span>
-             </div>
-             <div class="ib-cal-grid" id="ibCalGrid"></div>
-             <div class="ib-legend">
-               <span><i style="background:#e53935"></i><b data-ib="spring">春节 8天</b></span>
-               <span><i style="background:#ff9800"></i><b data-ib="tet">雄王节 7天</b></span>
-               <span><i style="background:#4caf50"></i><b data-ib="tomb">清明 3天</b></span>
-               <span><i style="background:#ffc107"></i><b data-ib="victory">胜利日 3天</b></span>
-             </div>
+           <div class="ib-card" style="min-height:430px"><i class="ib-corner"></i>
+             <div class="ib-cal-body" id="ibCalBody"></div>
            </div>
          </div>
          <div class="ib-grid ib-row3">
@@ -4117,20 +4124,20 @@ function _ovLoadChartLib(cb){
              <div class="ib-title" data-ib="prodWorkers">生产人数</div>
              <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="workers">生产人数</th></tr></thead><tbody id="ibProdWorkerList"></tbody></table>
            </div>
-           <div class="ib-card ib-fx"><i class="ib-corner"></i>
-             <div class="ib-title">RMB-VND <span class="ib-fx-switch"><b>RMB</b><b>USD</b><b class="on">VND</b></span></div>
-             <svg viewBox="0 0 160 60" preserveAspectRatio="none"><polyline fill="none" stroke="#2ee6ff" stroke-width="1.6" points="0,42 12,38 24,44 36,34 48,40 60,28 72,36 84,24 96,30 108,18 120,26 132,12 144,16 160,6"/></svg>
-             <div class="ib-fx-val">₫ 3,844.7</div>
+           <div class="ib-card ib-fx" style="min-height:170px"><i class="ib-corner"></i>
+             <div class="ib-fx-title">RMB-VND <span class="ib-fx-switch"><button onclick="ibSetFxCur(this)">RMB</button><button onclick="ibSetFxCur(this)">USD</button><button class="on" onclick="ibSetFxCur(this)">VND</button></span></div>
+             <div class="ib-fx-chart"><canvas id="ibFx1C"></canvas></div>
+             <div class="ib-fx-val" id="ibFx1V">…</div>
            </div>
-           <div class="ib-card ib-fx"><i class="ib-corner"></i>
-             <div class="ib-title">USD-VND <span class="ib-fx-switch"><b>RMB</b><b>USD</b><b class="on">VND</b></span></div>
-             <svg viewBox="0 0 160 60" preserveAspectRatio="none"><polyline fill="none" stroke="#ffca4a" stroke-width="1.6" points="0,44 12,46 24,40 36,42 48,32 60,34 72,24 84,30 96,20 108,26 120,16 132,22 144,12 160,18"/></svg>
-             <div class="ib-fx-val">₫ 25,692.4</div>
+           <div class="ib-card ib-fx" style="min-height:170px"><i class="ib-corner"></i>
+             <div class="ib-fx-title">USD-VND <span class="ib-fx-switch"><button onclick="ibSetFxCur(this)">RMB</button><button onclick="ibSetFxCur(this)">USD</button><button class="on" onclick="ibSetFxCur(this)">VND</button></span></div>
+             <div class="ib-fx-chart"><canvas id="ibFx2C"></canvas></div>
+             <div class="ib-fx-val" id="ibFx2V">…</div>
            </div>
-           <div class="ib-card ib-fx"><i class="ib-corner"></i>
-             <div class="ib-title">USD-RMB <span class="ib-fx-switch"><b>RMB</b><b>USD</b><b class="on">VND</b></span></div>
-             <svg viewBox="0 0 160 60" preserveAspectRatio="none"><polyline fill="none" stroke="#ff6b6b" stroke-width="1.6" points="0,24 12,18 24,28 36,14 48,22 60,12 72,18 84,8 96,16 108,10 120,20 132,14 144,24 160,30"/></svg>
-             <div class="ib-fx-val">¥ 6.6825</div>
+           <div class="ib-card ib-fx" style="min-height:170px"><i class="ib-corner"></i>
+             <div class="ib-fx-title">USD-RMB <span class="ib-fx-switch"><button onclick="ibSetFxCur(this)">RMB</button><button onclick="ibSetFxCur(this)">USD</button><button class="on" onclick="ibSetFxCur(this)">VND</button></span></div>
+             <div class="ib-fx-chart"><canvas id="ibFx3C"></canvas></div>
+             <div class="ib-fx-val" id="ibFx3V">…</div>
            </div>
          </div>
          <div class="ib-grid" style="grid-template-columns:1fr">
@@ -25829,7 +25836,7 @@ function boardRenderMapEcharts(body, agg) {
   //    胡志明市红(地图内小圆点标识 · 右+引导线)、广宁省右(额外外移22)、仅显示项目省+河内+胡志明市、水平引线、
   //    同侧防重叠必须基于 canvas 实际文字宽度（bdTextWidth），保证中英越文引导线外移距离一致。
   var LEFT_COLOR = '#ffffff', RIGHT_COLOR = '#ffc46b', HANOI_COLOR = '#ff6b6b';
-  var FONT_SIZE = 9, CW = 190, LBL_H = 220, GAP = 100, MARGIN = 100;
+  var FONT_SIZE = 10, CW = 190, LBL_H = 240, GAP = 150, MARGIN = 120;
 
   // 按实际 9px bold 字体像素宽度测量标签，避免中英文/越文字符数差异导致防重叠盒过大，
   // 从而保证不同语言下引导线的外移距离一致。
@@ -25914,24 +25921,39 @@ function boardRenderMapEcharts(body, agg) {
   }
   declOut(rawOut.filter(function(r){ return r.side === 'left'; }), -1);
   declOut(rawOut.filter(function(r){ return r.side === 'right'; }), 1);
+  // 纵向错位：同侧相邻省份 y 太近时把标签下移，引线改为三段折线，避免北部/南部标签叠字
+  (function () {
+    ['left', 'right'].forEach(function (side) {
+      var arr = rawOut.filter(function (r) { return r.side === side; })
+        .sort(function (a, b) { return b.cp[1] - a.cp[1]; });
+      var lastY = null, dir = -1;
+      arr.forEach(function (r) {
+        var y = r.cp[1];
+        if (lastY != null && Math.abs(lastY - y) < 320) { y = lastY + dir * 320; dir = -dir; }
+        else dir = -1;
+        r.labelY = y; lastY = y;
+      });
+    });
+  })();
 
   // 生成 series 数据 + 重叠自检盒
   var linesData = [];
   var rightLabels = [], leftLabels = [], inLabels = [];
   var verifyBoxes = [];                  // [x0,x1,y0,y1,name]
   rawOut.forEach(function(r){
-    linesData.push({ coords: [[r.cp[0], r.cp[1]], [r.labelX, r.cp[1]]],
+    var ly = (r.labelY != null) ? r.labelY : r.cp[1];
+    linesData.push({ coords: [[r.cp[0], r.cp[1]], [r.labelX, r.cp[1]], [r.labelX, ly]],
                      lineStyle: { color: r.color, width:1.2, opacity:0.9 } });
-    var item = { name: r.name, value: [r.labelX, r.cp[1], r.count],
+    var item = { name: r.name, value: [r.labelX, ly, r.count],
       label: { show:true, position: r.side, align: (r.side === 'left' ? 'right' : 'left'),
                color: r.color, fontSize: FONT_SIZE, fontWeight: 'bold',
                formatter: function(p){ return p.name + (p.value[2] ? ' · ' + p.value[2] : ''); } } };
     if (r.side === 'left') {
       leftLabels.push(item);
-      verifyBoxes.push([r.labelX - r.W, r.labelX, r.cp[1] - LBL_H/2, r.cp[1] + LBL_H/2, r.name]);
+      verifyBoxes.push([r.labelX - r.W, r.labelX, ly - LBL_H/2, ly + LBL_H/2, r.name]);
     } else {
       rightLabels.push(item);
-      verifyBoxes.push([r.labelX, r.labelX + r.W, r.cp[1] - LBL_H/2, r.cp[1] + LBL_H/2, r.name]);
+      verifyBoxes.push([r.labelX, r.labelX + r.W, ly - LBL_H/2, ly + LBL_H/2, r.name]);
     }
   });
   rawIn.forEach(function(r){
@@ -26070,9 +26092,9 @@ function ibMapRender(agg) {
 
 /* ★INSTALL-BOARD-20261124★ 安装项目进度看板（深蓝卡片）数据与三语 */
 var IB_I18N = {
-  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目' },
-  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project' },
-  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu' }
+  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目', wxClear:'晴', wxCloudy:'多云', wxFog:'雾', wxRain:'雨', wxSnow:'雪', wxShower:'阵雨', wxStorm:'暴雨', wxNa:'未知', wxHum:'湿度', wxWind:'风力', wxWindUnit:'级' },
+  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project', wxClear:'Clear', wxCloudy:'Cloudy', wxFog:'Fog', wxRain:'Rain', wxSnow:'Snow', wxShower:'Showers', wxStorm:'Storm', wxNa:'N/A', wxHum:'Humidity', wxWind:'Wind', wxWindUnit:'' },
+  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu', wxClear:'Quang trời', wxCloudy:'Nhiều mây', wxFog:'Sương mù', wxRain:'Mưa', wxSnow:'Tuyết', wxShower:'Mưa rào', wxStorm:'Bão', wxNa:'Không rõ', wxHum:'Độ ẩm', wxWind:'Gió', wxWindUnit:'cấp' }
 };
 var IB_BOOTED = false, IB_CLOCK = null, IB_CAL_Y = 0, IB_CAL_M = 0;
 function ibLang() { try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) return CUR_LANG; } catch (e) {} return 'zh'; }
@@ -26085,6 +26107,7 @@ function ibApplyLang() {
     if (v) el.textContent = v;
   });
   ibTick();
+  if (IB_CAL_Y) ibRenderCal();
   // 地图省名/天气省名随语言变化，切语言后按已聚合数据原地重绘（不重建整页）
   try {
     if (IB_AGG && Object.keys(IB_AGG).length) {
@@ -26101,6 +26124,64 @@ function ibTick() {
   var dateEl = document.getElementById('ibDate');
   if (dateEl) dateEl.textContent = now.getFullYear() + '/' + p(now.getMonth() + 1) + '/' + p(now.getDate()) + ' ' + (d.weekdays ? d.weekdays[now.getDay()] : '');
 }
+/* ★INSTALL-CAL-20261124★ 完全照搬 choice-lite 的 boardRenderCalendar + BOARD_HOLIDAYS：
+   周一开头、假期整格专属配色 + 悬停天数、当年假日图例、越南/中国下一大假提示。 */
+var IB_HOLIDAYS = [
+  { from:'2026-02-15', days:8, cn:1, color:'#ff5d73', zh:'春节', en:'Spring Festival', vi:'Tết Nguyên Đán' },
+  { from:'2026-02-16', days:7, vn:1, color:'#ff7f50', zh:'春节', en:'Lunar New Year', vi:'Tết Nguyên Đán' },
+  { from:'2026-04-04', days:3, cn:1, color:'#26de81', zh:'清明节', en:'Qingming', vi:'Thanh minh' },
+  { from:'2026-04-26', days:3, vn:1, color:'#fd9644', zh:'雄王节', en:"Hung Kings' Day", vi:'Tết Hùng Vương' },
+  { from:'2026-04-30', days:2, vn:1, color:'#ff4757', zh:'统一日·劳动节', en:'Reunification & Labour', vi:'30/4 & 1/5' },
+  { from:'2026-05-01', days:5, cn:1, color:'#70a1ff', zh:'劳动节', en:'Labour Day', vi:'Quốc tế Lao động' },
+  { from:'2026-06-19', days:3, cn:1, color:'#5352ed', zh:'端午节', en:'Dragon Boat', vi:'Tết Đoan ngọ' },
+  { from:'2026-09-02', days:2, vn:1, color:'#e0567a', zh:'越南国庆节', en:'National Day (VN)', vi:'Quốc khánh VN' },
+  { from:'2026-09-25', days:3, cn:1, color:'#2bcbba', zh:'中秋节', en:'Mid-Autumn', vi:'Tết Trung thu' },
+  { from:'2026-10-01', days:7, cn:1, color:'#1e90ff', zh:'中国国庆节', en:'National Day (CN)', vi:'Quốc khánh TQ' },
+  { from:'2027-01-01', days:3, cn:1, color:'#a55eea', zh:'元旦', en:"New Year's Day", vi:'Tết Dương lịch' },
+  { from:'2027-02-05', days:8, cn:1, color:'#ff5d73', zh:'春节', en:'Spring Festival', vi:'Tết Nguyên Đán' },
+  { from:'2027-02-06', days:7, vn:1, color:'#ff7f50', zh:'春节', en:'Lunar New Year', vi:'Tết Nguyên Đán' },
+  { from:'2027-04-04', days:3, cn:1, color:'#26de81', zh:'清明节', en:'Qingming', vi:'Thanh minh' },
+  { from:'2027-04-16', days:3, vn:1, color:'#fd9644', zh:'雄王节', en:"Hung Kings' Day", vi:'Tết Hùng Vương' },
+  { from:'2027-04-30', days:2, vn:1, color:'#ff4757', zh:'统一日·劳动节', en:'Reunification & Labour', vi:'30/4 & 1/5' },
+  { from:'2027-05-01', days:5, cn:1, color:'#70a1ff', zh:'劳动节', en:'Labour Day', vi:'Quốc tế Lao động' },
+  { from:'2027-06-09', days:3, cn:1, color:'#5352ed', zh:'端午节', en:'Dragon Boat', vi:'Tết Đoan ngọ' },
+  { from:'2027-09-02', days:2, vn:1, color:'#e0567a', zh:'越南国庆节', en:'National Day (VN)', vi:'Quốc khánh VN' },
+  { from:'2027-09-15', days:3, cn:1, color:'#2bcbba', zh:'中秋节', en:'Mid-Autumn', vi:'Tết Trung thu' },
+  { from:'2027-10-01', days:7, cn:1, color:'#1e90ff', zh:'中国国庆节', en:'National Day (CN)', vi:'Quốc khánh TQ' }
+];
+function ibL(zh, en, vi) { var L = ibLang(); return L === 'zh' ? zh : (L === 'en' ? en : vi); }
+function ibDateAdd(ymd, n) { var d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() + n); return d; }
+function ibYmd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function ibHolMap() {
+  var m = {};
+  (IB_HOLIDAYS || []).forEach(function (h) {
+    for (var i = 0; i < (h.days || 1); i++) m[ibYmd(ibDateAdd(h.from, i))] = h;
+  });
+  return m;
+}
+function ibHolName(h) { return (h && (h[ibLang()] || h.zh)) || ''; }
+function ibNextHoliday(country) {
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var arr = (IB_HOLIDAYS || []).filter(function (h) { return h[country]; })
+    .sort(function (a, b) { return a.from < b.from ? -1 : 1; });
+  for (var i = 0; i < arr.length; i++) {
+    var end = ibDateAdd(arr[i].from, (arr[i].days || 1) - 1);
+    if (end >= today) return { date: arr[i].from, days: arr[i].days || 1, info: arr[i] };
+  }
+  return null;
+}
+function ibNextLine(cls, country, item) {
+  if (!item) return '';
+  var name = country === 'vn' ? ibL('越南', 'Vietnam', 'Việt Nam') : ibL('中国', 'China', 'Trung Quốc');
+  return '<div class="ib-cal-legend"><span class="' + cls + '"></span>' + name + ' · ' +
+    ibL('下一个大假', 'Next holiday', 'Kỳ nghỉ tiếp theo') + ': <b>' + escBd(item.date) + '</b> ' +
+    escBd(ibHolName(item.info)) + ' (' + item.days + ibL('天', 'd', 'ngày') + ')</div>';
+}
+function ibToggleHolLegend(btn) {
+  var wrap = document.getElementById('ibHolLegendWrap'); if (!wrap || !btn) return;
+  var collapsed = wrap.classList.toggle('collapsed');
+  btn.innerText = collapsed ? '⌄' : '⌃';
+}
 function ibCalShift(n) {
   var dt = new Date(IB_CAL_Y, IB_CAL_M + n, 1);
   IB_CAL_Y = dt.getFullYear(); IB_CAL_M = dt.getMonth(); ibRenderCal();
@@ -26109,18 +26190,41 @@ function ibCalToday() {
   var now = new Date(); IB_CAL_Y = now.getFullYear(); IB_CAL_M = now.getMonth(); ibRenderCal();
 }
 function ibRenderCal() {
-  var grid = document.getElementById('ibCalGrid'); if (!grid) return;
-  var d = ibTexts(), wd = d.weekdays || ['日','一','二','三','四','五','六'];
-  var monthEl = document.getElementById('ibCalMonth');
-  if (monthEl) monthEl.textContent = IB_CAL_Y + '/' + String(IB_CAL_M + 1).padStart(2, '0');
-  var html = '';
-  wd.forEach(function (w) { html += '<span class="wd">' + w + '</span>'; });
-  var first = new Date(IB_CAL_Y, IB_CAL_M, 1).getDay();
+  var body = document.getElementById('ibCalBody'); if (!body) return;
+  var hol = ibHolMap();
+  var startDow = (new Date(IB_CAL_Y, IB_CAL_M, 1).getDay() + 6) % 7;
   var days = new Date(IB_CAL_Y, IB_CAL_M + 1, 0).getDate();
-  var now = new Date(), today = (now.getFullYear() === IB_CAL_Y && now.getMonth() === IB_CAL_M) ? now.getDate() : -1;
-  for (var i = 0; i < first; i++) html += '<span></span>';
-  for (var day = 1; day <= days; day++) html += '<span' + (day === today ? ' class="today"' : '') + '>' + day + '</span>';
-  grid.innerHTML = html;
+  var dows = ibLang() === 'zh' ? ['一','二','三','四','五','六','日']
+           : (ibLang() === 'en' ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] : ['T2','T3','T4','T5','T6','T7','CN']);
+  var html = '<div class="ib-cal-nav"><button onclick="ibCalShift(-1)">‹</button><span>' + IB_CAL_Y + '-' + ('0' + (IB_CAL_M + 1)).slice(-2) +
+    '</span><span><button onclick="ibCalShift(1)">›</button><button class="ib-cal-today-btn" onclick="ibCalToday()">' + ibL('回到当天', 'Today', 'Hôm nay') + '</button></span></div>';
+  html += '<div class="ib-cal-grid ib-cal-dows">' + dows.map(function (w) { return '<div>' + w + '</div>'; }).join('') + '</div>';
+  html += '<div class="ib-cal-grid">';
+  for (var i = 0; i < startDow; i++) html += '<div class="ib-cal-cell ib-cal-empty"></div>';
+  var now = new Date();
+  for (var day = 1; day <= days; day++) {
+    var ym = IB_CAL_Y + '-' + ('0' + (IB_CAL_M + 1)).slice(-2) + '-' + ('0' + day).slice(-2);
+    var h = hol[ym];
+    var isToday = now.getFullYear() === IB_CAL_Y && now.getMonth() === IB_CAL_M && now.getDate() === day;
+    var cls = 'ib-cal-cell' + (isToday ? ' ib-cal-today' : '');
+    var style = h ? ' style="background:' + h.color + ';color:#101418;font-weight:700;"' : '';
+    var tip = h ? escBd(ibHolName(h)) + ' · ' + (h.days || 1) + ibL('天', 'd', 'ngày') : '';
+    html += '<div class="' + cls + '"' + style + ' title="' + tip + '">' + day + '</div>';
+  }
+  html += '</div>';
+  var yearHols = (IB_HOLIDAYS || []).filter(function (h) { return String(h.from).slice(0, 4) === String(IB_CAL_Y); })
+    .sort(function (a, b) { return a.from < b.from ? -1 : 1; });
+  html += '<div class="ib-hol-legend-header"><span>' + ibL('假日图例', 'Holiday legend', 'Chú giải ngày lễ') + '</span>' +
+    '<button type="button" class="ib-hol-toggle" id="ibHolToggle" onclick="ibToggleHolLegend(this)">⌄</button></div>';
+  html += '<div class="ib-hol-legend-wrap collapsed" id="ibHolLegendWrap"><div class="ib-hol-legend">' + yearHols.map(function (h) {
+    return '<span class="ib-hol-chip"><i style="background:' + h.color + '"></i>' + escBd(ibHolName(h)) + ' ' +
+      (h.days || 1) + ibL('天', 'd', 'ngày') + '</span>';
+  }).join('') + '</div></div>';
+  html += '<div class="ib-cal-legend"><span class="ib-leg-vn"></span>' + ibL('越南', 'Vietnam', 'Việt Nam') +
+    '　<span class="ib-leg-cn"></span>' + ibL('中国', 'China', 'Trung Quốc') + '</div>';
+  html += ibNextLine('ib-leg-vn', 'vn', ibNextHoliday('vn'));
+  html += ibNextLine('ib-leg-cn', 'cn', ibNextHoliday('cn'));
+  body.innerHTML = html;
 }
 /* ★INSTALL-BOARD-DATA-20261124★ 看板数据取自本系统签约项目 /api/won-projects：
    · 地图省份 = 签约项目 province（经 vnProvinceByKey 归一到 34 省标准名）后聚合；
@@ -26174,6 +26278,92 @@ function ibLoadInstallData() {
       .then(function () { if (--pending === 0) ibRenderProjects(); });
   });
 }
+/* ★INSTALL-FX-20261124★ 汇率卡完全照搬 choice-lite：真实历史数据 + Chart.js 坐标轴/网格 + 三币种按钮 */
+var IB_FX_DATA = null;
+function ibSetFxCur(btn) {
+  var cur = btn.textContent.trim();
+  document.querySelectorAll('#ibPage .ib-fx-switch button').forEach(function (b) {
+    b.classList.toggle('on', b.textContent.trim() === cur);
+  });
+}
+function ibFmtNum(v, dec) {
+  if (v == null || isNaN(v)) return '–';
+  return Number(v).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function ibLoadFx() {
+  var set = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+  function draw() {
+    var d = IB_FX_DATA; if (!d) return;
+    var labels = d.labels || [], s = d.series || {};
+    function last(k) {
+      var a = s[k] || [];
+      for (var i = a.length - 1; i >= 0; i--) if (a[i] != null) return a[i];
+      return null;
+    }
+    set('ibFx1V', '₫ ' + ibFmtNum(last('cny_vnd'), 1));
+    set('ibFx2V', '₫ ' + ibFmtNum(last('usd_vnd'), 1));
+    var x = last('usd_cny');
+    set('ibFx3V', x != null ? ('¥ ' + ibFmtNum(x, 4)) : '–');
+    if (typeof _ovLoadChartLib === 'function') _ovLoadChartLib(function () { ibDrawFxCharts(labels, s); });
+    else if (typeof Chart !== 'undefined') ibDrawFxCharts(labels, s);
+  }
+  if (IB_FX_DATA) { draw(); return; }
+  if (typeof fetch !== 'function') return;
+  fetch('/api/fx-rates', { credentials: 'include' })
+    .then(function (r) { return r.json(); })
+    .then(function (res) { if (res && res.ok && res.labels) { IB_FX_DATA = res; draw(); } })
+    .catch(function () {});
+}
+function ibDrawFxCharts(labels, s) {
+  if (typeof Chart === 'undefined') return;
+  var defs = [
+    { id: 'ibFx1C', key: 'cny_vnd', color: '#39e6ff' },
+    { id: 'ibFx2C', key: 'usd_vnd', color: '#ffd166' },
+    { id: 'ibFx3C', key: 'usd_cny', color: '#ff6b81' }
+  ];
+  defs.forEach(function (d) {
+    var cv = document.getElementById(d.id); if (!cv) return;
+    var key = '_' + d.id + 'Chart';
+    if (window[key]) { try { window[key].destroy(); } catch (e) {} }
+    window[key] = new Chart(cv.getContext('2d'), {
+      type: 'line',
+      data: { labels: labels, datasets: [{
+        data: s[d.key] || [], borderColor: d.color, backgroundColor: 'transparent',
+        fill: false, pointRadius: 0, borderWidth: 1.6, tension: 0.25
+      }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: '#1b222b', borderColor: '#474e57', titleColor: '#eceff2', bodyColor: '#eceff2', displayColors: false }
+        },
+        scales: {
+          x: { ticks: { color: '#aab4c0', font: { size: 9 }, maxTicksLimit: 5, maxRotation: 0 }, grid: { color: 'rgba(120,130,145,0.15)' } },
+          y: { ticks: { color: '#aab4c0', font: { size: 9 }, maxTicksLimit: 4 }, grid: { color: 'rgba(120,130,145,0.15)' } }
+        }
+      }
+    });
+  });
+}
+/* ★INSTALL-WX-20261124★ 天气完全跟随签约项目所在地：复用 choice-lite 的 bdWxKey / bdBeaufort
+   与 Open-Meteo 批量接口，显示「省名 · 天气 · 温度 · 湿度 · 风力」。 */
+function ibWxKey(code) {
+  if (code == null) return 'Na';
+  if (code === 0) return 'Clear';
+  if (code <= 3) return 'Cloudy';
+  if (code <= 48) return 'Fog';
+  if (code <= 67) return 'Rain';
+  if (code <= 77) return 'Snow';
+  if (code <= 82) return 'Shower';
+  return 'Storm';
+}
+function ibBeaufort(kmh) {
+  if (kmh == null || isNaN(kmh)) return null;
+  var t = [[1,0],[5,1],[11,2],[19,3],[28,4],[38,5],[49,6],[61,7],[74,8],[88,9],[102,10],[117,11],[1e9,12]];
+  for (var i = 0; i < t.length; i++) { if (kmh <= t[i][0]) return t[i][1]; }
+  return 12;
+}
 function ibLoadWeather(viKeys) {
   var el = document.getElementById('ibWx'); if (!el) return;
   var items = [];
@@ -26181,14 +26371,17 @@ function ibLoadWeather(viKeys) {
     var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(k) : null;
     if (pr && !items.some(function (x) { return x.vi === pr.vi; })) items.push(pr);
   });
-  items = items.slice(0, 3);
-  if (!items.length) { el.innerHTML = '<span data-ib="noData">' + ibTexts().noData + '</span>'; return; }
+  if (!items.length) { el.innerHTML = '<span>' + ibTexts().noData + '</span>'; return; }
   function paint() {
     var d = ibTexts();
     el.innerHTML = items.map(function (p) {
       var c = (IB_WX && IB_WX[p.vi]) || null;
-      var txt = c ? (d['wx_' + c.code] || d.wxCloudy) : '—';
-      return '<div><b>' + bdName3(p) + '</b> · ' + txt + '</div>';
+      var txt = c ? (d['wx' + ibWxKey(c.code)] || d.wxNa) : '—';
+      var parts = ['<b>' + escBd(bdName3(p)) + '</b> · ' + txt];
+      if (c && c.temp != null) parts.push(Math.round(c.temp) + '°C');
+      if (c && c.hum != null) parts.push(d.wxHum + ' ' + Math.round(c.hum) + '%');
+      if (c && c.windLv != null) parts.push(d.wxWind + ' ' + c.windLv + d.wxWindUnit);
+      return '<div class="ib-wx-chip">' + parts.join(' · ') + '</div>';
     }).join('');
   }
   paint();
@@ -26205,11 +26398,11 @@ function ibLoadWeather(viKeys) {
       var arr = Array.isArray(j) ? j : [j], cache = {};
       arr.forEach(function (one, i) {
         if (!items[i]) return;
-        var cur = (one && one.current) || {}, code = cur.weather_code;
-        var w = code == null ? 'na' : (code === 0 ? 'clear' : (code <= 3 ? 'cloudy' : (code <= 48 ? 'fog' : (code <= 67 ? 'rain' : (code <= 82 ? 'shower' : 'storm')))));
-        cache[items[i].vi] = { code: w, text: Math.round(cur.temperature_2m || 0) + '°C · ' +
-          (cur.relative_humidity_2m != null ? Math.round(cur.relative_humidity_2m) + '% · ' : '') +
-          (cur.wind_speed_10m != null ? Math.round(cur.wind_speed_10m) + 'km/h' : '') };
+        var cur = (one && one.current) || {};
+        cache[items[i].vi] = { code: cur.weather_code,
+          temp: cur.temperature_2m != null ? cur.temperature_2m : null,
+          hum: cur.relative_humidity_2m != null ? cur.relative_humidity_2m : null,
+          windLv: ibBeaufort(cur.wind_speed_10m) };
       });
       IB_WX = cache; paint();
     })
@@ -26260,7 +26453,7 @@ function ibBoot() {
   IB_BOOTED = true;
   var bodyEl = document.getElementById('instBody');
   if (bodyEl) bodyEl.classList.toggle('ib-dark', INST_ACTIVE_TAB === 'board');
-  ibLoadData(); ibFillLogin(); ibCalToday(); ibApplyLang();
+  ibLoadData(); ibLoadFx(); ibFillLogin(); ibCalToday(); ibApplyLang();
   if (IB_CLOCK) clearInterval(IB_CLOCK);
   IB_CLOCK = setInterval(ibTick, 1000);
 }
