@@ -26214,9 +26214,12 @@ function ibNextLine(cls, country, item) {
     ibL('下一个大假', 'Next holiday', 'Kỳ nghỉ tiếp theo') + ': <b>' + escBd(item.date) + '</b> ' +
     escBd(ibHolName(item.info)) + ' (' + item.days + ibL('天', 'd', 'ngày') + ')</div>';
 }
+/* 假日图例展开状态独立于重渲染保存：切语言/换月调用 ibRenderCal 重建 DOM 时不能把它收回去 */
+var IB_HOL_EXPANDED = false;
 function ibToggleHolLegend(btn) {
   var wrap = document.getElementById('ibHolLegendWrap'); if (!wrap || !btn) return;
   var collapsed = wrap.classList.toggle('collapsed');
+  IB_HOL_EXPANDED = !collapsed;
   btn.innerText = collapsed ? '⌄' : '⌃';
 }
 function ibCalShift(n) {
@@ -26252,8 +26255,8 @@ function ibRenderCal() {
   var yearHols = (IB_HOLIDAYS || []).filter(function (h) { return String(h.from).slice(0, 4) === String(IB_CAL_Y); })
     .sort(function (a, b) { return a.from < b.from ? -1 : 1; });
   html += '<div class="ib-hol-legend-header"><span>' + ibL('假日图例', 'Holiday legend', 'Chú giải ngày lễ') + '</span>' +
-    '<button type="button" class="ib-hol-toggle" id="ibHolToggle" onclick="ibToggleHolLegend(this)">⌄</button></div>';
-  html += '<div class="ib-hol-legend-wrap collapsed" id="ibHolLegendWrap"><div class="ib-hol-legend">' + yearHols.map(function (h) {
+    '<button type="button" class="ib-hol-toggle" id="ibHolToggle" onclick="ibToggleHolLegend(this)">' + (IB_HOL_EXPANDED ? '⌃' : '⌄') + '</button></div>';
+  html += '<div class="ib-hol-legend-wrap' + (IB_HOL_EXPANDED ? '' : ' collapsed') + '" id="ibHolLegendWrap"><div class="ib-hol-legend">' + yearHols.map(function (h) {
     return '<span class="ib-hol-chip"><i style="background:' + h.color + '"></i>' + escBd(ibHolName(h)) + ' ' +
       (h.days || 1) + ibL('天', 'd', 'ngày') + '</span>';
   }).join('') + '</div></div>';

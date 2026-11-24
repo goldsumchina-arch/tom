@@ -1,7 +1,7 @@
 {
- "generated": "2026-11-24 15:35:11",
+ "generated": "2026-11-24 15:44:08",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-BOARD-20261124: province column, vertical stat card, culture festival\"",
+ "note": "\"INSTALL-CAL-20261124: preserve holiday legend expanded state\"",
  "i18n": {
   "dict@6806": {
    "zh": {
@@ -5440,7 +5440,7 @@
     "provText": "Tỉnh"
    }
   },
-  "dict@30335": {
+  "dict@30338": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
