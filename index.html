@@ -2862,7 +2862,9 @@ function _ovLoadChartLib(cb){
     background: linear-gradient(90deg, #1e5fa8, #2f7fd0);
     box-shadow: 0 2px 10px rgba(0,0,0,.35); font-family: "Segoe UI", Arial, sans-serif;
   }
-  .inst-brand { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.05; min-width: 0; }
+  /* ★INST-TAB-NOMOVE-20261125★ 品牌区固定宽度：切语言时「安装管理/Installation Management」长度不同，
+     若不锁宽会把右侧 4 个标签整体推来推去（用户反馈「左右串动」）。锁死后标签起点永远不变。 */
+  .inst-brand { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.05; min-width: 0; width: 144px; flex: 0 0 144px; }
   .inst-logo { display: flex; align-items: center; gap: 8px; white-space: nowrap; user-select: none; }
   .inst-logo-mark { font-size: 20px; font-weight: 800; color: #e8720c; letter-spacing: .5px; }
   .inst-logo-name { font-size: 16px; font-weight: 700; color: #fff; }
@@ -2910,6 +2912,7 @@ function _ovLoadChartLib(cb){
     .inst-title { font-size: 10px; }
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
     .inst-tabs { margin-left: 8px; gap: 5px; }
+    .inst-brand { width: auto; flex: 0 0 auto; }
     .inst-tab { font-size: 11px; padding: 4px 8px; border-radius: 5px; }
     /* 窄屏（手机横/竖屏）放弃固定宽度，改为按内容自适应，保证 4 个标签都能点到 */
     .inst-tab[data-itab] { width: auto; }
