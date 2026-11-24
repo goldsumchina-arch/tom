@@ -2970,9 +2970,14 @@ function _ovLoadChartLib(cb){
   .ib-bar > i { display: block; height: 100%; background: linear-gradient(90deg,#1fd1ff,#57e6a5); border-radius: 4px; }
   .ib-clock { font-size: 22px; font-weight: 800; color: #3ae0ff; letter-spacing: 1px; line-height: 1.1; }
   .ib-date { font-size: 11px; color: #bcd8f5; margin: 3px 0 8px; }
-  .ib-wx { font-size: 11px; color: #cfe4ff; line-height: 1.7; }
+  /* ★INSTALL-WX-AMPM-20261124★ 上午/下午两列分时天气 */
+  .ib-wx-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ib-wx-col { min-width: 0; }
+  .ib-wx-col-head { font-size: 11px; font-weight: 700; color: #39e6ff; margin-bottom: 5px; }
+  .ib-wx { font-size: 10px; color: #cfe4ff; line-height: 1.45; }
   .ib-wx b { color: #39e6ff; font-weight: 700; }
-  .ib-wx-chip { border-radius: 8px; padding: 2px 7px; margin-bottom: 3px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); }
+  .ib-wx-chip { border-radius: 6px; padding: 4px 5px; margin-bottom: 4px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); overflow-wrap: anywhere; }
+  .ib-wx-chip span { color: #bcd8f5; font-size: 9px; }
   .ib-map { height: 440px; display: flex; align-items: center; justify-content: center; }
   .ib-map svg { height: 265px; filter: drop-shadow(0 0 4px #2ee6ff); }
   .ib-empty { color: #8fb0d8; font-size: 12px; text-align: center; padding-top: 80px; }
@@ -4130,11 +4135,14 @@ function _ovLoadChartLib(cb){
              <div class="ib-title" data-ib="instProgress">安装进度</div>
              <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="provText">省份</th><th data-ib="progress">进度</th><th data-ib="instWorkers">安装人数</th></tr></thead><tbody id="ibInstList"></tbody></table>
            </div>
-           <div class="ib-card ib-top-narrow"><i class="ib-corner"></i>
+           <div class="ib-card ib-top-narrow ib-wx-card"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="dateWeather">日期 · 时间 · 天气</div>
              <div class="ib-clock" id="ibClock">--:--:--</div>
              <div class="ib-date" id="ibDate"></div>
-             <div class="ib-wx" id="ibWx"><span data-ib="noData">暂无数据</span></div>
+             <div class="ib-wx-cols">
+               <div class="ib-wx-col"><div class="ib-wx-col-head" data-ib="wxMorning">上午</div><div class="ib-wx" id="ibWxAm"></div></div>
+               <div class="ib-wx-col"><div class="ib-wx-col-head" data-ib="wxAfternoon">下午</div><div class="ib-wx" id="ibWxPm"></div></div>
+             </div>
            </div>
          </div>
          <div class="ib-grid ib-mid">
@@ -26126,9 +26134,9 @@ function ibMapRender(agg) {
 
 /* ★INSTALL-BOARD-20261124★ 安装项目进度看板（深蓝卡片）数据与三语 */
 var IB_I18N = {
-  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目', wxClear:'晴', wxCloudy:'多云', wxFog:'雾', wxRain:'雨', wxSnow:'雪', wxShower:'阵雨', wxStorm:'暴雨', wxNa:'未知', wxHum:'湿度', wxWind:'风力', wxWindUnit:'级', provText:'省份' },
-  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project', wxClear:'Clear', wxCloudy:'Cloudy', wxFog:'Fog', wxRain:'Rain', wxSnow:'Snow', wxShower:'Showers', wxStorm:'Storm', wxNa:'N/A', wxHum:'Humidity', wxWind:'Wind', wxWindUnit:'', provText:'Province' },
-  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu', wxClear:'Quang trời', wxCloudy:'Nhiều mây', wxFog:'Sương mù', wxRain:'Mưa', wxSnow:'Tuyết', wxShower:'Mưa rào', wxStorm:'Bão', wxNa:'Không rõ', wxHum:'Độ ẩm', wxWind:'Gió', wxWindUnit:'cấp', provText:'Tỉnh' }
+  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目', wxClear:'晴', wxCloudy:'多云', wxFog:'雾', wxRain:'雨', wxSnow:'雪', wxShower:'阵雨', wxStorm:'暴雨', wxNa:'未知', wxHum:'湿度', wxWind:'风力', wxWindUnit:'级', provText:'省份', wxMorning:'上午', wxAfternoon:'下午' },
+  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project', wxClear:'Clear', wxCloudy:'Cloudy', wxFog:'Fog', wxRain:'Rain', wxSnow:'Snow', wxShower:'Showers', wxStorm:'Storm', wxNa:'N/A', wxHum:'Humidity', wxWind:'Wind', wxWindUnit:'', provText:'Province', wxMorning:'Morning', wxAfternoon:'Afternoon' },
+  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu', wxClear:'Quang trời', wxCloudy:'Nhiều mây', wxFog:'Sương mù', wxRain:'Mưa', wxSnow:'Tuyết', wxShower:'Mưa rào', wxStorm:'Bão', wxNa:'Không rõ', wxHum:'Độ ẩm', wxWind:'Gió', wxWindUnit:'cấp', provText:'Tỉnh', wxMorning:'Sáng', wxAfternoon:'Chiều' }
 };
 var IB_BOOTED = false, IB_CLOCK = null, IB_CAL_Y = 0, IB_CAL_M = 0;
 function ibLang() { try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) return CUR_LANG; } catch (e) {} return 'zh'; }
@@ -26439,32 +26447,60 @@ function ibBeaufort(kmh) {
   for (var i = 0; i < t.length; i++) { if (kmh <= t[i][0]) return t[i][1]; }
   return 12;
 }
+/* 取指定小时（09:00 / 15:00）的数据；小时序列缺失时回退到 current */
+function ibWxPoint(src, hour) {
+  var h = (src && src.hourly) || {}, times = h.time || [], idx = -1;
+  for (var i = 0; i < times.length; i++) {
+    if (String(times[i]).slice(11, 16) === hour) { idx = i; break; }
+  }
+  var cur = (src && src.current) || {};
+  function pick(key) {
+    var arr = h[key] || [];
+    return (idx >= 0 && arr[idx] != null) ? arr[idx] : cur[key];
+  }
+  return { code: pick('weather_code'), temp: pick('temperature_2m'),
+           hum: pick('relative_humidity_2m'), windLv: ibBeaufort(pick('wind_speed_10m')) };
+}
 function ibLoadWeather(viKeys) {
-  var el = document.getElementById('ibWx'); if (!el) return;
+  var amEl = document.getElementById('ibWxAm'), pmEl = document.getElementById('ibWxPm');
+  if (!amEl || !pmEl) return;
   var items = [];
   (viKeys || []).forEach(function (k) {
     var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(k) : null;
     if (pr && !items.some(function (x) { return x.vi === pr.vi; })) items.push(pr);
   });
-  if (!items.length) { el.innerHTML = '<span>' + ibTexts().noData + '</span>'; return; }
+  if (!items.length) {
+    var empty = '<span>' + ibTexts().noData + '</span>';
+    amEl.innerHTML = empty; pmEl.innerHTML = empty; return;
+  }
+  function chip(p, c, d) {
+    var head = '<b>' + escBd(bdName3(p)) + '</b>';
+    if (!c) return '<div class="ib-wx-chip">' + head + ' · —</div>';
+    var meta = [], txt = d['wx' + ibWxKey(c.code)] || d.wxNa;
+    if (c.temp != null) meta.push(Math.round(c.temp) + '°C');
+    if (c.hum != null) meta.push(d.wxHum + Math.round(c.hum) + '%');
+    if (c.windLv != null) meta.push(d.wxWind + c.windLv + d.wxWindUnit);
+    return '<div class="ib-wx-chip">' + head + ' · ' + txt + '<br><span>' + meta.join(' · ') + '</span></div>';
+  }
   function paint() {
     var d = ibTexts();
-    el.innerHTML = items.map(function (p) {
-      var c = (IB_WX && IB_WX[p.vi]) || null;
-      var txt = c ? (d['wx' + ibWxKey(c.code)] || d.wxNa) : '—';
-      var parts = ['<b>' + escBd(bdName3(p)) + '</b> · ' + txt];
-      if (c && c.temp != null) parts.push(Math.round(c.temp) + '°C');
-      if (c && c.hum != null) parts.push(d.wxHum + ' ' + Math.round(c.hum) + '%');
-      if (c && c.windLv != null) parts.push(d.wxWind + ' ' + c.windLv + d.wxWindUnit);
-      return '<div class="ib-wx-chip">' + parts.join(' · ') + '</div>';
+    amEl.innerHTML = items.map(function (p) {
+      var c = IB_WX && IB_WX[p.vi]; return chip(p, c && c.am, d);
+    }).join('');
+    pmEl.innerHTML = items.map(function (p) {
+      var c = IB_WX && IB_WX[p.vi]; return chip(p, c && c.pm, d);
     }).join('');
   }
   paint();
-  var allHit = items.every(function (p) { return IB_WX && IB_WX[p.vi]; });
+  var allHit = items.every(function (p) {
+    return IB_WX && IB_WX[p.vi] && IB_WX[p.vi].am && IB_WX[p.vi].pm;
+  });
   if (allHit) return;
   var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + items.map(function (p) { return p.lat; }).join(',') +
     '&longitude=' + items.map(function (p) { return p.lng; }).join(',') +
-    '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=Asia%2FHo_Chi_Minh';
+    '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code' +
+    '&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code' +
+    '&forecast_days=1&timezone=Asia%2FHo_Chi_Minh';
   var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
   var to = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
   fetch(url, ctrl ? { signal: ctrl.signal } : {})
@@ -26473,11 +26509,7 @@ function ibLoadWeather(viKeys) {
       var arr = Array.isArray(j) ? j : [j], cache = {};
       arr.forEach(function (one, i) {
         if (!items[i]) return;
-        var cur = (one && one.current) || {};
-        cache[items[i].vi] = { code: cur.weather_code,
-          temp: cur.temperature_2m != null ? cur.temperature_2m : null,
-          hum: cur.relative_humidity_2m != null ? cur.relative_humidity_2m : null,
-          windLv: ibBeaufort(cur.wind_speed_10m) };
+        cache[items[i].vi] = { am: ibWxPoint(one, '09:00'), pm: ibWxPoint(one, '15:00') };
       });
       IB_WX = cache; paint();
     })

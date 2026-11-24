@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-24 15:44:08",
+ "generated": "2026-11-24 16:04:06",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-CAL-20261124: preserve holiday legend expanded state\"",
+ "note": "\"INSTALL-WX-AMPM-20261124: morning afternoon weather columns\"",
  "i18n": {
-  "dict@6806": {
+  "dict@6814": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26129": {
+  "dict@26137": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5321,7 +5321,9 @@
     "wxHum": "湿度",
     "wxWind": "风力",
     "wxWindUnit": "级",
-    "provText": "省份"
+    "provText": "省份",
+    "wxMorning": "上午",
+    "wxAfternoon": "下午"
    },
    "en": {
     "title": "Installation Progress Dashboard",
@@ -5379,7 +5381,9 @@
     "wxHum": "Humidity",
     "wxWind": "Wind",
     "wxWindUnit": "",
-    "provText": "Province"
+    "provText": "Province",
+    "wxMorning": "Morning",
+    "wxAfternoon": "Afternoon"
    },
    "vi": {
     "title": "Bảng tiến độ lắp đặt",
@@ -5437,10 +5441,12 @@
     "wxHum": "Độ ẩm",
     "wxWind": "Gió",
     "wxWindUnit": "cấp",
-    "provText": "Tỉnh"
+    "provText": "Tỉnh",
+    "wxMorning": "Sáng",
+    "wxAfternoon": "Chiều"
    }
   },
-  "dict@30338": {
+  "dict@30370": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
