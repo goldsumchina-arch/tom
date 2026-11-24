@@ -2858,7 +2858,7 @@ function _ovLoadChartLib(cb){
   body.install-open #topbar,
   body.install-open #app { visibility: hidden !important; pointer-events: none !important; }
   .inst-topbar {
-    flex: none; height: 66px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+    flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
     background: linear-gradient(90deg, #1e5fa8, #2f7fd0);
     box-shadow: 0 2px 10px rgba(0,0,0,.35); font-family: "Segoe UI", Arial, sans-serif;
   }
@@ -2887,7 +2887,7 @@ function _ovLoadChartLib(cb){
   .inst-tab {
     flex: 0 0 auto; border: 1px solid rgba(255,255,255,.55); border-radius: 6px;
     background: rgba(255,255,255,.10); color: #fff; font-size: 13px; font-weight: 600;
-    line-height: 1.2; padding: 12px 7px; cursor: pointer; white-space: nowrap; font-family: inherit;
+    line-height: 1.2; padding: 9px 7px; cursor: pointer; white-space: nowrap; font-family: inherit;
     transition: background .15s, color .15s, border-color .15s;
     box-sizing: border-box; text-align: center;
   }
@@ -2908,14 +2908,14 @@ function _ovLoadChartLib(cb){
   .inst-card h2 { font-size: 22px; color: #1e5fa8; font-weight: 700; margin: 0 0 12px; }
   .inst-card .inst-ph { font-size: 14px; color: #78899b; line-height: 1.9; }
   @media (max-width: 900px) {
-    .inst-topbar { height: 56px; padding: 0 10px; gap: 8px; }
+    .inst-topbar { height: 48px; padding: 0 10px; gap: 8px; }
     .inst-title { font-size: 10px; }
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
     .inst-tabs { margin-left: 8px; gap: 6px; }
     /* 窄屏同样锁死品牌区宽度（只留 logo，隐藏标题），保证切语言时标签零位移 */
     .inst-brand { width: 88px; flex: 0 0 88px; }
     .inst-title { display: none; }
-    .inst-tab { font-size: 12px; padding: 8px 8px; border-radius: 5px; }
+    .inst-tab { font-size: 12px; padding: 6px 8px; border-radius: 5px; }
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
     .inst-card h2 { font-size: 18px; }
