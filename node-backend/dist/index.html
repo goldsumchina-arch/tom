@@ -2877,17 +2877,23 @@ function _ovLoadChartLib(cb){
   .inst-exit-btn:hover { background: rgba(231,76,60,.85); border-color: transparent; }
   /* ★INST-TABS-20261125★ 安装管理领航标签：位于蓝色顶栏内，选中项白底、每项带外框线 + 间隔 */
   .inst-tabs {
-    display: flex; align-items: center; gap: 7px; margin-left: 18px; padding: 0 2px;
+    display: flex; align-items: center; gap: 5px; margin-left: 10px; padding: 0 2px;
     min-width: 0; flex: 0 1 auto; overflow-x: auto; overflow-y: hidden;
     -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
   .inst-tabs::-webkit-scrollbar { height: 0; }
   .inst-tab {
     flex: 0 0 auto; border: 1px solid rgba(255,255,255,.55); border-radius: 6px;
-    background: rgba(255,255,255,.10); color: #fff; font-size: 12px; font-weight: 600;
+    background: rgba(255,255,255,.10); color: #fff; font-size: 11.5px; font-weight: 600;
     padding: 6px 10px; cursor: pointer; white-space: nowrap; font-family: inherit;
     transition: background .15s, color .15s, border-color .15s;
+    box-sizing: border-box; text-align: center;
   }
+  /* ★INST-TAB-FIXW-20261125★ 标签固定宽度：按三语「最长文案」定宽，切语言时宽度绝不变化 */
+  .inst-tab[data-itab="board"]  { width: 196px; }
+  .inst-tab[data-itab="detail"] { width: 194px; }
+  .inst-tab[data-itab="files"]  { width: 128px; }
+  .inst-tab[data-itab="shared"] { width: 152px; }
   .inst-tab:hover { background: rgba(255,255,255,.26); border-color: #fff; }
   .inst-tab.active { background: #fff; color: #1e5fa8; border-color: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
   .inst-panel { display: none; }
@@ -2905,6 +2911,8 @@ function _ovLoadChartLib(cb){
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
     .inst-tabs { margin-left: 8px; gap: 5px; }
     .inst-tab { font-size: 11px; padding: 4px 8px; border-radius: 5px; }
+    /* 窄屏（手机横/竖屏）放弃固定宽度，改为按内容自适应，保证 4 个标签都能点到 */
+    .inst-tab[data-itab] { width: auto; }
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
     .inst-card h2 { font-size: 18px; }
