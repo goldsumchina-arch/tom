@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-24 12:14:41",
+ "generated": "2026-11-24 12:48:04",
  "version": "V2026.11.04.01",
- "note": "INSTALL-BOARD-20261124: add IB_I18N trilingual dict for install dashboard",
+ "note": "\"INSTALL-BOARD-20261124: install dashboard i18n + map port\"",
  "i18n": {
-  "dict@6781": {
+  "dict@6765": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@25554": {
+  "dict@26073": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5404,7 +5404,7 @@
     "demoProject": "Dự án mẫu"
    }
   },
-  "dict@29450": {
+  "dict@30070": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

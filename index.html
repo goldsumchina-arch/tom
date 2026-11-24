@@ -2912,7 +2912,7 @@ function _ovLoadChartLib(cb){
   .ib-page { color: #dceaff; padding: 2px 2px 24px; font-family: "Segoe UI", Arial, sans-serif; }
   .ib-heading { font-size: 17px; font-weight: 700; color: #fff; margin: 0 0 12px; }
   .ib-grid { display: grid; gap: 12px; margin-bottom: 12px; }
-  .ib-top { grid-template-columns: 1.15fr 1fr 1fr 1.2fr; }
+  .ib-top { grid-template-columns: 1fr 1.3fr 1.2fr; }
   .ib-mid { grid-template-columns: 1fr 1fr 1.25fr; }
   .ib-row3 { grid-template-columns: .8fr .8fr 1fr 1fr 1fr; }
   .ib-card {
@@ -4073,10 +4073,6 @@ function _ovLoadChartLib(cb){
              </div>
            </div>
            <div class="ib-card"><i class="ib-corner"></i>
-             <div class="ib-title" data-ib="prodProgress">生产进度</div>
-             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibProdList"></tbody></table>
-           </div>
-           <div class="ib-card"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="instProgress">安装进度</div>
              <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibInstList"></tbody></table>
            </div>
@@ -4084,26 +4080,14 @@ function _ovLoadChartLib(cb){
              <div class="ib-title" data-ib="dateWeather">日期 · 时间 · 天气</div>
              <div class="ib-clock" id="ibClock">--:--:--</div>
              <div class="ib-date" id="ibDate"></div>
-             <div class="ib-wx">
-               <div><b data-ib="wx1">广宁省</b> · <span data-ib="wx1txt">多云，温度 62°F，风力 3级</span></div>
-               <div><b data-ib="wx2">清化省</b> · <span data-ib="wx2txt">小雨，湿度 73%，风力 1级</span></div>
-               <div><b data-ib="wx3">老街省</b> · <span data-ib="wx3txt">雨，湿度 83%，风力 1级</span></div>
-             </div>
+             <div class="ib-wx" id="ibWx"><span data-ib="noData">暂无数据</span></div>
            </div>
          </div>
          <div class="ib-grid ib-mid">
            <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="mapTitle">项目分布地图（越南）</div>
-             <div class="ib-map">
-               <svg viewBox="0 0 130 280" xmlns="http://www.w3.org/2000/svg">
-                 <path d="M42 12 L62 18 L70 34 L60 44 L75 56 L68 72 L80 88 L72 104 L84 122 L76 142 L88 158 L78 178 L90 196 L80 214 L96 228 L82 244 L74 264 L66 248 L60 228 L52 210 L58 190 L48 172 L56 152 L46 134 L54 116 L44 98 L52 80 L40 62 L48 44 L36 28 Z" fill="#44688f" stroke="#7fdcff" stroke-width="1.4"/>
-                 <circle cx="58" cy="38" r="5" fill="#2ee6ff"/><circle cx="76" cy="160" r="5" fill="#ff5b5b"/>
-                 <circle cx="65" cy="92" r="4" fill="#2ee6ff"/><circle cx="80" cy="214" r="4" fill="#2ee6ff"/>
-                 <text x="66" y="34" fill="#bfefff" font-size="8" data-ib="hanoi">河内 ·1</text>
-                 <text x="84" y="163" fill="#ffb3b3" font-size="8" data-ib="hcmc">胡志明市</text>
-                 <text x="70" y="90" fill="#bfefff" font-size="8" data-ib="thanhhoa">清化省 ·1</text>
-                 <text x="85" y="212" fill="#bfefff" font-size="8" data-ib="tayninh">西宁省 ·1</text>
-               </svg>
+             <div class="ib-map" id="ibMapBody" style="width:100%;height:285px">
+               <span style="color:#8fb0d8;font-size:11px">地图加载中…</span>
              </div>
            </div>
            <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
@@ -25546,9 +25530,544 @@ function instSwitchTab(name) {
   }
   var body = document.getElementById('instBody');
   if (body) { body.scrollTop = 0; body.classList.toggle('ib-dark', name === 'board'); }
+  // 从别的领航标签切回看板时，地图容器才真正可见，补绘一次（避免隐藏态 clientWidth=0 直接 return）
+  if (name === 'board') {
+    setTimeout(function () {
+      try {
+        if (typeof IB_AGG !== 'undefined' && IB_AGG && Object.keys(IB_AGG).length && typeof ibMapRender === 'function') ibMapRender(IB_AGG);
+      } catch (e) {}
+    }, 80);
+  }
   // 记住当前标签，刷新/退出再进时回到同一页
   try { sessionStorage.setItem('won_install_tab', name); } catch (e) {}
 }
+
+/* ===== ★INSTALL-MAP-PORT-20261124★ 移植 choice-lite 看板地图逻辑 =====
+   保留原逻辑：ECharts + vn34 省界 + vnOutline 白色国界 + 项目省聚合 +
+   仅显示有项目的省 + 河内/胡志明市常显 + 水平引导线 + canvas 实测文字宽防重叠。 */
+// 越南省份坐标（看板地图省级闪光 + 按省取天气）
+// ★ 省份清单与「编辑模态框 provinceOptionsHtml()」完全一致：2025 年合并后的 34 个省市。
+//   三语名称（vi/zh/en）也与下拉中的 ['Hà Nội','河内市','Hanoi City'] 对应，保证看板与表单显示一致。
+//   历史数据中若存的是旧省名，通过 VN_PROV_ALIAS 自动映射到新省（坐标照旧可用）。
+window.VN_PROVINCES = [
+  { vi:'Hà Nội',          zh:'河内市',   en:'Hanoi City',         lat:21.03, lng:105.85 },
+  { vi:'Hải Phòng',       zh:'海防市',   en:'Hai Phong City',     lat:20.86, lng:106.68 },
+  { vi:'Huế',             zh:'顺化市',   en:'Hue City',           lat:16.46, lng:107.60 },
+  { vi:'Đà Nẵng',         zh:'岘港市',   en:'Da Nang City',       lat:16.05, lng:108.20 },
+  { vi:'TP. Hồ Chí Minh', zh:'胡志明市', en:'Ho Chi Minh City',   lat:10.82, lng:106.63 },
+  { vi:'Cần Thơ',         zh:'芹苴市',   en:'Can Tho City',       lat:10.03, lng:105.77 },
+  { vi:'Cao Bằng',        zh:'高平省',   en:'Cao Bang Province',  lat:22.67, lng:106.26 },
+  { vi:'Tuyên Quang',     zh:'宣光省',   en:'Tuyen Quang Province',lat:21.82, lng:105.21 },
+  { vi:'Điện Biên',       zh:'奠边省',   en:'Dien Bien Province', lat:21.39, lng:103.02 },
+  { vi:'Lai Châu',        zh:'莱州省',   en:'Lai Chau Province',  lat:22.39, lng:103.06 },
+  { vi:'Sơn La',          zh:'山罗省',   en:'Son La Province',    lat:21.33, lng:103.91 },
+  { vi:'Lào Cai',         zh:'老街省',   en:'Lao Cai Province',   lat:22.48, lng:103.97 },
+  { vi:'Thái Nguyên',     zh:'太原省',   en:'Thai Nguyen Province',lat:21.59, lng:105.85 },
+  { vi:'Lạng Sơn',        zh:'谅山省',   en:'Lang Son Province',  lat:21.85, lng:106.76 },
+  { vi:'Quảng Ninh',      zh:'广宁省',   en:'Quang Ninh Province',lat:21.01, lng:107.29 },
+  { vi:'Bắc Ninh',        zh:'北宁省',   en:'Bac Ninh Province',  lat:21.18, lng:106.07 },
+  { vi:'Phú Thọ',         zh:'富寿省',   en:'Phu Tho Province',   lat:21.32, lng:105.40 },
+  { vi:'Hưng Yên',        zh:'兴安省',   en:'Hung Yen Province',  lat:20.79, lng:106.07 },
+  { vi:'Ninh Bình',       zh:'宁平省',   en:'Ninh Binh Province', lat:20.25, lng:105.97 },
+  { vi:'Thanh Hóa',       zh:'清化省',   en:'Thanh Hoa Province', lat:19.80, lng:105.77 },
+  { vi:'Nghệ An',         zh:'义安省',   en:'Nghe An Province',   lat:18.68, lng:105.68 },
+  { vi:'Hà Tĩnh',         zh:'河静省',   en:'Ha Tinh Province',   lat:18.34, lng:105.90 },
+  { vi:'Quảng Trị',       zh:'广治省',   en:'Quang Tri Province', lat:17.48, lng:106.60 },
+  { vi:'Quảng Ngãi',      zh:'广义省',   en:'Quang Ngai Province',lat:15.12, lng:108.79 },
+  { vi:'Gia Lai',         zh:'嘉莱省',   en:'Gia Lai Province',   lat:13.99, lng:108.00 },
+  { vi:'Khánh Hòa',       zh:'庆和省',   en:'Khanh Hoa Province', lat:12.25, lng:109.18 },
+  { vi:'Đắk Lắk',         zh:'得乐省',   en:'Dak Lak Province',   lat:12.71, lng:108.24 },
+  { vi:'Lâm Đồng',        zh:'林同省',   en:'Lam Dong Province',  lat:11.94, lng:108.44 },
+  { vi:'Đồng Nai',        zh:'同奈省',   en:'Dong Nai Province',  lat:10.95, lng:106.82 },
+  { vi:'Tây Ninh',        zh:'西宁省',   en:'Tay Ninh Province',  lat:11.31, lng:106.10 },
+  { vi:'Đồng Tháp',       zh:'同塔省',   en:'Dong Thap Province', lat:10.45, lng:105.63 },
+  { vi:'Vĩnh Long',       zh:'永隆省',   en:'Vinh Long Province', lat:10.25, lng:106.00 },
+  { vi:'An Giang',        zh:'安江省',   en:'An Giang Province',  lat:10.38, lng:105.44 },
+  { vi:'Cà Mau',          zh:'金瓯省',   en:'Ca Mau Province',    lat:9.18,  lng:105.15 }
+];
+// 重点城市（地图白点 + 三语标注）
+window.VN_CITIES = [
+  { vi:'Hà Nội',          zh:'河内',     en:'Hanoi',            lat:21.03, lng:105.85 },
+  { vi:'Hải Phòng',       zh:'海防',     en:'Hai Phong',        lat:20.86, lng:106.68 },
+  { vi:'Đà Nẵng',         zh:'岘港',     en:'Da Nang',          lat:16.05, lng:108.20 },
+  { vi:'TP. Hồ Chí Minh', zh:'胡志明市', en:'Ho Chi Minh City', lat:10.82, lng:106.63 },
+  { vi:'Cần Thơ',         zh:'芹苴',     en:'Can Tho',          lat:10.03, lng:105.77 }
+];
+// 越南国界近似轮廓（[lng,lat]，视觉示意用，非精确边界）
+window.VN_OUTLINE = [
+  [102.14,22.43],[103.0,22.83],[103.9,22.56],[104.5,22.83],[105.3,23.39],[106.7,22.83],[107.97,21.55],
+  [107.0,20.8],[106.2,20.4],[106.0,19.8],[105.7,19.2],[106.3,18.3],[106.6,17.5],[107.1,16.98],[107.6,16.4],
+  [108.25,15.9],[108.9,15.1],[109.3,13.8],[109.32,13.1],[109.27,12.4],[108.99,11.57],[109.2,11.3],
+  [108.1,10.93],[107.0,10.4],[106.7,10.3],[106.5,9.9],[106.2,9.5],[106.0,9.4],[105.7,9.2],[105.0,8.9],
+  [104.8,8.6],[104.8,9.5],[104.9,10.0],[105.1,10.4],[105.43,10.7],[105.6,11.0],[106.1,11.3],[106.6,11.7],
+  [107.2,12.0],[107.55,12.3],[107.6,12.9],[107.4,13.8],[107.2,14.6],[107.3,15.3],[107.1,16.0],[106.6,16.75],
+  [105.3,17.4],[104.7,18.5],[104.1,19.2],[104.0,19.9],[104.2,20.7],[103.7,21.0],[103.3,21.6],[102.7,21.9]
+];
+window.VN_MAP = { W:1000, H:620, latMin:8.5, latMax:23.5, lngMin:102.0, lngMax:110.0 };
+window.vnProject = function(lat, lng) {
+  var M = window.VN_MAP;
+  var x = (lng - M.lngMin) / (M.lngMax - M.lngMin) * M.W;
+  var y = (M.latMax - lat) / (M.latMax - M.latMin) * M.H;
+  return { x: +x.toFixed(1), y: +y.toFixed(1) };
+};
+// 省名归一化：去声调/去符号/转小写
+window._vnProvNorm = function(s) {
+  return String(s || '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]/g, '');
+};
+// 旧省名（2025 合并前）-> 新省名 key，用于兼容历史数据
+window.VN_PROV_ALIAS = {
+  bacgiang:'bacninh', backan:'thainguyen', haiduong:'haiphong', baclieu:'camau',
+  bentre:'vinhlong', binhduong:'tphochiminh', binhdinh:'gialai', binhphuoc:'dongnai',
+  binhthuan:'lamdong', kontum:'quangngai', daknong:'lamdong',
+  hagiang:'tuyenquang', hanam:'ninhbinh', namdinh:'ninhbinh', hoabinh:'phutho', vinhphuc:'phutho',
+  haugiang:'cantho', soctrang:'cantho', kiengiang:'angiang',
+  longan:'tayninh', ninhthuan:'khanhhoa', phuyen:'daklak', quangbinh:'quangtri', quangnam:'danang',
+  thaibinh:'hungyen', thuathienhue:'hue', tiengiang:'dongthap', travinh:'vinhlong', yenbai:'laocai',
+  baria:'tphochiminh', vungtau:'tphochiminh', bariavungtau:'tphochiminh',
+  hochiminh:'tphochiminh', tphcm:'tphochiminh', hcm:'tphochiminh', saigon:'tphochiminh', hue:'hue'
+};
+// 按任意写法的省名查找省份记录（先精确/归一化匹配 34 省，再走旧名映射），找不到返回 null
+window.vnProvinceByKey = function(name) {
+  if (!name) return null;
+  var k = window._vnProvNorm(name);
+  var list = window.VN_PROVINCES || [];
+  for (var i = 0; i < list.length; i++) { if (window._vnProvNorm(list[i].vi) === k) return list[i]; }
+  var a = window.VN_PROV_ALIAS[k];
+  if (a) { for (var j = 0; j < list.length; j++) { if (window._vnProvNorm(list[j].vi) === a) return list[j]; } }
+  return null;
+};
+
+var i18nVal = (typeof i18nVal === 'function') ? i18nVal : function (k, d) {
+  var t = (typeof T === 'function') ? T() : null;
+  return (t && t[k]) || d;
+};
+var escBd = (typeof escBd === 'function') ? escBd : function (s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+};
+var bdName3 = (typeof bdName3 === 'function') ? bdName3 : function (o) {
+  if (!o) return '';
+  var L = (typeof CUR_LANG !== 'undefined') ? CUR_LANG : 'zh';
+  if (L === 'en') return o.en || o.vi || '';
+  if (L === 'zh') return o.zh || o.en || o.vi || '';
+  return o.vi || o.en || '';
+};
+// ===== 专业越南地图（ECharts + 真实省级边界）：悬停任意省高亮 + 三语提示 + 项目涟漪 =====
+function bdLoadScript(src) {
+  return new Promise(function(res, rej) {
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = function(){ res(); };
+    s.onerror = function(){ rej(new Error('load fail: ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+/* ★BD-MAP-READY-20261108（用户报「刷新后仍偶发画出怪地图」的根治）：
+   旧实现把 __vn34Ready 在「34 省边界到手」时就置真，白色外轮廓还没到就允许渲染；
+   而标签外置布局完全依赖外轮廓（borderXatY），外轮廓为空时所有标签会挤到中线，
+   同时省界层按 regions 上色也可能因数据未定型而不上色 → 就是那张"怪地图"。
+   现在：就绪 = echarts + vn34 + vnOutline 三者齐备；共用一个 Promise，失败清缓存可重试。 */
+function boardEnsureEcharts() {
+  if (window.echarts && window.__vn34Ready) return Promise.resolve();
+  if (window.__bdMapReadyP) return window.__bdMapReadyP;
+
+  function loadLib() {
+    if (window.echarts) return Promise.resolve();
+    return bdLoadScript('/vendor/echarts.min.js')
+      .catch(function(){ return bdLoadScript('https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js'); });
+  }
+  function getJson(url, retry) {
+    return fetch(url, { credentials:'include', cache:'no-store' }).then(function(r){
+      if (!r.ok) throw new Error('http ' + r.status + ' ' + url);
+      return r.json();
+    }).catch(function(e){
+      if (retry > 0) return new Promise(function(res, rej){
+        setTimeout(function(){ getJson(url, retry - 1).then(res, rej); }, 500);
+      });
+      throw e;
+    });
+  }
+
+  window.__bdMapReadyP = loadLib()
+    .then(function(){ return getJson('/vendor/vn34.geo.json', 1); })   // 34 省市边界（63 省按 2025 合并规则归组）
+    .then(function(geo){
+      window.echarts.registerMap('vn34', geo);
+      window.__vn34Geo = geo;                       // 原始 JSON 缓存：echarts 实例被换掉时可重注册
+      window.__vn34Features = geo.features || [];
+      return getJson('/vendor/vn_outline.geo.json', 1).catch(function(){ return null; });
+    })
+    .then(function(o){
+      if (o) {
+        window.echarts.registerMap('vnOutline', o);
+        window.__vnOutlineGeo = o;
+        window.__vnOutlineFeatures = o.features || [];
+      }
+      if (!window.echarts
+          || !(window.__vn34Features || []).length
+          || !(window.__vnOutlineFeatures || []).length) throw new Error('map data not ready');
+      window.__vn34Ready = true;
+    })
+    .catch(function(e){ window.__bdMapReadyP = null; throw e; });   // 失败清缓存：下次还能重试
+  return window.__bdMapReadyP;
+}
+// 把 GeoJSON 区域名（无音调英文/旧省名）解析成 34 省标准省对象
+function bdResolveRegion(name) {
+  if (!name) return null;
+  var base = String(name).replace(/\s*(province|city)\s*$/i, '').replace(/^Tỉnh\s+/i, '');
+  return (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(base) : null;
+}
+// 点到线段投影
+function bdProjToSeg(px, py, ax, ay, bx, by) {
+  var dx = bx - ax, dy = by - ay, len2 = dx*dx + dy*dy;
+  if (len2 === 0) return [ax, ay];
+  var t = ((px-ax)*dx + (py-ay)*dy) / len2;
+  t = t < 0 ? 0 : (t > 1 ? 1 : t);
+  return [ax + t*dx, ay + t*dy];
+}
+// 求省份中心到白色外框（国界线）的最近点
+function bdNearestBorder(cp, feats) {
+  if (!cp || !feats || !feats.length) return [cp[0], cp[1]];
+  var best = { d: Infinity, x: cp[0], y: cp[1] };
+  function consider(rings) {
+    if (!rings) return;
+    rings.forEach(function(ring) {
+      for (var i = 0; i < ring.length - 1; i++) {
+        var a = ring[i], b = ring[i+1];
+        var proj = bdProjToSeg(cp[0], cp[1], a[0], a[1], b[0], b[1]);
+        var dx = proj[0] - cp[0], dy = proj[1] - cp[1];
+        var d = Math.sqrt(dx*dx + dy*dy);
+        if (d < best.d) { best.d = d; best.x = proj[0]; best.y = proj[1]; }
+      }
+    });
+  }
+  feats.forEach(function(f) {
+    var g = f.geometry;
+    if (!g) return;
+    if (g.type === 'Polygon') consider(g.coordinates);
+    else if (g.type === 'MultiPolygon') g.coordinates.forEach(consider);
+  });
+  return [best.x, best.y];
+}
+function boardRenderMapEcharts(body, agg) {
+  // ★BD-MAP-READY-20261108：半就绪（缺外轮廓/缺省界）绝不画，宁可抛错让外层重试，
+  //   否则会得到「标签挤在中间、省份不上色」的怪图。
+  var feats0 = window.__vn34Features || [];
+  var outline0 = window.__vnOutlineFeatures || [];
+  if (!feats0.length || !outline0.length) throw new Error('map data not ready');
+  if (!body || !body.clientWidth || !body.clientHeight) throw new Error('map body not visible');
+
+  /* ★BD-MAP-READY-20261108：页面上不止一处会加载图表库（vendor/chart.umd.min.js 等），
+     一旦 window.echarts 被替换成新实例，之前 registerMap 注册的边界就丢了
+     → geo 画不出来（省份不上色/只剩一层轮廓）。这里按缓存对象补注册一次。 */
+  try {
+    if (window.echarts.getMap && !window.echarts.getMap('vn34') && window.__vn34Geo)
+      window.echarts.registerMap('vn34', window.__vn34Geo);
+    if (window.echarts.getMap && !window.echarts.getMap('vnOutline') && window.__vnOutlineGeo)
+      window.echarts.registerMap('vnOutline', window.__vnOutlineGeo);
+    if (window.echarts.getMap && !window.echarts.getMap('vn34')) throw new Error('vn34 map lost');
+    if (window.echarts.getMap && !window.echarts.getMap('vnOutline')) throw new Error('vnOutline map lost');
+  } catch(e){ throw e; }
+
+  body.innerHTML = '<div style="width:100%;height:100%;min-height:320px;"></div>';
+  var el = body.firstChild;
+  var chart = window.__bdMapChart;
+  if (chart) { try { chart.dispose(); } catch(e){} }
+  chart = window.__bdMapChart = window.echarts.init(el);
+
+  // 用 34 省边界自带的 cp（与地图同一坐标空间）定位项目点
+  var feats = feats0;
+  var cpMap = {};
+  feats.forEach(function(f){ if (f.properties) cpMap[f.properties.name] = f.properties.cp; });
+
+  var pts = [];
+  Object.keys(agg || {}).forEach(function(vi) {
+    var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(vi) : null;
+    if (!pr) return;
+    var cp = cpMap[pr.vi];
+    if (cp) pts.push({ name: bdName3(pr), value: [cp[0], cp[1], agg[vi]] });
+  });
+  // 34 省各自柔和配色：省界靠颜色区分（不描边，内部旧省界自动消失）
+  var palette = ['#39424e','#454f5b','#374049','#48525e','#3e4753','#4b5561','#3a4350','#434d59'];
+  var regions = feats.map(function(f, i) {
+    return { name: (f.properties && f.properties.name) || '',
+             itemStyle: { areaColor: palette[i % palette.length] } };
+  });
+
+  // ========= 标签外置布局：沿白色海岸线等距外扩"虚拟框" + 引导线 =========
+  var bounds = { minLng: Infinity, maxLng: -Infinity, minLat: Infinity, maxLat: -Infinity };
+  feats.forEach(function(f){
+    var cp = f.properties && f.properties.cp;
+    if (cp) {
+      bounds.minLng = Math.min(bounds.minLng, cp[0]);
+      bounds.maxLng = Math.max(bounds.maxLng, cp[0]);
+      bounds.minLat = Math.min(bounds.minLat, cp[1]);
+      bounds.maxLat = Math.max(bounds.maxLat, cp[1]);
+    }
+  });
+  var lngPad = 2.0;
+  var boundingCoords = [[bounds.minLng - lngPad, bounds.maxLat + 1], [bounds.maxLng + lngPad, bounds.minLat - 1]];
+  var cx = (bounds.minLng + bounds.maxLng) / 2;
+  var cy = (bounds.minLat + bounds.maxLat) / 2;
+  var outlineFeats = outline0;
+
+  // 投影坐标单位下：D = 白线→虚拟框 间距(≈11px)；T = 内陆阈值(≈7px)；radialOut = 内陆省额外外推
+  var D = 900, T = 180, radialOut = 80;
+
+  // ========= 项目省 + 始终显示河内/胡志明市 + 全外部水平引导线 + 防重叠 =========
+  // 规则：
+  //  · 所有 agg[vi] > 0 的项目省画标签；没项目的省名不显示。
+  //  · 河内始终显示在地图内部（红色，无引导线）。
+  //  · 胡志明市始终显示，强制右侧 + 水平引导线，文字/引线用红色。
+  //  · 西宁省强制左侧。
+  //  · 其余省份：cp.x > cx → 右侧，否则左侧。
+  //  · 引线严格水平；左侧白色、右侧琥珀色、河内/胡志明市红色；全部 9px 加粗。
+  //  ★ 本块为最终锁定逻辑（2026-09-28），不可擅自修改：字体 9px、西宁左(额外外移22)、河内红(内/五角星上)、
+  //    胡志明市红(地图内小圆点标识 · 右+引导线)、广宁省右(额外外移22)、仅显示项目省+河内+胡志明市、水平引线、
+  //    同侧防重叠必须基于 canvas 实际文字宽度（bdTextWidth），保证中英越文引导线外移距离一致。
+  var LEFT_COLOR = '#ffffff', RIGHT_COLOR = '#ffc46b', HANOI_COLOR = '#ff6b6b';
+  var FONT_SIZE = 9, CW = 190, LBL_H = 220, GAP = 100, MARGIN = 100;
+
+  // 按实际 9px bold 字体像素宽度测量标签，避免中英文/越文字符数差异导致防重叠盒过大，
+  // 从而保证不同语言下引导线的外移距离一致。
+  function bdTextWidth(txt){
+    var ctx = (bdTextWidth._c || (bdTextWidth._c = document.createElement('canvas').getContext('2d')));
+    ctx.font = 'bold ' + FONT_SIZE + 'px sans-serif';
+    return ctx.measureText(txt || '').width;
+  }
+
+  function borderXatY(y, side) {
+    var xs = [];
+    outlineFeats.forEach(function(ft){
+      (ft.geometry.coordinates || []).forEach(function(poly){
+        // 只取外环，不把岛屿/湖泊内环当作边界
+        var ring = (poly.length && poly[0].length && typeof poly[0][0] === 'number') ? poly : (poly[0] || []);
+        if (!ring.length) return;
+        var n = ring.length;
+        for (var i = 0; i < n; i++) {
+          var a = ring[i], b = ring[(i+1)%n];
+          if ((a[1] <= y && y < b[1]) || (b[1] <= y && y < a[1])) {
+            var t = (y - a[1]) / (b[1] - a[1]); xs.push(a[0] + t * (b[0] - a[0]));
+          }
+        }
+      });
+    });
+    if (!xs.length) { var nb = bdNearestBorder([cx, y], outlineFeats); return nb[0]; }
+    var v = xs[0];
+    for (var k = 1; k < xs.length; k++) v = (side === 'left') ? Math.min(v, xs[k]) : Math.max(v, xs[k]);
+    return v;
+  }
+
+  // 收集项目省，并始终保留河内、胡志明市
+  var labelEntries = [];
+  Object.keys(agg || {}).forEach(function(vi){
+    var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(vi) : null;
+    var c = pr ? cpMap[pr.vi] : null;
+    if (pr && c && (agg[vi] || 0) > 0) labelEntries.push({ vi: pr.vi, cp: c, name: bdName3(pr), count: agg[vi] });
+  });
+  function ensureEntry(viKey){
+    var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(viKey) : null;
+    var c = pr ? cpMap[pr.vi] : null;
+    if (!pr || !c) return false;
+    var exists = labelEntries.some(function(e){ return e.vi === pr.vi; });
+    if (!exists) labelEntries.push({ vi: pr.vi, cp: c, name: bdName3(pr), count: agg[pr.vi] || 0 });
+    return pr.vi;
+  }
+  var hanoiVi = ensureEntry('Hà Nội');
+  var hcmKey = ['TP. Hồ Chí Minh', 'Hồ Chí Minh', 'Thành phố Hồ Chí Minh'].find(function(k){ return cpMap[k]; });
+  var hcmVi = hcmKey ? ensureEntry(hcmKey) : null;
+
+  var forceRightSet = {}; if (hcmVi) forceRightSet[hcmVi] = true;
+  var forceLeftSet = { 'Tây Ninh': true };
+  // 个别省标签额外外移，避免贴边/压到引线
+  var EXTRA_MARGIN = { 'Quảng Ninh': 22, 'Tây Ninh': 22 };
+
+  var rawOut = [], rawIn = [];
+  labelEntries.forEach(function(p){
+    var labelTxt = p.name + (p.count ? ' · ' + p.count : '');
+    var W = Math.ceil(bdTextWidth(labelTxt)) + 12;
+    if (p.vi === hanoiVi) {
+      rawIn.push({ cp: p.cp, name: p.name, count: p.count, W: W });
+      return;
+    }
+    var side = forceRightSet[p.vi] ? 'right' : (forceLeftSet[p.vi] ? 'left' : (p.cp[0] > cx ? 'right' : 'left'));
+    var bl = borderXatY(p.cp[1], 'left'), br = borderXatY(p.cp[1], 'right');
+    var extra = EXTRA_MARGIN[p.vi] || 0;
+    var labelX = (side === 'left') ? (bl - MARGIN - extra) : (br + MARGIN + extra);
+    var color = (p.vi === hcmVi) ? HANOI_COLOR : (side === 'left' ? LEFT_COLOR : RIGHT_COLOR);
+    rawOut.push({ cp: p.cp, name: p.name, count: p.count, side: side, labelX: labelX, W: W, color: color });
+  });
+
+  // 同侧按 labelX 排序，强制最小水平间距（保证同侧文字 x 方向不重叠）
+  function declOut(arr, sgn) {
+    arr.sort(function(a, b){ return sgn < 0 ? (b.labelX - a.labelX) : (a.labelX - b.labelX); });
+    for (var i = 1; i < arr.length; i++) {
+      if (sgn < 0) {
+        if (arr[i].labelX > arr[i-1].labelX - arr[i].W - GAP) arr[i].labelX = arr[i-1].labelX - arr[i].W - GAP;
+      } else {
+        if (arr[i].labelX < arr[i-1].labelX + arr[i-1].W + GAP) arr[i].labelX = arr[i-1].labelX + arr[i-1].W + GAP;
+      }
+    }
+  }
+  declOut(rawOut.filter(function(r){ return r.side === 'left'; }), -1);
+  declOut(rawOut.filter(function(r){ return r.side === 'right'; }), 1);
+
+  // 生成 series 数据 + 重叠自检盒
+  var linesData = [];
+  var rightLabels = [], leftLabels = [], inLabels = [];
+  var verifyBoxes = [];                  // [x0,x1,y0,y1,name]
+  rawOut.forEach(function(r){
+    linesData.push({ coords: [[r.cp[0], r.cp[1]], [r.labelX, r.cp[1]]],
+                     lineStyle: { color: r.color, width:1.2, opacity:0.9 } });
+    var item = { name: r.name, value: [r.labelX, r.cp[1], r.count],
+      label: { show:true, position: r.side, align: (r.side === 'left' ? 'right' : 'left'),
+               color: r.color, fontSize: FONT_SIZE, fontWeight: 'bold',
+               formatter: function(p){ return p.name + (p.value[2] ? ' · ' + p.value[2] : ''); } } };
+    if (r.side === 'left') {
+      leftLabels.push(item);
+      verifyBoxes.push([r.labelX - r.W, r.labelX, r.cp[1] - LBL_H/2, r.cp[1] + LBL_H/2, r.name]);
+    } else {
+      rightLabels.push(item);
+      verifyBoxes.push([r.labelX, r.labelX + r.W, r.cp[1] - LBL_H/2, r.cp[1] + LBL_H/2, r.name]);
+    }
+  });
+  rawIn.forEach(function(r){
+    var item = { name: r.name, value: [r.cp[0], r.cp[1], r.count],
+      label: { show:true, position:'top', align:'center', color: HANOI_COLOR,
+               fontSize: FONT_SIZE, fontWeight: 'bold',
+               formatter: function(p){ return p.name; } } };
+    inLabels.push(item);
+    verifyBoxes.push([r.cp[0] - r.W/2, r.cp[0] + r.W/2, r.cp[1] - LBL_H, r.cp[1], r.name]);
+  });
+
+  // 页面内自检：逐省两两检测文字盒重叠（verifyBoxes: [x0,x1,y0,y1,name]）
+  (function(){
+    var bad = 0;
+    for (var a = 0; a < verifyBoxes.length; a++)
+      for (var b = a + 1; b < verifyBoxes.length; b++) {
+        var A = verifyBoxes[a], B = verifyBoxes[b];
+        if (!(A[1] <= B[0] || B[1] <= A[0] || A[3] <= B[2] || B[3] <= A[2])) {
+          bad++; if (bad <= 20) console.warn('[标签重叠]', A[4], '<->', B[4]);
+        }
+      }
+    if (bad) console.warn('标签重叠总数 =', bad, '/', verifyBoxes.length);
+    else console.log('标签自检通过：', verifyBoxes.length, '个省/市两两无重叠');
+  })();
+
+  var tip = function(p) {
+    if (p.seriesType === 'effectScatter') {
+      return '<b>' + escBd(p.name) + '</b>' + (p.value && p.value[2] ? (' · ' + p.value[2]) : '');
+    }
+    // 悬停提示只显示当前语言的名字，不再回退到越南语省名
+    var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(p.name) : null;
+    if (!pr) return '';
+    var nm = bdName3(pr);
+    var c = agg[pr.vi] || 0;
+    return nm ? ('<b>' + escBd(nm) + '</b>' + (c ? (' · ' + c) : '')) : '';
+  };
+
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger:'item', backgroundColor:'#1b222b', borderColor:'#474e57',
+               textStyle:{ color:'#eceff2', fontSize:12 }, formatter: tip },
+    geo: [
+      {
+        map: 'vn34', roam: false,
+        // ★ geo 组件的悬停提示必须挂在 geo.tooltip 上，顶层 tooltip 对 geo 不生效，
+        //   否则会用默认格式化器直接显示数据里的越南语省名
+        tooltip: { backgroundColor:'#1b222b', borderColor:'#474e57',
+                   textStyle:{ color:'#eceff2', fontSize:12 }, formatter: tip },
+        // 34 省数据是预投影平面坐标（x/y 单位一致），必须用 aspectScale=1，
+        // 否则 ECharts 默认 0.75（按经纬度）会把地图横向压扁、看起来变形
+        aspectScale: 1,
+        layoutCenter: ['50%', '50%'], layoutSize: '83%',
+        boundingCoords: boundingCoords,
+        regions: regions,
+        itemStyle: { areaColor:'#39424e', borderColor:'transparent', borderWidth: 0 },
+        emphasis: {
+          label: { show:true, color:'#101418', fontWeight:700, fontSize:11,
+                   formatter: function(p){ var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(p.name) : null; return pr ? bdName3(pr) : ''; } },
+          itemStyle: { areaColor:'#39e6ff' }
+        },
+        select: { disabled: true }
+      },
+      {
+        // 白色外轮廓层：全国海岸线 + 越南所有岛屿（独立 geo 层，不响应鼠标）
+        map: 'vnOutline', roam: false, silent: true,
+        aspectScale: 1, layoutCenter: ['50%', '50%'], layoutSize: '83%',
+        boundingCoords: boundingCoords,
+        itemStyle: { areaColor:'rgba(0,0,0,0)', borderColor:'#e8ecef', borderWidth:1.4 }
+      }
+    ],
+    series: [
+      { name:'capital', type:'scatter', coordinateSystem:'geo', geoIndex:0,
+        // 首都河内：红色五角星（其余城市一律不显示）
+        symbol: 'path://M12 1.5 L15 9 L23 9 L16.8 13.6 L19.2 21.5 L12 16.9 L4.8 21.5 L7.2 13.6 L1 9 L9 9 Z',
+        symbolSize: 10, zlevel: 2,
+        itemStyle:{ color:'#ff4757', shadowBlur:10, shadowColor:'#ff4757' },
+        label:{ show:false },
+        data: (function(){
+          var cp = cpMap['Hà Nội'];
+          return cp ? [{ name: bdName3({ vi:'Hà Nội', zh:'河内', en:'Hanoi' }), value:[cp[0], cp[1]] }] : [];
+        })() },
+      { name:'hcmDot', type:'scatter', coordinateSystem:'geo', geoIndex:0,
+        // 胡志明市：红色小圆点标识（与右侧红色标签呼应）
+        symbol: 'circle', symbolSize: 6, zlevel: 2,
+        itemStyle:{ color:'#ff4757', shadowBlur:8, shadowColor:'#ff4757' },
+        label:{ show:false },
+        data: (function(){
+          var cp = hcmVi ? cpMap[hcmVi] : null;
+          return cp ? [{ name: (typeof bdName3 === 'function') ? bdName3({ vi:hcmVi, zh:'胡志明市', en:'Ho Chi Minh City' }) : '胡志明市', value:[cp[0], cp[1]] }] : [];
+        })() },
+      { name:'projects', type:'effectScatter', coordinateSystem:'geo', geoIndex:0,
+        symbolSize: function(v){ return 8 + Math.min((v[2]||1), 6) * 3; },
+        rippleEffect:{ scale:3.4, brushType:'stroke' },
+        itemStyle:{ color:'#39e6ff', shadowBlur:12, shadowColor:'#39e6ff' },
+        label:{ show:false },
+        data: pts },
+      { name:'leaderLines', type:'lines', coordinateSystem:'geo', geoIndex:0, zlevel:3,
+        symbol: ['none','none'], lineStyle:{ color:'#9fb3c8', width:1, opacity:0.7 },
+        data: linesData },
+      { name:'rightLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4,
+        symbolSize:0,
+        label:{ show:true, position:'right', align:'left', fontSize:9, fontWeight:'bold',
+                formatter:function(p){ return p.name + (p.value[2] ? ' · '+p.value[2] : ''); } },
+        data: rightLabels },
+      { name:'leftLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4,
+        symbolSize:0,
+        label:{ show:true, position:'left', align:'right', fontSize:9, fontWeight:'bold',
+                formatter:function(p){ return p.name + (p.value[2] ? ' · '+p.value[2] : ''); } },
+        data: leftLabels },
+      { name:'inLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4,
+        symbolSize:0,
+        label:{ show:true, position:'top', align:'center', fontSize:9, fontWeight:'bold',
+                formatter:function(p){ return p.name; } },
+        data: inLabels }
+    ]
+  });
+  if (!window.__bdMapResize) {
+    window.__bdMapResize = true;
+    window.addEventListener('resize', function(){
+      try { if (window.__bdMapChart) window.__bdMapChart.resize(); } catch(e){}
+    });
+  }
+}
+function ibMapRender(agg) {
+  var body = document.getElementById('ibMapBody');
+  if (!body || !body.clientWidth) return;
+  boardEnsureEcharts().then(function () {
+    if (!body.isConnected) return;
+    try { boardRenderMapEcharts(body, agg); }
+    catch (e) { body.innerHTML = '<div style="color:#9fc4e8;font-size:11px;padding-top:100px;text-align:center">地图渲染失败：' + escBd(String(e && e.message || e)) + '</div>'; }
+  }).catch(function (e) {
+    body.innerHTML = '<div style="color:#9fc4e8;font-size:11px;padding-top:100px;text-align:center">地图资源加载失败：' + escBd(String(e && e.message || e)) + '</div>';
+  });
+}
+/* ===== END INSTALL-MAP-PORT ===== */
+
 /* ★INSTALL-BOARD-20261124★ 安装项目进度看板（深蓝卡片）数据与三语 */
 var IB_I18N = {
   zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目' },
@@ -25566,6 +26085,13 @@ function ibApplyLang() {
     if (v) el.textContent = v;
   });
   ibTick();
+  // 地图省名/天气省名随语言变化，切语言后按已聚合数据原地重绘（不重建整页）
+  try {
+    if (IB_AGG && Object.keys(IB_AGG).length) {
+      ibMapRender(IB_AGG);
+      ibLoadWeather(Object.keys(IB_AGG));
+    }
+  } catch (e) {}
 }
 function ibTick() {
   var d = ibTexts(), now = new Date();
@@ -25596,31 +26122,125 @@ function ibRenderCal() {
   for (var day = 1; day <= days; day++) html += '<span' + (day === today ? ' class="today"' : '') + '>' + day + '</span>';
   grid.innerHTML = html;
 }
-function ibFillProjects() {
-  var d = ibTexts();
-  var list = (typeof globalWonData !== 'undefined' && Array.isArray(globalWonData)) ? globalWonData.slice(0, 3) : [];
-  if (!list.length) list = [0, 1, 2].map(function (i) { return { name: (d.demoProject || 'Sample project') + ' ' + (i + 1) }; });
-  var total = list.length;
-  var setTxt = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
-  setTxt('ibTotal', total); setTxt('ibDone', 0); setTxt('ibBuilding', total);
-  var prod = [108.4, 0, 0], inst = [8.4, 0, 0], iw = [6, 0, 0], pw = [18, 0, 0];
-  var nameOf = function (p, i) { return (p && (p.project_name || p.contract_no || p.no || p.name)) || (d.noProject + ' ' + (i + 1)); };
-  var rows = function (arr, vals, isBar) {
+/* ★INSTALL-BOARD-DATA-20261124★ 看板数据取自本系统签约项目 /api/won-projects：
+   · 地图省份 = 签约项目 province（经 vnProvinceByKey 归一到 34 省标准名）后聚合；
+   · 安装进度 = 该项目签约信息中的「含安装」状态 + /api/install/mgmt 里的 {demand,installed,workers}；
+   · 天气 = 按项目省份坐标取 Open-Meteo 实时天气（与 choice-lite 看板同源逻辑）。 */
+var IB_PROJECTS = [], IB_AGG = {}, IB_WX = null, IB_LOADING = false;
+function ibName(p) { return (p && (p.customer || p.project_name || p.contract_no || p.no)) || ''; }
+function ibInstallData(p) {
+  var d = (p && p.__ibInstall && p.__ibInstall.data) || {};
+  var demand = Number(d.demand || 0), installed = Number(d.installed || 0);
+  // 安装管理接口尚无明细时，直接取签约项目里的安装情况（inst_budget_vnd / inst_actual_vnd）
+  if (!(demand > 0) && p) {
+    demand = Number(p.inst_budget_vnd || 0);
+    installed = Number(p.inst_actual_vnd || 0);
+  }
+  return { demand: demand, installed: installed,
+           rate: demand > 0 ? Math.min(100, installed / demand * 100) : 0,
+           workers: Number(d.workers || 0) };
+}
+function ibRenderProjects() {
+  var d = ibTexts(), list = IB_PROJECTS || [];
+  var setTxt = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = String(v); };
+  var done = list.filter(function (p) { return ibInstallData(p).rate >= 100; }).length;
+  setTxt('ibTotal', list.length); setTxt('ibDone', done); setTxt('ibBuilding', Math.max(0, list.length - done));
+  var withInst = list.filter(function (p) { return String(p.include_install || '').toUpperCase() === 'YES'; });
+  withInst.sort(function (a, b) { return ibInstallData(b).rate - ibInstallData(a).rate; });
+  var rows = function (arr, kind) {
     if (!arr.length) return '<tr><td colspan="3">' + d.noProject + '</td></tr>';
-    return arr.map(function (p, i) {
-      var name = String(nameOf(p, i)).replace(/</g, '&lt;').slice(0, 22);
-      var v = vals[i] || 0;
-      return '<tr><td>' + (i + 1) + '</td><td title="' + name + '">' + name + '</td><td>' + (isBar
-        ? v + '%<div class="ib-bar"><i style="width:' + Math.min(100, v) + '%"></i></div>'
-        : v) + '</td></tr>';
+    return arr.slice(0, 12).map(function (p, i) {
+      var nm = String(ibName(p) || ('#' + p.id)).replace(/[&<>"]/g, '').slice(0, 24);
+      var st = ibInstallData(p);
+      var v = kind === 'inst' ? st.rate.toFixed(1) + '%' : (st.workers || '—');
+      return '<tr><td>' + (i + 1) + '</td><td title="' + nm + '">' + nm + '</td><td>' + v +
+        (kind === 'inst' ? '<div class="ib-bar"><i style="width:' + st.rate + '%"></i></div>' : '') + '</td></tr>';
     }).join('');
   };
-  var elProd = document.getElementById('ibProdList'), elInst = document.getElementById('ibInstList');
-  if (elProd) elProd.innerHTML = rows(list, prod, true);
-  if (elInst) elInst.innerHTML = rows(list, inst, true);
-  var elWi = document.getElementById('ibWorkerList'), elPw = document.getElementById('ibProdWorkerList');
-  if (elWi) elWi.innerHTML = rows(list, iw, false);
-  if (elPw) elPw.innerHTML = rows(list, pw, false);
+  var el = document.getElementById('ibInstList'); if (el) el.innerHTML = rows(withInst, 'inst');
+  var w = document.getElementById('ibWorkerList'); if (w) w.innerHTML = rows(withInst, 'workers');
+  // 「生产人数」不属于安装管理数据，禁止拿安装人数冒充；无生产数据源时明确显示暂无数据
+  var pw = document.getElementById('ibProdWorkerList'); if (pw) pw.innerHTML = '<tr><td colspan="3">' + d.noData + '</td></tr>';
+}
+function ibLoadInstallData() {
+  var list = (IB_PROJECTS || []).slice(0, 30);
+  if (!list.length) return;
+  var pending = list.length;
+  list.forEach(function (p) {
+    fetch('/api/install/mgmt?project_id=' + encodeURIComponent(p.id), { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j && j.item) p.__ibInstall = j.item; })
+      .catch(function () {})
+      .then(function () { if (--pending === 0) ibRenderProjects(); });
+  });
+}
+function ibLoadWeather(viKeys) {
+  var el = document.getElementById('ibWx'); if (!el) return;
+  var items = [];
+  (viKeys || []).forEach(function (k) {
+    var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(k) : null;
+    if (pr && !items.some(function (x) { return x.vi === pr.vi; })) items.push(pr);
+  });
+  items = items.slice(0, 3);
+  if (!items.length) { el.innerHTML = '<span data-ib="noData">' + ibTexts().noData + '</span>'; return; }
+  function paint() {
+    var d = ibTexts();
+    el.innerHTML = items.map(function (p) {
+      var c = (IB_WX && IB_WX[p.vi]) || null;
+      var txt = c ? (d['wx_' + c.code] || d.wxCloudy) : '—';
+      return '<div><b>' + bdName3(p) + '</b> · ' + txt + '</div>';
+    }).join('');
+  }
+  paint();
+  var allHit = items.every(function (p) { return IB_WX && IB_WX[p.vi]; });
+  if (allHit) return;
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + items.map(function (p) { return p.lat; }).join(',') +
+    '&longitude=' + items.map(function (p) { return p.lng; }).join(',') +
+    '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=Asia%2FHo_Chi_Minh';
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var to = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
+  fetch(url, ctrl ? { signal: ctrl.signal } : {})
+    .then(function (r) { if (to) clearTimeout(to); return r.json(); })
+    .then(function (j) {
+      var arr = Array.isArray(j) ? j : [j], cache = {};
+      arr.forEach(function (one, i) {
+        if (!items[i]) return;
+        var cur = (one && one.current) || {}, code = cur.weather_code;
+        var w = code == null ? 'na' : (code === 0 ? 'clear' : (code <= 3 ? 'cloudy' : (code <= 48 ? 'fog' : (code <= 67 ? 'rain' : (code <= 82 ? 'shower' : 'storm')))));
+        cache[items[i].vi] = { code: w, text: Math.round(cur.temperature_2m || 0) + '°C · ' +
+          (cur.relative_humidity_2m != null ? Math.round(cur.relative_humidity_2m) + '% · ' : '') +
+          (cur.wind_speed_10m != null ? Math.round(cur.wind_speed_10m) + 'km/h' : '') };
+      });
+      IB_WX = cache; paint();
+    })
+    .catch(function () { if (to) clearTimeout(to); });
+}
+function ibLoadData() {
+  if (IB_LOADING) return;
+  IB_LOADING = true;
+  function render(list) {
+    IB_PROJECTS = (list || []).filter(Boolean);
+    var agg = {};
+    IB_PROJECTS.forEach(function (p) {
+      var raw = String(p.province || '').trim(); if (!raw) return;
+      var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(raw) : null;
+      var key = pr ? pr.vi : raw;
+      agg[key] = (agg[key] || 0) + 1;
+    });
+    IB_AGG = agg;
+    ibRenderProjects();
+    ibMapRender(agg);
+    ibLoadWeather(Object.keys(agg));
+    ibLoadInstallData();
+  }
+  if (typeof fetch !== 'function') { render([]); IB_LOADING = false; return; }
+  fetch('/api/won-projects', { credentials: 'include' })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)); })
+    .then(function (j) { render(Array.isArray(j) ? j : ((j && j.data) || [])); })
+    .catch(function () {
+      render((typeof globalWonData !== 'undefined' && Array.isArray(globalWonData)) ? globalWonData : []);
+    })
+    .then(function () { IB_LOADING = false; });
 }
 function ibFillLogin() {
   var daily = document.getElementById('ibLoginDaily'), monthly = document.getElementById('ibLoginMonthly');
@@ -25640,7 +26260,7 @@ function ibBoot() {
   IB_BOOTED = true;
   var bodyEl = document.getElementById('instBody');
   if (bodyEl) bodyEl.classList.toggle('ib-dark', INST_ACTIVE_TAB === 'board');
-  ibFillProjects(); ibFillLogin(); ibCalToday(); ibApplyLang();
+  ibLoadData(); ibFillLogin(); ibCalToday(); ibApplyLang();
   if (IB_CLOCK) clearInterval(IB_CLOCK);
   IB_CLOCK = setInterval(ibTick, 1000);
 }
