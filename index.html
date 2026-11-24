@@ -2858,44 +2858,44 @@ function _ovLoadChartLib(cb){
   body.install-open #topbar,
   body.install-open #app { visibility: hidden !important; pointer-events: none !important; }
   .inst-topbar {
-    flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
+    flex: none; height: 66px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
     background: linear-gradient(90deg, #1e5fa8, #2f7fd0);
     box-shadow: 0 2px 10px rgba(0,0,0,.35); font-family: "Segoe UI", Arial, sans-serif;
   }
   /* ★INST-TAB-NOMOVE-20261125★ 品牌区固定宽度：切语言时「安装管理/Installation Management」长度不同，
      若不锁宽会把右侧 4 个标签整体推来推去（用户反馈「左右串动」）。锁死后标签起点永远不变。 */
-  .inst-brand { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.05; min-width: 0; width: 144px; flex: 0 0 144px; }
+  .inst-brand { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.05; min-width: 0; width: 118px; flex: 0 0 118px; }
   .inst-logo { display: flex; align-items: center; gap: 8px; white-space: nowrap; user-select: none; }
   .inst-logo-mark { font-size: 20px; font-weight: 800; color: #e8720c; letter-spacing: .5px; }
   .inst-logo-name { font-size: 16px; font-weight: 700; color: #fff; }
   /* ★INST-TITLE-UNDER-LOGO-20261124★ 安装管理标题缩小并放到 AGI-CRM logo 下方 */
-  .inst-title { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; letter-spacing: .5px; padding-left: 0; border-left: none; }
+  .inst-title { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; letter-spacing: .3px; padding-left: 0; border-left: none; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .inst-spacer { flex: 1 1 auto; }
   .inst-exit-btn {
     border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff;
-    font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 11px; font-weight: 600; padding: 5px 9px; border-radius: 6px; cursor: pointer;
     transition: background .15s, border-color .15s; white-space: nowrap;
   }
   .inst-exit-btn:hover { background: rgba(231,76,60,.85); border-color: transparent; }
   /* ★INST-TABS-20261125★ 安装管理领航标签：位于蓝色顶栏内，选中项白底、每项带外框线 + 间隔 */
   .inst-tabs {
-    display: flex; align-items: center; gap: 5px; margin-left: 10px; padding: 0 2px;
+    display: flex; align-items: center; gap: 6px; margin-left: 10px; padding: 0 2px;
     min-width: 0; flex: 0 1 auto; overflow-x: auto; overflow-y: hidden;
     -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
   .inst-tabs::-webkit-scrollbar { height: 0; }
   .inst-tab {
     flex: 0 0 auto; border: 1px solid rgba(255,255,255,.55); border-radius: 6px;
-    background: rgba(255,255,255,.10); color: #fff; font-size: 11.5px; font-weight: 600;
-    padding: 6px 10px; cursor: pointer; white-space: nowrap; font-family: inherit;
+    background: rgba(255,255,255,.10); color: #fff; font-size: 13px; font-weight: 600;
+    line-height: 1.2; padding: 12px 7px; cursor: pointer; white-space: nowrap; font-family: inherit;
     transition: background .15s, color .15s, border-color .15s;
     box-sizing: border-box; text-align: center;
   }
   /* ★INST-TAB-FIXW-20261125★ 标签固定宽度：按三语「最长文案」定宽，切语言时宽度绝不变化 */
-  .inst-tab[data-itab="board"]  { width: 196px; }
-  .inst-tab[data-itab="detail"] { width: 194px; }
-  .inst-tab[data-itab="files"]  { width: 128px; }
-  .inst-tab[data-itab="shared"] { width: 152px; }
+  .inst-tab[data-itab="board"]  { width: 210px; }
+  .inst-tab[data-itab="detail"] { width: 208px; }
+  .inst-tab[data-itab="files"]  { width: 132px; }
+  .inst-tab[data-itab="shared"] { width: 160px; }
   .inst-tab:hover { background: rgba(255,255,255,.26); border-color: #fff; }
   .inst-tab.active { background: #fff; color: #1e5fa8; border-color: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
   .inst-panel { display: none; }
@@ -2908,14 +2908,14 @@ function _ovLoadChartLib(cb){
   .inst-card h2 { font-size: 22px; color: #1e5fa8; font-weight: 700; margin: 0 0 12px; }
   .inst-card .inst-ph { font-size: 14px; color: #78899b; line-height: 1.9; }
   @media (max-width: 900px) {
-    .inst-topbar { height: 50px; padding: 0 10px; gap: 8px; }
+    .inst-topbar { height: 56px; padding: 0 10px; gap: 8px; }
     .inst-title { font-size: 10px; }
     .inst-exit-btn { font-size: 11px; padding: 5px 9px; }
-    .inst-tabs { margin-left: 8px; gap: 5px; }
+    .inst-tabs { margin-left: 8px; gap: 6px; }
     /* 窄屏同样锁死品牌区宽度（只留 logo，隐藏标题），保证切语言时标签零位移 */
     .inst-brand { width: 88px; flex: 0 0 88px; }
     .inst-title { display: none; }
-    .inst-tab { font-size: 11px; padding: 4px 8px; border-radius: 5px; }
+    .inst-tab { font-size: 12px; padding: 8px 8px; border-radius: 5px; }
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
     .inst-card h2 { font-size: 18px; }
