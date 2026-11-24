@@ -2907,6 +2907,68 @@ function _ovLoadChartLib(cb){
   }
   .inst-card h2 { font-size: 22px; color: #1e5fa8; font-weight: 700; margin: 0 0 12px; }
   .inst-card .inst-ph { font-size: 14px; color: #78899b; line-height: 1.9; }
+  /* ★INSTALL-BOARD-20261124★ 安装项目进度看板：深蓝底 + 青色四角卡片（仿 Dashboard） */
+  .inst-body.ib-dark { background: #08265a; }
+  .ib-page { color: #dceaff; padding: 2px 2px 24px; font-family: "Segoe UI", Arial, sans-serif; }
+  .ib-heading { font-size: 17px; font-weight: 700; color: #fff; margin: 0 0 12px; }
+  .ib-grid { display: grid; gap: 12px; margin-bottom: 12px; }
+  .ib-top { grid-template-columns: 1.15fr 1fr 1fr 1.2fr; }
+  .ib-mid { grid-template-columns: 1fr 1fr 1.25fr; }
+  .ib-row3 { grid-template-columns: .8fr .8fr 1fr 1fr 1fr; }
+  .ib-card {
+    position: relative; min-height: 168px; padding: 11px 13px; border-radius: 6px;
+    border: 1px solid rgba(70,190,255,.24); background: linear-gradient(160deg,#123a78,#0b2857);
+    box-shadow: 0 2px 12px rgba(0,0,0,.25); overflow: hidden;
+  }
+  .ib-card::before, .ib-card::after, .ib-corner::before, .ib-corner::after {
+    content: ''; position: absolute; width: 11px; height: 11px; border: 0 solid #2ee6ff; pointer-events: none;
+  }
+  .ib-card::before { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+  .ib-card::after { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+  .ib-corner::before { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+  .ib-corner::after { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+  .ib-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 9px; }
+  .ib-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #2ee6ff; box-shadow: 0 0 6px #2ee6ff; flex: none; }
+  .ib-tiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 18px; }
+  .ib-tile { border: 1px solid rgba(90,200,255,.28); border-radius: 5px; padding: 13px 3px; text-align: center; }
+  .ib-tile b { display: block; font-size: 27px; color: #2ee6ff; line-height: 1.1; }
+  .ib-tile span { font-size: 10px; color: #a8c4e6; white-space: nowrap; }
+  .ib-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+  .ib-table th { color: #9dc4e8; font-weight: 600; text-align: left; padding: 2px 4px 6px; }
+  .ib-table td { color: #d6e8ff; padding: 3px 4px; border-top: 1px solid rgba(120,180,240,.13); }
+  .ib-bar { width: 100%; height: 7px; background: #163d72; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+  .ib-bar > i { display: block; height: 100%; background: linear-gradient(90deg,#1fd1ff,#57e6a5); border-radius: 4px; }
+  .ib-clock { font-size: 25px; font-weight: 800; color: #3ae0ff; letter-spacing: 1px; line-height: 1.1; }
+  .ib-date { font-size: 11px; color: #bcd8f5; margin: 3px 0 8px; }
+  .ib-wx { font-size: 10px; color: #cfe4ff; line-height: 1.65; }
+  .ib-wx b { color: #ffd166; font-weight: 600; }
+  .ib-map { height: 285px; display: flex; align-items: center; justify-content: center; }
+  .ib-map svg { height: 265px; filter: drop-shadow(0 0 4px #2ee6ff); }
+  .ib-empty { color: #8fb0d8; font-size: 12px; text-align: center; padding-top: 80px; }
+  .ib-cal-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #fff; }
+  .ib-cal-nav { background: #174a8d; color: #d9ecff; border: 1px solid rgba(120,200,255,.3); border-radius: 4px; font-size: 10px; padding: 2px 6px; cursor: pointer; }
+  .ib-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; margin-top: 7px; }
+  .ib-cal-grid span { text-align: center; font-size: 9px; padding: 3px 0; color: #bcd6f5; border: 1px solid rgba(100,180,240,.14); border-radius: 2px; }
+  .ib-cal-grid span.wd { color: #6fd8ff; border: none; }
+  .ib-cal-grid span.today { color: #fff; background: #e53935; border-color: #ff6b6b; font-weight: 700; }
+  .ib-legend { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .ib-legend span { font-size: 8px; color: #c9e0ff; border: 1px solid rgba(120,190,255,.25); border-radius: 8px; padding: 1px 5px; white-space: nowrap; }
+  .ib-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 3px; }
+  .ib-fx-switch { display: flex; gap: 2px; margin-left: auto; }
+  .ib-fx-switch b { font-size: 8px; padding: 1px 4px; border: 1px solid rgba(140,200,255,.3); border-radius: 6px; color: #a9c9ea; }
+  .ib-fx-switch b.on { background: #e53935; color: #fff; border-color: #e53935; }
+  .ib-fx svg { width: 100%; height: 60px; display: block; margin-top: 4px; }
+  .ib-fx-val { text-align: center; font-size: 12px; color: #39e0ff; font-weight: 700; margin-top: 1px; }
+  .ib-tbl { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 6px; }
+  .ib-tbl th, .ib-tbl td { border: 1px solid rgba(110,180,240,.18); padding: 4px 6px; text-align: center; color: #cfe3fb; }
+  .ib-tbl th { color: #8fc6f2; font-weight: 600; background: rgba(20,70,140,.5); }
+  .ib-tbl td:first-child { text-align: left; }
+  .ib-tbl tr.sum td { color: #fff; font-weight: 700; }
+  @media (max-width: 1180px) {
+    .ib-top { grid-template-columns: 1fr 1fr; }
+    .ib-mid { grid-template-columns: 1fr 1fr; }
+    .ib-row3 { grid-template-columns: 1fr 1fr; }
+  }
   @media (max-width: 900px) {
     .inst-topbar { height: 48px; padding: 0 10px; gap: 8px; }
     .inst-title { font-size: 10px; }
@@ -3999,9 +4061,112 @@ function _ovLoadChartLib(cb){
        </div>
        <div class="inst-body" id="instBody">
        <div class="inst-panel active" data-itab="board" role="tabpanel">
-       <div class="inst-card">
-         <h2 class="inst-panel-title" data-itab="board">安装项目进度看板</h2>
-         <div class="inst-ph">功能开发中，敬请期待</div>
+       <div class="ib-page" id="ibPage">
+         <div class="ib-heading" data-ib="title">安装项目进度看板</div>
+         <div class="ib-grid ib-top">
+           <div class="ib-card"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="projStat">项目总数 / 建成项目 / 在建项目</div>
+             <div class="ib-tiles">
+               <div class="ib-tile"><b id="ibTotal">3</b><span data-ib="total">项目总数</span></div>
+               <div class="ib-tile"><b id="ibDone">0</b><span data-ib="done">建成项目</span></div>
+               <div class="ib-tile"><b id="ibBuilding">3</b><span data-ib="building">在建项目</span></div>
+             </div>
+           </div>
+           <div class="ib-card"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="prodProgress">生产进度</div>
+             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibProdList"></tbody></table>
+           </div>
+           <div class="ib-card"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="instProgress">安装进度</div>
+             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibInstList"></tbody></table>
+           </div>
+           <div class="ib-card"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="dateWeather">日期 · 时间 · 天气</div>
+             <div class="ib-clock" id="ibClock">--:--:--</div>
+             <div class="ib-date" id="ibDate"></div>
+             <div class="ib-wx">
+               <div><b data-ib="wx1">广宁省</b> · <span data-ib="wx1txt">多云，温度 62°F，风力 3级</span></div>
+               <div><b data-ib="wx2">清化省</b> · <span data-ib="wx2txt">小雨，湿度 73%，风力 1级</span></div>
+               <div><b data-ib="wx3">老街省</b> · <span data-ib="wx3txt">雨，湿度 83%，风力 1级</span></div>
+             </div>
+           </div>
+         </div>
+         <div class="ib-grid ib-mid">
+           <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="mapTitle">项目分布地图（越南）</div>
+             <div class="ib-map">
+               <svg viewBox="0 0 130 280" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M42 12 L62 18 L70 34 L60 44 L75 56 L68 72 L80 88 L72 104 L84 122 L76 142 L88 158 L78 178 L90 196 L80 214 L96 228 L82 244 L74 264 L66 248 L60 228 L52 210 L58 190 L48 172 L56 152 L46 134 L54 116 L44 98 L52 80 L40 62 L48 44 L36 28 Z" fill="#44688f" stroke="#7fdcff" stroke-width="1.4"/>
+                 <circle cx="58" cy="38" r="5" fill="#2ee6ff"/><circle cx="76" cy="160" r="5" fill="#ff5b5b"/>
+                 <circle cx="65" cy="92" r="4" fill="#2ee6ff"/><circle cx="80" cy="214" r="4" fill="#2ee6ff"/>
+                 <text x="66" y="34" fill="#bfefff" font-size="8" data-ib="hanoi">河内 ·1</text>
+                 <text x="84" y="163" fill="#ffb3b3" font-size="8" data-ib="hcmc">胡志明市</text>
+                 <text x="70" y="90" fill="#bfefff" font-size="8" data-ib="thanhhoa">清化省 ·1</text>
+                 <text x="85" y="212" fill="#bfefff" font-size="8" data-ib="tayninh">西宁省 ·1</text>
+               </svg>
+             </div>
+           </div>
+           <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="photos">现场图片</div>
+             <div class="ib-empty" data-ib="noData">暂无数据</div>
+           </div>
+           <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
+             <div class="ib-cal-head">
+               <span class="ib-title" style="margin:0" data-ib="calendar">日历（中越法定假日）</span>
+               <span><button class="ib-cal-nav" onclick="ibCalShift(-1)">‹</button> <b id="ibCalMonth"></b> <button class="ib-cal-nav" onclick="ibCalShift(1)">›</button> <button class="ib-cal-nav" data-ib="backToday" onclick="ibCalToday()">回到当天</button></span>
+             </div>
+             <div class="ib-cal-grid" id="ibCalGrid"></div>
+             <div class="ib-legend">
+               <span><i style="background:#e53935"></i><b data-ib="spring">春节 8天</b></span>
+               <span><i style="background:#ff9800"></i><b data-ib="tet">雄王节 7天</b></span>
+               <span><i style="background:#4caf50"></i><b data-ib="tomb">清明 3天</b></span>
+               <span><i style="background:#ffc107"></i><b data-ib="victory">胜利日 3天</b></span>
+             </div>
+           </div>
+         </div>
+         <div class="ib-grid ib-row3">
+           <div class="ib-card"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="instWorkers">安装人数</div>
+             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="workers">安装人数</th></tr></thead><tbody id="ibWorkerList"></tbody></table>
+           </div>
+           <div class="ib-card"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="prodWorkers">生产人数</div>
+             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="workers">生产人数</th></tr></thead><tbody id="ibProdWorkerList"></tbody></table>
+           </div>
+           <div class="ib-card ib-fx"><i class="ib-corner"></i>
+             <div class="ib-title">RMB-VND <span class="ib-fx-switch"><b>RMB</b><b>USD</b><b class="on">VND</b></span></div>
+             <svg viewBox="0 0 160 60" preserveAspectRatio="none"><polyline fill="none" stroke="#2ee6ff" stroke-width="1.6" points="0,42 12,38 24,44 36,34 48,40 60,28 72,36 84,24 96,30 108,18 120,26 132,12 144,16 160,6"/></svg>
+             <div class="ib-fx-val">₫ 3,844.7</div>
+           </div>
+           <div class="ib-card ib-fx"><i class="ib-corner"></i>
+             <div class="ib-title">USD-VND <span class="ib-fx-switch"><b>RMB</b><b>USD</b><b class="on">VND</b></span></div>
+             <svg viewBox="0 0 160 60" preserveAspectRatio="none"><polyline fill="none" stroke="#ffca4a" stroke-width="1.6" points="0,44 12,46 24,40 36,42 48,32 60,34 72,24 84,30 96,20 108,26 120,16 132,22 144,12 160,18"/></svg>
+             <div class="ib-fx-val">₫ 25,692.4</div>
+           </div>
+           <div class="ib-card ib-fx"><i class="ib-corner"></i>
+             <div class="ib-title">USD-RMB <span class="ib-fx-switch"><b>RMB</b><b>USD</b><b class="on">VND</b></span></div>
+             <svg viewBox="0 0 160 60" preserveAspectRatio="none"><polyline fill="none" stroke="#ff6b6b" stroke-width="1.6" points="0,24 12,18 24,28 36,14 48,22 60,12 72,18 84,8 96,16 108,10 120,20 132,14 144,24 160,30"/></svg>
+             <div class="ib-fx-val">¥ 6.6825</div>
+           </div>
+         </div>
+         <div class="ib-grid" style="grid-template-columns:1fr">
+           <div class="ib-card" style="min-height:150px"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="loginDaily">职位人员登录次数（今日 / 本周 / 本月 / 累计）</div>
+             <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px">
+               <button class="ib-cal-nav" data-ib="startRecord" onclick="ibToast('start')">开始记录</button>
+               <span style="font-size:10px;color:#9dc4e8" data-ib="startDate">开始记录日</span>
+               <span style="font-size:10px;color:#ffd166">23/08/2026</span>
+               <button class="ib-cal-nav" data-ib="startRecord" onclick="ibToast('start')">开始记录</button>
+             </div>
+             <table class="ib-tbl"><thead><tr><th data-ib="name">姓名</th><th data-ib="today">今日</th><th data-ib="week">本周</th><th data-ib="month">本月</th><th data-ib="total">累计</th><th data-ib="lastLogin">最后登录</th></tr></thead>
+               <tbody id="ibLoginDaily"></tbody></table>
+           </div>
+           <div class="ib-card" style="min-height:150px"><i class="ib-corner"></i>
+             <div class="ib-title" data-ib="loginMonthly">全员登录次数（月 / 季）</div>
+             <table class="ib-tbl"><thead><tr><th data-ib="name">姓名</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th><th data-ib="total">合计</th></tr></thead>
+               <tbody id="ibLoginMonthly"></tbody></table>
+           </div>
+         </div>
        </div>
        </div>
        <div class="inst-panel" data-itab="detail" role="tabpanel">
@@ -25336,6 +25501,7 @@ function openInstallMgmt() {
   document.body.classList.add('install-open');
   try { sessionStorage.setItem(INSTALL_SESSION_KEY, '1'); } catch (e) {}
   if (typeof applyInstallLang === 'function') applyInstallLang();
+  if (typeof ibBoot === 'function') ibBoot();
   // ★INST-TABS-20261125★ 恢复上次停留的领航标签（默认「安装项目进度看板」）
   try {
     var lastTab = sessionStorage.getItem('won_install_tab');
@@ -25379,9 +25545,104 @@ function instSwitchTab(name) {
     panels[j].classList.toggle('active', panels[j].getAttribute('data-itab') === name);
   }
   var body = document.getElementById('instBody');
-  if (body) body.scrollTop = 0;
+  if (body) { body.scrollTop = 0; body.classList.toggle('ib-dark', name === 'board'); }
   // 记住当前标签，刷新/退出再进时回到同一页
   try { sessionStorage.setItem('won_install_tab', name); } catch (e) {}
+}
+/* ★INSTALL-BOARD-20261124★ 安装项目进度看板（深蓝卡片）数据与三语 */
+var IB_I18N = {
+  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目' },
+  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project' },
+  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu' }
+};
+var IB_BOOTED = false, IB_CLOCK = null, IB_CAL_Y = 0, IB_CAL_M = 0;
+function ibLang() { try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) return CUR_LANG; } catch (e) {} return 'zh'; }
+function ibTexts() { return IB_I18N[ibLang()] || IB_I18N.zh; }
+function ibApplyLang() {
+  var d = ibTexts();
+  document.querySelectorAll('#ibPage [data-ib]').forEach(function (el) {
+    if (el.children.length) return;
+    var v = d[el.getAttribute('data-ib')];
+    if (v) el.textContent = v;
+  });
+  ibTick();
+}
+function ibTick() {
+  var d = ibTexts(), now = new Date();
+  var p = function (n) { return String(n).padStart(2, '0'); };
+  var clock = document.getElementById('ibClock');
+  if (clock) clock.textContent = p(now.getHours()) + ':' + p(now.getMinutes()) + ':' + p(now.getSeconds());
+  var dateEl = document.getElementById('ibDate');
+  if (dateEl) dateEl.textContent = now.getFullYear() + '/' + p(now.getMonth() + 1) + '/' + p(now.getDate()) + ' ' + (d.weekdays ? d.weekdays[now.getDay()] : '');
+}
+function ibCalShift(n) {
+  var dt = new Date(IB_CAL_Y, IB_CAL_M + n, 1);
+  IB_CAL_Y = dt.getFullYear(); IB_CAL_M = dt.getMonth(); ibRenderCal();
+}
+function ibCalToday() {
+  var now = new Date(); IB_CAL_Y = now.getFullYear(); IB_CAL_M = now.getMonth(); ibRenderCal();
+}
+function ibRenderCal() {
+  var grid = document.getElementById('ibCalGrid'); if (!grid) return;
+  var d = ibTexts(), wd = d.weekdays || ['日','一','二','三','四','五','六'];
+  var monthEl = document.getElementById('ibCalMonth');
+  if (monthEl) monthEl.textContent = IB_CAL_Y + '/' + String(IB_CAL_M + 1).padStart(2, '0');
+  var html = '';
+  wd.forEach(function (w) { html += '<span class="wd">' + w + '</span>'; });
+  var first = new Date(IB_CAL_Y, IB_CAL_M, 1).getDay();
+  var days = new Date(IB_CAL_Y, IB_CAL_M + 1, 0).getDate();
+  var now = new Date(), today = (now.getFullYear() === IB_CAL_Y && now.getMonth() === IB_CAL_M) ? now.getDate() : -1;
+  for (var i = 0; i < first; i++) html += '<span></span>';
+  for (var day = 1; day <= days; day++) html += '<span' + (day === today ? ' class="today"' : '') + '>' + day + '</span>';
+  grid.innerHTML = html;
+}
+function ibFillProjects() {
+  var d = ibTexts();
+  var list = (typeof globalWonData !== 'undefined' && Array.isArray(globalWonData)) ? globalWonData.slice(0, 3) : [];
+  if (!list.length) list = [0, 1, 2].map(function (i) { return { name: (d.demoProject || 'Sample project') + ' ' + (i + 1) }; });
+  var total = list.length;
+  var setTxt = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+  setTxt('ibTotal', total); setTxt('ibDone', 0); setTxt('ibBuilding', total);
+  var prod = [108.4, 0, 0], inst = [8.4, 0, 0], iw = [6, 0, 0], pw = [18, 0, 0];
+  var nameOf = function (p, i) { return (p && (p.project_name || p.contract_no || p.no || p.name)) || (d.noProject + ' ' + (i + 1)); };
+  var rows = function (arr, vals, isBar) {
+    if (!arr.length) return '<tr><td colspan="3">' + d.noProject + '</td></tr>';
+    return arr.map(function (p, i) {
+      var name = String(nameOf(p, i)).replace(/</g, '&lt;').slice(0, 22);
+      var v = vals[i] || 0;
+      return '<tr><td>' + (i + 1) + '</td><td title="' + name + '">' + name + '</td><td>' + (isBar
+        ? v + '%<div class="ib-bar"><i style="width:' + Math.min(100, v) + '%"></i></div>'
+        : v) + '</td></tr>';
+    }).join('');
+  };
+  var elProd = document.getElementById('ibProdList'), elInst = document.getElementById('ibInstList');
+  if (elProd) elProd.innerHTML = rows(list, prod, true);
+  if (elInst) elInst.innerHTML = rows(list, inst, true);
+  var elWi = document.getElementById('ibWorkerList'), elPw = document.getElementById('ibProdWorkerList');
+  if (elWi) elWi.innerHTML = rows(list, iw, false);
+  if (elPw) elPw.innerHTML = rows(list, pw, false);
+}
+function ibFillLogin() {
+  var daily = document.getElementById('ibLoginDaily'), monthly = document.getElementById('ibLoginMonthly');
+  if (daily) daily.innerHTML =
+    '<tr><td>thuong</td><td></td><td></td><td>23</td><td>23</td><td>2026-11-22 23:31</td></tr>' +
+    '<tr><td>Hung</td><td></td><td></td><td>13</td><td>13</td><td>2026-11-19 23:55</td></tr>' +
+    '<tr><td>Then Ly</td><td></td><td></td><td>11</td><td>11</td><td>2026-11-15 23:23</td></tr>' +
+    '<tr class="sum"><td>Tong</td><td>0</td><td>0</td><td>47</td><td>47</td><td></td></tr>';
+  if (monthly) monthly.innerHTML =
+    '<tr><td>Cuong</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td>5</td><td>8</td><td></td><td>23</td></tr>' +
+    '<tr><td>James</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>1</td><td>5</td><td></td><td>2</td><td></td><td>8</td></tr>' +
+    '<tr class="sum"><td>Tom</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>69</td><td>77</td><td>893</td><td>316</td><td></td><td>1355</td></tr>';
+}
+function ibToast() { if (typeof toast === 'function') toast('安装看板 · 开始记录'); }
+function ibBoot() {
+  if (IB_BOOTED) return;
+  IB_BOOTED = true;
+  var bodyEl = document.getElementById('instBody');
+  if (bodyEl) bodyEl.classList.toggle('ib-dark', INST_ACTIVE_TAB === 'board');
+  ibFillProjects(); ibFillLogin(); ibCalToday(); ibApplyLang();
+  if (IB_CLOCK) clearInterval(IB_CLOCK);
+  IB_CLOCK = setInterval(ibTick, 1000);
 }
 function applyInstallLang() {
   var ov = installOverlayEl();
@@ -25419,6 +25680,7 @@ function applyInstallLang() {
     var b = document.getElementById('instLang' + p[1]);
     if (b) b.classList.toggle('active', cur === p[0]);
   });
+  if (typeof ibApplyLang === 'function') ibApplyLang();
 }
 
 /* ===== 视图切换：点击顶部菜单切换对应视图 ===== */
