@@ -2912,8 +2912,10 @@ function _ovLoadChartLib(cb){
   .ib-page { color: #dceaff; padding: 2px 2px 24px; font-family: "Segoe UI", Arial, sans-serif; }
   .ib-heading { font-size: 17px; font-weight: 700; color: #fff; margin: 0 0 12px; }
   .ib-grid { display: grid; gap: 12px; margin-bottom: 12px; }
-  .ib-top { grid-template-columns: 1fr 1.3fr 1.2fr; }
-  .ib-mid { grid-template-columns: 1fr 1fr 1.25fr; }
+  /* ★LAYOUT-20261124★ 顶部三卡：统计卡放宽、安装进度/天气收窄并限高；地图行改为地图+日历两栏 */
+  .ib-top { grid-template-columns: 1.45fr .85fr 1fr; }
+  .ib-mid { grid-template-columns: 2fr 1fr; }
+  .ib-photo-strip { grid-column: 1 / -1; }
   .ib-row3 { grid-template-columns: .8fr .8fr 1fr 1fr 1fr; }
   .ib-card {
     position: relative; min-height: 168px; padding: 11px 13px; border-radius: 6px;
@@ -2929,21 +2931,25 @@ function _ovLoadChartLib(cb){
   .ib-corner::after { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
   .ib-title { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 9px; }
   .ib-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #2ee6ff; box-shadow: 0 0 6px #2ee6ff; flex: none; }
-  .ib-tiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 18px; }
-  .ib-tile { border: 1px solid rgba(90,200,255,.28); border-radius: 5px; padding: 13px 3px; text-align: center; }
-  .ib-tile b { display: block; font-size: 27px; color: #2ee6ff; line-height: 1.1; }
+  /* 顶部三卡统一限高 190px：统计卡压缩留白，进度/天气卡内容区可滚动 */
+  .ib-top > .ib-card { height: 190px; min-height: 0; overflow: hidden; }
+  .ib-scroll { max-height: 138px; overflow: auto; }
+  .ib-top > .ib-card:last-child .ib-scroll { max-height: 100px; }
+  .ib-tiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+  .ib-tile { border: 1px solid rgba(90,200,255,.28); border-radius: 5px; padding: 8px 3px; text-align: center; }
+  .ib-tile b { display: block; font-size: 22px; color: #2ee6ff; line-height: 1.1; }
   .ib-tile span { font-size: 10px; color: #a8c4e6; white-space: nowrap; }
   .ib-table { width: 100%; border-collapse: collapse; font-size: 10px; }
   .ib-table th { color: #9dc4e8; font-weight: 600; text-align: left; padding: 2px 4px 6px; }
   .ib-table td { color: #d6e8ff; padding: 3px 4px; border-top: 1px solid rgba(120,180,240,.13); }
   .ib-bar { width: 100%; height: 7px; background: #163d72; border-radius: 4px; overflow: hidden; margin-top: 3px; }
   .ib-bar > i { display: block; height: 100%; background: linear-gradient(90deg,#1fd1ff,#57e6a5); border-radius: 4px; }
-  .ib-clock { font-size: 25px; font-weight: 800; color: #3ae0ff; letter-spacing: 1px; line-height: 1.1; }
+  .ib-clock { font-size: 22px; font-weight: 800; color: #3ae0ff; letter-spacing: 1px; line-height: 1.1; }
   .ib-date { font-size: 11px; color: #bcd8f5; margin: 3px 0 8px; }
   .ib-wx { font-size: 11px; color: #cfe4ff; line-height: 1.7; }
   .ib-wx b { color: #39e6ff; font-weight: 700; }
   .ib-wx-chip { border-radius: 8px; padding: 2px 7px; margin-bottom: 3px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); }
-  .ib-map { height: 355px; display: flex; align-items: center; justify-content: center; }
+  .ib-map { height: 440px; display: flex; align-items: center; justify-content: center; }
   .ib-map svg { height: 265px; filter: drop-shadow(0 0 4px #2ee6ff); }
   .ib-empty { color: #8fb0d8; font-size: 12px; text-align: center; padding-top: 80px; }
   /* ★INSTALL-CAL-20261124★ 日历完全复用 choice-lite 的中越法定假日逻辑 */
@@ -2998,6 +3004,9 @@ function _ovLoadChartLib(cb){
     .inst-body { padding: 14px 10px; }
     .inst-card { padding: 24px 16px; }
     .inst-card h2 { font-size: 18px; }
+    .ib-top, .ib-mid, .ib-row3 { grid-template-columns: 1fr; }
+    .ib-top > .ib-card { height: auto; min-height: 160px; }
+    .ib-photo-strip { grid-column: auto; }
   }
   /* ★TOPBAR-RIGHTSLIM-20261102★ 用户要求：顶部标签必须一屏放下、不出现横向滚动条。
      办法是把右侧信息区（语言胶囊 / 用户 / 退出）整体瘦身，省下的约 120px 全部让给标签：
@@ -4089,30 +4098,30 @@ function _ovLoadChartLib(cb){
                <div class="ib-tile"><b id="ibBuilding">3</b><span data-ib="building">在建项目</span></div>
              </div>
            </div>
-           <div class="ib-card"><i class="ib-corner"></i>
+           <div class="ib-card ib-top-narrow"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="instProgress">安装进度</div>
-             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibInstList"></tbody></table>
+             <div class="ib-scroll"><table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="progress">进度</th></tr></thead><tbody id="ibInstList"></tbody></table></div>
            </div>
-           <div class="ib-card"><i class="ib-corner"></i>
+           <div class="ib-card ib-top-narrow"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="dateWeather">日期 · 时间 · 天气</div>
              <div class="ib-clock" id="ibClock">--:--:--</div>
              <div class="ib-date" id="ibDate"></div>
-             <div class="ib-wx" id="ibWx"><span data-ib="noData">暂无数据</span></div>
+             <div class="ib-scroll"><div class="ib-wx" id="ibWx"><span data-ib="noData">暂无数据</span></div></div>
            </div>
          </div>
          <div class="ib-grid ib-mid">
-           <div class="ib-card" style="min-height:430px"><i class="ib-corner"></i>
+           <div class="ib-card ib-map-card" style="min-height:500px"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="mapTitle">项目分布地图（越南）</div>
-             <div class="ib-map" id="ibMapBody" style="width:100%;height:355px">
+             <div class="ib-map" id="ibMapBody" style="width:100%;height:440px">
                <span style="color:#8fb0d8;font-size:11px">地图加载中…</span>
              </div>
            </div>
-           <div class="ib-card" style="min-height:330px"><i class="ib-corner"></i>
+           <div class="ib-card ib-cal-card" style="min-height:500px"><i class="ib-corner"></i>
+             <div class="ib-cal-body" id="ibCalBody"></div>
+           </div>
+           <div class="ib-card ib-photo-strip" style="min-height:110px"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="photos">现场图片</div>
              <div class="ib-empty" data-ib="noData">暂无数据</div>
-           </div>
-           <div class="ib-card" style="min-height:430px"><i class="ib-corner"></i>
-             <div class="ib-cal-body" id="ibCalBody"></div>
            </div>
          </div>
          <div class="ib-grid ib-row3">
@@ -4143,12 +4152,7 @@ function _ovLoadChartLib(cb){
          <div class="ib-grid" style="grid-template-columns:1fr">
            <div class="ib-card" style="min-height:150px"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="loginDaily">职位人员登录次数（今日 / 本周 / 本月 / 累计）</div>
-             <div style="display:flex;gap:6px;align-items:center;margin-bottom:2px">
-               <button class="ib-cal-nav" data-ib="startRecord" onclick="ibToast('start')">开始记录</button>
-               <span style="font-size:10px;color:#9dc4e8" data-ib="startDate">开始记录日</span>
-               <span style="font-size:10px;color:#ffd166">23/08/2026</span>
-               <button class="ib-cal-nav" data-ib="startRecord" onclick="ibToast('start')">开始记录</button>
-             </div>
+
              <table class="ib-tbl"><thead><tr><th data-ib="name">姓名</th><th data-ib="today">今日</th><th data-ib="week">本周</th><th data-ib="month">本月</th><th data-ib="total">累计</th><th data-ib="lastLogin">最后登录</th></tr></thead>
                <tbody id="ibLoginDaily"></tbody></table>
            </div>

@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-24 13:12:32",
+ "generated": "2026-11-24 13:23:10",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-BOARD-20261124: final map label stagger and fx global switch\"",
+ "note": "\"INSTALL-LAYOUT-20261124: remove start-record row, resize board cards and map\"",
  "i18n": {
-  "dict@6772": {
+  "dict@6776": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26095": {
+  "dict@26099": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5437,7 +5437,7 @@
     "wxWindUnit": "cấp"
    }
   },
-  "dict@30263": {
+  "dict@30267": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
