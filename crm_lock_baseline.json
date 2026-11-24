@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-24 13:39:54",
+ "generated": "2026-11-24 15:35:11",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-BOARD-20261124: remove prod workers, show all projects, add install workers column\"",
+ "note": "\"INSTALL-BOARD-20261124: province column, vertical stat card, culture festival\"",
  "i18n": {
-  "dict@6782": {
+  "dict@6806": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26105": {
+  "dict@26129": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5320,7 +5320,8 @@
     "wxNa": "未知",
     "wxHum": "湿度",
     "wxWind": "风力",
-    "wxWindUnit": "级"
+    "wxWindUnit": "级",
+    "provText": "省份"
    },
    "en": {
     "title": "Installation Progress Dashboard",
@@ -5377,7 +5378,8 @@
     "wxNa": "N/A",
     "wxHum": "Humidity",
     "wxWind": "Wind",
-    "wxWindUnit": ""
+    "wxWindUnit": "",
+    "provText": "Province"
    },
    "vi": {
     "title": "Bảng tiến độ lắp đặt",
@@ -5434,10 +5436,11 @@
     "wxNa": "Không rõ",
     "wxHum": "Độ ẩm",
     "wxWind": "Gió",
-    "wxWindUnit": "cấp"
+    "wxWindUnit": "cấp",
+    "provText": "Tỉnh"
    }
   },
-  "dict@30277": {
+  "dict@30335": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
