@@ -2922,7 +2922,7 @@ function _ovLoadChartLib(cb){
   .ib-stat-vertical .ib-tile b { font-size: 19px; }
   .ib-stat-vertical .ib-tile span { white-space: normal; text-align: right; }
   .ib-grid { display: grid; gap: 12px; margin-bottom: 12px; }
-  .ib-top { grid-template-columns: .55fr 1.2fr 1fr; }
+  .ib-top { grid-template-columns: .42fr 1.15fr 1.5fr; }
   .ib-mid { grid-template-columns: 2fr 1fr; }
   .ib-photo-row { grid-template-columns: repeat(3, 1fr); }
   .ib-photo-card { aspect-ratio: 1 / 1; min-height: 0; padding: 10px; display: flex; flex-direction: column; }
@@ -2974,9 +2974,9 @@ function _ovLoadChartLib(cb){
   .ib-wx-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .ib-wx-col { min-width: 0; }
   .ib-wx-col-head { font-size: 11px; font-weight: 700; color: #39e6ff; margin-bottom: 5px; }
-  .ib-wx { font-size: 10px; color: #cfe4ff; line-height: 1.45; }
+  .ib-wx { font-size: 9.5px; color: #cfe4ff; line-height: 1.4; }
   .ib-wx b { color: #39e6ff; font-weight: 700; }
-  .ib-wx-chip { border-radius: 6px; padding: 4px 5px; margin-bottom: 4px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); overflow-wrap: anywhere; }
+  .ib-wx-chip { border-radius: 6px; padding: 3px 5px; margin-bottom: 3px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ib-wx-chip span { color: #bcd8f5; font-size: 9px; }
   .ib-map { height: 440px; display: flex; align-items: center; justify-content: center; }
   .ib-map svg { height: 265px; filter: drop-shadow(0 0 4px #2ee6ff); }
@@ -26476,7 +26476,7 @@ function ibWxSlotReady(slot) {
   var n = ibWxNowHm();
   return n.h >= (slot === 'am' ? 9 : 14);
 }
-function ibLoadWeather(viKeys) {
+function ibLoadWeather(viKeys, force) {
   var amEl = document.getElementById('ibWxAm'), pmEl = document.getElementById('ibWxPm');
   if (!amEl || !pmEl) return;
   var items = [];
@@ -26495,7 +26495,7 @@ function ibLoadWeather(viKeys) {
     if (c.temp != null) meta.push(Math.round(c.temp) + '°C');
     if (c.hum != null) meta.push(d.wxHum + Math.round(c.hum) + '%');
     if (c.windLv != null) meta.push(d.wxWind + c.windLv + d.wxWindUnit);
-    return '<div class="ib-wx-chip">' + head + ' · ' + txt + '<br><span>' + meta.join(' · ') + '</span></div>';
+    return '<div class="ib-wx-chip">' + head + ' · ' + txt + ' · <span>' + meta.join(' · ') + '</span></div>';
   }
   function paint() {
     var d = ibTexts(), empty = '<span>' + d.noData + '</span>';
@@ -26511,7 +26511,7 @@ function ibLoadWeather(viKeys) {
   var allHit = items.every(function (p) {
     return IB_WX && IB_WX[p.vi] && IB_WX[p.vi].am && IB_WX[p.vi].pm;
   });
-  if (allHit) return;
+  if (allHit && !force) return;
   var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + items.map(function (p) { return p.lat; }).join(',') +
     '&longitude=' + items.map(function (p) { return p.lng; }).join(',') +
     '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code' +
@@ -26584,6 +26584,14 @@ function ibBoot() {
     window.__ibWxSlotTimer = setInterval(function () {
       try { if (typeof IB_WX_REPAINT === 'function') IB_WX_REPAINT(); } catch (e) {}
     }, 60000);
+  }
+  // 每 10 分钟重新请求 Open-Meteo，天气数据自动更新
+  if (!window.__ibWxFetchTimer) {
+    window.__ibWxFetchTimer = setInterval(function () {
+      try {
+        if (IB_AGG && Object.keys(IB_AGG).length) ibLoadWeather(Object.keys(IB_AGG), true);
+      } catch (e) {}
+    }, 600000);
   }
 }
 function applyInstallLang() {
