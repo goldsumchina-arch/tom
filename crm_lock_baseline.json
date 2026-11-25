@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-25 10:02:36",
+ "generated": "2026-11-25 10:16:45",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-DETAIL-20261125: project cards for all signed projects\"",
+ "note": "\"INSTALL-DETAIL-20261125: project list subtitle and compact layout\"",
  "i18n": {
-  "dict@6878": {
+  "dict@6882": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26204": {
+  "dict@26208": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5326,7 +5326,8 @@
     "wxAfternoon": "下午",
     "contractNo": "合同号",
     "slabsTotal": "累计片数",
-    "housesTotal": "累计房舍"
+    "housesTotal": "累计房舍",
+    "projectList": "项目列表"
    },
    "en": {
     "title": "Installation Progress Dashboard",
@@ -5389,7 +5390,8 @@
     "wxAfternoon": "Afternoon",
     "contractNo": "Contract",
     "slabsTotal": "Total slabs",
-    "housesTotal": "Total houses"
+    "housesTotal": "Total houses",
+    "projectList": "Project List"
    },
    "vi": {
     "title": "Bảng tiến độ lắp đặt",
@@ -5452,10 +5454,11 @@
     "wxAfternoon": "Chiều",
     "contractNo": "Số hợp đồng",
     "slabsTotal": "Tổng số tấm",
-    "housesTotal": "Tổng số chuồng"
+    "housesTotal": "Tổng số chuồng",
+    "projectList": "Danh sách dự án"
    }
   },
-  "dict@30517": {
+  "dict@30521": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
