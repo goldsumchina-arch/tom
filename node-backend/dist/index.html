@@ -2865,9 +2865,9 @@ function _ovLoadChartLib(cb){
   /* ★INST-TAB-NOMOVE-20261125★ 品牌区固定宽度：切语言时「安装管理/Installation Management」长度不同，
      若不锁宽会把右侧 4 个标签整体推来推去（用户反馈「左右串动」）。锁死后标签起点永远不变。 */
   .inst-brand { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; line-height: 1.05; min-width: 0; width: 118px; flex: 0 0 118px; }
-  .inst-logo { display: flex; align-items: center; gap: 8px; white-space: nowrap; user-select: none; }
-  .inst-logo-mark { font-size: 20px; font-weight: 800; color: #e8720c; letter-spacing: .5px; }
-  .inst-logo-name { font-size: 16px; font-weight: 700; color: #fff; }
+  /* ★INST-LOGO-SVG-20261125★ 用内联 SVG 取代原文字 LOGO + 下方说明，零额外请求、矢量不失真 */
+  .inst-logo { display: flex; align-items: center; white-space: nowrap; user-select: none; }
+  .inst-logo .agi-logo { display: block; width: 62px; height: 46px; border-radius: 5px; background: #fff; }
   /* ★INST-TITLE-UNDER-LOGO-20261124★ 安装管理标题缩小并放到 AGI-CRM logo 下方 */
   .inst-title { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.9); white-space: nowrap; letter-spacing: .3px; padding-left: 0; border-left: none; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .inst-spacer { flex: 1 1 auto; }
@@ -3028,6 +3028,7 @@ function _ovLoadChartLib(cb){
     .inst-tabs { margin-left: 8px; gap: 6px; }
     /* 窄屏同样锁死品牌区宽度（只留 logo，隐藏标题），保证切语言时标签零位移 */
     .inst-brand { width: 88px; flex: 0 0 88px; }
+    .inst-logo .agi-logo { width: 54px; height: 40px; }
     .inst-title { display: none; }
     .inst-tab { font-size: 12px; padding: 6px 8px; border-radius: 5px; }
     .inst-body { padding: 14px 10px; }
@@ -4092,10 +4093,61 @@ function _ovLoadChartLib(cb){
        <div class="inst-topbar">
        <div class="inst-brand">
        <div class="inst-logo">
-         <span class="inst-logo-mark">AGI</span>
-         <span class="inst-logo-name">-CRM</span>
+         <svg class="agi-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 768" role="img" aria-label="AGI Construction Logo">
+           <defs>
+             <linearGradient id="agiLogoYellow" x1="100" y1="500" x2="380" y2="700" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFBE16"/><stop offset="1" stop-color="#F2A900"/></linearGradient>
+             <linearGradient id="agiLogoRed" x1="380" y1="300" x2="590" y2="490" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F20E17"/><stop offset="1" stop-color="#E90009"/></linearGradient>
+             <filter id="agiLogoShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000000" flood-opacity="0.30"/></filter>
+             <style>.agiLogoWave{fill:none;stroke:#ED111A;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}</style>
+           </defs>
+           <rect width="1024" height="768" fill="#FFFFFF"/>
+           <path class="agiLogoWave" d="M210 214 C255 142 338 91 431 79 C472 74 513 76 548 82"/>
+           <path class="agiLogoWave" d="M276 214 C319 164 378 132 442 122 C477 117 508 119 537 125"/>
+           <path class="agiLogoWave" d="M336 227 C365 202 400 183 434 177 C444 175 454 174 463 174"/>
+           <path class="agiLogoWave" d="M362 276 C390 251 426 237 468 231"/>
+           <path class="agiLogoWave" d="M660 171 C705 205 735 252 748 304"/>
+           <path class="agiLogoWave" d="M625 228 C666 267 691 315 699 369"/>
+           <path class="agiLogoWave" d="M592 282 C623 320 638 364 640 411"/>
+           <path class="agiLogoWave" d="M594 458 C620 493 631 530 632 571"/>
+           <path class="agiLogoWave" d="M482 595 C538 596 586 600 630 619"/>
+           <path class="agiLogoWave" d="M481 650 C530 650 575 657 613 673"/>
+           <path class="agiLogoWave" d="M480 703 C522 704 559 708 590 719"/>
+           <circle cx="483" cy="387" r="96" fill="url(#agiLogoRed)"/>
+           <path d="M596 114 C587 92 589 68 601 48 C622 14 661 -2 698 4 C705 5 712 7 718 10 L670 53 C661 61 662 73 670 81 L681 91 C689 99 701 100 709 93 L751 50 C755 59 758 68 759 78 C764 116 746 141 719 153 C697 163 674 159 655 148 L590 218 C574 236 548 262 529 257 C510 253 493 240 489 222 C485 204 493 186 508 174 C521 164 536 162 550 167 L618 99 Z" fill="#FFFFFF" stroke="#050505" stroke-width="9" stroke-linejoin="round"/>
+           <path d="M557 177 L624 108" fill="none" stroke="#050505" stroke-width="9" stroke-linecap="round"/>
+           <circle cx="545" cy="212" r="39" fill="#FFFFFF" stroke="#050505" stroke-width="9"/>
+           <circle cx="545" cy="212" r="14" fill="#050505"/>
+           <path d="M159 449 C163 481 183 504 213 515 L213 552 L315 552 L315 510 C334 495 343 475 344 449 Z" fill="#FFFFFF"/>
+           <path d="M145 507 C112 515 78 527 59 552 C44 572 29 617 17 704 L459 704 C447 653 436 607 420 568 C409 541 389 524 361 517 L315 507 L213 507 Z" fill="#050505"/>
+           <path d="M105 526 L154 510 L154 626 L104 626 Z" fill="url(#agiLogoYellow)"/>
+           <path d="M314 509 L362 521 L362 626 L314 626 Z" fill="url(#agiLogoYellow)"/>
+           <path d="M96 623 L370 623 L370 708 L96 708 Z" fill="url(#agiLogoYellow)"/>
+           <rect x="96" y="618" width="274" height="9" fill="#050505"/>
+           <rect x="119" y="643" width="20" height="19" fill="#050505"/>
+           <rect x="327" y="643" width="20" height="19" fill="#050505"/>
+           <path d="M127 396 C127 443 132 476 153 500 C173 523 202 537 235 537 C268 537 298 524 316 501 C333 479 340 446 340 399 L127 396 Z" fill="#FFFFFF"/>
+           <path d="M139 399 C126 398 123 414 126 431 C129 449 139 458 151 459" fill="none" stroke="#050505" stroke-width="8" stroke-linecap="round"/>
+           <path d="M330 399 C344 398 347 412 344 430 C342 447 333 457 320 459" fill="none" stroke="#050505" stroke-width="8" stroke-linecap="round"/>
+           <path d="M151 447 C156 491 188 519 235 522 C282 519 314 492 319 449" fill="none" stroke="#050505" stroke-width="8" stroke-linecap="round"/>
+           <path d="M119 367 C119 320 130 281 154 256 C178 231 208 230 235 230 C265 230 293 238 316 259 C338 280 350 318 350 366 L119 366 Z" fill="#050505"/>
+           <path d="M183 230 C193 225 208 230 235 230 C260 230 273 225 279 232 L274 333 L236 349 L196 332 Z" fill="#050505"/>
+           <path d="M183 253 C190 275 194 304 197 332 L211 345 L204 252 Z" fill="#FFFFFF"/>
+           <path d="M274 250 C267 278 264 307 263 335 L278 326 L288 251 Z" fill="#FFFFFF"/>
+           <path d="M119 341 C108 347 114 368 114 380 L355 380 C355 364 354 348 343 341 C335 336 324 335 314 335 L157 335 C143 335 130 337 119 341 Z" fill="#050505"/>
+           <path d="M509 532 L760 287 L998 530 C1002 534 999 540 994 540 L970 540 L970 764 L538 764 L538 540 L514 540 C507 540 505 536 509 532 Z" fill="#FFFFFF" stroke="#050505" stroke-width="9" stroke-linejoin="round"/>
+           <path d="M593 505 L760 350 L916 505 Z" fill="#050505"/>
+           <path d="M574 518 L946 518" fill="none" stroke="#050505" stroke-width="9" stroke-linecap="square"/>
+           <rect x="580" y="529" width="340" height="197" fill="#050505"/>
+           <g id="agiLettering" transform="translate(551 424) scale(0.61 0.70)" filter="url(#agiLogoShadow)" stroke="#FFFFFF" stroke-width="10" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke fill">
+             <path d="M125 220 L117 232 L115 257 L109 278 L90 322 L70 362 L62 370 L49 376 L47 380 L48 388 L56 394 L67 396 L100 396 L115 392 L120 388 L122 381 L117 374 L111 372 L106 367 L106 360 L111 354 L118 352 L161 353 L171 357 L174 362 L174 367 L161 376 L159 384 L164 391 L173 395 L236 396 L248 394 L260 388 L263 383 L262 375 L259 372 L249 368 L242 360 L213 297 L193 257 L180 236 L167 222 L153 215 L136 215 Z M137 284 L141 284 L153 300 L160 314 L160 320 L158 322 L132 323 L124 322 L122 320 L122 314 L129 295 Z" fill="#000000" fill-rule="evenodd"/>
+             <path d="M431 219 L423 218 L409 222 L375 215 L346 217 L320 226 L304 236 L291 248 L281 262 L272 285 L272 326 L282 351 L288 360 L304 376 L320 386 L344 395 L357 397 L383 397 L407 391 L422 383 L435 372 L446 356 L453 336 L463 334 L470 327 L469 316 L462 309 L448 304 L403 303 L384 307 L375 312 L371 319 L373 330 L379 334 L391 335 L397 342 L397 351 L391 359 L384 362 L373 361 L366 358 L349 343 L341 329 L339 320 L337 319 L337 312 L335 311 L335 280 L338 269 L345 257 L359 247 L375 245 L387 248 L395 253 L417 276 L428 280 L439 278 L447 269 L447 264 L449 263 L449 248 L447 247 L447 241 L443 235 L443 232 Z" fill="#B40500" fill-rule="evenodd"/>
+             <path d="M484 224 L478 232 L479 239 L482 239 L488 247 L493 249 L496 254 L496 263 L498 264 L499 335 L498 351 L496 352 L494 367 L481 376 L480 383 L482 383 L483 387 L488 391 L504 397 L527 397 L528 395 L543 396 L544 394 L551 396 L555 393 L561 394 L564 391 L575 384 L577 374 L567 366 L563 365 L562 360 L559 359 L559 256 L561 255 L562 249 L567 246 L567 243 L572 239 L577 238 L576 236 L578 231 L575 224 L571 224 L567 220 L553 218 L551 216 L509 217 Z" fill="#FDC101" fill-rule="evenodd"/>
+           </g>
+           <rect x="539" y="726" width="431" height="38" fill="#FFFFFF"/>
+           <path d="M538 540 L538 764 L970 764 L970 540" fill="none" stroke="#050505" stroke-width="9" stroke-linejoin="round"/>
+           <path d="M510 534 L760 289 L997 533" fill="none" stroke="#050505" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+         </svg>
        </div>
-       <span class="inst-title" id="instTitle">安装管理</span>
        </div>
        <div class="inst-tabs" id="instTabs" role="tablist">
          <button class="inst-tab active" data-itab="board" role="tab" onclick="instSwitchTab('board')"><span class="tb-label">安装项目进度看板</span></button>
@@ -26279,6 +26331,8 @@ function ibRenderCal() {
    · 安装进度 = 该项目签约信息中的「含安装」状态 + /api/install/mgmt 里的 {demand,installed,workers}；
    · 天气 = 按项目省份坐标取 Open-Meteo 实时天气（与 choice-lite 看板同源逻辑）。 */
 var IB_PROJECTS = [], IB_AGG = {}, IB_WX = null, IB_LOADING = false, IB_WX_REPAINT = null;
+/* 天气只在每天 09:00 / 14:00 各更新一次，完成后当日不再请求，次日自动重置 */
+var IB_WX_DAY = '', IB_WX_DONE = { am: false, pm: false };
 function ibName(p) { return (p && (p.customer || p.project_name || p.contract_no || p.no)) || ''; }
 function ibInstallData(p) {
   var d = (p && p.__ibInstall && p.__ibInstall.data) || {};
@@ -26476,6 +26530,33 @@ function ibWxSlotReady(slot) {
   var n = ibWxNowHm();
   return n.h >= (slot === 'am' ? 9 : 14);
 }
+function ibWxTodayKey() {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date());
+  } catch (e) {
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+}
+function ibWxMarkDone() {
+  var day = ibWxTodayKey(), n = ibWxNowHm();
+  if (IB_WX_DAY !== day) { IB_WX_DAY = day; IB_WX_DONE = { am: false, pm: false }; }
+  if (n.h >= 9) IB_WX_DONE.am = true;
+  if (n.h >= 14) IB_WX_DONE.pm = true;
+}
+function ibWxDailyCheck() {
+  if (!IB_AGG || !Object.keys(IB_AGG).length) return;
+  var day = ibWxTodayKey(), n = ibWxNowHm();
+  if (IB_WX_DAY !== day) { IB_WX_DAY = day; IB_WX_DONE = { am: false, pm: false }; }
+  var needAm = n.h >= 9 && !IB_WX_DONE.am;
+  var needPm = n.h >= 14 && !IB_WX_DONE.pm;
+  if (!needAm && !needPm) return;
+  if (needAm) IB_WX_DONE.am = true;
+  if (needPm) IB_WX_DONE.pm = true;
+  ibLoadWeather(Object.keys(IB_AGG), true);
+}
 function ibLoadWeather(viKeys, force) {
   var amEl = document.getElementById('ibWxAm'), pmEl = document.getElementById('ibWxPm');
   if (!amEl || !pmEl) return;
@@ -26527,7 +26608,7 @@ function ibLoadWeather(viKeys, force) {
         if (!items[i]) return;
         cache[items[i].vi] = { am: ibWxPoint(one, '09:00'), pm: ibWxPoint(one, '14:00') };
       });
-      IB_WX = cache; paint();
+      IB_WX = cache; ibWxMarkDone(); paint();
     })
     .catch(function () { if (to) clearTimeout(to); });
 }
@@ -26585,13 +26666,11 @@ function ibBoot() {
       try { if (typeof IB_WX_REPAINT === 'function') IB_WX_REPAINT(); } catch (e) {}
     }, 60000);
   }
-  // 每 10 分钟重新请求 Open-Meteo，天气数据自动更新
-  if (!window.__ibWxFetchTimer) {
-    window.__ibWxFetchTimer = setInterval(function () {
-      try {
-        if (IB_AGG && Object.keys(IB_AGG).length) ibLoadWeather(Object.keys(IB_AGG), true);
-      } catch (e) {}
-    }, 600000);
+  // 每天 09:00 / 14:00 各更新一次；完成即停，次日自动重置（每分钟只做轻量检查，不请求接口）
+  if (!window.__ibWxDailyTimer) {
+    window.__ibWxDailyTimer = setInterval(function () {
+      try { ibWxDailyCheck(); } catch (e) {}
+    }, 60000);
   }
 }
 function applyInstallLang() {
