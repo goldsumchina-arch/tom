@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-25 09:54:27",
+ "generated": "2026-11-25 10:02:36",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-20261125: daily weather schedule and inline SVG logo\"",
+ "note": "\"INSTALL-DETAIL-20261125: project cards for all signed projects\"",
  "i18n": {
-  "dict@6866": {
+  "dict@6878": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5264,7 +5264,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26189": {
+  "dict@26204": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5323,7 +5323,10 @@
     "wxWindUnit": "级",
     "provText": "省份",
     "wxMorning": "上午",
-    "wxAfternoon": "下午"
+    "wxAfternoon": "下午",
+    "contractNo": "合同号",
+    "slabsTotal": "累计片数",
+    "housesTotal": "累计房舍"
    },
    "en": {
     "title": "Installation Progress Dashboard",
@@ -5383,7 +5386,10 @@
     "wxWindUnit": "",
     "provText": "Province",
     "wxMorning": "Morning",
-    "wxAfternoon": "Afternoon"
+    "wxAfternoon": "Afternoon",
+    "contractNo": "Contract",
+    "slabsTotal": "Total slabs",
+    "housesTotal": "Total houses"
    },
    "vi": {
     "title": "Bảng tiến độ lắp đặt",
@@ -5443,10 +5449,13 @@
     "wxWindUnit": "cấp",
     "provText": "Tỉnh",
     "wxMorning": "Sáng",
-    "wxAfternoon": "Chiều"
+    "wxAfternoon": "Chiều",
+    "contractNo": "Số hợp đồng",
+    "slabsTotal": "Tổng số tấm",
+    "housesTotal": "Tổng số chuồng"
    }
   },
-  "dict@30479": {
+  "dict@30517": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
