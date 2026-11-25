@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-25 10:37:58",
+ "generated": "2026-11-25 10:44:26",
  "version": "V2026.11.04.01",
- "note": "\"WON-SALES-PRODUCT-20261125: sales product field with trilingual tips\"",
+ "note": "\"WON-SALES-PRODUCT-20261125: robust hover tooltip across language switch\"",
  "i18n": {
-  "dict@6889": {
+  "dict@6893": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -5285,7 +5285,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26242": {
+  "dict@26288": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5479,7 +5479,7 @@
     "projectList": "Danh sách dự án"
    }
   },
-  "dict@30555": {
+  "dict@30601": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

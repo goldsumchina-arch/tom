@@ -711,6 +711,10 @@ function _ovLoadChartLib(cb){
     .w-sales-cell { position: relative; }
     .w-sales-req { position:absolute; top:1px; right:4px; font-size:11px; line-height:1; font-weight:800; color:#e00000; cursor:help; z-index:2; }
     .w-sales-cell select { padding-right:16px !important; }
+    /* 自绘悬停注解：不依赖浏览器原生 title，切语言后立即刷新且不会失灵 */
+    #wonSalesTip { position:fixed; z-index:99999; display:none; max-width:400px; padding:9px 12px;
+      border-radius:8px; background:#1b2433; color:#fff; font-size:12px; line-height:1.6;
+      box-shadow:0 8px 26px rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.18); pointer-events:none; }
     /* 窄屏兜底：3 列（宽字段跨 2 列）→ 2 列 */
     @media (max-width:900px) {
       .w-2row.w-basic-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -11404,6 +11408,8 @@ function setLangDebug(lang) {
   // /api/translate-remarks 请求风暴 -> Worker 502。I18N 缓存清空保留。
   // ★BENCARD-I18N-20261103★ 切语言后重渲染「受益人支付明细卡片」，使其表头立即跟随语言
   try { if (typeof renderBenPaymentCards === 'function') renderBenPaymentCards(true); } catch (e) {}
+  // ★WON-SALES-PRODUCT-20261125★ 切语言后立即刷新销售产品红色 * 的三语注解（含已显示的气泡）
+  try { if (typeof wonSalesProductTip === 'function') wonSalesProductTip(); } catch (e) {}
 }
 // 更新顶部导航栏语言按钮的高亮状态
 function updateLangSwitchUI() {
@@ -20156,13 +20162,53 @@ function wonSubTitle(lbl) {
   var s = String(lbl == null ? '' : lbl).replace(/\s*RMB\s*$/i, '');
   return s + ' (RMB \u00b7 USD \u00b7 VND)';
 }
-/* ★WON-SALES-PRODUCT-20261125★ 红色 * 悬停解释：按当前所选销售产品显示三语说明 */
+/* ★WON-SALES-PRODUCT-20261125★ 红色 * 悬停解释：自绘气泡，切语言后立即刷新，不依赖原生 title */
+function wonSalesTipText() {
+  var sel = el('w_sales_product') || document.getElementById('w_sales_product');
+  if (!sel) return '';
+  var t = T(), v = String(sel.value || '');
+  return (v === 'PART' ? t.sales_part_tip : (v === 'SYSTEM' ? t.sales_system_tip : (v === 'SERVICE' ? t.sales_service_tip : ''))) || '';
+}
+function wonSalesTipBox() {
+  var box = document.getElementById('wonSalesTip');
+  if (!box) { box = document.createElement('div'); box.id = 'wonSalesTip'; document.body.appendChild(box); }
+  return box;
+}
+function wonSalesTipBind() {
+  if (window.__wonSalesTipBound) return;
+  window.__wonSalesTipBound = true;
+  document.addEventListener('mouseover', function (e) {
+    var tg = e.target;
+    if (!tg || !tg.closest || !tg.closest('#wSalesReq')) return;
+    var txt = wonSalesTipText(); if (!txt) return;
+    var box = wonSalesTipBox(), badge = tg.closest('#wSalesReq'), r = badge.getBoundingClientRect();
+    box.textContent = txt;
+    box.style.display = 'block';
+    var w = Math.min(400, window.innerWidth - 24);
+    box.style.maxWidth = w + 'px';
+    box.style.left = Math.max(12, Math.min(r.left - 8, window.innerWidth - w - 12)) + 'px';
+    box.style.top = (r.bottom + 8) + 'px';
+  });
+  document.addEventListener('mouseout', function (e) {
+    var tg = e.target;
+    if (!tg || !tg.closest || !tg.closest('#wSalesReq')) return;
+    var box = document.getElementById('wonSalesTip'); if (box) box.style.display = 'none';
+  });
+  document.addEventListener('app:langchange', function () {
+    wonSalesProductTip();
+    var box = document.getElementById('wonSalesTip');
+    if (box && box.style.display === 'block') box.textContent = wonSalesTipText();
+  });
+}
 function wonSalesProductTip() {
-  var sel = el('w_sales_product'); if (!sel) return;
-  var t = T(), v = sel.value;
-  var txt = v === 'PART' ? t.sales_part_tip : (v === 'SYSTEM' ? t.sales_system_tip : (v === 'SERVICE' ? t.sales_service_tip : ''));
-  sel.title = txt || '';
-  var badge = el('wSalesReq'); if (badge) badge.title = txt || '';
+  var txt = wonSalesTipText();
+  var sel = el('w_sales_product') || document.getElementById('w_sales_product');
+  if (sel) sel.title = txt;
+  var badge = el('wSalesReq') || document.getElementById('wSalesReq');
+  if (badge) badge.title = txt;
+  var box = document.getElementById('wonSalesTip');
+  if (box && box.style.display === 'block') box.textContent = txt;
+  wonSalesTipBind();
 }
 function renderModalBody() {
   var t = T();
