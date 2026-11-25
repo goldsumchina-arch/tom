@@ -99,6 +99,32 @@ async function upsertWonProvince(env, wonId, province) {
   ).bind(wonId, v).run();
 }
 
+// ★WON-SALES-PRODUCT-20261125★ won_projects 已达 100 列上限，销售产品同样走独立映射表
+async function ensureWonSalesProductMap(env) {
+  await env.DB.prepare(
+    "CREATE TABLE IF NOT EXISTS won_sales_product_map (won_id INTEGER PRIMARY KEY, sales_product TEXT NOT NULL DEFAULT '')"
+  ).run();
+}
+async function loadWonSalesProductMap(env) {
+  const rs = await env.DB.prepare("SELECT won_id, sales_product FROM won_sales_product_map").all();
+  const m = {};
+  for (const r of rs.results || []) m[r.won_id] = r.sales_product || "";
+  return m;
+}
+async function getWonSalesProduct(env, wonId) {
+  const r = await env.DB.prepare("SELECT sales_product FROM won_sales_product_map WHERE won_id=?")
+    .bind(wonId).first();
+  return (r && r.sales_product) || "";
+}
+async function upsertWonSalesProduct(env, wonId, value) {
+  if (value === undefined) return;
+  const v = String(value == null ? "" : value).trim() || "PART";
+  await env.DB.prepare(
+    "INSERT INTO won_sales_product_map (won_id, sales_product) VALUES (?, ?) " +
+    "ON CONFLICT(won_id) DO UPDATE SET sales_product=excluded.sales_product"
+  ).bind(wonId, v).run();
+}
+
 // 自动填充：还没有省份映射的 WON 项目按列表循环分配（幂等，只补缺省行）
 async function migrateWonProvinceFill(env) {
   const rs = await env.DB.prepare(
@@ -429,6 +455,7 @@ export async function handleWonLost(request, env, url, pathname) {
   try { await ensureRemarkCols(env); } catch (e) { return errj("数据库迁移失败: " + (e && e.message || e), 500); }
   // ★ WON 省份映射表（V40）：建表 + 自动填充缺省省份（幂等，不阻塞请求）
   try { await ensureWonProvinceMap(env); } catch (e) { /* 不阻塞请求 */ }
+  try { await ensureWonSalesProductMap(env); } catch (e) { /* 不阻塞请求 */ }
   try { await migrateWonProvinceFill(env); } catch (e) { /* 不阻塞请求 */ }
   // ★ 省份归一化迁移（幂等）：lost_projects 的英文/中文变体 → 标准名
   //   无匹配省份默认：LOST → 清化省（用户指定 V28）。won_projects 无 province 列
@@ -459,7 +486,8 @@ export async function handleWonLost(request, env, url, pathname) {
     // V40：合并省份映射（won_projects 表无 province 列）
     try {
       const pm = await loadWonProvinceMap(env);
-      out.forEach((r) => { r.province = pm[r.id] || ""; });
+      const sm = await loadWonSalesProductMap(env);
+      out.forEach((r) => { r.province = pm[r.id] || ""; r.sales_product = sm[r.id] || "PART"; });
     } catch (e) { /* 映射表异常不阻塞列表 */ }
     if (await wonP345Hidden(env, username)) stripWonP345(out);
     out.forEach(expandWonRemarks);
@@ -504,9 +532,11 @@ export async function handleWonLost(request, env, url, pathname) {
     ).bind(newId).run();
     // V40：保存省份映射
     try { await upsertWonProvince(env, newId, data.province); } catch (e) { /* 不阻塞 */ }
+    try { await upsertWonSalesProduct(env, newId, data.sales_product); } catch (e) { /* 不阻塞 */ }
     const row = await env.DB.prepare("SELECT * FROM won_projects WHERE id=?")
       .bind(newId).first();
     try { row.province = await getWonProvince(env, newId); } catch (e) { row.province = ""; }
+    try { row.sales_product = await getWonSalesProduct(env, newId) || "PART"; } catch (e) { row.sales_product = "PART"; }
     expandWonRemarks(row);
     expandPaymentTerms(row);
     if (await wonP345Hidden(env, username)) stripWonP345([row]);
@@ -632,9 +662,11 @@ export async function handleWonLost(request, env, url, pathname) {
       }
       // V40：更新省份映射（data.province 存在时才写，避免旧客户端误清）
       try { await upsertWonProvince(env, pid, data.province); } catch (e) { /* 不阻塞 */ }
+      try { await upsertWonSalesProduct(env, pid, data.sales_product); } catch (e) { /* 不阻塞 */ }
       const row = await env.DB.prepare("SELECT * FROM won_projects WHERE id=?")
         .bind(pid).first();
       try { row.province = await getWonProvince(env, pid); } catch (e) { row.province = ""; }
+      try { row.sales_product = await getWonSalesProduct(env, pid) || "PART"; } catch (e) { row.sales_product = "PART"; }
       expandWonRemarks(row);
       expandPaymentTerms(row);
       if (await wonP345Hidden(env, username)) stripWonP345([row]);

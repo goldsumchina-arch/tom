@@ -706,13 +706,20 @@ function _ovLoadChartLib(cb){
     /* 第3行只有 3 个字段（付款方式 + 2 份合同文件），各占 2 列 = 正好铺满 6 列，
        与上面两行的网格线对齐，上传输入框也宽了一倍 */
     .w-2row.w-basic-grid .w-cell.w-wide { min-width:0; grid-column:span 2; }
+    /* ★WON-SALES-PRODUCT-20261125★ 第2行新增销售产品后仍保持同一行：7 列，其余框略收窄 */
+    .w-2row.w-basic-grid.w-sales-grid { grid-template-columns: 1.1fr repeat(6, minmax(0,1fr)); }
+    .w-sales-cell { position: relative; }
+    .w-sales-req { position:absolute; top:1px; right:4px; font-size:11px; line-height:1; font-weight:800; color:#e00000; cursor:help; z-index:2; }
+    .w-sales-cell select { padding-right:16px !important; }
     /* 窄屏兜底：3 列（宽字段跨 2 列）→ 2 列 */
     @media (max-width:900px) {
       .w-2row.w-basic-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .w-2row.w-basic-grid.w-sales-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
       .w-2row.w-basic-grid .w-cell.w-wide { grid-column:span 2; }
     }
     @media (max-width:620px) {
       .w-2row.w-basic-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .w-2row.w-basic-grid.w-sales-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .w-2row.w-basic-grid .w-cell.w-wide { grid-column:span 2; }
     }
     /* ★WON-WARRANTY-1ROW-20261102★ 用户要求「质保金信息」6 个字段必须在一行：
@@ -6912,6 +6919,11 @@ var I18N = {
     lbl_rate_rmb_vnd:"RMB-VND 汇率",
     lbl_rate_usd_vnd:"USD-VND 汇率",
     lbl_include_install:"包含安装？",
+    lbl_sales_product:"销售产品",
+    sales_part:"零配件", sales_system:"系统性设备", sales_service:"服务",
+    sales_part_tip:"零配件：该合同只销售了零配件，客户通常自行安装，或者客户准备的备品备件、不构成系统！",
+    sales_system_tip:"系统性设备：单个或者多个系统，比如料线系统、集中供料、通风系统、栏位系统、鸡笼系统、集蛋系统、水电系统、清粪系统等等需要安装，便可以理解为系统性设备；",
+    sales_service_tip:"服务：无实物的销售，比如销售顾问、设计咨询等无形产品的销售；",
     lbl_payment_terms:"付款方式",
     lbl_salesperson:"销售人员",
     lbl_equip_rmb:"设备金额 RMB",
@@ -7696,6 +7708,11 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     lbl_rate_rmb_vnd:"RMB-VND Rate",
     lbl_rate_usd_vnd:"USD-VND Rate",
     lbl_include_install:"Include Installation?",
+    lbl_sales_product:"Sales Product",
+    sales_part:"Spare Parts", sales_system:"System Equipment", sales_service:"Service",
+    sales_part_tip:"Spare Parts: this contract sells spare parts only; the customer usually installs them by himself, or they are customer-prepared reserves and do not form a system!",
+    sales_system_tip:"System Equipment: one or more systems requiring installation, such as feeding line, central feeding, ventilation, housing, chicken cage, egg collection, water/electricity, manure removal systems, etc.",
+    sales_service_tip:"Service: sales without physical goods, such as sales consulting and design consulting, i.e. intangible products.",
     lbl_payment_terms:"Payment Terms",
     lbl_salesperson:"Salesperson",
     lbl_equip_rmb:"Equipment RMB",
@@ -8483,6 +8500,11 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     lbl_rate_rmb_vnd:"Tỷ giá RMB-VND",
     lbl_rate_usd_vnd:"Tỷ giá USD-VND",
     lbl_include_install:"Bao gồm lắp đặt?",
+    lbl_sales_product:"Sản phẩm bán",
+    sales_part:"Phụ tùng", sales_system:"Thiết bị hệ thống", sales_service:"Dịch vụ",
+    sales_part_tip:"Phụ tùng: hợp đồng này chỉ bán phụ tùng, khách thường tự lắp đặt, hoặc là phụ tùng dự phòng do khách chuẩn bị, không tạo thành hệ thống!",
+    sales_system_tip:"Thiết bị hệ thống: một hoặc nhiều hệ thống cần lắp đặt, như hệ thống ăn, cấp liệu tập trung, thông gió, chuồng trại, lồng gà, thu trứng, nước/điện, dọn phân, v.v.;",
+    sales_service_tip:"Dịch vụ: bán không có hàng hóa thực tế, ví dụ tư vấn bán hàng, tư vấn thiết kế và các sản phẩm vô hình khác;",
     lbl_payment_terms:"Phương thức thanh toán",
     lbl_salesperson:"NVKD",
     lbl_equip_rmb:"Thiết bị RMB",
@@ -20134,6 +20156,14 @@ function wonSubTitle(lbl) {
   var s = String(lbl == null ? '' : lbl).replace(/\s*RMB\s*$/i, '');
   return s + ' (RMB \u00b7 USD \u00b7 VND)';
 }
+/* ★WON-SALES-PRODUCT-20261125★ 红色 * 悬停解释：按当前所选销售产品显示三语说明 */
+function wonSalesProductTip() {
+  var sel = el('w_sales_product'); if (!sel) return;
+  var t = T(), v = sel.value;
+  var txt = v === 'PART' ? t.sales_part_tip : (v === 'SYSTEM' ? t.sales_system_tip : (v === 'SERVICE' ? t.sales_service_tip : ''));
+  sel.title = txt || '';
+  var badge = el('wSalesReq'); if (badge) badge.title = txt || '';
+}
 function renderModalBody() {
   var t = T();
   var id = el('wonModal').dataset.id;
@@ -20161,7 +20191,8 @@ function renderModalBody() {
         '<div class="w-cell"><label>' + t.lbl_bu + '</label><select id="w_doc_remark">' + buOptionsHtml(t) + '</select></div>' +
       '</div>' +
       // 第2行：签约货币 / 贸易术语 / 两个汇率 / 是否含安装 / 销售人员
-      '<div class="w-2row w-basic-grid">' +
+      '<div class="w-2row w-basic-grid w-sales-grid">' +
+        '<div class="w-cell w-sales-cell"><label>' + t.lbl_sales_product + '</label><span class="w-sales-req" id="wSalesReq" title="">*</span><select id="w_sales_product" onchange="wonSalesProductTip()"><option value="PART">' + t.sales_part + '</option><option value="SYSTEM">' + t.sales_system + '</option><option value="SERVICE">' + t.sales_service + '</option></select></div>' +
         '<div class="w-cell"><label>' + t.lbl_currency + '</label><select id="w_contract_currency"><option value="USD">USD</option><option value="VND">VND</option><option value="RMB">RMB</option></select></div>' +
         '<div class="w-cell"><label>' + t.lbl_incoterm + '</label><select id="w_incoterm"><option value="EXW">EXW</option><option value="FCA">FCA</option><option value="FAS">FAS</option><option value="FOB">FOB</option><option value="CFR">CFR</option><option value="CIF">CIF</option><option value="CPT">CPT</option><option value="CIP">CIP</option><option value="DAP">DAP</option><option value="DPU">DPU</option><option value="DDP">DDP</option><option value="OTHERS">OTHERS</option></select></div>' +
         '<div class="w-cell"><label>' + t.lbl_rate_rmb_vnd + '</label><input id="w_rate_rmb_vnd" type="text" inputmode="numeric" placeholder="' + t.ph_rate_rmb + '" oninput="wonRateUserEdit(this);formatRateInput(this)" onblur="formatRateDisplay(this);syncCpRatesFromParent();syncAgiRatesFromParent();"></div>' +
@@ -20941,11 +20972,13 @@ function openWonModal(id) {
   // 重置 WON 备注自动翻译追踪，避免上一笔记录的自动值影响当前记录
   window.__wonRmAuto = {};
   renderModalBody();
+  wonSalesProductTip();
   
-  var ids=['w_contract_no','w_province','w_customer','w_contract_date','w_signing_parties','w_contract_currency','w_incoterm','w_rate_rmb_vnd','w_rate_usd_vnd','w_include_install','w_payment_terms','w_salesperson','w_equip_rmb','w_equip_usd','w_equip_vnd','w_superv_rmb','w_superv_usd','w_superv_vnd','w_fb_budget_rmb','w_fb_budget_usd','w_fb_budget_vnd','w_fb_actual_rmb','w_fb_actual_usd','w_fb_actual_vnd','w_cc_budget_rmb','w_cc_budget_usd','w_cc_budget_vnd','w_cc_actual_rmb','w_cc_actual_usd','w_cc_actual_vnd','w_total_equip_rmb','w_total_equip_usd','w_total_equip_vnd','w_inst_budget_rmb','w_inst_budget_usd','w_inst_budget_vnd','w_inst_actual_rmb','w_inst_actual_usd','w_inst_actual_vnd','w_total_ei_rmb','w_total_ei_usd','w_total_ei_vnd','w_vat_rmb','w_vat_usd','w_vat_vnd','w_warranty_rmb','w_warranty_usd','w_warranty_vnd','w_warranty_start','w_warranty_end','w_cust_pay_count','w_cust_paid_rmb','w_cust_paid_usd','w_cust_paid_vnd','w_cust_unpaid_rmb','w_cust_unpaid_usd','w_cust_unpaid_vnd','w_cust_remark','w_gs_comm_pct','w_gs_comm_rmb','w_gs_comm_usd','w_gs_comm_vnd','w_gs_pay_count','w_gs_paid_rmb','w_gs_paid_usd','w_gs_paid_vnd','w_gs_unpaid_rmb','w_gs_unpaid_usd','w_gs_unpaid_vnd','w_gs_remark','w_agi_payable_rmb','w_agi_payable_usd','w_agi_payable_vnd','w_agi_pay_count','w_agi_paid_rmb','w_agi_paid_usd','w_agi_paid_vnd','w_agi_unpaid_rmb','w_agi_unpaid_usd','w_agi_unpaid_vnd','w_agi_remark','w_doc_addendum_cnt','w_doc_view_addendum','w_doc_remark','w_doc_equip','w_doc_install'];
+  var ids=['w_contract_no','w_province','w_customer','w_contract_date','w_signing_parties','w_sales_product','w_contract_currency','w_incoterm','w_rate_rmb_vnd','w_rate_usd_vnd','w_include_install','w_payment_terms','w_salesperson','w_equip_rmb','w_equip_usd','w_equip_vnd','w_superv_rmb','w_superv_usd','w_superv_vnd','w_fb_budget_rmb','w_fb_budget_usd','w_fb_budget_vnd','w_fb_actual_rmb','w_fb_actual_usd','w_fb_actual_vnd','w_cc_budget_rmb','w_cc_budget_usd','w_cc_budget_vnd','w_cc_actual_rmb','w_cc_actual_usd','w_cc_actual_vnd','w_total_equip_rmb','w_total_equip_usd','w_total_equip_vnd','w_inst_budget_rmb','w_inst_budget_usd','w_inst_budget_vnd','w_inst_actual_rmb','w_inst_actual_usd','w_inst_actual_vnd','w_total_ei_rmb','w_total_ei_usd','w_total_ei_vnd','w_vat_rmb','w_vat_usd','w_vat_vnd','w_warranty_rmb','w_warranty_usd','w_warranty_vnd','w_warranty_start','w_warranty_end','w_cust_pay_count','w_cust_paid_rmb','w_cust_paid_usd','w_cust_paid_vnd','w_cust_unpaid_rmb','w_cust_unpaid_usd','w_cust_unpaid_vnd','w_cust_remark','w_gs_comm_pct','w_gs_comm_rmb','w_gs_comm_usd','w_gs_comm_vnd','w_gs_pay_count','w_gs_paid_rmb','w_gs_paid_usd','w_gs_paid_vnd','w_gs_unpaid_rmb','w_gs_unpaid_usd','w_gs_unpaid_vnd','w_gs_remark','w_agi_payable_rmb','w_agi_payable_usd','w_agi_payable_vnd','w_agi_pay_count','w_agi_paid_rmb','w_agi_paid_usd','w_agi_paid_vnd','w_agi_unpaid_rmb','w_agi_unpaid_usd','w_agi_unpaid_vnd','w_agi_remark','w_doc_addendum_cnt','w_doc_view_addendum','w_doc_remark','w_doc_equip','w_doc_install'];
   if(id){ 
     var p=globalWonData.find(function(x){ return x.id==id; }); 
     if(p) ids.forEach(function(i){ var e=el(i); if(e){ var key=i.replace('w_',''); if(key==='contract_date'){ var cd=p[key]||''; if(/^\d{2}-\d{2}-\d{4}$/.test(cd)){ var parts=cd.split('-'); e.value=parts[2]+'-'+parts[1]+'-'+parts[0]; } else e.value=cd; } else { var rawVal=p[key]||''; e.value=rawVal; } }}); 
+    wonSalesProductTip();
     var buEl = el('w_doc_remark');
     if (buEl && p && p.doc_remark) {
       var buKeys=['pig_farm','broiler_farm','chicken_egg_farm','duck_farm','duck_egg_farm','others'];
@@ -21723,6 +21756,7 @@ function buildWonData() { var N=function(id){ return stripToNumber(el(id).value)
     customer:el('w_customer').value.trim(),
     contract_date:el('w_contract_date').value.trim(),
     signing_parties:el('w_signing_parties').value.trim()||'AGI-GS', 
+    sales_product:el('w_sales_product').value.trim(), 
     contract_currency:el('w_contract_currency').value.trim(), 
     incoterm:el('w_incoterm').value.trim(), 
     rate_rmb_vnd:N('w_rate_rmb_vnd'), 

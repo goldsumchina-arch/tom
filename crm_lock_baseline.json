@@ -1,9 +1,9 @@
 {
- "generated": "2026-11-25 10:16:45",
+ "generated": "2026-11-25 10:37:58",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-DETAIL-20261125: project list subtitle and compact layout\"",
+ "note": "\"WON-SALES-PRODUCT-20261125: sales product field with trilingual tips\"",
  "i18n": {
-  "dict@6882": {
+  "dict@6889": {
    "zh": {
     "login_title": "AGI-CRM",
     "login_sub": "登录您的账号",
@@ -109,6 +109,13 @@
     "lbl_rate_rmb_vnd": "RMB-VND 汇率",
     "lbl_rate_usd_vnd": "USD-VND 汇率",
     "lbl_include_install": "包含安装？",
+    "lbl_sales_product": "销售产品",
+    "sales_part": "零配件",
+    "sales_system": "系统性设备",
+    "sales_service": "服务",
+    "sales_part_tip": "零配件：该合同只销售了零配件，客户通常自行安装，或者客户准备的备品备件、不构成系统！",
+    "sales_system_tip": "系统性设备：单个或者多个系统，比如料线系统、集中供料、通风系统、栏位系统、鸡笼系统、集蛋系统、水电系统、清粪系统等等需要安装，便可以理解为系统性设备；",
+    "sales_service_tip": "服务：无实物的销售，比如销售顾问、设计咨询等无形产品的销售；",
     "lbl_payment_terms": "付款方式",
     "lbl_salesperson": "销售人员",
     "lbl_equip_rmb": "设备金额 RMB",
@@ -1861,6 +1868,13 @@
     "lbl_rate_rmb_vnd": "RMB-VND Rate",
     "lbl_rate_usd_vnd": "USD-VND Rate",
     "lbl_include_install": "Include Installation?",
+    "lbl_sales_product": "Sales Product",
+    "sales_part": "Spare Parts",
+    "sales_system": "System Equipment",
+    "sales_service": "Service",
+    "sales_part_tip": "Spare Parts: this contract sells spare parts only; the customer usually installs them by himself, or they are customer-prepared reserves and do not form a system!",
+    "sales_system_tip": "System Equipment: one or more systems requiring installation, such as feeding line, central feeding, ventilation, housing, chicken cage, egg collection, water/electricity, manure removal systems, etc.",
+    "sales_service_tip": "Service: sales without physical goods, such as sales consulting and design consulting, i.e. intangible products.",
     "lbl_payment_terms": "Payment Terms",
     "lbl_salesperson": "Salesperson",
     "lbl_equip_rmb": "Equipment RMB",
@@ -3615,6 +3629,13 @@
     "lbl_rate_rmb_vnd": "Tỷ giá RMB-VND",
     "lbl_rate_usd_vnd": "Tỷ giá USD-VND",
     "lbl_include_install": "Bao gồm lắp đặt?",
+    "lbl_sales_product": "Sản phẩm bán",
+    "sales_part": "Phụ tùng",
+    "sales_system": "Thiết bị hệ thống",
+    "sales_service": "Dịch vụ",
+    "sales_part_tip": "Phụ tùng: hợp đồng này chỉ bán phụ tùng, khách thường tự lắp đặt, hoặc là phụ tùng dự phòng do khách chuẩn bị, không tạo thành hệ thống!",
+    "sales_system_tip": "Thiết bị hệ thống: một hoặc nhiều hệ thống cần lắp đặt, như hệ thống ăn, cấp liệu tập trung, thông gió, chuồng trại, lồng gà, thu trứng, nước/điện, dọn phân, v.v.;",
+    "sales_service_tip": "Dịch vụ: bán không có hàng hóa thực tế, ví dụ tư vấn bán hàng, tư vấn thiết kế và các sản phẩm vô hình khác;",
     "lbl_payment_terms": "Phương thức thanh toán",
     "lbl_salesperson": "NVKD",
     "lbl_equip_rmb": "Thiết bị RMB",
@@ -5264,7 +5285,7 @@
     "comm_led_total": "Tổng cộng"
    }
   },
-  "dict@26208": {
+  "dict@26242": {
    "zh": {
     "title": "安装项目进度看板",
     "projStat": "项目总数 / 建成项目 / 在建项目",
@@ -5458,7 +5479,7 @@
     "projectList": "Danh sách dự án"
    }
   },
-  "dict@30521": {
+  "dict@30555": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",
