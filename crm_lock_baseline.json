@@ -1,7 +1,7 @@
 {
- "generated": "2026-11-24 16:04:06",
+ "generated": "2026-11-25 09:17:45",
  "version": "V2026.11.04.01",
- "note": "\"INSTALL-WX-AMPM-20261124: morning afternoon weather columns\"",
+ "note": "\"INSTALL-WX-20261124: gate morning 09:00 afternoon 14:00\"",
  "i18n": {
   "dict@6814": {
    "zh": {
@@ -5446,7 +5446,7 @@
     "wxAfternoon": "Chiều"
    }
   },
-  "dict@30370": {
+  "dict@30392": {
    "zh": {
     "mTitle": "📄 佣金支付管理",
     "mSub": "Commission Payment",

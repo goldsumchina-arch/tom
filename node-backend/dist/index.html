@@ -4140,8 +4140,8 @@ function _ovLoadChartLib(cb){
              <div class="ib-clock" id="ibClock">--:--:--</div>
              <div class="ib-date" id="ibDate"></div>
              <div class="ib-wx-cols">
-               <div class="ib-wx-col"><div class="ib-wx-col-head" data-ib="wxMorning">上午</div><div class="ib-wx" id="ibWxAm"></div></div>
-               <div class="ib-wx-col"><div class="ib-wx-col-head" data-ib="wxAfternoon">下午</div><div class="ib-wx" id="ibWxPm"></div></div>
+               <div class="ib-wx-col"><div class="ib-wx-col-head"><span data-ib="wxMorning">上午</span> <small>09:00</small></div><div class="ib-wx" id="ibWxAm"></div></div>
+               <div class="ib-wx-col"><div class="ib-wx-col-head"><span data-ib="wxAfternoon">下午</span> <small>14:00</small></div><div class="ib-wx" id="ibWxPm"></div></div>
              </div>
            </div>
          </div>
@@ -26278,7 +26278,7 @@ function ibRenderCal() {
    · 地图省份 = 签约项目 province（经 vnProvinceByKey 归一到 34 省标准名）后聚合；
    · 安装进度 = 该项目签约信息中的「含安装」状态 + /api/install/mgmt 里的 {demand,installed,workers}；
    · 天气 = 按项目省份坐标取 Open-Meteo 实时天气（与 choice-lite 看板同源逻辑）。 */
-var IB_PROJECTS = [], IB_AGG = {}, IB_WX = null, IB_LOADING = false;
+var IB_PROJECTS = [], IB_AGG = {}, IB_WX = null, IB_LOADING = false, IB_WX_REPAINT = null;
 function ibName(p) { return (p && (p.customer || p.project_name || p.contract_no || p.no)) || ''; }
 function ibInstallData(p) {
   var d = (p && p.__ibInstall && p.__ibInstall.data) || {};
@@ -26461,6 +26461,21 @@ function ibWxPoint(src, hour) {
   return { code: pick('weather_code'), temp: pick('temperature_2m'),
            hum: pick('relative_humidity_2m'), windLv: ibBeaufort(pick('wind_speed_10m')) };
 }
+/* 时间闸：上午 09:00 起显示，下午 14:00 起显示；未到点即使有数据也留空 */
+function ibWxNowHm() {
+  try {
+    var s = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', hour12: false
+    }).format(new Date()).split(':');
+    return { h: Number(s[0]), m: Number(s[1]) };
+  } catch (e) {
+    var n = new Date(); return { h: n.getHours(), m: n.getMinutes() };
+  }
+}
+function ibWxSlotReady(slot) {
+  var n = ibWxNowHm();
+  return n.h >= (slot === 'am' ? 9 : 14);
+}
 function ibLoadWeather(viKeys) {
   var amEl = document.getElementById('ibWxAm'), pmEl = document.getElementById('ibWxPm');
   if (!amEl || !pmEl) return;
@@ -26483,14 +26498,15 @@ function ibLoadWeather(viKeys) {
     return '<div class="ib-wx-chip">' + head + ' · ' + txt + '<br><span>' + meta.join(' · ') + '</span></div>';
   }
   function paint() {
-    var d = ibTexts();
-    amEl.innerHTML = items.map(function (p) {
+    var d = ibTexts(), empty = '<span>' + d.noData + '</span>';
+    amEl.innerHTML = ibWxSlotReady('am') ? items.map(function (p) {
       var c = IB_WX && IB_WX[p.vi]; return chip(p, c && c.am, d);
-    }).join('');
-    pmEl.innerHTML = items.map(function (p) {
+    }).join('') : empty;
+    pmEl.innerHTML = ibWxSlotReady('pm') ? items.map(function (p) {
       var c = IB_WX && IB_WX[p.vi]; return chip(p, c && c.pm, d);
-    }).join('');
+    }).join('') : empty;
   }
+  IB_WX_REPAINT = paint;
   paint();
   var allHit = items.every(function (p) {
     return IB_WX && IB_WX[p.vi] && IB_WX[p.vi].am && IB_WX[p.vi].pm;
@@ -26509,7 +26525,7 @@ function ibLoadWeather(viKeys) {
       var arr = Array.isArray(j) ? j : [j], cache = {};
       arr.forEach(function (one, i) {
         if (!items[i]) return;
-        cache[items[i].vi] = { am: ibWxPoint(one, '09:00'), pm: ibWxPoint(one, '15:00') };
+        cache[items[i].vi] = { am: ibWxPoint(one, '09:00'), pm: ibWxPoint(one, '14:00') };
       });
       IB_WX = cache; paint();
     })
@@ -26563,6 +26579,12 @@ function ibBoot() {
   ibLoadData(); ibLoadFx(); ibFillLogin(); ibCalToday(); ibApplyLang(); ibPhotosBoot();
   if (IB_CLOCK) clearInterval(IB_CLOCK);
   IB_CLOCK = setInterval(ibTick, 1000);
+  // 跨越 09:00 / 14:00 时自动补显对应时段，无需刷新页面
+  if (!window.__ibWxSlotTimer) {
+    window.__ibWxSlotTimer = setInterval(function () {
+      try { if (typeof IB_WX_REPAINT === 'function') IB_WX_REPAINT(); } catch (e) {}
+    }, 60000);
+  }
 }
 function applyInstallLang() {
   var ov = installOverlayEl();
