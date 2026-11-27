@@ -2909,7 +2909,7 @@ function _ovLoadChartLib(cb){
   body.install-open #app { visibility: hidden !important; pointer-events: none !important; }
   .inst-topbar {
     flex: none; height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px;
-    background: linear-gradient(90deg, #1e5fa8, #2f7fd0);
+    background: linear-gradient(90deg, #7a2e0b, #b3470a);
     box-shadow: 0 2px 10px rgba(0,0,0,.35); font-family: "Segoe UI", Arial, sans-serif;
   }
   /* ★INST-TAB-NOMOVE-20261125★ 品牌区固定宽度：切语言时「安装管理/Installation Management」长度不同，
@@ -2927,7 +2927,7 @@ function _ovLoadChartLib(cb){
     transition: background .15s, border-color .15s; white-space: nowrap;
   }
   .inst-exit-btn:hover { background: rgba(231,76,60,.85); border-color: transparent; }
-  /* ★INST-TABS-20261125★ 安装管理领航标签：位于蓝色顶栏内，选中项白底、每项带外框线 + 间隔 */
+  /* ★INST-TABS-20261125★ 安装管理领航标签：位于深橙顶栏内，选中项白底、每项带外框线 + 间隔 */
   .inst-tabs {
     display: flex; align-items: center; gap: 6px; margin-left: 10px; padding: 0 2px;
     min-width: 0; flex: 0 1 auto; overflow-x: auto; overflow-y: hidden;
@@ -2947,7 +2947,7 @@ function _ovLoadChartLib(cb){
   .inst-tab[data-itab="files"]  { width: 132px; }
   .inst-tab[data-itab="shared"] { width: 160px; }
   .inst-tab:hover { background: rgba(255,255,255,.26); border-color: #fff; }
-  .inst-tab.active { background: #fff; color: #1e5fa8; border-color: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+  .inst-tab.active { background: #fff; color: #7a2e0b; border-color: #fff; font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
   .inst-panel { display: none; }
   .inst-panel.active { display: block; }
   /* ★INST-PROJECT-CARDS-20261125★ 安装详情管理：每个签约项目自动生成小卡片，悬停淡粉 */
@@ -4233,8 +4233,8 @@ function _ovLoadChartLib(cb){
     <!-- ★INSTALL-MGMT-20261124★ 安装管理：紧随销售管理CRM右侧，点击后全屏覆盖（权限 INST-L1） -->
     <button class="tb-item" data-view="install" id="tbInstall" onclick="openInstallMgmt()"><span class="tb-label">Installation Management</span></button>
     <!-- ★NAV-EXTRA-20261127★ 新增两个独立领航标签 -->
-    <button class="tb-item" data-view="parts" onclick="switchView('parts')"><span class="tb-label">Spare Parts Inventory</span></button>
-    <button class="tb-item" data-view="service" onclick="switchView('service')"><span class="tb-label">After-sales Service</span></button>
+    <button class="tb-item" data-view="parts" onclick="switchView('parts')"><span class="tb-label">零配件库存管理</span></button>
+    <button class="tb-item" data-view="service" onclick="switchView('service')"><span class="tb-label">售后服务</span></button>
     <button class="tb-item active" data-view="dashboard" onclick="if(window.__dashLongPressFired){window.__dashLongPressFired=false;return false;}switchView('dashboard')" oncontextmenu="return false;" onpointerdown="onDashNavPressStart(event)" onpointerup="onDashNavPressEnd(event)" onpointerleave="onDashNavPressCancel(event)" onpointercancel="onDashNavPressCancel(event)">Dashboard</button>
     <button class="tb-item" data-view="crm" onclick="switchView('crm')">Potential Projects</button>
     <button class="tb-item" data-view="won" onclick="switchView('won')">Won Projects</button>
@@ -7571,7 +7571,7 @@ var I18N = {
     clean_title:"清理残留文件", clean_confirm:"确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。", clean_ok:"确认清除", clean_cancel:"取消", clean_success:"清理完成", clean_result:"扫描了 {total} 个 R2 对象，发现 {orphans} 个孤儿文件，已删除 {deleted} 个，跳过 {skipped} 个非受管文件。", clean_no_orphans:"未发现孤儿文件。", clean_forbidden:"仅 Tom 可使用此功能。", clean_error:"清理请求失败：", clean_report_title:"清理报告", clean_report_summary:"本次共删除 {deleted} 个垃圾文件（共发现 {total} 个孤儿文件）。", clean_report_where:"删除位置（相对路径）", clean_report_close:"关闭", clean_report_empty:"未发现可删除的垃圾文件，目录已干净。", clean_report_more:"（仅显示前 50 个，实际共 {total} 个）", clean_storage_title:"腾讯云容量分布", clean_storage_summary:"总容量 {total}，已用 {used}（{usedPct}），剩余 {free}（{freePct}）", clean_storage_won:"WON 附件", clean_storage_crm:"CRM 附件", clean_storage_lost:"LOST 附件", clean_storage_vault:"私密空间文件", clean_storage_snapshots:"数据快照", clean_storage_other:"其它", clean_storage_free:"剩余空间", clean_storage_loading:"正在统计腾讯云容量…", clean_storage_error:"容量统计失败：",
     nav: { dashboard:"看板", crm:"潜在项目", won:"签约项目", archive:"项目结束存档", lost:"失败项目", approvals:"审批", users:"用户与授权", commission:"个人佣金", crm_group:"销售管理CRM", crm_group_exit:"退出销售管理CRM", parts_inventory:"零配件库存管理", after_sales:"售后服务", install:"安装管理", install_exit:"退出安装管理", install_ph:"功能开发中，敬请期待", install_tab_board:"安装项目进度看板", install_tab_detail:"安装详情管理", install_tab_files:"项目专属资料", install_tab_shared:"安装相关公共共享资料", lang:"语言", logout:"退出登录", role_admin:"(管理员)", export_pdf:"导出PDF", fit:"适应", fit_exit:"还原", fit_tip:"把整张表缩放到一屏宽；双击表格或再点一次还原", inst_proj_back:"返回列表", inst_proj_install:"安装", inst_proj_ph:"功能开发中，敬请期待", inst_proj_tab_zone:"农场栋数&分区", inst_proj_tab_ship:"发货&到货计划", inst_proj_tab_plan:"详细安装计划", inst_proj_tab_material:"物料管理", inst_proj_tab_log:"工作日志" },
     /* 手机横屏专用短标签：原名太长会挤掉后面的标签，这里用短名保证 6 个标签一屏可见 */
-    nav_short: { dashboard:"看板", crm:"潜在", won:"签约", archive:"存档", lost:"失败", approvals:"审批", users:"用户", commission:"佣金", crm_group:"销售CRM", parts:"零配件", service:"售后", install:"安装" },
+    nav_short: { dashboard:"看板", crm:"潜在", won:"签约", archive:"存档", lost:"失败", approvals:"审批", users:"用户", commission:"佣金", crm_group:"销售CRM", parts_inventory:"零配件", after_sales:"售后", install:"安装" },
     empty: { dash_title:"看板", dash_sub:"CRM + 签约 + 失败数据分析", dash_hint:"数据分析面板开发中，敬请期待",
              dash_card_title:"数据看板", dash_refresh:"刷新", dash_loading:"数据加载中…", dash_load_failed:"数据加载失败",
              dash_potential_count:"潜在项目总数", dash_potential_amt:"潜在项目总金额",
@@ -8370,7 +8370,7 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     clean_title:"Clean up leftover files", clean_confirm:"Confirm cleanup of invalid files and orphan remnants after deletion? This action cannot be undone.", clean_ok:"Confirm Clean", clean_cancel:"Cancel", clean_success:"Cleanup completed", clean_result:"Scanned {total} R2 objects, found {orphans} orphan files, deleted {deleted}, skipped {skipped} unmanaged files.", clean_no_orphans:"No orphan files found.", clean_forbidden:"Only Tom can use this feature.", clean_error:"Cleanup request failed:", clean_report_title:"Cleanup Report", clean_report_summary:"Deleted {deleted} junk file(s) (found {total} orphan file(s) in total).", clean_report_where:"Deleted location (relative path)", clean_report_close:"Close", clean_report_empty:"No junk files to delete; the directory is already clean.", clean_report_more:"(showing first 50; total {total})", clean_storage_title:"Tencent Cloud Storage", clean_storage_summary:"Total {total}, Used {used} ({usedPct}), Free {free} ({freePct})", clean_storage_won:"WON attachments", clean_storage_crm:"CRM attachments", clean_storage_lost:"LOST attachments", clean_storage_vault:"Vault files", clean_storage_snapshots:"Data snapshots", clean_storage_other:"Other", clean_storage_free:"Free space", clean_storage_loading:"Counting Tencent Cloud storage…", clean_storage_error:"Storage count failed: ",
     nav: { dashboard:"Dashboard", crm:"Potential Projects", won:"Won Projects", archive:"Project Archive", lost:"Failed Projects", approvals:"Approvals", users:"User & Authorization", commission:"Personal Commission", crm_group:"Sales Management CRM", crm_group_exit:"Exit Sales Management CRM", parts_inventory:"Spare Parts Inventory", after_sales:"After-sales Service", install:"Installation Management", install_exit:"Exit Installation Management", install_ph:"Under development, coming soon", install_tab_board:"Installation Progress Dashboard", install_tab_detail:"Installation Detail Management", install_tab_files:"Project Documents", install_tab_shared:"Installation Shared Files", lang:"Lang", logout:"Logout", role_admin:"(admin)", export_pdf:"Export PDF", fit:"Fit", fit_exit:"100%", fit_tip:"Fit table to screen width; double-tap the table or tap again to restore", inst_proj_back:"Back to List", inst_proj_install:"Installation", inst_proj_ph:"Under development, coming soon", inst_proj_tab_zone:"Farm Buildings & Zones", inst_proj_tab_ship:"Shipping & Receiving Plan", inst_proj_tab_plan:"Detailed Installation Plan", inst_proj_tab_material:"Material Management", inst_proj_tab_log:"Work Log" },
     /* Short labels used on phone landscape so all 6 tabs fit on one row */
-    nav_short: { dashboard:"Board", crm:"Potential", won:"Won", archive:"Archive", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm", crm_group:"Sales CRM", parts:"Parts", service:"Service", install:"Install" },
+    nav_short: { dashboard:"Board", crm:"Potential", won:"Won", archive:"Archive", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm", crm_group:"Sales CRM", parts_inventory:"Parts", after_sales:"Service", install:"Install" },
     empty: { dash_title:"Dashboard", dash_sub:"CRM + Won + Failed Analytics", dash_hint:"Analytics panel under development",
              dash_card_title:"Dashboard", dash_refresh:"Refresh", dash_loading:"Loading…", dash_load_failed:"Failed to load data",
              dash_potential_count:"Total Potential Projects", dash_potential_amt:"Total Potential Project Value",
@@ -9172,7 +9172,7 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     clean_title:"Dọn dẹp file thừa", clean_confirm:"Xác nhận xóa file không hợp lệ và file thừa còn sót sau khi xóa? Thao tác này không thể hoàn tác.", clean_ok:"Xác nhận xóa", clean_cancel:"Hủy", clean_success:"Dọn dẹp hoàn tất", clean_result:"Đã quét {total} đối tượng R2, tìm thấy {orphans} file thừa, đã xóa {deleted}, bỏ qua {skipped} file không được quản lý.", clean_no_orphans:"Không tìm thấy file thừa.", clean_forbidden:"Chỉ Tom mới có thể sử dụng tính năng này.", clean_error:"Yêu cầu dọn dẹp thất bại:", clean_report_title:"Báo cáo dọn dẹp", clean_report_summary:"Đã xóa {deleted} file rác (tìm thấy tổng cộng {total} file thừa).", clean_report_where:"Vị trí đã xóa (đường dẫn tương đối)", clean_report_close:"Đóng", clean_report_empty:"Không tìm thấy file rác để xóa; thư mục đã sạch.", clean_report_more:"(chỉ hiển thị 50 đầu; tổng {total})", clean_storage_title:"Dung lượng Tencent Cloud", clean_storage_summary:"Tổng {total}, Đã dùng {used} ({usedPct}), Còn trống {free} ({freePct})", clean_storage_won:"Tệp đính kèm WON", clean_storage_crm:"Tệp đính kèm CRM", clean_storage_lost:"Tệp đính kèm LOST", clean_storage_vault:"Tệp Vault", clean_storage_snapshots:"Snapshot dữ liệu", clean_storage_other:"Khác", clean_storage_free:"Còn trống", clean_storage_loading:"Đang thống kê dung lượng Tencent Cloud…", clean_storage_error:"Thống kê thất bại: ",
     nav: { dashboard:"Bảng điều khiển", crm:"Dự án tiềm năng", won:"Dự án Thắng", archive:"Lưu trữ dự án", lost:"Dự án thất bại", approvals:"Phê duyệt", users:"Người dùng & Ủy quyền", commission:"Hoa Hồng Cá Nhân", crm_group:"Quản lý bán hàng CRM", crm_group_exit:"Thoát quản lý bán hàng CRM", parts_inventory:"Quản lý kho phụ tùng", after_sales:"Dịch vụ hậu mãi", install:"Quản lý lắp đặt", install_exit:"Thoát quản lý lắp đặt", install_ph:"Đang phát triển, vui lòng chờ", install_tab_board:"Bảng tiến độ lắp đặt", install_tab_detail:"Quản lý chi tiết lắp đặt", install_tab_files:"Tài liệu riêng dự án", install_tab_shared:"Tài liệu chia sẻ lắp đặt", lang:"Ngôn ngữ", logout:"Đăng xuất", role_admin:"(quản trị)", export_pdf:"Xuất PDF", fit:"Vừa", fit_exit:"100%", fit_tip:"Thu nhỏ bảng vừa màn hình; nhấn đúp vào bảng để trở lại", inst_proj_back:"Về danh sách", inst_proj_install:"Lắp đặt", inst_proj_ph:"Đang phát triển, vui lòng chờ", inst_proj_tab_zone:"Số chuồng trang trại & Khu vực", inst_proj_tab_ship:"Kế hoạch gửi hàng & nhận hàng", inst_proj_tab_plan:"Kế hoạch lắp đặt chi tiết", inst_proj_tab_material:"Quản lý vật tư", inst_proj_tab_log:"Nhật ký công việc" },
     /* Nhãn ngắn dùng cho màn hình ngang để 6 tab vừa một hàng */
-    nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", archive:"Lưu trữ", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH", crm_group:"BH CRM", parts:"Phụ tùng", service:"Hậu mãi", install:"Lắp đặt" },
+    nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", archive:"Lưu trữ", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH", crm_group:"BH CRM", parts_inventory:"Phụ tùng", after_sales:"Hậu mãi", install:"Lắp đặt" },
     empty: { dash_title:"Bảng điều khiển", dash_sub:"Phân tích CRM + Thắng + Thất bại", dash_hint:"Bảng phân tích đang phát triển",
              dash_card_title:"Bảng dữ liệu", dash_refresh:"Làm mới", dash_loading:"Đang tải…", dash_load_failed:"Tải dữ liệu thất bại",
              dash_potential_count:"Tổng số dự án tiềm năng", dash_potential_amt:"Tổng giá trị dự án tiềm năng",
@@ -11716,7 +11716,7 @@ function applyTopbarLang() {
   // 盒子宽度由 LG.freezeTopbar 按「三语最长文案」算定，所以文案变、盒子不变 → 不闪跳。
   var _langNow = (window.CUR_LANG || CUR_LANG);
   var shortNav = (topbarCompact() && _langNow !== 'zh' && t.nav_short) ? t.nav_short : null;
-  var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', archive:'archive', lost:'lost', approvals:'approvals', users:'users', commission:'commission', crmgroup:'crm_group', parts:'parts_inventory', service:'after_sales', install:'install' };
+  var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', archive:'archive', lost:'lost', approvals:'approvals', users:'users', commission:'commission', crm_group:'crmgroup', parts_inventory:'parts', after_sales:'service', install:'install' };
   for (var k in menuMap) {
     var b = document.querySelector('.tb-item[data-view="'+menuMap[k]+'"]');
     var txt = (shortNav && shortNav[k]) ? shortNav[k] : nav[k];
@@ -11814,6 +11814,13 @@ window.LG = (function () {
     var d = dict(lang); if (!d) return null;
     if (shortMode && d.nav_short) return d.nav_short;
     return d.nav || null;
+  }
+  // ★NAV-KEY-FIX-20261127★ data-view 与三语键名不一致时按此映射取文案，避免量到 0 后被截成前两个字母
+  function navKeyFromView(v) {
+    if (v === 'crmgroup') return 'crm_group';
+    if (v === 'parts') return 'parts_inventory';
+    if (v === 'service') return 'after_sales';
+    return v;
   }
   function textW(txt, font) {
     var c = ctx(); if (!c || !txt) return 0;
@@ -11930,7 +11937,7 @@ window.LG = (function () {
       var f = '600 ' + sizes[i] + 'px ' + navFam;
       var ws = [], sum = 0, j;
       for (j = 0; j < all.length; j++) {                       // 含隐藏项：解锁后不挤别人
-        var wv = Math.ceil(maxNavW(all[j].getAttribute('data-view') || '', compact, f) + pad + buf);
+        var wv = Math.ceil(maxNavW(navKeyFromView(all[j].getAttribute('data-view') || ''), compact, f) + pad + buf);
         if (wv < 26) wv = 26;
         // ★CRM-GROUP-WIDTH-20261127★ 销售管理CRM 标签必须完整可见，禁止被短标签/紧凑模式压窄
         if (all[j].getAttribute('data-view') === 'crmgroup') wv = Math.max(wv, compact ? 140 : 180);
@@ -11947,7 +11954,7 @@ window.LG = (function () {
       var used = 0, k2;
       for (k2 = 0; k2 < pickW.length; k2++) used += pickW[k2];
       var slack = avail - (used + pickGap * (vis.length - 1));
-      var capGap = compact ? 14 : 28;
+      var capGap = compact ? 10 : 16;
       if (slack > 0) pickGap = Math.min(capGap, pickGap + Math.floor(slack / (vis.length - 1)));
     }
 
@@ -17738,7 +17745,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-27-Z334";  // 版本标记：Z334 = 改名销售管理CRM并修复宽度、安装管理右移、新增零配件库存管理与售后服务领航标签
+const PERM_BUILD = "build 2026-11-27-Z336";  // 版本标记：Z336 = 分组领航顶栏改为深橙色（含销售管理CRM与安装管理）；Z335 = 修复新领航标签三语映射/宽度/间距
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
