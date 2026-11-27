@@ -40,6 +40,23 @@ if (fs.existsSync(schemaPath)) {
   }
 }
 
+// ---- ★INST-LIB-PORT-20261125★ 独立项目资料（从 choice-lite 只读移植，不修改 choice-lite）----
+const LIB_DIR = path.join(DATA, "library");
+fs.mkdirSync(LIB_DIR, { recursive: true });
+db.exec(`
+  CREATE TABLE IF NOT EXISTS library_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER DEFAULT NULL,
+    filename TEXT NOT NULL,
+    original_name TEXT NOT NULL,
+    uploader TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now','localtime')),
+    size INTEGER DEFAULT 0,
+    is_contract INTEGER DEFAULT 0
+  )
+`);
+try { db.exec("CREATE INDEX IF NOT EXISTS idx_library_project ON library_files(project_id)"); } catch (e) {}
+
 // ---- 首次启动种管理员（空库时）----
 // 全新部署（方案 A）库为空，必须有一个可登录的管理员，否则任何人都登不进。
 // 密码用明文 66668888（与 Worker 新建用户分支一致，verifyPassword 对明文有兜底）。
@@ -118,6 +135,131 @@ app.use(express.static(DIST, {
     }
   }
 }));
+
+// ---- ★INST-LIB-PORT-20261125★ 独立项目资料 API（逻辑对齐 choice-lite，只读移植）----
+function libUser(req) {
+  let u = "";
+  try { u = authenticateRequest(req, db) || ""; } catch (e) {}
+  return String(u || req.get("X-User-Name") || "tom").toLowerCase();
+}
+function libSafeName(s) {
+  return String(s || "").replace(/[\\/:*?"<>|]/g, "_").slice(0, 180) || "file";
+}
+function libMime(name) {
+  const ext = String(path.extname(name || "").toLowerCase());
+  const m = {
+    ".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+    ".gif": "image/gif", ".webp": "image/webp", ".txt": "text/plain; charset=utf-8",
+    ".csv": "text/csv; charset=utf-8", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".xls": "application/vnd.ms-excel", ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".doc": "application/msword", ".zip": "application/zip"
+  };
+  return m[ext] || "application/octet-stream";
+}
+function parseMultipart(buf, boundary) {
+  const out = [];
+  if (!boundary) return out;
+  const delim = Buffer.from("--" + boundary);
+  let idx = 0;
+  while ((idx = buf.indexOf(delim, idx)) !== -1) {
+    let start = idx + delim.length;
+    if (buf.slice(start, start + 2).toString() === "--") break;
+    if (buf.slice(start, start + 2).toString() === "\r\n") start += 2;
+    const he = buf.indexOf("\r\n\r\n", start);
+    if (he < 0) break;
+    const head = buf.slice(start, he).toString("utf8");
+    const ds = he + 4;
+    const nx = buf.indexOf(delim, ds);
+    if (nx < 0) break;
+    let de = nx;
+    if (buf.slice(de - 2, de).toString() === "\r\n") de -= 2;
+    const nm = /name="([^"]*)"/i.exec(head);
+    const fm = /filename="([^"]*)"/i.exec(head);
+    out.push({ name: nm ? nm[1] : "", filename: fm ? fm[1] : null, data: buf.slice(ds, de) });
+    idx = nx;
+  }
+  return out;
+}
+
+app.get("/api/library/projects", (req, res) => {
+  try {
+    const rows = db.prepare("SELECT id, contract_no, customer FROM won_projects ORDER BY id DESC").all();
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: String(e && e.message || e) }); }
+});
+app.get("/api/library/files", (req, res) => {
+  try {
+    const pid = req.query.project_id;
+    const rows = (pid === undefined || pid === "" || pid === "null")
+      ? db.prepare("SELECT id, project_id, filename, original_name, uploader, created_at, size, is_contract FROM library_files WHERE project_id IS NULL ORDER BY created_at DESC").all()
+      : db.prepare("SELECT id, project_id, filename, original_name, uploader, created_at, size, is_contract FROM library_files WHERE project_id=? ORDER BY created_at DESC").all(Number(pid));
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: String(e && e.message || e) }); }
+});
+app.post("/api/library/upload", async (req, res) => {
+  try {
+    const buf = await rawBody(req);
+    const ct = String(req.get("content-type") || "");
+    const bm = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(ct);
+    const boundary = bm ? String(bm[1] || bm[2] || "").trim() : "";
+    const parts = parseMultipart(buf, boundary);
+    const files = parts.filter((p) => p.filename);
+    if (!files.length) return res.status(400).json({ error: "no file" });
+    const qp = req.query.project_id;
+    let pid = (qp === undefined || qp === "" || qp === "null") ? null : Number(qp);
+    const paths = parts.filter((p) => p.name === "paths").map((p) => p.data.toString("utf8"));
+    const user = libUser(req);
+    const uploaded = [];
+    files.forEach((p, i) => {
+      const rel = String(paths[i] || "").replace(/\\/g, "/").trim();
+      const display = rel || libSafeName(String(p.filename).replace(/\\/g, "/").split("/").pop());
+      const ext = path.extname(display).toLowerCase() || ".bin";
+      const fname = "lib_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10) + ext;
+      fs.writeFileSync(path.join(LIB_DIR, fname), p.data);
+      const info = db.prepare("INSERT INTO library_files (project_id, filename, original_name, uploader, size, is_contract) VALUES (?,?,?,?,?,0)").run(pid, fname, display, user, p.data.length);
+      uploaded.push({ ok: true, id: Number(info.lastInsertRowid), filename: fname, original_name: display, size: p.data.length });
+    });
+    res.json({ ok: true, uploaded, count: uploaded.length });
+  } catch (e) { res.status(500).json({ error: String(e && e.message || e) }); }
+});
+app.delete("/api/library/files/:id", (req, res) => {
+  try {
+    const row = db.prepare("SELECT filename FROM library_files WHERE id=?").get(Number(req.params.id));
+    if (!row) return res.status(404).json({ error: "not found" });
+    db.prepare("DELETE FROM library_files WHERE id=?").run(Number(req.params.id));
+    if (row.filename) {
+      try { const fp = path.join(LIB_DIR, row.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch (e) {}
+    }
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: String(e && e.message || e) }); }
+});
+app.put("/api/library/files/:id/rename", async (req, res) => {
+  try {
+    const raw = await rawBody(req);
+    const data = JSON.parse(raw.toString("utf8") || "{}");
+    const name = String(data.original_name || "").trim();
+    if (!name) return res.status(400).json({ error: "empty name" });
+    const info = db.prepare("UPDATE library_files SET original_name=? WHERE id=?").run(name, Number(req.params.id));
+    if (!info.changes) return res.status(404).json({ error: "not found" });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: String(e && e.message || e) }); }
+});
+app.get(["/api/library/files/:id/download", "/api/library/files/:id/raw", "/api/library/files/:id/preview"], (req, res) => {
+  try {
+    const row = db.prepare("SELECT filename, original_name FROM library_files WHERE id=?").get(Number(req.params.id));
+    if (!row || !row.filename) return res.status(404).json({ error: "not found" });
+    const fp = path.join(LIB_DIR, row.filename);
+    if (!fs.existsSync(fp)) return res.status(404).json({ error: "not found" });
+    res.setHeader("Content-Type", libMime(row.original_name || row.filename));
+    if (/\/download$/.test(req.path)) {
+      res.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodeURIComponent(row.original_name || row.filename));
+    } else if (/\/preview$/.test(req.path)) {
+      res.setHeader("Content-Disposition", "inline; filename*=UTF-8''" + encodeURIComponent(row.original_name || row.filename));
+      res.setHeader("X-Content-Type-Options", "nosniff");
+    }
+    fs.createReadStream(fp).pipe(res);
+  } catch (e) { res.status(500).json({ error: String(e && e.message || e) }); }
+});
 
 app.get("/api/tencent-usage", async (req, res) => {
   const username = authenticateRequest(req, db);

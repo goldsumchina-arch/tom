@@ -13,7 +13,7 @@ var globalLostData = [];
 var originalLostData = [];
 var lostSortState = [];
 var lostGroupState = {};
-var LOST_NEVER_HIDE_COLS = new Set([0, 1, 48]);
+var LOST_NEVER_HIDE_COLS = new Set([0, 1, 49]);
 
 // ==================== 工具函数 ====================
 // 报价单 PDF 字段值兼容：完整 URL 直接用；纯文件名（旧版本地数据）→ /uploads/<名>
@@ -38,7 +38,7 @@ function getFailReasonDisplay(val) {
 // ==================== 列定义 ====================
 // 失败项目 49 列：0-46 与 CRM 完全一致；47=失败原因；48=操作
 var LOST_COL_KEYS = [
-  'idx','quote_no','project_name','province','customer','bu','construction',
+  'idx','quote_no','project_name','province','customer','bu','sales_product','construction',
   'startup_pct','sign_pct','manager','manager_phone','company_info',
   'initial_quote_date','est_purchase_date','est_ship_date','quote_version','last_quote_date',
   'rate_rmb_vnd','rate_usd_vnd','incoterm',
@@ -52,16 +52,16 @@ var LOST_COL_KEYS = [
 
 // 排序字段映射：列索引 → 数据字段名（与 CRM 一致，47=失败原因，48=操作）
 var LOST_COL_KEY_MAP = {
-  0:'idx',1:'quote_no',2:'project_name',3:'province',4:'customer',5:'bu',6:'construction',
-  7:'startup_pct',8:'sign_pct',9:'manager',10:'manager_phone',11:'company_info',
-  12:'initial_quote_date',13:'est_purchase_date',14:'est_ship_date',15:'quote_version',16:'last_quote_date',
-  17:'rate_rmb_vnd',18:'rate_usd_vnd',19:'incoterm',
-  20:'q1_rmb',21:'q1_usd',22:'q1_vnd',23:'q2_rmb',24:'q2_usd',25:'q2_vnd',
-  26:'q3_rmb',27:'q3_usd',28:'q3_vnd',29:'q4_rmb',30:'q4_usd',31:'q4_vnd',
-  32:'q5_rmb',33:'q5_usd',34:'q5_vnd',35:'q6_rmb',36:'q6_usd',37:'q6_vnd',
-  38:'q7_rmb',39:'q7_usd',40:'q7_vnd',
-  41:'install_quoted',42:'pdf_equip',43:'pdf_install',44:'pdf_both',
-  45:'salesperson',46:'remark',47:'fail_reason',48:'id'
+  0:'idx',1:'quote_no',2:'project_name',3:'province',4:'customer',5:'bu',6:'sales_product',7:'construction',
+  8:'startup_pct',9:'sign_pct',10:'manager',11:'manager_phone',12:'company_info',
+  13:'initial_quote_date',14:'est_purchase_date',15:'est_ship_date',16:'quote_version',17:'last_quote_date',
+  18:'rate_rmb_vnd',19:'rate_usd_vnd',20:'incoterm',
+  21:'q1_rmb',22:'q1_usd',23:'q1_vnd',24:'q2_rmb',25:'q2_usd',26:'q2_vnd',
+  27:'q3_rmb',28:'q3_usd',29:'q3_vnd',30:'q4_rmb',31:'q4_usd',32:'q4_vnd',
+  33:'q5_rmb',34:'q5_usd',35:'q5_vnd',36:'q6_rmb',37:'q6_usd',38:'q6_vnd',
+  39:'q7_rmb',40:'q7_usd',41:'q7_vnd',
+  42:'install_quoted',43:'pdf_equip',44:'pdf_install',45:'pdf_both',
+  46:'salesperson',47:'remark',48:'fail_reason',49:'id'
 };
 
 // 列分组定义（用于折叠）——与潜在项目 CRM 完全一致：rate 合并、PDF 合并、Q1-Q7 合并
@@ -70,31 +70,32 @@ var LOST_GROUPS = [
   { label:'l3',  labelKey:'crm_province',          c:[3] },
   { label:'l4',  labelKey:'crm_customer',          c:[4] },
   { label:'l5',  labelKey:'crm_bu',                c:[5] },
-  { label:'l6',  labelKey:'crm_construction',      c:[6] },
-  { label:'l7',  labelKey:'crm_startup_pct',       c:[7] },
-  { label:'l8',  labelKey:'crm_sign_pct',          c:[8] },
-  { label:'l9',  labelKey:'crm_manager',           c:[9] },
-  { label:'l10', labelKey:'crm_manager_phone',     c:[10] },
-  { label:'l11', labelKey:'crm_company_info',      c:[11] },
-  { label:'l12', labelKey:'crm_initial_quote_date',c:[12] },
-  { label:'l13', labelKey:'crm_est_purchase_date', c:[13] },
-  { label:'l14', labelKey:'crm_est_ship_date',     c:[14] },
-  { label:'l15', labelKey:'crm_quote_version',     c:[15] },
-  { label:'l16', labelKey:'crm_last_quote_date',   c:[16] },
-  { label:'lrate', labelKey:'crm_rate_title', c:[17,18] },
-  { label:'l19', labelKey:'crm_incoterm',          c:[19] },
-  { label:'lQ1', labelKey:'crm_q1', c:[20,21,22] },
-  { label:'lQ2', labelKey:'crm_q2', c:[23,24,25] },
-  { label:'lQ3', labelKey:'crm_q3', c:[26,27,28] },
-  { label:'lQ4', labelKey:'crm_q4', c:[29,30,31] },
-  { label:'lQ5', labelKey:'crm_q5', c:[32,33,34] },
-  { label:'lQ6', labelKey:'crm_q6', c:[35,36,37] },
-  { label:'lQ7', labelKey:'crm_q7', c:[38,39,40] },
-  { label:'l41', labelKey:'crm_install_quoted',    c:[41] },
-  { label:'ldoc', labelKey:'crm_pdf_title', c:[42,43,44] },
-  { label:'l45', labelKey:'crm_salesperson',       c:[45] },
-  { label:'l46', labelKey:'crm_remark',            c:[46] },
-  { label:'l47', labelKey:'won_fail_reason', label:'失败原因', c:[47] }
+  { label:'c5s',  labelKey:'sales_product',        c:[6] },
+  { label:'l6',  labelKey:'crm_construction',      c:[7] },
+  { label:'l7',  labelKey:'crm_startup_pct',       c:[8] },
+  { label:'l8',  labelKey:'crm_sign_pct',          c:[9] },
+  { label:'l9',  labelKey:'crm_manager',           c:[10] },
+  { label:'l10', labelKey:'crm_manager_phone',     c:[11] },
+  { label:'l11', labelKey:'crm_company_info',      c:[12] },
+  { label:'l12', labelKey:'crm_initial_quote_date',c:[13] },
+  { label:'l13', labelKey:'crm_est_purchase_date', c:[14] },
+  { label:'l14', labelKey:'crm_est_ship_date',     c:[15] },
+  { label:'l15', labelKey:'crm_quote_version',     c:[16] },
+  { label:'l16', labelKey:'crm_last_quote_date',   c:[17] },
+  { label:'lrate', labelKey:'crm_rate_title', c:[18,19] },
+  { label:'l19', labelKey:'crm_incoterm',          c:[20] },
+  { label:'lQ1', labelKey:'crm_q1', c:[21,22,23] },
+  { label:'lQ2', labelKey:'crm_q2', c:[24,25,26] },
+  { label:'lQ3', labelKey:'crm_q3', c:[27,28,29] },
+  { label:'lQ4', labelKey:'crm_q4', c:[30,31,32] },
+  { label:'lQ5', labelKey:'crm_q5', c:[33,34,35] },
+  { label:'lQ6', labelKey:'crm_q6', c:[36,37,38] },
+  { label:'lQ7', labelKey:'crm_q7', c:[39,40,41] },
+  { label:'l41', labelKey:'crm_install_quoted',    c:[42] },
+  { label:'ldoc', labelKey:'crm_pdf_title', c:[43,44,45] },
+  { label:'l45', labelKey:'crm_salesperson',       c:[46] },
+  { label:'l46', labelKey:'crm_remark',            c:[47] },
+  { label:'l47', labelKey:'won_fail_reason', label:'失败原因', c:[48] }
 ];
 
 LOST_GROUPS.forEach(function(g){ lostGroupState[g.label] = false; });
@@ -102,7 +103,7 @@ LOST_GROUPS.forEach(function(g){ lostGroupState[g.label] = false; });
 // ==================== colgroup ====================
 function buildLostColGroup() {
   var html = '<colgroup>';
-  for (var i = 0; i < 49; i++) {
+  for (var i = 0; i < 50; i++) {
     var cls = '';
     if (i === 0) cls = ' class="col-fixed col-never-hide"';
     else if (i === 1) cls = ' class="col-fixed-2 col-never-hide"';
@@ -139,7 +140,7 @@ function syncLostColVisibility() {
   LOST_GROUPS.forEach(function(g) {
     if (lostGroupState[g.label]) g.c.forEach(function(c) { if (!LOST_NEVER_HIDE_COLS.has(c)) hidden[c] = 1; });
   });
-  for (var c = 0; c < 49; c++) {
+  for (var c = 0; c < 50; c++) {
     if (LOST_NEVER_HIDE_COLS.has(c)) continue;
     var want = !!hidden[c] || (typeof curHiddenFor === 'function' && curHiddenFor(c, 'q'));
     tbl.querySelectorAll('[data-col="' + c + '"]').forEach(function(el) {
@@ -249,7 +250,7 @@ function renderLostThead() {
     cls = cls || '';
     if (i === 0) cls += ' col-fixed col-never-hide';
     else if (i === 1) cls += ' col-fixed-2 col-never-hide';
-    if (i === 48) cls += ' col-never-hide';
+    if (i === 49) cls += ' col-never-hide';
     var w = '';
     if (i === 0) w = ' style="width:40px;min-width:40px;max-width:40px;"';
     else if (i === 1) w = ' style="width:90px;min-width:90px;max-width:90px;"';
@@ -264,33 +265,34 @@ function renderLostThead() {
   html += hdr(3,  t.crm_province,                'won-cyan', 1, true);
   html += hdr(4,  t.crm_customer,                'won-cyan', 1, true);
   html += hdr(5,  t.crm_bu,                      'won-cyan', 1, true);
-  html += hdr(6,  t.crm_construction,            'won-pink', 1, true);
-  html += hdr(7,  t.crm_startup_pct,             'won-pink', 1, true);
-  html += hdr(8,  t.crm_sign_pct,                'won-pink', 1, true);
-  html += hdr(9,  t.crm_manager,                 'won-blue', 1, true);
-  html += hdr(10, t.crm_manager_phone,           'won-blue', 1, true);
-  html += hdr(11, t.crm_company_info,            'won-blue', 1, true);
-  html += hdr(12, t.crm_initial_quote_date,      'won-yellow', 1, true);
-  html += hdr(13, t.crm_est_purchase_date,       'won-yellow', 1, true);
-  html += hdr(14, t.crm_est_ship_date,           'won-yellow', 1, true);
-  html += hdr(15, t.crm_quote_version,           'won-yellow', 1, true);
-  html += hdr(16, t.crm_last_quote_date,         'won-yellow', 1, true);
-  html += hdr(17, t.crm_rate_title || 'Exchange Rate', 'rate', 2, false);
-  html += hdr(19, t.crm_incoterm,                'hdr', 1, true);
-  html += hdr(20, t.crm_q1 || 'Q1',              'won-qhdr', 3, false);
-  html += hdr(23, t.crm_q2 || 'Q2',              'won-qhdr', 3, false);
-  html += hdr(26, t.crm_q3 || 'Q3',              'won-qhdr', 3, false);
-  html += hdr(29, t.crm_q4 || 'Q4',              'won-qhdr', 3, false);
-  html += hdr(32, t.crm_q5 || 'Q5',              'won-qhdr', 3, false);
-  html += hdr(35, t.crm_q6 || 'Q6',              'won-qhdr', 3, false);
-  html += hdr(38, t.crm_q7 || 'Q7',              'won-qhdr', 3, false);
-  html += hdr(41, t.crm_install_quoted,          'won-p1', 1, true);
-  html += hdr(42, t.crm_pdf_title || 'Quote PDF','won-pink', 3, false);
-  html += hdr(45, t.crm_salesperson,             'won-blue', 1, true);
-  html += hdr(46, t.crm_remark,                  'won-blue', 1, true);
+  html += hdr(6,  t.sales_product,           'won-cyan', 1, true);
+  html += hdr(7,  t.crm_construction,            'won-pink', 1, true);
+  html += hdr(8,  t.crm_startup_pct,             'won-pink', 1, true);
+  html += hdr(9,  t.crm_sign_pct,                'won-pink', 1, true);
+  html += hdr(10,  t.crm_manager,                 'won-blue', 1, true);
+  html += hdr(11, t.crm_manager_phone,           'won-blue', 1, true);
+  html += hdr(12, t.crm_company_info,            'won-blue', 1, true);
+  html += hdr(13, t.crm_initial_quote_date,      'won-yellow', 1, true);
+  html += hdr(14, t.crm_est_purchase_date,       'won-yellow', 1, true);
+  html += hdr(15, t.crm_est_ship_date,           'won-yellow', 1, true);
+  html += hdr(16, t.crm_quote_version,           'won-yellow', 1, true);
+  html += hdr(17, t.crm_last_quote_date,         'won-yellow', 1, true);
+  html += hdr(18, t.crm_rate_title || 'Exchange Rate', 'rate', 2, false);
+  html += hdr(20, t.crm_incoterm,                'hdr', 1, true);
+  html += hdr(21, t.crm_q1 || 'Q1',              'won-qhdr', 3, false);
+  html += hdr(24, t.crm_q2 || 'Q2',              'won-qhdr', 3, false);
+  html += hdr(27, t.crm_q3 || 'Q3',              'won-qhdr', 3, false);
+  html += hdr(30, t.crm_q4 || 'Q4',              'won-qhdr', 3, false);
+  html += hdr(33, t.crm_q5 || 'Q5',              'won-qhdr', 3, false);
+  html += hdr(36, t.crm_q6 || 'Q6',              'won-qhdr', 3, false);
+  html += hdr(39, t.crm_q7 || 'Q7',              'won-qhdr', 3, false);
+  html += hdr(42, t.crm_install_quoted,          'won-p1', 1, true);
+  html += hdr(43, t.crm_pdf_title || 'Quote PDF','won-pink', 3, false);
+  html += hdr(46, t.crm_salesperson,             'won-blue', 1, true);
+  html += hdr(47, t.crm_remark,                  'won-blue', 1, true);
   // 失败信息（本模块特有）
-  html += hdr(47, t.won_fail_reason || '失败原因', 'won-pink', 1, true);
-  html += hdr(48, t.crm_action || 'Action',      'won-action-yellow', 1, false);
+  html += hdr(48, t.won_fail_reason || '失败原因', 'won-pink', 1, true);
+  html += hdr(49, t.crm_action || 'Action',      'won-action-yellow', 1, false);
 
   html += '</tr>';
   return html;
@@ -300,33 +302,33 @@ function renderLostThead() {
 function renderLostFakeSubHeaderRow() {
   var t = T();
   var html = '<tr class="fake-header-row">';
-  for (var i = 0; i < 49; i++) {
+  for (var i = 0; i < 50; i++) {
     var cls = 'fake-hdr ';
     var label = '';
-    if      (i>=0 && i<=5)  { cls+='won-cyan'; }
-    else if (i>=6 && i<=8)  { cls+='won-pink'; }
-    else if (i>=9 && i<=11) { cls+='won-blue'; }
-    else if (i>=12 && i<=16){ cls+='won-yellow'; }
-    else if (i===17) { cls+='rate';    label='RMB-VND'; }
-    else if (i===18) { cls+='rate';    label='USD-VND'; }
-    else if (i===20||i===23||i===26||i===29||i===32||i===35||i===38) { cls+='won-rmb'; label=t.crm_rmb || 'RMB'; }
-    else if (i===21||i===24||i===27||i===30||i===33||i===36||i===39) { cls+='won-usd'; label=t.crm_usd || 'USD'; }
-    else if (i===22||i===25||i===28||i===31||i===34||i===37||i===40) { cls+='won-vnd'; label=t.crm_vnd || 'VND'; }
-    else if (i===41) { cls+='won-p1'; }
-    else if (i===42) { cls+='won-pink'; label=t.crm_pdf_equip||'Equip'; }
-    else if (i===43) { cls+='won-pink'; label=t.crm_pdf_install||'Install'; }
-    else if (i===44) { cls+='won-pink'; label=t.crm_pdf_both||'Both'; }
-    else if (i===45) { cls+='won-blue'; }
+    if      (i>=0 && i<=6)  { cls+='won-cyan'; }
+    else if (i>=7 && i<=9)  { cls+='won-pink'; }
+    else if (i>=10 && i<=12) { cls+='won-blue'; }
+    else if (i>=13 && i<=17){ cls+='won-yellow'; }
+    else if (i===18) { cls+='rate';    label='RMB-VND'; }
+    else if (i===19) { cls+='rate';    label='USD-VND'; }
+    else if (i===21||i===24||i===27||i===30||i===33||i===36||i===39) { cls+='won-rmb'; label=t.crm_rmb || 'RMB'; }
+    else if (i===22||i===25||i===28||i===31||i===34||i===37||i===40) { cls+='won-usd'; label=t.crm_usd || 'USD'; }
+    else if (i===23||i===26||i===29||i===32||i===35||i===38||i===41) { cls+='won-vnd'; label=t.crm_vnd || 'VND'; }
+    else if (i===42) { cls+='won-p1'; }
+    else if (i===43) { cls+='won-pink'; label=t.crm_pdf_equip||'Equip'; }
+    else if (i===44) { cls+='won-pink'; label=t.crm_pdf_install||'Install'; }
+    else if (i===45) { cls+='won-pink'; label=t.crm_pdf_both||'Both'; }
     else if (i===46) { cls+='won-blue'; }
-    else if (i===47) { cls+='won-pink'; }
-    else if (i===48) { cls+='won-action-yellow'; }
+    else if (i===47) { cls+='won-blue'; }
+    else if (i===48) { cls+='won-pink'; }
+    else if (i===49) { cls+='won-action-yellow'; }
     if (i===0) cls += ' col-fixed col-never-hide';
     else if (i===1) cls += ' col-fixed-2 col-never-hide';
-    else if (i===48) cls += ' col-never-hide';
+    else if (i===49) cls += ' col-never-hide';
     var st = '';
     if (i===0) st = ' style="width:40px;min-width:40px;max-width:40px;"';
     else if (i===1) st = ' style="width:90px;min-width:90px;max-width:90px;"';
-    var sortable = (i>=17 && i<=18) || (i>=20 && i<=40) || (i>=42 && i<=44);
+    var sortable = (i>=18 && i<=19) || (i>=21 && i<=41) || (i>=43 && i<=45);
     if (sortable) {
       cls += ' sortable-cell';
       html += '<td class="' + cls + '"' + st + ' data-col="' + i + '">' + label +
@@ -346,7 +348,7 @@ function renderLostData(list) {
   list.forEach(function(p, rowIdx) {
     var rowNo = rowIdx + 1;
     html += '<tr class="won-data-row' + (rowIdx % 2 === 1 ? ' zebra-even' : '') + '">';
-    for (var i = 0; i < 49; i++) {
+    for (var i = 0; i < 50; i++) {
       var cls = 'hdr';
       var val = p[LOST_COL_KEYS[i]];
       var dc = ' data-col="' + i + '"';
@@ -360,22 +362,23 @@ function renderLostData(list) {
         case 3:  cls='won-cyan'; val=(typeof provinceDisplay === 'function') ? provinceDisplay(val) : esc(val); break;
         case 4:  cls='won-cyan'; val=esc(val); break;
         case 5:  cls='won-cyan'; val=buDisplay(val); break;
-        case 6:  cls='won-pink'; val=constructionDisplay(val); break;
-        case 7:  cls='won-pink'; val=(val !== undefined && val !== null && val !== '') ? val+'%' : ''; break;
+        case 6:  cls='won-cyan'; val=(typeof salesProductDisplay==='function') ? salesProductDisplay(val) : esc(val); break;
+        case 7:  cls='won-pink'; val=constructionDisplay(val); break;
         case 8:  cls='won-pink'; val=(val !== undefined && val !== null && val !== '') ? val+'%' : ''; break;
-        case 9:  cls='won-blue'; val=esc(val); break;
-        case 10: cls='won-blue'; val=esc(val); break;
+        case 9:  cls='won-pink'; val=(val !== undefined && val !== null && val !== '') ? val+'%' : ''; break;
+        case 10:  cls='won-blue'; val=esc(val); break;
         case 11: cls='won-blue'; val=esc(val); break;
-        case 12: cls='won-yellow'; val=ymdToDmy(val); break;
+        case 12: cls='won-blue'; val=esc(val); break;
         case 13: cls='won-yellow'; val=ymdToDmy(val); break;
         case 14: cls='won-yellow'; val=ymdToDmy(val); break;
-        case 15: cls='won-yellow'; val=esc(val); break;
-        case 16: cls='won-yellow'; val=ymdToDmy(val); break;
-        case 17: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? (Math.round(Number(val)||0)).toLocaleString('en-US') : ''; break;
+        case 15: cls='won-yellow'; val=ymdToDmy(val); break;
+        case 16: cls='won-yellow'; val=esc(val); break;
+        case 17: cls='won-yellow'; val=ymdToDmy(val); break;
         case 18: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? (Math.round(Number(val)||0)).toLocaleString('en-US') : ''; break;
-        case 19: cls='hdr'; val=esc(val); break;
-        case 20: case 23: case 26: case 29: case 32: case 35: case 38: {
-          var qMap={20:1,23:2,26:3,29:4,32:5,35:6,38:7};
+        case 19: cls='rate'; val=(val !== undefined && val !== null && val !== '') ? (Math.round(Number(val)||0)).toLocaleString('en-US') : ''; break;
+        case 20: cls='hdr'; val=esc(val); break;
+        case 21: case 24: case 27: case 30: case 33: case 36: case 39: {
+          var qMap={21:1,24:2,27:3,30:4,33:5,36:6,39:7};
           var q=qMap[i];
           var rmb=fmtMoney(p['q'+q+'_rmb'],'rmb');
           var usd=fmtMoney(p['q'+q+'_usd'],'usd');
@@ -386,10 +389,10 @@ function renderLostData(list) {
           html+='<td class="won-vnd" data-col="'+(i+2)+'">'+vnd+'</td>';
           continue;
         }
-        case 21: case 24: case 27: case 30: case 33: case 36: case 39:
         case 22: case 25: case 28: case 31: case 34: case 37: case 40:
+        case 23: case 26: case 29: case 32: case 35: case 38: case 41:
           continue;
-        case 41: {
+        case 42: {
           var insRaw = val;
           var insYes = (insRaw === '是' || insRaw === '1' || insRaw === 1 || insRaw === true ||
                         insRaw === 'Yes' || insRaw === 'yes' || insRaw === 'Y');
@@ -397,18 +400,18 @@ function renderLostData(list) {
           html += '<td class="won-p1"' + dc + '><span style="color:' + insColor + ';font-weight:' + (insYes ? '700' : '400') + ';">' + crmInstallDisplay(insRaw) + '</span></td>';
           continue;
         }
-        case 42: case 43: case 44: {
+        case 43: case 44: case 45: {
           // 附件不随 CRM→LOST 展示：LOST 界面一律显示"无PDF"；
           // 数据保留在行内，转回 CRM 后可重新查看；删除 LOST 时同步删除附件文件
           cls='won-pink';
           html+='<td class="won-pink"'+dc+'><span style="color:#aaa">'+(t.crm_no_pdf||'No PDF')+'</span></td>';
           continue;
         }
-        case 45: cls='won-blue'; val=esc(val); break;
+        case 46: cls='won-blue'; val=esc(val); break;
         // 备注(46)：三语按当前表头语言显示（转失败项目继承 CRM 三语列时生效；旧单语数据回退 p.remark）
-        case 46: cls='won-blue'; val=esc(typeof rmLangVal==='function' ? rmLangVal(p, 'remark') : val); break;
-        case 47: cls='won-pink'; val=esc(getFailReasonDisplay(val)); break; // 失败原因（按语言切换）
-        case 48: {
+        case 47: cls='won-blue'; val=esc(typeof rmLangVal==='function' ? rmLangVal(p, 'remark') : val); break;
+        case 48: cls='won-pink'; val=esc(getFailReasonDisplay(val)); break; // 失败原因（按语言切换）
+        case 49: {
           var viewBtn='<button class="btn-sm btn-view" onclick="viewLost('+p.id+')">'+(t.crm_view||t.lostView||'View')+'</button>';
           // 失败项目操作按钮统一全部渲染；显隐完全由 LOST-D3 / LOST-R1 权限决策控制
           // （applyLostRowPerms 兜底隐藏），不再按 canWriteRow 在行生成阶段阉割。
@@ -425,7 +428,7 @@ function renderLostData(list) {
     html+='</tr>';
   });
   if (list.length === 0) {
-    html+='<tr><td colspan="49" style="text-align:center;padding:40px;color:#999">'+(t.crm_empty||'No data')+'</td></tr>';
+    html+='<tr><td colspan="50" style="text-align:center;padding:40px;color:#999">'+(t.crm_empty||'No data')+'</td></tr>';
   }
   return html;
 }
@@ -553,7 +556,7 @@ function loadLost(isAuto) {
   // thead 重建后立即按单一事实源恢复列可见性与组头 colspan（含无数据路径）
   if (typeof syncLostColVisibility === 'function') syncLostColVisibility();
 
-  var emptyRow = '<tr><td colspan="49" style="text-align:center;padding:40px;color:#999">' + ((T().lost_empty) || ((T().crm_empty) || 'No data')) + '</td></tr>';
+  var emptyRow = '<tr><td colspan="50" style="text-align:center;padding:40px;color:#999">' + ((T().lost_empty) || ((T().crm_empty) || 'No data')) + '</td></tr>';
 
   fetch(lostApiBase() + '/api/lost-projects', { credentials: 'include', headers: (typeof authHeaders==='function'?authHeaders():{}) })
     .then(function(r){ return r.json(); })
@@ -664,7 +667,7 @@ function updateLostTheadTextOnly() {
   } catch (e) { console.warn('[lost-lang] thead text sync failed:', e); }
 }
 
-// 表格侧备注补翻兜底（行定位 tr.won-data-row 序号 + td[data-col="46"]）
+// 表格侧备注补翻兜底（行定位 tr.won-data-row 序号 + td[data-col="47"]）
 function _lostFillMissingRemarks(tb) {
   if (typeof ptTranslateText !== 'function') return;
   if (typeof navigator !== 'undefined' && !navigator.onLine) return;
@@ -692,7 +695,7 @@ function _lostFillMissingRemarks(tb) {
       row.remark_zh = o.zh; row.remark_en = o.en; row.remark_vi = o.vi;
       var tr = trs[i];
       if (tr) {
-        var cell = tr.querySelector('td[data-col="46"]');
+        var cell = tr.querySelector('td[data-col="47"]');
         if (cell) cell.textContent = res;
       }
     }).catch(function(){ row.__rmFail[L] = Date.now(); });
@@ -942,7 +945,12 @@ function applyLostLang() {
 // 删除失败项目：按决策分流（与转回潜在项目一致）
 //   保留默认/特别授权 → 普通确认框（无红字）→ 直接删除，无需审批
 //   发起审批 → 确认框带红字「单次生效」→ 提交单次审批，审批人通过后由轮询自动删除
+// ★WON-DEL-PWD-20261125★ 失败项目删除：与签约项目一致，先输密码 can-delete，再弹询问框
 function deleteLost(id) {
+  if (typeof delPwdAsk === 'function') { delPwdAsk(function () { deleteLostAfterPwd(id); }); return; }
+  deleteLostAfterPwd(id);
+}
+function deleteLostAfterPwd(id) {
   var t = T();
   var dec = (typeof normDecision === 'function' && typeof curRawDecision === 'function') ? normDecision(curRawDecision('LOST-D3')) : 'def';
   var isApprove = (dec === 'approve');
@@ -1080,9 +1088,9 @@ function onLostSumOver(e) {
   var tr = td.closest('tr');
   if (!tr || !tr.classList.contains('fake-header-row')) { hideLostSumTip(); return; }
   var colIdx = parseInt(td.dataset.col, 10);
-  if (isNaN(colIdx) || colIdx < 20 || colIdx > 40) { hideLostSumTip(); return; }
-  var q = Math.floor((colIdx - 20) / 3) + 1;
-  var kind = (colIdx - 20) % 3;
+  if (isNaN(colIdx) || colIdx < 21 || colIdx > 41) { hideLostSumTip(); return; }
+  var q = Math.floor((colIdx - 21) / 3) + 1;
+  var kind = (colIdx - 21) % 3;
   var key = 'q' + q + '_' + ['rmb', 'usd', 'vnd'][kind];
   var sum = 0;
   (globalLostData || []).forEach(function(row) { sum += Number(row[key]) || 0; });
@@ -1306,6 +1314,9 @@ function _lostReportRender() {
   html += field(t.crm_province || 'Province', esc(provDisp));
   html += field(t.crm_customer || 'Customer', esc(row.customer));
   html += field(t.crm_bu || 'BU', esc(buDisp));
+  // ★CRM-SALES-PRODUCT-20261125：失败项目报告显示销售产品（随 CRM→LOST 列名映射带入）
+  var spDisp = (typeof salesProductDisplay === 'function') ? salesProductDisplay(row.sales_product) : esc(row.sales_product);
+  html += field(t.sales_product || 'Sales Product', esc(spDisp));
   html += field(t.crm_manager || 'Manager', esc(row.manager));
   html += field(t.crm_manager_phone || 'Manager Phone', esc(row.manager_phone));
   html += field(t.crm_company_info || 'Company Info', esc(row.company_info));

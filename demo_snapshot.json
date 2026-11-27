@@ -6216,7 +6216,8 @@
     "warranty_vnd": 868608000,
     "warranty_start": "29-10-2024",
     "warranty_end": "29-10-2025",
-    "owner_user_id": "cuong"
+    "owner_user_id": "cuong",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 2,
@@ -6314,7 +6315,8 @@
     "warranty_vnd": 1018944000,
     "warranty_start": "26-11-2024",
     "warranty_end": "26-11-2025",
-    "owner_user_id": "cuong"
+    "owner_user_id": "cuong",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 3,
@@ -6412,7 +6414,8 @@
     "warranty_vnd": 751680000,
     "warranty_start": "16-12-2024",
     "warranty_end": "16-12-2025",
-    "owner_user_id": "james"
+    "owner_user_id": "james",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 4,
@@ -6510,7 +6513,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "linh"
+    "owner_user_id": "linh",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 5,
@@ -6608,7 +6612,8 @@
     "warranty_vnd": 1202688000,
     "warranty_start": "23-02-2025",
     "warranty_end": "23-02-2027",
-    "owner_user_id": "ali"
+    "owner_user_id": "ali",
+    "sales_product": "SERVICE"
    },
    {
     "id": 6,
@@ -6706,7 +6711,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "khoa"
+    "owner_user_id": "khoa",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 7,
@@ -6804,7 +6810,8 @@
     "warranty_vnd": 935424000,
     "warranty_start": "13-04-2025",
     "warranty_end": "13-04-2027",
-    "owner_user_id": "tom"
+    "owner_user_id": "tom",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 8,
@@ -6902,7 +6909,8 @@
     "warranty_vnd": 801792000,
     "warranty_start": "26-05-2025",
     "warranty_end": "26-05-2026",
-    "owner_user_id": "cuong"
+    "owner_user_id": "cuong",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 9,
@@ -7000,7 +7008,8 @@
     "warranty_vnd": 1085760000,
     "warranty_start": "04-07-2025",
     "warranty_end": "04-07-2026",
-    "owner_user_id": "james"
+    "owner_user_id": "james",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 10,
@@ -7098,7 +7107,8 @@
     "warranty_vnd": 985536000,
     "warranty_start": "19-10-2025",
     "warranty_end": "19-10-2026",
-    "owner_user_id": "linh"
+    "owner_user_id": "linh",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 11,
@@ -7196,7 +7206,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "ali"
+    "owner_user_id": "ali",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 12,
@@ -7294,7 +7305,8 @@
     "warranty_vnd": 1169280000,
     "warranty_start": "13-12-2025",
     "warranty_end": "06-06-2027",
-    "owner_user_id": "khoa"
+    "owner_user_id": "khoa",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 13,
@@ -7392,7 +7404,8 @@
     "warranty_vnd": 851904000,
     "warranty_start": "10-01-2026",
     "warranty_end": "10-01-2027",
-    "owner_user_id": "tom"
+    "owner_user_id": "tom",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 14,
@@ -7490,7 +7503,8 @@
     "warranty_vnd": 1102464000,
     "warranty_start": "25-02-2026",
     "warranty_end": "25-02-2027",
-    "owner_user_id": "cuong"
+    "owner_user_id": "cuong",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 15,
@@ -7588,7 +7602,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "james"
+    "owner_user_id": "james",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 16,
@@ -7686,7 +7701,8 @@
     "warranty_vnd": 952128000,
     "warranty_start": "30-04-2026",
     "warranty_end": "22-10-2027",
-    "owner_user_id": "linh"
+    "owner_user_id": "linh",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 17,
@@ -7784,7 +7800,8 @@
     "warranty_vnd": 818496000,
     "warranty_start": "30-05-2026",
     "warranty_end": "30-05-2027",
-    "owner_user_id": "ali"
+    "owner_user_id": "ali",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 18,
@@ -7882,7 +7899,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "khoa"
+    "owner_user_id": "khoa",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 19,
@@ -7980,7 +7998,8 @@
     "warranty_vnd": 1035648000,
     "warranty_start": "24-10-2026",
     "warranty_end": "16-04-2028",
-    "owner_user_id": "tom"
+    "owner_user_id": "tom",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 20,
@@ -8078,7 +8097,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "cuong"
+    "owner_user_id": "cuong",
+    "sales_product": "PART"
    },
    {
     "id": 21,
@@ -8176,7 +8196,8 @@
     "warranty_vnd": 768384000,
     "warranty_start": "23-12-2026",
     "warranty_end": "22-12-2028",
-    "owner_user_id": "james"
+    "owner_user_id": "james",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 22,
@@ -8274,7 +8295,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "linh"
+    "owner_user_id": "linh",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 23,
@@ -8372,7 +8394,8 @@
     "warranty_vnd": 1152576000,
     "warranty_start": "13-02-2027",
     "warranty_end": "06-08-2028",
-    "owner_user_id": "ali"
+    "owner_user_id": "ali",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 24,
@@ -8470,7 +8493,8 @@
     "warranty_vnd": 0,
     "warranty_start": "",
     "warranty_end": "",
-    "owner_user_id": "khoa"
+    "owner_user_id": "khoa",
+    "sales_product": "SYSTEM"
    },
    {
     "id": 25,
@@ -8568,7 +8592,8 @@
     "warranty_vnd": 1269504000,
     "warranty_start": "24-04-2027",
     "warranty_end": "23-04-2029",
-    "owner_user_id": "tom"
+    "owner_user_id": "tom",
+    "sales_product": "PART"
    }
   ],
   "approval_requests": [

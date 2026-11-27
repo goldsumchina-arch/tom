@@ -444,6 +444,21 @@ async function findOriginCrmId(env, lostRow) {
   } catch (e) { return 0; }
 }
 
+// ★WON-ARCHIVE-20261125★ 项目结束存档标记列（幂等补列，不新增物理表：
+//   原行原样留在 won_projects，只打标记，附件/审批/佣金/文件引用全部保持有效）
+let _wonArchiveColEnsured = false;
+async function ensureWonArchiveCol(env) {
+  if (_wonArchiveColEnsured) return;
+  try {
+    await env.DB.prepare("ALTER TABLE won_projects ADD COLUMN archive_status TEXT DEFAULT ''").run();
+    _wonArchiveColEnsured = true;
+  } catch (e) {
+    const m = String((e && e.message) || e).toLowerCase();
+    if (m.includes("duplicate") || m.includes("exists")) _wonArchiveColEnsured = true;
+    // 其它错误（锁表等）不置标记，下次请求重试，避免列没建成却永久跳过
+  }
+}
+
 // 主路由
 // ============================================================
 
@@ -456,6 +471,7 @@ export async function handleWonLost(request, env, url, pathname) {
   // ★ WON 省份映射表（V40）：建表 + 自动填充缺省省份（幂等，不阻塞请求）
   try { await ensureWonProvinceMap(env); } catch (e) { /* 不阻塞请求 */ }
   try { await ensureWonSalesProductMap(env); } catch (e) { /* 不阻塞请求 */ }
+  try { await ensureWonArchiveCol(env); } catch (e) { /* 不阻塞请求 */ }
   try { await migrateWonProvinceFill(env); } catch (e) { /* 不阻塞请求 */ }
   // ★ 省份归一化迁移（幂等）：lost_projects 的英文/中文变体 → 标准名
   //   无匹配省份默认：LOST → 清化省（用户指定 V28）。won_projects 无 province 列
@@ -474,7 +490,8 @@ export async function handleWonLost(request, env, url, pathname) {
   // GET /api/won-projects
   if (pathname === "/api/won-projects" && request.method === "GET") {
     const vs = await visibleScope(env, username, "WON-L1");
-    let sql = "SELECT * FROM won_projects WHERE lower(salesperson) <> 'agi-gs internal'";
+    // ★WON-ARCHIVE-20261125★ 已结束存档的项目不再出现在签约项目列表
+    let sql = "SELECT * FROM won_projects WHERE (archive_status IS NULL OR archive_status='') AND lower(salesperson) <> 'agi-gs internal'";
     const params = [];
     if (vs.clause) {
       sql += " AND (" + vs.clause + ")";
@@ -489,6 +506,8 @@ export async function handleWonLost(request, env, url, pathname) {
       const sm = await loadWonSalesProductMap(env);
       out.forEach((r) => { r.province = pm[r.id] || ""; r.sales_product = sm[r.id] || "PART"; });
     } catch (e) { /* 映射表异常不阻塞列表 */ }
+    // ★WON-BU-ALIAS-20261126★ BU 在签约项目里存于 doc_remark；派生只读别名，供安装进度表使用，且不进入 P345 敏感剥离范围
+    out.forEach((r) => { r.bu = r.doc_remark || ""; });
     if (await wonP345Hidden(env, username)) stripWonP345(out);
     out.forEach(expandWonRemarks);
     out.forEach(expandPaymentTerms);
@@ -704,7 +723,68 @@ export async function handleWonLost(request, env, url, pathname) {
     return { body: { ok: true }, status: 200 };
   }
 
+  // ================= 项目结束存档（★WON-ARCHIVE-20261125★） =================
+  // 设计：不新建物理表、不删除原行 —— 只在 won_projects 上打 archive_status 标记。
+  //       这样附件（R2 key）、审批单、佣金记录、映射表全部保持原样，100% 数据可查。
+  // GET /api/archived-projects —— 与签约项目同格式
+  if (pathname === "/api/archived-projects" && request.method === "GET") {
+    const vs = await visibleScope(env, username, "WON-L1");
+    let sql = "SELECT * FROM won_projects WHERE archive_status='archived' AND lower(salesperson) <> 'agi-gs internal'";
+    const params = [];
+    if (vs.clause) {
+      sql += " AND (" + vs.clause + ")";
+      vs.params.forEach((p) => params.push(p));
+    }
+    sql += " ORDER BY id DESC";
+    const rs = await env.DB.prepare(sql).bind(...params).all();
+    const out = rs.results || [];
+    try {
+      const pm = await loadWonProvinceMap(env);
+      const sm = await loadWonSalesProductMap(env);
+      out.forEach((r) => { r.province = pm[r.id] || ""; r.sales_product = sm[r.id] || "PART"; });
+    } catch (e) { /* 映射表异常不阻塞列表 */ }
+    if (await wonP345Hidden(env, username)) stripWonP345(out);
+    out.forEach(expandWonRemarks);
+    out.forEach(expandPaymentTerms);
+    return { body: out, status: 200 };
+  }
+
+  // POST /api/won-projects/<id>/archive —— 签约项目 100% 转入项目结束存档
+  m = /^\/api\/won-projects\/(\d+)\/archive$/.exec(pathname);
+  if (m && request.method === "POST") {
+    const pid = parseInt(m[1], 10);
+    const ex = await env.DB.prepare("SELECT id FROM won_projects WHERE id=?").bind(pid).first();
+    if (!ex) return errj("not found", 404);
+    if (!(await canModifyRow(env, "won_projects", pid, username, "WON-L1"))) return errj("forbidden", 403);
+    const gA = await permGate(env, username, "WON-D3", String(pid));
+    if (gA) return errj(gA.__msg, gA.__status || 403);
+    await env.DB.prepare(
+      "UPDATE won_projects SET archive_status='archived', updated_at=datetime('now','localtime') WHERE id=?"
+    ).bind(pid).run();
+    return { body: { ok: true, id: pid }, status: 200 };
+  }
+
+  // ★WON-ARCHIVE-UI-20261125★ POST /api/won-projects/<id>/restore —— 从存档返回签约项目
+  m = /^\/api\/won-projects\/(\d+)\/restore$/.exec(pathname);
+  if (m && request.method === "POST") {
+    const pid = parseInt(m[1], 10);
+    const ex = await env.DB.prepare("SELECT id FROM won_projects WHERE id=? AND archive_status='archived'").bind(pid).first();
+    if (!ex) return errj("not found", 404);
+    if (!(await canModifyRow(env, "won_projects", pid, username, "WON-L1"))) return errj("forbidden", 403);
+    const gR = await permGate(env, username, "WON-D3", String(pid));
+    if (gR) return errj(gR.__msg, gR.__status || 403);
+    await env.DB.prepare(
+      "UPDATE won_projects SET archive_status='', updated_at=datetime('now','localtime') WHERE id=?"
+    ).bind(pid).run();
+    return { body: { ok: true, id: pid }, status: 200 };
+  }
+
   // ================= LOST 失败项目 =================
+
+  // ★CRM-SALES-PRODUCT-20261125：失败项目表补 sales_product 列（幂等迁移，首次访问时执行）
+  if (pathname.indexOf("/api/lost-projects") === 0) {
+    try { await ensureLostSalesProductCol(env); } catch (e) { /* 迁移失败不阻塞请求 */ }
+  }
 
   // GET /api/lost-projects
   if (pathname === "/api/lost-projects" && request.method === "GET") {
@@ -855,7 +935,7 @@ const CRM_LIST = [
   "startup_pct", "sign_pct", "manager", "manager_phone", "company_info",
   "initial_quote_date", "est_purchase_date", "est_ship_date", "quote_version",
   "last_quote_date", "rate_rmb_vnd", "rate_usd_vnd", "incoterm",
-  "install_quoted", "salesperson", "remark", "pdf_equip", "pdf_install", "pdf_both",
+  "install_quoted", "salesperson", "sales_product", "remark", "pdf_equip", "pdf_install", "pdf_both",
   "q1_rmb", "q1_usd", "q1_vnd", "q2_rmb", "q2_usd", "q2_vnd",
   "q3_rmb", "q3_usd", "q3_vnd", "q4_rmb", "q4_usd", "q4_vnd",
   "q5_rmb", "q5_usd", "q5_vnd", "q6_rmb", "q6_usd", "q6_vnd",
@@ -868,6 +948,18 @@ const CRM_NUM = new Set([
   "q7_rmb", "q7_usd", "q7_vnd",
 ]);
 const CRM_AND_LOST_FIELDS = CRM_LIST.concat(["fail_reason", "fail_date"]);
+
+// ★CRM-SALES-PRODUCT-20261125：lost_projects.sales_product 幂等迁移（每个 isolate 只跑一次）
+let _lostSpEnsured = false;
+async function ensureLostSalesProductCol(env) {
+  if (_lostSpEnsured) return;
+  try {
+    await env.DB.prepare("ALTER TABLE lost_projects ADD COLUMN sales_product TEXT DEFAULT ''").run();
+  } catch (e) {
+    // 列已存在 / 表不存在等：都不阻塞业务请求
+  }
+  _lostSpEnsured = true;
+}
 
 // ============================================================
 // 看板聚合统计（2026-09-06）：仅返回计数与三币汇总，避免前端全表扫描

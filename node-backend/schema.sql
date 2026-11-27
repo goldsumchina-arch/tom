@@ -96,6 +96,7 @@ CREATE TABLE lost_projects (
         incoterm TEXT DEFAULT '',
         install_quoted TEXT DEFAULT '',
         salesperson TEXT DEFAULT '',
+        sales_product TEXT DEFAULT '',
         remark TEXT DEFAULT '',
         pdf_equip TEXT DEFAULT '',
         pdf_install TEXT DEFAULT '',
@@ -256,7 +257,7 @@ CREATE TABLE won_projects (
     doc_addendum_cnt INTEGER DEFAULT 0,
     doc_view_addendum TEXT,
     doc_remark       TEXT
-, attachments TEXT DEFAULT '[]', supp_summary TEXT DEFAULT '[]', created_at TEXT DEFAULT '', updated_at TEXT DEFAULT '', warranty_rmb INTEGER DEFAULT 0, warranty_usd INTEGER DEFAULT 0, warranty_vnd INTEGER DEFAULT 0, warranty_start TEXT DEFAULT '', warranty_end TEXT DEFAULT '', owner_user_id TEXT DEFAULT '');
+, attachments TEXT DEFAULT '[]', supp_summary TEXT DEFAULT '[]', created_at TEXT DEFAULT '', updated_at TEXT DEFAULT '', warranty_rmb INTEGER DEFAULT 0, warranty_usd INTEGER DEFAULT 0, warranty_vnd INTEGER DEFAULT 0, warranty_start TEXT DEFAULT '', warranty_end TEXT DEFAULT '', owner_user_id TEXT DEFAULT '', archive_status TEXT DEFAULT '');
 
 
 -- ============ 缓存表（不迁移） ============

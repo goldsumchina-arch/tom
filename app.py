@@ -272,6 +272,7 @@ def init_db():
         province TEXT DEFAULT '',
         contract_date TEXT DEFAULT '',
         signing_parties TEXT DEFAULT '',
+        sales_product TEXT DEFAULT '',
         contract_currency TEXT DEFAULT '',
         rate_rmb_vnd TEXT DEFAULT '',
         rate_usd_vnd TEXT DEFAULT '',
@@ -364,7 +365,8 @@ def init_db():
         doc_remark TEXT DEFAULT '',
 
         attachments TEXT DEFAULT '[]',
-        supp_summary TEXT DEFAULT '[]'
+        supp_summary TEXT DEFAULT '[]',
+        archive_status TEXT DEFAULT ''
     );
     """)
 
@@ -395,6 +397,11 @@ def init_db():
         pass
     try:
         c.execute("ALTER TABLE won_projects ADD COLUMN doc_remark TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
+    # ★ WON-SALES-PRODUCT-20261125：销售产品（PART 零配件 / SYSTEM 系统性设备 / SERVICE 服务）
+    try:
+        c.execute("ALTER TABLE won_projects ADD COLUMN sales_product TEXT DEFAULT ''")
     except sqlite3.OperationalError:
         pass
     # ★ 三语付款方式列
@@ -510,6 +517,11 @@ def init_db():
         c.execute("ALTER TABLE won_projects ADD COLUMN province TEXT DEFAULT ''")
     except sqlite3.OperationalError:
         pass
+    # ★WON-ARCHIVE-20261125★ 项目结束存档标记（原行保留，附件/审批/佣金不删）
+    try:
+        c.execute("ALTER TABLE won_projects ADD COLUMN archive_status TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
     # ★ V40：WON 省份自动填充（与云端 wonlost.js 的 WON_PROV_FILL 列表一致）：
     #   空省份行按列表循环分配，让案例数据有合理分布
     _won_prov_fill = [
@@ -555,6 +567,7 @@ def init_db():
         incoterm TEXT DEFAULT '',
         install_quoted TEXT DEFAULT '',
         salesperson TEXT DEFAULT '',
+        sales_product TEXT DEFAULT '',
         remark TEXT DEFAULT '',
         pdf_equip TEXT DEFAULT '',
         pdf_install TEXT DEFAULT '',
@@ -576,6 +589,12 @@ def init_db():
         c.execute("ALTER TABLE crm_projects ADD COLUMN status TEXT DEFAULT 'active'")
     except sqlite3.OperationalError:
         pass
+    # ★CRM-SALES-PRODUCT-20261125：销售产品（PART 零配件 / SYSTEM 系统性设备 / SERVICE 服务）
+    try:
+        c.execute("ALTER TABLE crm_projects ADD COLUMN sales_product TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
+
     # ★ 独立记录：为 crm_projects 添加 owner_user_id（记录归属账号）
     try:
         c.execute("ALTER TABLE crm_projects ADD COLUMN owner_user_id TEXT DEFAULT ''")
@@ -615,6 +634,7 @@ def init_db():
         incoterm TEXT DEFAULT '',
         install_quoted TEXT DEFAULT '',
         salesperson TEXT DEFAULT '',
+        sales_product TEXT DEFAULT '',
         remark TEXT DEFAULT '',
         pdf_equip TEXT DEFAULT '',
         pdf_install TEXT DEFAULT '',
@@ -634,6 +654,11 @@ def init_db():
     # ★ 独立记录：为 lost_projects 添加 owner_user_id（记录归属账号，从 crm 转失败时自动继承）
     try:
         c.execute("ALTER TABLE lost_projects ADD COLUMN owner_user_id TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
+    # ★CRM-SALES-PRODUCT-20261125：失败项目也保存销售产品（CRM↔LOST 互转时按列名自动带过去）
+    try:
+        c.execute("ALTER TABLE lost_projects ADD COLUMN sales_product TEXT DEFAULT ''")
     except sqlite3.OperationalError:
         pass
 
@@ -1146,18 +1171,24 @@ def seed_won_projects(c):
          "total_ei_rmb": 3100000, "total_ei_usd": 100000, "total_ei_vnd": 2580000000},
     ]
     
+    # ★ WON-SALES-PRODUCT-20261125：示例数据自动随机分配"销售产品"
+    #   系统性设备(SYSTEM)最多，固定 2 个零配件(PART) + 1 个服务(SERVICE)，随机落到不同记录
+    import random as _rnd
+    _sp_pool = ["PART", "PART", "SERVICE"] + ["SYSTEM"] * max(0, len(won_data) - 3)
+    _rnd.Random(20261125).shuffle(_sp_pool)
+
     # 插入数据库
-    for proj in won_data:
+    for _i, proj in enumerate(won_data):
         c.execute("""
             INSERT INTO won_projects (
-                contract_no, customer, contract_date, signing_parties, contract_currency,
+                contract_no, customer, contract_date, signing_parties, sales_product, contract_currency,
                 rate_rmb_vnd, rate_usd_vnd, incoterm, salesperson, owner_user_id,
                 total_equip_rmb, total_equip_usd, total_equip_vnd,
                 total_ei_rmb, total_ei_usd, total_ei_vnd
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             proj["contract_no"], proj["customer"], proj["contract_date"],
-            proj["signing_parties"], proj["contract_currency"],
+            proj["signing_parties"], _sp_pool[_i], proj["contract_currency"],
             proj["rate_rmb_vnd"], proj["rate_usd_vnd"], proj["incoterm"], proj["salesperson"],
             (proj.get("salesperson") or "").strip().lower(),
             proj["total_equip_rmb"], proj["total_equip_usd"], proj["total_equip_vnd"],
@@ -2440,7 +2471,8 @@ def list_projects():
     conn = get_db()
     uname = request.headers.get("X-User-Name")
     clause, params = _visible_scope(uname, "WON-L1")
-    sql = "SELECT * FROM won_projects WHERE lower(salesperson) <> 'agi-gs internal'"
+    # ★WON-ARCHIVE-20261125★ 已结束存档的项目不再出现在签约项目列表
+    sql = "SELECT * FROM won_projects WHERE (archive_status IS NULL OR archive_status='') AND lower(salesperson) <> 'agi-gs internal'"
     if clause:
         sql += " AND (" + clause + ")"
     sql += " ORDER BY id DESC"
@@ -2455,11 +2487,73 @@ def list_projects():
     conn.close()
     return jsonify(out)
 
+
+# ★WON-ARCHIVE-20261125★ 项目结束存档（原地标记，不删数据）
+@app.route("/api/archived-projects", methods=["GET"])
+def list_archived_projects():
+    conn = get_db()
+    uname = request.headers.get("X-User-Name")
+    clause, params = _visible_scope(uname, "WON-L1")
+    sql = "SELECT * FROM won_projects WHERE archive_status='archived' AND lower(salesperson) <> 'agi-gs internal'"
+    if clause:
+        sql += " AND (" + clause + ")"
+    sql += " ORDER BY id DESC"
+    rows = conn.execute(sql, params).fetchall()
+    out = [row_to_dict(r) for r in rows]
+    for d in out:
+        _expand_won_row(d)
+    if _won_p345_hidden(conn, uname):
+        _strip_won_p345(out)
+    conn.close()
+    return jsonify(out)
+
+
+@app.route("/api/won-projects/<int:pid>/archive", methods=["POST"])
+def archive_won_project():
+    conn = get_db()
+    row = conn.execute("SELECT id FROM won_projects WHERE id=?", (pid,)).fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "not found"}), 404
+    if not _owns_row("won_projects", pid, request.headers.get("X-User-Name")):
+        conn.close()
+        return jsonify({"error": "forbidden"}), 403
+    conn.execute(
+        "UPDATE won_projects SET archive_status='archived', updated_at=datetime('now','localtime') WHERE id=?",
+        (pid,),
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True, "id": pid})
+
+
+# ★WON-ARCHIVE-UI-20261125★ 从项目结束存档返回签约项目
+@app.route("/api/won-projects/<int:pid>/restore", methods=["POST"])
+def restore_won_project():
+    conn = get_db()
+    row = conn.execute(
+        "SELECT id FROM won_projects WHERE id=? AND archive_status='archived'", (pid,)
+    ).fetchone()
+    if not row:
+        conn.close()
+        return jsonify({"error": "not found"}), 404
+    if not _owns_row("won_projects", pid, request.headers.get("X-User-Name")):
+        conn.close()
+        return jsonify({"error": "forbidden"}), 403
+    conn.execute(
+        "UPDATE won_projects SET archive_status='', updated_at=datetime('now','localtime') WHERE id=?",
+        (pid,),
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True, "id": pid})
+
+
 @app.route("/api/won-projects", methods=["POST"])
 def create_project():
     data = request.get_json(force=True, silent=True) or {}
     fields = [
-        "contract_no","customer","province","contract_date","signing_parties","contract_currency",
+        "contract_no","customer","province","contract_date","signing_parties","sales_product","contract_currency",
         "rate_rmb_vnd","rate_usd_vnd","incoterm","include_install","payment_terms","payment_terms_zh","payment_terms_en","payment_terms_vi","salesperson",
         "equip_rmb","equip_usd","equip_vnd","superv_rmb","superv_usd","superv_vnd",
         "fb_budget_rmb","fb_budget_usd","fb_budget_vnd","fb_actual_rmb","fb_actual_usd","fb_actual_vnd",
@@ -2550,7 +2644,7 @@ def update_project(pid):
         conn.close()
         return jsonify({"error":"forbidden"}), 403
     fields = [
-        "contract_no","customer","province","contract_date","signing_parties","contract_currency",
+        "contract_no","customer","province","contract_date","signing_parties","sales_product","contract_currency",
         "rate_rmb_vnd","rate_usd_vnd","incoterm","include_install","payment_terms","payment_terms_zh","payment_terms_en","payment_terms_vi","salesperson",
         "equip_rmb","equip_usd","equip_vnd","superv_rmb","superv_usd","superv_vnd",
         "fb_budget_rmb","fb_budget_usd","fb_budget_vnd","fb_actual_rmb","fb_actual_usd","fb_actual_vnd",
@@ -2820,7 +2914,7 @@ CRM_FIELDS = [
     "startup_pct","sign_pct","manager","manager_phone","company_info",
     "initial_quote_date","est_purchase_date","est_ship_date","quote_version","quote_version_log",
     "last_quote_date","rate_rmb_vnd","rate_usd_vnd","incoterm",
-    "install_quoted","salesperson","remark","pdf_equip","pdf_install","pdf_both",
+    "install_quoted","salesperson","sales_product","remark","pdf_equip","pdf_install","pdf_both",
     "remark_zh","remark_en","remark_vi",
     "q1_rmb","q1_usd","q1_vnd",
     "q2_rmb","q2_usd","q2_vnd",

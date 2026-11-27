@@ -16,7 +16,7 @@ export const CRM_FIELDS = [
   "startup_pct", "sign_pct", "manager", "manager_phone", "company_info",
   "initial_quote_date", "est_purchase_date", "est_ship_date", "quote_version", "quote_version_log",
   "last_quote_date", "rate_rmb_vnd", "rate_usd_vnd", "incoterm",
-  "install_quoted", "salesperson", "remark", "pdf_equip", "pdf_install", "pdf_both",
+  "install_quoted", "salesperson", "sales_product", "remark", "pdf_equip", "pdf_install", "pdf_both",
   "remark_zh", "remark_en", "remark_vi",
   "q1_rmb", "q1_usd", "q1_vnd",
   "q2_rmb", "q2_usd", "q2_vnd",
@@ -319,6 +319,15 @@ async function ensureCrmRemarkCols(env) {
       throw new Error("CRM 版本日志列迁移失败(quote_version_log): " + (e && e.message || e));
     }
   }
+  // ★CRM-SALES-PRODUCT-20261125：销售产品（PART 零配件 / SYSTEM 系统性设备 / SERVICE 服务）
+  try {
+    await env.DB.prepare("ALTER TABLE crm_projects ADD COLUMN sales_product TEXT DEFAULT ''").run();
+  } catch (e) {
+    const m = String(e && e.message || e).toLowerCase();
+    if (!m.includes("duplicate") && !m.includes("already exists") && !m.includes("exists")) {
+      throw new Error("CRM 销售产品列迁移失败(sales_product): " + (e && e.message || e));
+    }
+  }
   _crmRmEnsured = true;
 }
 
@@ -537,6 +546,8 @@ export async function handleCrm(request, env, url, pathname) {
     const pid = parseInt(m[1], 10);
     // 幂等：确保来源关联列存在（下方 vals 映射会写入 crm_origin_id）
     try { await env.DB.prepare("ALTER TABLE lost_projects ADD COLUMN crm_origin_id INTEGER DEFAULT 0").run(); } catch (e) { /* 已存在 */ }
+    // ★CRM-SALES-PRODUCT-20261125：失败项目也保存销售产品（CRM↔LOST 互转时按列名自动带过去）
+    try { await env.DB.prepare("ALTER TABLE lost_projects ADD COLUMN sales_product TEXT DEFAULT ''").run(); } catch (e) { /* 已存在 */ }
     const exists = await env.DB.prepare("SELECT id FROM crm_projects WHERE id=?")
       .bind(pid)
       .first();

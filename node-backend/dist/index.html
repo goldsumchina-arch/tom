@@ -712,7 +712,7 @@ function _ovLoadChartLib(cb){
     .w-sales-req { position:absolute; top:1px; right:4px; font-size:11px; line-height:1; font-weight:800; color:#e00000; cursor:help; z-index:2; }
     .w-sales-cell select { padding-right:16px !important; }
     /* 自绘悬停注解：不依赖浏览器原生 title，切语言后立即刷新且不会失灵 */
-    #wonSalesTip { position:fixed; z-index:99999; display:none; max-width:400px; padding:9px 12px;
+    #wonSalesTip, #crmSalesTip { position:fixed; z-index:99999; display:none; max-width:400px; padding:9px 12px;
       border-radius:8px; background:#1b2433; color:#fff; font-size:12px; line-height:1.6;
       box-shadow:0 8px 26px rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.18); pointer-events:none; }
     /* 窄屏兜底：3 列（宽字段跨 2 列）→ 2 列 */
@@ -1445,6 +1445,28 @@ function _ovLoadChartLib(cb){
       border-radius:6px; cursor:pointer; transition:all .2s ease;
     }
     .icon-btn:disabled { opacity:.3; cursor:not-allowed; transform:none; box-shadow:none; }
+    /* ★WON-ACTION-TIGHT-20261125★ 签约项目操作列按钮收紧，6 个按钮全部完整可见 */
+    #wonTable .won-actions { gap:1px; }
+    #wonTable .won-actions .icon-btn,
+    #wonTable .won-actions .btn-move { width:22px; height:24px; font-size:13px; border-radius:5px; }
+    /* ★INSTALL-CARD-GROUP-20261125★ 安装详情标题同行 + 销售产品三分区 */
+    .inst-detail-head { display:flex; align-items:baseline; flex-wrap:wrap; gap:10px; }
+    .inst-proj-summary { color:#5b7fa6; font-size:12px; margin:2px 0 10px; }
+    /* ★INSTALL-CARD-GROUP-20261125B★ 三个销售产品区域水平并排：系统性设备 | 零配件 | 服务 */
+    /* ★INSTALL-CARD-GROUP-20261125D★ 三个分区【纵向依次排列】：
+       系统性设备 → 零配件 → 服务；每个分区内部卡片【水平排列】一排多个。 */
+    /* ★INST-FILES-SAME-20261125★ 项目专属资料与安装详情管理共用同一纵向分组布局 */
+    #instProjList, #instFilesProjList { display:block !important; }
+    .inst-sp-group { margin-bottom:18px; min-width:0; }
+    .inst-sp-group-title { font-weight:700; color:#1e5aa8; margin:8px 0 6px; }
+    .inst-sp-group .inst-proj-list {
+      display:grid !important;
+      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:12px; align-items:stretch;
+    }
+    /* ★INSTALL-CARD-EQUALHEIGHT-20261125★ 同行卡片以最高的为准等高，宽度不变 */
+    .inst-sp-group .inst-proj-card { height:100%; box-sizing:border-box; }
+    @media (max-width:600px) { .inst-sp-group .inst-proj-list { grid-template-columns:1fr !important; } }
     .icon-edit { color:#F5872E; }
     .icon-edit:hover:not(:disabled) { background:#F5872E; color:#fff; border-color:#F5872E; transform:translateY(-1px); box-shadow:0 4px 8px rgba(245,135,46,.3); }
     .icon-del { color:#d9534f; }
@@ -2858,6 +2880,23 @@ function _ovLoadChartLib(cb){
     white-space:nowrap;   /* ★LANG-GEOMETRY-LOCK：绝不能竖排换行（宽度已冻结） */
   }
   .tb-logout:hover { background:rgba(231,76,60,.85); border-color:transparent; }
+  /* ===== ★CRM-GROUP-20261127★ 项目管理CRM：把 4 个项目类标签收进分组领航标签 =====
+     原 #app 视图不搬动；覆盖层只有顶栏接收点击，下方透明穿透，继续显示当前项目视图。 */
+  #tbMenu .tb-item[data-view="dashboard"],
+  #tbMenu .tb-item[data-view="crm"],
+  #tbMenu .tb-item[data-view="won"],
+  #tbMenu .tb-item[data-view="lost"] { display:none !important; }
+  #crmGroupOverlay {
+    position:fixed; inset:0; z-index:100071; display:none; flex-direction:column;
+    background:transparent; pointer-events:none; font-family:"Segoe UI",Arial,sans-serif;
+  }
+  #crmGroupOverlay.show { display:flex; }
+  body.crmgroup-open #topbar { visibility:hidden !important; pointer-events:none !important; }
+  #crmGroupOverlay .inst-topbar { height:var(--tb-h,84px); pointer-events:auto; }
+  #crmGroupOverlay .crm-group-body { flex:1 1 auto; min-height:0; pointer-events:none; }
+  #crmGroupOverlay .crm-group-logo { display:inline-block; color:#fff; font-size:18px; font-weight:800; letter-spacing:.4px; }
+  #crmGroupOverlay .crm-group-tabs .inst-tab { width:132px; font-size:12px; padding:8px 6px; }
+  #crmGroupOverlay .crm-group-exit { margin-left:8px; }
   /* ===== ★INSTALL-MGMT-20261124★ 安装管理：全屏覆盖层（连 AGI 顶栏一起盖住，自带独立顶栏） =====
      契约：只有点右上角「退出安装管理」才收起；期间原 #topbar/#app 只隐藏不销毁（保持原视图/滚动/数据）。 */
   #installOverlay {
@@ -2919,13 +2958,92 @@ function _ovLoadChartLib(cb){
   .inst-proj-card {
     background: #fff; border: 1px solid rgba(30,95,168,.14); border-radius: 10px;
     padding: 14px 15px; box-shadow: 0 4px 14px rgba(30,60,120,.08); text-align: left;
-    transition: background .16s, box-shadow .16s, transform .16s; cursor: default;
+    transition: background .16s, box-shadow .16s, transform .16s; cursor: pointer;
   }
   .inst-proj-card:hover { background: #fff0f4; box-shadow: 0 6px 18px rgba(200,60,100,.18); transform: translateY(-1px); }
   .inst-proj-name { font-size: 14px; font-weight: 700; color: #173a66; line-height: 1.35; margin-bottom: 8px; overflow-wrap: anywhere; }
   .inst-proj-contract { display: inline-block; background: #eaf7e3; border: 1px solid #b9e0a8; color: #2c6b28; border-radius: 10px; font-size: 11px; padding: 2px 8px; margin-bottom: 10px; }
   .inst-proj-stat { font-size: 12px; color: #4a5d75; line-height: 1.6; }
   .inst-empty { color: #8fa6c0; font-size: 13px; padding: 24px 0; }
+  /* ★INSTALL-PROJ-DETAIL-20261125★ 点击项目卡片进入的具体安装详情 */
+  .ib-proj-detail { max-width:1180px; margin:0 auto; text-align:left; }
+  .ib-pd-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .ib-pd-back { background:#F5A623; border:1px solid #E09412; color:#fff; font-size:12px; font-weight:700; padding:6px 14px; border-radius:16px; cursor:pointer; }
+  .ib-pd-back:hover { background:#E09412; }
+  .ib-pd-title { font-size:17px; font-weight:800; color:#e53935; }
+  .ib-pd-tabs { display:flex; flex-wrap:nowrap; gap:6px; margin:10px 0 14px; padding-bottom:10px; border-bottom:1px solid #e8eef5; overflow-x:auto; }
+  .ib-pd-tab { flex:0 0 190px; width:190px; box-sizing:border-box; border:1px solid #d9e2ec; background:#fff; color:#3b5876; font-size:11px; font-weight:600; padding:7px 8px; border-radius:16px; cursor:pointer; white-space:nowrap; overflow:visible; line-height:1.25; text-align:center; }
+  .ib-pd-tab:hover { border-color:#e53935; color:#e53935; }
+  .ib-pd-tab.active { background:#e53935; border-color:#e53935; color:#fff; box-shadow:0 3px 10px rgba(229,57,53,.25); }
+  .ib-pd-body { min-height:320px; border:1px solid #e8eef5; border-radius:10px; background:#fbfdff; padding:18px 20px; }
+  .ib-pd-ph { color:#8fa6c0; font-size:13px; line-height:1.9; }
+  .ib-pd-info { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+  .ib-pd-info div { background:#fff; border:1px solid #e8eef5; border-radius:8px; padding:10px 12px; font-size:12px; color:#4a5d75; }
+  /* ★INST-LIB-PORT-20261125★ 项目专属资料文件管理器（完整模拟 choice-lite 独立项目资料） */
+  .ib-lib { max-width:1180px; margin:0 auto; text-align:left; }
+  .ib-lib-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .ib-lib-title { font-size:18px; font-weight:800; color:#1e5fa8; }
+  .ib-lib-crumb { display:flex; align-items:center; gap:6px; flex-wrap:wrap; background:#eef5fc; border:1px solid #dbe8f5; border-radius:8px; padding:8px 12px; font-size:12px; color:#3b5876; margin-bottom:12px; }
+  .ib-lib-crumb .cb-i { color:#1e5aa8; cursor:pointer; }
+  .ib-lib-crumb .cb-i:hover { text-decoration:underline; }
+  .ib-lib-crumb .cb-c { color:#7f93a8; }
+  .ib-lib-crumb .cb-proj { color:#e53935; font-weight:700; font-size:13px; }
+  .ib-lib-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .ib-lib-btn { border:1px solid #d9e2ec; background:#fff; color:#3b5876; font-size:12px; font-weight:600; padding:6px 12px; border-radius:14px; cursor:pointer; }
+  .ib-lib-btn:hover { border-color:#e53935; color:#e53935; }
+  .ib-lib-btn.primary { background:#e53935; border-color:#e53935; color:#fff; }
+  .ib-lib-btn.back { background:#f5a623; border-color:#e09412; color:#fff; }
+  .ib-lib-search { margin-left:auto; border:1px solid #d9e2ec; border-radius:14px; padding:5px 12px; font-size:12px; min-width:180px; }
+  .ib-lib-toggle { display:inline-flex; border:1px solid #d9e2ec; border-radius:12px; overflow:hidden; }
+  .ib-lib-toggle button { border:none; background:#fff; padding:5px 10px; font-size:13px; cursor:pointer; color:#6b7f99; }
+  .ib-lib-toggle button.active { background:#e53935; color:#fff; }
+  .ib-lib-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .ib-lib-item { position:relative; border:1px solid #e4ecf5; border-radius:10px; background:#fff; padding:14px 10px; text-align:center; cursor:pointer; box-shadow:0 3px 10px rgba(30,60,120,.06); }
+  .ib-lib-item:hover { border-color:#f3b6bd; background:#fff7f8; }
+  .ib-lib-item .li-icon { font-size:34px; line-height:1; margin-bottom:8px; }
+  .ib-lib-item .li-name { font-size:12px; font-weight:600; color:#26436a; overflow-wrap:anywhere; }
+  .ib-lib-item .li-meta { font-size:10px; color:#94a7bd; margin-top:5px; }
+  .ib-lib-item .li-acts { display:none; gap:4px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .ib-lib-item:hover .li-acts { display:flex; }
+  .ib-lib-item .li-acts button { border:1px solid #d9e2ec; background:#fff; border-radius:10px; font-size:10px; padding:2px 6px; cursor:pointer; color:#4a5d75; }
+  .ib-lib-item .li-acts button.danger { color:#e53935; border-color:#f3b6bd; }
+  .ib-lib-list { border:1px solid #e4ecf5; border-radius:10px; overflow:hidden; background:#fff; }
+  .ib-lib-list .ll-row { display:grid; grid-template-columns:1fr 110px 150px 170px; gap:8px; align-items:center; padding:8px 12px; border-bottom:1px solid #eef3f8; font-size:12px; color:#3b5876; cursor:pointer; }
+  .ib-lib-list .ll-row:last-child { border-bottom:none; }
+  .ib-lib-list .ll-row:hover { background:#fff7f8; }
+  .ib-lib-list .ll-head { background:#f4f8fc; font-weight:700; color:#1e5aa8; cursor:default; }
+  .ib-lib-empty { color:#8fa6c0; font-size:13px; padding:30px 0; text-align:center; }
+  .ib-lib-drop { position:fixed; inset:0; z-index:40000; background:rgba(30,60,120,.35); color:#fff; font-size:26px; font-weight:700; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  .ib-lib-drop.show { display:flex; }
+  .ib-lib-rename { width:100%; box-sizing:border-box; font-size:12px; padding:3px 5px; border:1px solid #e53935; border-radius:5px; }
+  .ib-lib-confirm { display:inline-flex; align-items:center; gap:4px; background:#eef5fc; border:1px solid #2f6db3; border-radius:12px; padding:3px 6px; font-size:11px; color:#1e5aa8; box-shadow:0 2px 8px rgba(47,109,179,.18); white-space:nowrap; z-index:5; }
+  .ib-lib-confirm button { border:1px solid #2f6db3; background:#fff; color:#1e5aa8; border-radius:9px; padding:1px 7px; margin-left:4px; font-size:11px; cursor:pointer; }
+  .ib-lib-confirm button.ok { background:#2f6db3; color:#fff; }
+  .ib-lib-item .li-acts.has-confirm { display:flex; }
+  /* ★INST-LIB-DRAG-20261125★ 拖拽进入资料区立即淡粉高亮 */
+  .ib-lib.drop-active { background:#fff0f4; outline:2px dashed #f3b6bd; outline-offset:-6px; border-radius:10px; }
+  .ib-lib.drop-active .ib-lib-content, .ib-lib.drop-active #ibLibContent, .ib-lib.drop-active #ibPubLibContent { background:#fff0f4; }
+  /* Windows 风格文件/文件夹图标（与系统自带外观一致，不用 emoji） */
+  .lib-ico { position:relative; display:inline-block; width:34px; height:34px; vertical-align:middle; }
+  .lib-ico.file:before { content:''; position:absolute; left:7px; top:2px; width:22px; height:30px; background:#fff; border:1px solid #cfd8e3; border-radius:2px; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+  .lib-ico.file:after { content:''; position:absolute; left:8px; top:2px; width:8px; height:6px; border-left:1px solid #cfd8e3; border-top:1px solid #cfd8e3; border-radius:2px 0 0 0; background:#f4f7fb; }
+  .lib-ico.file i { position:absolute; left:10px; top:15px; width:17px; height:14px; line-height:14px; text-align:center; font-style:normal; font-size:10px; font-weight:800; color:#fff; border-radius:2px; }
+  .lib-ico.w i { background:#2b579a; }
+  .lib-ico.x i { background:#217346; }
+  .lib-ico.p i { background:#d24726; }
+  .lib-ico.pdf i { background:#e8112d; font-size:8px; width:19px; left:9px; }
+  .lib-ico.gen i { background:#7f8c9b; }
+  .lib-ico.folder:before { content:''; position:absolute; left:3px; top:8px; width:28px; height:22px; background:#f7c948; border:1px solid #d9a900; border-radius:2px; }
+  .lib-ico.folder:after { content:''; position:absolute; left:3px; top:4px; width:13px; height:6px; background:#f7c948; border:1px solid #d9a900; border-bottom:none; border-radius:2px 2px 0 0; }
+  /* ★INST-LIB-PREVIEW-20261125★ 在线预览弹窗（不下载） */
+  .ib-lib-preview-modal { position:fixed; inset:0; z-index:300000; background:rgba(15,35,60,.55); display:none; align-items:center; justify-content:center; padding:24px; }
+  .ib-lib-preview-box { width:min(1180px,96vw); height:min(860px,92vh); background:#fff; border-radius:12px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 18px 60px rgba(0,0,0,.3); }
+  .ib-lib-preview-head { height:48px; flex:0 0 48px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0 16px; background:#2f6db3; color:#fff; font-size:14px; font-weight:700; }
+  .ib-lib-preview-head button { border:1px solid rgba(255,255,255,.6); background:rgba(255,255,255,.12); color:#fff; border-radius:8px; font-size:18px; line-height:1; padding:4px 10px; cursor:pointer; }
+  .ib-lib-preview-head button:hover { background:rgba(255,255,255,.28); }
+  .ib-lib-preview-body { flex:1; min-height:0; background:#f4f7fb; }
+  .ib-lib-preview-body iframe { width:100%; height:100%; border:0; display:block; }
+  .ib-lib-preview-fallback { padding:40px; text-align:center; color:#6b7f99; font-size:13px; }
   .inst-body { flex: 1 1 auto; overflow: auto; padding: 16px 20px; }
   .inst-card {
     max-width: 880px; margin: 0 auto; background: #fff; border-radius: 14px;
@@ -2948,7 +3066,8 @@ function _ovLoadChartLib(cb){
   .ib-stat-vertical .ib-tile b { font-size: 19px; }
   .ib-stat-vertical .ib-tile span { white-space: normal; text-align: right; }
   .ib-grid { display: grid; gap: 12px; margin-bottom: 12px; }
-  .ib-top { grid-template-columns: .42fr 1.15fr 1.5fr; }
+  /* ★INSTALL-WX-LAYOUT-20261125★ 天气卡收窄，省下的宽度给「项目总数」统计卡 */
+  .ib-top { grid-template-columns: .65fr 1.15fr 1.27fr; }
   .ib-mid { grid-template-columns: 2fr 1fr; }
   .ib-photo-row { grid-template-columns: repeat(3, 1fr); }
   .ib-photo-card { aspect-ratio: 1 / 1; min-height: 0; padding: 10px; display: flex; flex-direction: column; }
@@ -2972,19 +3091,27 @@ function _ovLoadChartLib(cb){
   .ib-title::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #2ee6ff; box-shadow: 0 0 6px #2ee6ff; flex: none; }
   /* 顶部三卡不截断：全部项目/全部天气直接展示，卡片随内容自然增高 */
   .ib-top > .ib-card { height: auto; min-height: 190px; overflow: visible; }
-  /* 安装进度：序号列极窄、项目列尽量宽并完整显示名称、人数列固定 */
-  .ib-progress-card .ib-table { table-layout: fixed; }
+  /* ★INSTALL-CARD-TIGHT-20261125B★ 表格继续左移（卡片外框不变），序号列进一步收窄 */
+  .ib-progress-card .ib-table { table-layout: fixed; width: calc(100% + 24px); margin-left: -24px; }
+  .ib-progress-card .ib-table th,
+  .ib-progress-card .ib-table td { padding-left: 3px; padding-right: 3px; }
   .ib-progress-card .ib-table th:first-child,
-  .ib-progress-card .ib-table td:first-child { width: 22px; padding-left: 1px; padding-right: 1px; text-align: center; }
+  .ib-progress-card .ib-table td:first-child { width: 8px; padding-left: 0; padding-right: 0; text-align: center; }
   .ib-progress-card .ib-table th:nth-child(2),
   .ib-progress-card .ib-table td:nth-child(2) { width: auto; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }
   .ib-progress-card .ib-table th:nth-child(3),
-  .ib-progress-card .ib-table td:nth-child(3) { width: 82px; white-space: normal; overflow-wrap: anywhere; color: #9dc4e8; }
+  .ib-progress-card .ib-table td:nth-child(3) { width: 68px; white-space: normal; overflow-wrap: anywhere; color: #9dc4e8; }
   .ib-progress-card .ib-table th:nth-child(4),
-  .ib-progress-card .ib-table td:nth-child(4) { width: 76px; white-space: nowrap; }
+  .ib-progress-card .ib-table td:nth-child(4) { width: 68px; white-space: normal; overflow-wrap: anywhere; color: #9dc4e8; }
+  .ib-progress-card .ib-table th:nth-child(5),
+  .ib-progress-card .ib-table td:nth-child(5) { width: 60px; white-space: nowrap; }
   .ib-progress-card .ib-table th:last-child,
-  .ib-progress-card .ib-table td:last-child { width: 58px; text-align: right; white-space: nowrap; }
+  .ib-progress-card .ib-table td:last-child { width: 86px; text-align: right; white-space: nowrap; }
   .ib-progress-card .ib-table td.ib-num { color: #8fb0d8; }
+  .ib-progress-card .ib-table td.ib-prov-click { cursor:pointer; }
+  .ib-progress-card .ib-table td.ib-prov-click:hover { color:#c9a2ff; text-decoration:underline; }
+  .ib-progress-card .ib-table tr.ib-row-focus td { background:rgba(176,38,255,.20); color:#f0d4ff; }
+  .ib-progress-card .ib-table tr.ib-row-focus td.ib-prov { color:#d7a3ff; font-weight:700; }
   .ib-tiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
   .ib-tile { border: 1px solid rgba(90,200,255,.28); border-radius: 5px; padding: 8px 3px; text-align: center; }
   .ib-tile b { display: block; font-size: 22px; color: #2ee6ff; line-height: 1.1; }
@@ -2992,18 +3119,28 @@ function _ovLoadChartLib(cb){
   .ib-table { width: 100%; border-collapse: collapse; font-size: 10px; }
   .ib-table th { color: #9dc4e8; font-weight: 600; text-align: left; padding: 2px 4px 6px; }
   .ib-table td { color: #d6e8ff; padding: 3px 4px; border-top: 1px solid rgba(120,180,240,.13); }
-  .ib-bar { width: 100%; height: 7px; background: #163d72; border-radius: 4px; overflow: hidden; margin-top: 3px; }
+  /* ★INSTALL-BAR-BORDER-20261125★ 进度条加白色外框 */
+  .ib-bar { width: 100%; height: 9px; background: #163d72; border: 1px solid rgba(255,255,255,.9); box-sizing: border-box; border-radius: 5px; overflow: hidden; margin-top: 3px; }
   .ib-bar > i { display: block; height: 100%; background: linear-gradient(90deg,#1fd1ff,#57e6a5); border-radius: 4px; }
   .ib-clock { font-size: 22px; font-weight: 800; color: #3ae0ff; letter-spacing: 1px; line-height: 1.1; }
   .ib-date { font-size: 11px; color: #bcd8f5; margin: 3px 0 8px; }
   /* ★INSTALL-WX-AMPM-20261124★ 上午/下午两列分时天气 */
-  .ib-wx-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .ib-wx-col { min-width: 0; }
-  .ib-wx-col-head { font-size: 11px; font-weight: 700; color: #39e6ff; margin-bottom: 5px; }
-  .ib-wx { font-size: 9.5px; color: #cfe4ff; line-height: 1.4; }
+  .ib-wx-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+  .ib-wx-col { min-width: 0; overflow: hidden; }
+  .ib-wx-col-head { font-size: 10px; font-weight: 700; color: #39e6ff; margin-bottom: 4px; }
+  .ib-wx { min-width: 0; overflow: hidden; font-size: 9px; color: #cfe4ff; line-height: 1.35; }
   .ib-wx b { color: #39e6ff; font-weight: 700; }
-  .ib-wx-chip { border-radius: 6px; padding: 3px 5px; margin-bottom: 3px; background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ib-wx-chip span { color: #bcd8f5; font-size: 9px; }
+  /* ★INSTALL-WX-COMPACT-20261126★ 上午五列压缩，保证下午整列不被挤出可视区域 */
+  .ib-wx-chip {
+    display: grid;
+    grid-template-columns: minmax(34px,1.1fr) minmax(26px,.55fr) minmax(30px,.65fr) minmax(36px,.85fr) minmax(36px,.85fr);
+    align-items: center; gap: 1px;
+    border-radius: 5px; padding: 2px 3px; margin-bottom: 2px;
+    background: rgba(9,36,117,.55); border: 1px solid rgba(57,230,255,.28);
+    white-space: nowrap; overflow: hidden;
+  }
+  .ib-wx-chip > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .ib-wx-chip span { color: #bcd8f5; font-size: 8.5px; }
   .ib-map { height: 440px; display: flex; align-items: center; justify-content: center; }
   .ib-map svg { height: 265px; filter: drop-shadow(0 0 4px #2ee6ff); }
   .ib-empty { color: #8fb0d8; font-size: 12px; text-align: center; padding-top: 80px; }
@@ -3025,7 +3162,7 @@ function _ovLoadChartLib(cb){
   .ib-hol-chip { display: inline-flex; align-items: center; gap: 5px; background: #092475; border: 1px solid rgba(57,230,255,.35); border-radius: 8px; padding: 3px 7px; font-size: 11px; color: #eceff2; }
   .ib-hol-chip i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
   .ib-hol-toggle { background: #092475; color: #eceff2; border: 1px solid rgba(57,230,255,.35); border-radius: 6px; width: 26px; height: 23px; cursor: pointer; }
-  .ib-cal-legend { font-size: 11px; color: #aab4c0; margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ib-cal-legend { font-size: 9px; color: #aab4c0; margin-top: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .ib-leg-vn, .ib-leg-cn { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
   .ib-leg-vn { background: #ff5d73; } .ib-leg-cn { background: #4da3ff; }
   /* ★INSTALL-FX-20261124★ 汇率卡完全复用 choice-lite：Chart.js 折线 + 坐标轴/网格 + 三币种切换 */
@@ -3253,6 +3390,21 @@ function _ovLoadChartLib(cb){
   }
   .btn-action { background:#F5872E; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-size:13px; cursor:pointer; font-weight:600; }
   .btn-action:hover { background:#e07822; }
+  /* ★WON-ARCHIVE-20261125★ 项目结束存档：红色入口 + 行内金色星星 */
+  .btn-archive-top { background:#e74c3c !important; }
+  .btn-archive-top:hover { background:#c0392b !important; }
+  .icon-archive { color:#f5a623; }
+  .icon-archive:hover:not(:disabled) { background:#f5a623; color:#fff; border-color:#f5a623; transform:translateY(-1px); box-shadow:0 4px 8px rgba(245,166,35,.3); }
+  /* ★WON-ARCHIVE-UI-20261125★ 存档页只保留「退出存档 + 币种」，表格铺满容器不留白区 */
+  #view-won.archive-mode #btnAddWon,
+  #view-won.archive-mode #btnOverview,
+  #view-won.archive-mode #btnExportWonExcel { display:none !important; }
+  #view-won.archive-mode .won-scroll-container table { width:100% !important; min-width:100% !important; table-layout:auto; }
+  #view-won.archive-mode .icon-archive,
+  #view-won.archive-mode .icon-edit,
+  #view-won.archive-mode .icon-copy,
+  #view-won.archive-mode .icon-move-up,
+  #view-won.archive-mode .icon-move-down { display:none !important; }
   .btn-action-sm { display:inline-block; margin:0 4px; padding:5px 14px; border-radius:5px; border:1px solid transparent; font-size:13px; cursor:pointer; font-weight:500; line-height:1.2; transition:background .15s,border-color .15s; min-width:64px; position:relative; }
   /* 复制按钮：蓝色，与编辑（橙）/删除（红）区分；文字强制白色 */
   .users-table .btn-copy { background:#3E7BC8; color:#fff; }
@@ -4076,6 +4228,8 @@ function _ovLoadChartLib(cb){
     <span class="tb-logo-name">-CRM</span>
   </div>
   <div class="tb-menu" id="tbMenu">
+    <!-- ★CRM-GROUP-20261127★ 项目管理CRM：看板/潜在/签约/失败四个标签收进本分组 -->
+    <button class="tb-item" data-view="crmgroup" id="tbCrmGroup" onclick="openCrmGroup()"><span class="tb-label">项目管理CRM</span></button>
     <button class="tb-item active" data-view="dashboard" onclick="if(window.__dashLongPressFired){window.__dashLongPressFired=false;return false;}switchView('dashboard')" oncontextmenu="return false;" onpointerdown="onDashNavPressStart(event)" onpointerup="onDashNavPressEnd(event)" onpointerleave="onDashNavPressCancel(event)" onpointercancel="onDashNavPressCancel(event)">Dashboard</button>
     <button class="tb-item" data-view="crm" onclick="switchView('crm')">Potential Projects</button>
     <button class="tb-item" data-view="won" onclick="switchView('won')">Won Projects</button>
@@ -4211,7 +4365,7 @@ function _ovLoadChartLib(cb){
            </div>
            <div class="ib-card ib-top-narrow ib-progress-card"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="instProgress">安装进度</div>
-             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="provText">省份</th><th data-ib="progress">进度</th><th data-ib="instWorkers">安装人数</th></tr></thead><tbody id="ibInstList"></tbody></table>
+             <table class="ib-table"><thead><tr><th>#</th><th data-ib="project">项目</th><th data-ib="buText">BU（业务单元）</th><th data-ib="provText">省份</th><th data-ib="progress">进度</th><th data-ib="instWorkers">安装人数</th></tr></thead><tbody id="ibInstList"></tbody></table>
            </div>
            <div class="ib-card ib-top-narrow ib-wx-card"><i class="ib-corner"></i>
              <div class="ib-title" data-ib="dateWeather">日期 · 时间 · 天气</div>
@@ -4282,25 +4436,104 @@ function _ovLoadChartLib(cb){
        </div>
        <div class="inst-panel" data-itab="detail" role="tabpanel">
        <div class="inst-card inst-detail-card" style="max-width:1180px;text-align:left">
-         <h2 class="inst-panel-title" data-itab="detail">安装详情管理</h2>
-         <div class="inst-subtitle" data-ib="projectList">项目列表</div>
-         <div class="inst-proj-list" id="instProjList"></div>
+         <div id="instProjListWrap">
+           <!-- ★INSTALL-CARD-GROUP-20261125★ 标题与副标题同一行 -->
+           <div class="inst-detail-head">
+             <h2 class="inst-panel-title" data-itab="detail">安装详情管理</h2>
+             <div class="inst-subtitle" data-ib="projectList">项目列表</div>
+           </div>
+           <!-- ★INSTALL-CARD-SUMMARY-20261125★ 销售产品分类统计（三语，随语言切换刷新） -->
+           <div class="inst-proj-summary" id="instProjSummary"></div>
+           <div class="inst-proj-list" id="instProjList"></div>
+         </div>
+         <!-- ★INSTALL-PROJ-DETAIL-20261125★ 卡片点击进入的项目级安装详情 -->
+         <div class="ib-proj-detail" id="ibProjDetail" style="display:none">
+           <div class="ib-pd-head">
+             <button class="ib-pd-back" id="ibProjBackBtn" onclick="ibCloseProjDetail()">返回列表</button>
+             <span class="ib-pd-title" id="ibProjTitle"></span>
+           </div>
+           <div class="ib-pd-tabs" id="ibProjTabs"></div>
+           <div class="ib-pd-body" id="ibProjBody"></div>
+         </div>
        </div>
        </div>
        <div class="inst-panel" data-itab="files" role="tabpanel">
-       <div class="inst-card">
-         <h2 class="inst-panel-title" data-itab="files">项目专属资料</h2>
-         <div class="inst-ph">功能开发中，敬请期待</div>
+       <div class="inst-card inst-detail-card" style="max-width:1180px;text-align:left">
+         <!-- ★INST-FILES-SAME-20261125★ 项目专属资料：与「安装详情管理」相同的项目卡片列表 -->
+         <div class="inst-detail-head">
+           <h2 class="inst-panel-title" data-itab="files">项目专属资料</h2>
+           <div class="inst-subtitle" data-ib="projectList">项目列表</div>
+         </div>
+         <div id="instFilesListWrap">
+           <div class="inst-proj-summary" id="instFilesProjSummary"></div>
+           <div class="inst-proj-list" id="instFilesProjList"></div>
+         </div>
+         <!-- ★INST-LIB-PORT-20261125★ 点击项目卡片后进入的独立项目资料文件管理器 -->
+         <div class="ib-lib" id="ibLibView" style="display:none">
+           <div class="ib-lib-crumb" id="ibLibCrumb"></div>
+           <div class="ib-lib-tools" id="ibLibTools"></div>
+           <div id="ibLibContent"></div>
+           <input type="file" id="ibLibFileInput" multiple style="display:none" onchange="ibLibUpload(this)">
+           <input type="file" id="ibLibDirInput" webkitdirectory directory multiple style="display:none" onchange="ibLibUpload(this)">
+         </div>
+         <div class="ib-lib-drop" id="ibLibDrop">松开以上传文件</div>
+
        </div>
        </div>
        <div class="inst-panel" data-itab="shared" role="tabpanel">
-       <div class="inst-card">
+       <div class="inst-card inst-detail-card" style="max-width:1180px;text-align:left">
          <h2 class="inst-panel-title" data-itab="shared">安装相关公共共享资料</h2>
-         <div class="inst-ph">功能开发中，敬请期待</div>
+         <div class="ib-lib" id="ibPubLibView" style="display:none">
+           <div class="ib-lib-crumb" id="ibPubLibCrumb"></div>
+           <div class="ib-lib-tools" id="ibPubLibTools"></div>
+           <div id="ibPubLibContent"></div>
+           <input type="file" id="ibPubLibFileInput" multiple style="display:none" onchange="ibLibUpload(this)">
+           <input type="file" id="ibPubLibDirInput" webkitdirectory directory multiple style="display:none" onchange="ibLibUpload(this)">
+         </div>
        </div>
        </div>
        </div>
        </div>
+
+<!-- ★CRM-GROUP-20261127★ 项目管理CRM：分组领航标签（复用安装管理顶栏外观，下方透明穿透原项目视图） -->
+<div id="crmGroupOverlay" aria-hidden="true">
+  <div class="inst-topbar">
+    <div class="inst-brand">
+      <div class="inst-logo"><span class="crm-group-logo">AGI-CRM</span></div>
+      <div class="inst-title" id="crmGroupTitle">项目管理CRM</div>
+    </div>
+    <div class="inst-tabs crm-group-tabs" id="crmGroupTabs" role="tablist">
+      <button class="inst-tab active" data-itab="dashboard" role="tab" onclick="crmSwitchTab('dashboard')"><span class="tb-label">看板</span></button>
+      <button class="inst-tab" data-itab="crm" role="tab" onclick="crmSwitchTab('crm')"><span class="tb-label">潜在项目</span></button>
+      <button class="inst-tab" data-itab="won" role="tab" onclick="crmSwitchTab('won')"><span class="tb-label">签约项目</span></button>
+      <button class="inst-tab" data-itab="lost" role="tab" onclick="crmSwitchTab('lost')"><span class="tb-label">失败项目</span></button>
+    </div>
+    <span class="inst-spacer"></span>
+    <div class="lang-switch" id="crmGroupLangSwitch">
+      <button id="crmGroupLangZh" onclick="setLangDebug('zh')">中</button>
+      <button id="crmGroupLangEn" onclick="setLangDebug('en')">EN</button>
+      <button id="crmGroupLangVi" onclick="setLangDebug('vi')">VI</button>
+    </div>
+    <div class="tb-user" id="crmGroupUserChip">
+      <span class="tb-user-avatar" id="crmGroupUserAvatar">T</span>
+      <span class="tb-user-name" id="crmGroupUserName">Tom</span>
+      <span class="tb-user-role" id="crmGroupUserRole"></span>
+    </div>
+    <button class="inst-exit-btn crm-group-exit" id="crmGroupExitBtn" onclick="exitCrmGroup()">退出项目管理CRM</button>
+  </div>
+  <div class="crm-group-body" id="crmGroupBody"></div>
+</div>
+
+<!-- ★INST-LIB-PREVIEW-20261125★ 文件在线预览弹窗（不下载，可关闭） -->
+<div id="ibLibPreviewModal" class="ib-lib-preview-modal">
+  <div class="ib-lib-preview-box">
+    <div class="ib-lib-preview-head">
+      <span id="ibLibPreviewTitle"></span>
+      <button type="button" onclick="ibLibClosePreview()" title="Close">✕</button>
+    </div>
+    <div class="ib-lib-preview-body" id="ibLibPreviewBody"></div>
+  </div>
+</div>
 
 <!-- ==================== 私密空间（Vault）入口 PIN 弹窗 ==================== -->
 <div id="vaultPinModal" class="vault-pin-modal hidden">
@@ -4785,6 +5018,8 @@ function _ovLoadChartLib(cb){
     <button class="btn-action" id="btnAddWon" onclick="openWonModal()">+ New Won</button>
     <button class="btn-action" id="btnOverview" onclick="openOverviewModal()">全部项目概况</button>
     <button class="btn-action" id="btnExportWonExcel" onclick="exportWonToExcel()">📊 Export Excel</button>
+    <!-- ★WON-ARCHIVE-20261125★ 红色按钮：进入/退出项目结束存档（同一按钮切换） -->
+    <button type="button" class="btn-action btn-archive-top" id="btnArchiveList" onclick="toggleArchiveView()">项目结束存档</button>
     <span class="cur-toggles">
       <button type="button" class="cur-pill on" data-cur="rmb" onclick="onCurPillClick('rmb')">RMB</button>
       <button type="button" class="cur-pill on" data-cur="usd" onclick="onCurPillClick('usd')">USD</button>
@@ -6924,10 +7159,20 @@ var I18N = {
     lbl_rate_usd_vnd:"USD-VND 汇率",
     lbl_include_install:"包含安装？",
     lbl_sales_product:"销售产品",
+    sales_product:"销售产品",
     sales_part:"零配件", sales_system:"系统性设备", sales_service:"服务",
     sales_part_tip:"零配件：该合同只销售了零配件，客户通常自行安装，或者客户准备的备品备件、不构成系统！",
     sales_system_tip:"系统性设备：单个或者多个系统，比如料线系统、集中供料、通风系统、栏位系统、鸡笼系统、集蛋系统、水电系统、清粪系统等等需要安装，便可以理解为系统性设备；",
     sales_service_tip:"服务：无实物的销售，比如销售顾问、设计咨询等无形产品的销售；",
+    /* ★WON-DEL-PWD-20261125★ 删除项目前必须输入密码 can-delete */
+    del_pwd_title:"删除项目", del_pwd_hint:"请输入删除密码", del_pwd_placeholder:"密码", del_pwd_error:"密码错误，请重新输入",
+    /* ★WON-ARCHIVE-20261125★ 项目结束存档（三语） */
+    won_archive_btn:"项目结束存档", archive_exit_btn:"退出项目结束存档", archive_title:"项目结束存档", archive_row_tip:"存档该项目",
+    archive_restore_tip:"返回至签约项目", archive_restore_ok:"已返回至签约项目",
+    archive_restore_confirm_title:"确认转回", archive_restore_confirm_msg:"确定需要转回至签约项目吗？",
+    archive_pwd_title:"项目结束存档", archive_pwd_hint:"请输入存档密码", archive_pwd_placeholder:"••••••", archive_pwd_error:"密码错误，请重新输入",
+    archive_confirm_title:"确认存档", archive_confirm_msg:"确定要把该项目转入「项目结束存档」吗？转入后签约项目列表将不再显示，全部数据与附件都会完整保留。",
+    archive_ok:"已转入「项目结束存档」", archive_fail:"存档失败：无法连接服务器",
     lbl_payment_terms:"付款方式",
     lbl_salesperson:"销售人员",
     lbl_equip_rmb:"设备金额 RMB",
@@ -7305,9 +7550,9 @@ var I18N = {
     addm_title:"补充协议管理", addm_action:"操作", addm_date:"日期", addm_amt_rmb:"金额(RMB)", addm_amt_usd:"金额(USD)", addm_amt_vnd:"金额(VND)", addm_desc:"说明", addm_file:"附件(PDF)", addm_upload_cnt:"修改次数", addm_add:"＋ 增加补充协议", addm_save:"保存", addm_close:"关闭", addm_del:"删除", addm_clear_desc:"清空三语", addm_no_pdf:"仅支持 PDF 格式", addm_upload_ok:"上传成功", addm_upload_fail:"上传失败", addm_confirm_del:"确定删除该补充协议？", addm_no_data:"暂无补充协议", addm_save_first:"请先保存主表", addm_alert_title:"提示", addm_alert_ok:"确定", addm_count_auto:"（次数自动）", addm_view_title:"查看补充协议", detail_del:"删除",
     d1u_report_title:"Tencent 用量与监控", d1u_title:"腾讯云资源用量", d1u_plan:"腾讯云轻量应用服务器", d1u_limit:"流量包总额：{limit} GB", d1u_used:"已用流量", d1u_remain:"剩余流量", d1u_pct:"占比", d1u_written:"磁盘已用", d1u_date:"更新时间", d1u_refresh:"刷新", d1u_loading:"正在读取腾讯数据…", d1u_unavailable:"暂无法获取腾讯数据（未配置密钥或接口不可用）", d1u_locked:"已达 95% 上限：已限制其他用户，仅管理员可用", d1u_normal:"用量正常", d1u_cleanup_btn:"清理残留文件", d1u_close:"关闭", d1u_choose_title:"Tencent 用量与监控", d1u_choose_usage:"查看用量与监控", d1u_choose_clean:"清理残留文件（含容量报告）", d1u_choose_cancel:"取消", d1u_back:"返回上一页", d1u_back_lvl:"返回上一级",
     clean_title:"清理残留文件", clean_confirm:"确认清除删除后的无效文件、孤儿文件的残余文件吗？此操作不可恢复。", clean_ok:"确认清除", clean_cancel:"取消", clean_success:"清理完成", clean_result:"扫描了 {total} 个 R2 对象，发现 {orphans} 个孤儿文件，已删除 {deleted} 个，跳过 {skipped} 个非受管文件。", clean_no_orphans:"未发现孤儿文件。", clean_forbidden:"仅 Tom 可使用此功能。", clean_error:"清理请求失败：", clean_report_title:"清理报告", clean_report_summary:"本次共删除 {deleted} 个垃圾文件（共发现 {total} 个孤儿文件）。", clean_report_where:"删除位置（相对路径）", clean_report_close:"关闭", clean_report_empty:"未发现可删除的垃圾文件，目录已干净。", clean_report_more:"（仅显示前 50 个，实际共 {total} 个）", clean_storage_title:"腾讯云容量分布", clean_storage_summary:"总容量 {total}，已用 {used}（{usedPct}），剩余 {free}（{freePct}）", clean_storage_won:"WON 附件", clean_storage_crm:"CRM 附件", clean_storage_lost:"LOST 附件", clean_storage_vault:"私密空间文件", clean_storage_snapshots:"数据快照", clean_storage_other:"其它", clean_storage_free:"剩余空间", clean_storage_loading:"正在统计腾讯云容量…", clean_storage_error:"容量统计失败：",
-    nav: { dashboard:"看板", crm:"潜在项目", won:"签约项目", lost:"失败项目", approvals:"审批", users:"用户与授权", commission:"个人佣金", install:"安装管理", install_exit:"退出安装管理", install_ph:"功能开发中，敬请期待", install_tab_board:"安装项目进度看板", install_tab_detail:"安装详情管理", install_tab_files:"项目专属资料", install_tab_shared:"安装相关公共共享资料", lang:"语言", logout:"退出登录", role_admin:"(管理员)", export_pdf:"导出PDF", fit:"适应", fit_exit:"还原", fit_tip:"把整张表缩放到一屏宽；双击表格或再点一次还原" },
+    nav: { dashboard:"看板", crm:"潜在项目", won:"签约项目", archive:"项目结束存档", lost:"失败项目", approvals:"审批", users:"用户与授权", commission:"个人佣金", crm_group:"项目管理CRM", crm_group_exit:"退出项目管理CRM", install:"安装管理", install_exit:"退出安装管理", install_ph:"功能开发中，敬请期待", install_tab_board:"安装项目进度看板", install_tab_detail:"安装详情管理", install_tab_files:"项目专属资料", install_tab_shared:"安装相关公共共享资料", lang:"语言", logout:"退出登录", role_admin:"(管理员)", export_pdf:"导出PDF", fit:"适应", fit_exit:"还原", fit_tip:"把整张表缩放到一屏宽；双击表格或再点一次还原", inst_proj_back:"返回列表", inst_proj_install:"安装", inst_proj_ph:"功能开发中，敬请期待", inst_proj_tab_zone:"农场栋数&分区", inst_proj_tab_ship:"发货&到货计划", inst_proj_tab_plan:"详细安装计划", inst_proj_tab_material:"物料管理", inst_proj_tab_log:"工作日志" },
     /* 手机横屏专用短标签：原名太长会挤掉后面的标签，这里用短名保证 6 个标签一屏可见 */
-    nav_short: { dashboard:"看板", crm:"潜在", won:"签约", lost:"失败", approvals:"审批", users:"用户", commission:"佣金", install:"安装" },
+    nav_short: { dashboard:"看板", crm:"潜在", won:"签约", archive:"存档", lost:"失败", approvals:"审批", users:"用户", commission:"佣金", crm_group:"项目CRM", install:"安装" },
     empty: { dash_title:"看板", dash_sub:"CRM + 签约 + 失败数据分析", dash_hint:"数据分析面板开发中，敬请期待",
              dash_card_title:"数据看板", dash_refresh:"刷新", dash_loading:"数据加载中…", dash_load_failed:"数据加载失败",
              dash_potential_count:"潜在项目总数", dash_potential_amt:"潜在项目总金额",
@@ -7713,10 +7958,20 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     lbl_rate_usd_vnd:"USD-VND Rate",
     lbl_include_install:"Include Installation?",
     lbl_sales_product:"Sales Product",
+    sales_product:"Sales Product",
     sales_part:"Spare Parts", sales_system:"System Equipment", sales_service:"Service",
     sales_part_tip:"Spare Parts: this contract sells spare parts only; the customer usually installs them by himself, or they are customer-prepared reserves and do not form a system!",
     sales_system_tip:"System Equipment: one or more systems requiring installation, such as feeding line, central feeding, ventilation, housing, chicken cage, egg collection, water/electricity, manure removal systems, etc.",
     sales_service_tip:"Service: sales without physical goods, such as sales consulting and design consulting, i.e. intangible products.",
+    /* ★WON-DEL-PWD-20261125★ delete password gate */
+    del_pwd_title:"Delete Project", del_pwd_hint:"Enter the delete password", del_pwd_placeholder:"Password", del_pwd_error:"Wrong password, please try again",
+    /* ★WON-ARCHIVE-20261125★ project archive (i18n) */
+    won_archive_btn:"Project Archive", archive_exit_btn:"Exit Project Archive", archive_title:"Project Archive", archive_row_tip:"Archive this project",
+    archive_restore_tip:"Return to Won Projects", archive_restore_ok:"Returned to Won Projects",
+    archive_restore_confirm_title:"Confirm Return", archive_restore_confirm_msg:"Return this project to Won Projects?",
+    archive_pwd_title:"Project Archive", archive_pwd_hint:"Enter the archive password", archive_pwd_placeholder:"••••••", archive_pwd_error:"Wrong password, please try again",
+    archive_confirm_title:"Confirm Archive", archive_confirm_msg:"Move this project to Project Archive? It will disappear from the Won Projects list, but all data and attachments remain intact.",
+    archive_ok:"Moved to Project Archive", archive_fail:"Archive failed: unable to connect to server",
     lbl_payment_terms:"Payment Terms",
     lbl_salesperson:"Salesperson",
     lbl_equip_rmb:"Equipment RMB",
@@ -8094,9 +8349,9 @@ crm_yes:"是", crm_no_yes:"否", lostRestore:"转回至潜在项目", lostRestor
     addm_title:"Addendum Management", addm_action:"Action", addm_date:"Date", addm_amt_rmb:"Amt RMB", addm_amt_usd:"Amt USD", addm_amt_vnd:"Amt VND", addm_desc:"Description", addm_file:"Attachment(PDF)", addm_upload_cnt:"Mod Count", addm_add:"＋ Add Addendum", addm_save:"Save", addm_close:"Close", addm_del:"Delete", addm_clear_desc:"Clear all", addm_no_pdf:"Only PDF is supported", addm_upload_ok:"Upload successful", addm_upload_fail:"Upload failed", addm_confirm_del:"Delete this addendum?", addm_no_data:"No addendum yet", addm_save_first:"Please save the main form first", addm_alert_title:"Notice", addm_alert_ok:"OK", addm_count_auto:"(count auto)", addm_view_title:"View Addendum", detail_del:"Delete",
     d1u_report_title:"Tencent Usage & Monitoring", d1u_title:"Tencent Cloud Usage", d1u_plan:"Tencent Cloud Lighthouse", d1u_limit:"Traffic package: {limit} GB", d1u_used:"Traffic used", d1u_remain:"Traffic remaining", d1u_pct:"Percentage", d1u_written:"Disk used", d1u_date:"Updated", d1u_refresh:"Refresh", d1u_loading:"Loading Tencent data…", d1u_unavailable:"Tencent data unavailable (credentials not configured or API error)", d1u_locked:"95% limit reached: other users blocked, admin only", d1u_normal:"Usage is normal", d1u_cleanup_btn:"Clean up leftover files", d1u_close:"Close", d1u_choose_title:"Tencent Usage & Monitoring", d1u_choose_usage:"View Usage & Monitoring", d1u_choose_clean:"Clean up leftover files (with storage report)", d1u_choose_cancel:"Cancel", d1u_back:"Back to Previous", d1u_back_lvl:"Back",
     clean_title:"Clean up leftover files", clean_confirm:"Confirm cleanup of invalid files and orphan remnants after deletion? This action cannot be undone.", clean_ok:"Confirm Clean", clean_cancel:"Cancel", clean_success:"Cleanup completed", clean_result:"Scanned {total} R2 objects, found {orphans} orphan files, deleted {deleted}, skipped {skipped} unmanaged files.", clean_no_orphans:"No orphan files found.", clean_forbidden:"Only Tom can use this feature.", clean_error:"Cleanup request failed:", clean_report_title:"Cleanup Report", clean_report_summary:"Deleted {deleted} junk file(s) (found {total} orphan file(s) in total).", clean_report_where:"Deleted location (relative path)", clean_report_close:"Close", clean_report_empty:"No junk files to delete; the directory is already clean.", clean_report_more:"(showing first 50; total {total})", clean_storage_title:"Tencent Cloud Storage", clean_storage_summary:"Total {total}, Used {used} ({usedPct}), Free {free} ({freePct})", clean_storage_won:"WON attachments", clean_storage_crm:"CRM attachments", clean_storage_lost:"LOST attachments", clean_storage_vault:"Vault files", clean_storage_snapshots:"Data snapshots", clean_storage_other:"Other", clean_storage_free:"Free space", clean_storage_loading:"Counting Tencent Cloud storage…", clean_storage_error:"Storage count failed: ",
-    nav: { dashboard:"Dashboard", crm:"Potential Projects", won:"Won Projects", lost:"Failed Projects", approvals:"Approvals", users:"User & Authorization", commission:"Personal Commission", install:"Installation Management", install_exit:"Exit Installation Management", install_ph:"Under development, coming soon", install_tab_board:"Installation Progress Dashboard", install_tab_detail:"Installation Detail Management", install_tab_files:"Project Documents", install_tab_shared:"Installation Shared Files", lang:"Lang", logout:"Logout", role_admin:"(admin)", export_pdf:"Export PDF", fit:"Fit", fit_exit:"100%", fit_tip:"Fit table to screen width; double-tap the table or tap again to restore" },
+    nav: { dashboard:"Dashboard", crm:"Potential Projects", won:"Won Projects", archive:"Project Archive", lost:"Failed Projects", approvals:"Approvals", users:"User & Authorization", commission:"Personal Commission", crm_group:"Project Management CRM", crm_group_exit:"Exit Project Management CRM", install:"Installation Management", install_exit:"Exit Installation Management", install_ph:"Under development, coming soon", install_tab_board:"Installation Progress Dashboard", install_tab_detail:"Installation Detail Management", install_tab_files:"Project Documents", install_tab_shared:"Installation Shared Files", lang:"Lang", logout:"Logout", role_admin:"(admin)", export_pdf:"Export PDF", fit:"Fit", fit_exit:"100%", fit_tip:"Fit table to screen width; double-tap the table or tap again to restore", inst_proj_back:"Back to List", inst_proj_install:"Installation", inst_proj_ph:"Under development, coming soon", inst_proj_tab_zone:"Farm Buildings & Zones", inst_proj_tab_ship:"Shipping & Receiving Plan", inst_proj_tab_plan:"Detailed Installation Plan", inst_proj_tab_material:"Material Management", inst_proj_tab_log:"Work Log" },
     /* Short labels used on phone landscape so all 6 tabs fit on one row */
-    nav_short: { dashboard:"Board", crm:"Potential", won:"Won", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm", install:"Install" },
+    nav_short: { dashboard:"Board", crm:"Potential", won:"Won", archive:"Archive", lost:"Failed", approvals:"Approvals", users:"Users", commission:"Comm", crm_group:"CRM", install:"Install" },
     empty: { dash_title:"Dashboard", dash_sub:"CRM + Won + Failed Analytics", dash_hint:"Analytics panel under development",
              dash_card_title:"Dashboard", dash_refresh:"Refresh", dash_loading:"Loading…", dash_load_failed:"Failed to load data",
              dash_potential_count:"Total Potential Projects", dash_potential_amt:"Total Potential Project Value",
@@ -8505,10 +8760,20 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     lbl_rate_usd_vnd:"Tỷ giá USD-VND",
     lbl_include_install:"Bao gồm lắp đặt?",
     lbl_sales_product:"Sản phẩm bán",
+    sales_product:"Sản phẩm bán",
     sales_part:"Phụ tùng", sales_system:"Thiết bị hệ thống", sales_service:"Dịch vụ",
     sales_part_tip:"Phụ tùng: hợp đồng này chỉ bán phụ tùng, khách thường tự lắp đặt, hoặc là phụ tùng dự phòng do khách chuẩn bị, không tạo thành hệ thống!",
     sales_system_tip:"Thiết bị hệ thống: một hoặc nhiều hệ thống cần lắp đặt, như hệ thống ăn, cấp liệu tập trung, thông gió, chuồng trại, lồng gà, thu trứng, nước/điện, dọn phân, v.v.;",
     sales_service_tip:"Dịch vụ: bán không có hàng hóa thực tế, ví dụ tư vấn bán hàng, tư vấn thiết kế và các sản phẩm vô hình khác;",
+    /* ★WON-DEL-PWD-20261125★ cổng mật khẩu xóa */
+    del_pwd_title:"Xóa dự án", del_pwd_hint:"Nhập mật khẩu xóa", del_pwd_placeholder:"Mật khẩu", del_pwd_error:"Mật khẩu sai, vui lòng nhập lại",
+    /* ★WON-ARCHIVE-20261125★ lưu trữ dự án (đa ngôn ngữ) */
+    won_archive_btn:"Lưu trữ dự án", archive_exit_btn:"Thoát lưu trữ dự án", archive_title:"Lưu trữ dự án", archive_row_tip:"Lưu trữ dự án này",
+    archive_restore_tip:"Trở lại Dự án Thắng", archive_restore_ok:"Đã trở lại Dự án Thắng",
+    archive_restore_confirm_title:"Xác nhận trở lại", archive_restore_confirm_msg:"Bạn có chắc muốn trở lại Dự án Thắng không?",
+    archive_pwd_title:"Lưu trữ dự án", archive_pwd_hint:"Nhập mật khẩu lưu trữ", archive_pwd_placeholder:"••••••", archive_pwd_error:"Mật khẩu sai, vui lòng nhập lại",
+    archive_confirm_title:"Xác nhận lưu trữ", archive_confirm_msg:"Chuyển dự án này vào Lưu trữ dự án? Dự án sẽ không còn trong danh sách Dự án Thắng, nhưng toàn bộ dữ liệu và tệp đính kèm vẫn được giữ nguyên.",
+    archive_ok:"Đã chuyển vào Lưu trữ dự án", archive_fail:"Lưu trữ thất bại: không thể kết nối máy chủ",
     lbl_payment_terms:"Phương thức thanh toán",
     lbl_salesperson:"NVKD",
     lbl_equip_rmb:"Thiết bị RMB",
@@ -8886,9 +9151,9 @@ crm_yes:"Yes", crm_no_yes:"No", lostRestore:"Restore to Prospect", lostRestoreTi
     addm_title:"Quản lý phụ lục hợp đồng", addm_action:"Thao tác", addm_date:"Ngày", addm_amt_rmb:"Tiền(RMB)", addm_amt_usd:"Tiền(USD)", addm_amt_vnd:"Tiền(VND)", addm_desc:"Mô tả", addm_file:"Tệp(PDF)", addm_upload_cnt:"Số lần sửa", addm_add:"＋ Thêm phụ lục", addm_save:"Lưu", addm_close:"Đóng", addm_del:"Xóa", addm_clear_desc:"Xóa 3 ngôn ngữ", addm_no_pdf:"Chỉ hỗ trợ PDF", addm_upload_ok:"Tải lên thành công", addm_upload_fail:"Tải lên thất bại", addm_confirm_del:"Xóa phụ lục này?", addm_no_data:"Chưa có phụ lục", addm_save_first:"Vui lòng lưu form chính trước", addm_alert_title:"Thông báo", addm_alert_ok:"Đồng ý", addm_count_auto:"(tự động)", addm_view_title:"Xem phụ lục", detail_del:"Xóa",
     d1u_report_title:"Tencent Usage & Monitoring", d1u_title:"Mức sử dụng tài nguyên Tencent Cloud", d1u_plan:"Tencent Cloud Lighthouse", d1u_limit:"Gói lưu lượng: {limit} GB", d1u_used:"Lưu lượng đã dùng", d1u_remain:"Lưu lượng còn lại", d1u_pct:"Tỷ lệ", d1u_written:"Đĩa đã dùng", d1u_date:"Cập nhật", d1u_refresh:"Làm mới", d1u_loading:"Đang tải dữ liệu Tencent…", d1u_unavailable:"Không lấy được dữ liệu Tencent (chưa cấu hình khóa hoặc lỗi API)", d1u_locked:"Đã đạt 95% giới hạn: người dùng khác bị chặn, chỉ quản trị viên", d1u_normal:"Mức sử dụng bình thường", d1u_cleanup_btn:"Dọn dẹp file thừa", d1u_close:"Đóng", d1u_choose_title:"Tencent Usage & Monitoring", d1u_choose_usage:"Xem mức sử dụng & giám sát", d1u_choose_clean:"Dọn dẹp file thừa (kèm báo cáo dung lượng)", d1u_choose_cancel:"Hủy", d1u_back:"Quay lại trang trước", d1u_back_lvl:"Quay lại",
     clean_title:"Dọn dẹp file thừa", clean_confirm:"Xác nhận xóa file không hợp lệ và file thừa còn sót sau khi xóa? Thao tác này không thể hoàn tác.", clean_ok:"Xác nhận xóa", clean_cancel:"Hủy", clean_success:"Dọn dẹp hoàn tất", clean_result:"Đã quét {total} đối tượng R2, tìm thấy {orphans} file thừa, đã xóa {deleted}, bỏ qua {skipped} file không được quản lý.", clean_no_orphans:"Không tìm thấy file thừa.", clean_forbidden:"Chỉ Tom mới có thể sử dụng tính năng này.", clean_error:"Yêu cầu dọn dẹp thất bại:", clean_report_title:"Báo cáo dọn dẹp", clean_report_summary:"Đã xóa {deleted} file rác (tìm thấy tổng cộng {total} file thừa).", clean_report_where:"Vị trí đã xóa (đường dẫn tương đối)", clean_report_close:"Đóng", clean_report_empty:"Không tìm thấy file rác để xóa; thư mục đã sạch.", clean_report_more:"(chỉ hiển thị 50 đầu; tổng {total})", clean_storage_title:"Dung lượng Tencent Cloud", clean_storage_summary:"Tổng {total}, Đã dùng {used} ({usedPct}), Còn trống {free} ({freePct})", clean_storage_won:"Tệp đính kèm WON", clean_storage_crm:"Tệp đính kèm CRM", clean_storage_lost:"Tệp đính kèm LOST", clean_storage_vault:"Tệp Vault", clean_storage_snapshots:"Snapshot dữ liệu", clean_storage_other:"Khác", clean_storage_free:"Còn trống", clean_storage_loading:"Đang thống kê dung lượng Tencent Cloud…", clean_storage_error:"Thống kê thất bại: ",
-    nav: { dashboard:"Bảng điều khiển", crm:"Dự án tiềm năng", won:"Dự án Thắng", lost:"Dự án thất bại", approvals:"Phê duyệt", users:"Người dùng & Ủy quyền", commission:"Hoa Hồng Cá Nhân", install:"Quản lý lắp đặt", install_exit:"Thoát quản lý lắp đặt", install_ph:"Đang phát triển, vui lòng chờ", install_tab_board:"Bảng tiến độ lắp đặt", install_tab_detail:"Quản lý chi tiết lắp đặt", install_tab_files:"Tài liệu riêng dự án", install_tab_shared:"Tài liệu chia sẻ lắp đặt", lang:"Ngôn ngữ", logout:"Đăng xuất", role_admin:"(quản trị)", export_pdf:"Xuất PDF", fit:"Vừa", fit_exit:"100%", fit_tip:"Thu nhỏ bảng vừa màn hình; nhấn đúp vào bảng để trở lại" },
+    nav: { dashboard:"Bảng điều khiển", crm:"Dự án tiềm năng", won:"Dự án Thắng", archive:"Lưu trữ dự án", lost:"Dự án thất bại", approvals:"Phê duyệt", users:"Người dùng & Ủy quyền", commission:"Hoa Hồng Cá Nhân", crm_group:"Quản lý dự án CRM", crm_group_exit:"Thoát quản lý dự án CRM", install:"Quản lý lắp đặt", install_exit:"Thoát quản lý lắp đặt", install_ph:"Đang phát triển, vui lòng chờ", install_tab_board:"Bảng tiến độ lắp đặt", install_tab_detail:"Quản lý chi tiết lắp đặt", install_tab_files:"Tài liệu riêng dự án", install_tab_shared:"Tài liệu chia sẻ lắp đặt", lang:"Ngôn ngữ", logout:"Đăng xuất", role_admin:"(quản trị)", export_pdf:"Xuất PDF", fit:"Vừa", fit_exit:"100%", fit_tip:"Thu nhỏ bảng vừa màn hình; nhấn đúp vào bảng để trở lại", inst_proj_back:"Về danh sách", inst_proj_install:"Lắp đặt", inst_proj_ph:"Đang phát triển, vui lòng chờ", inst_proj_tab_zone:"Số chuồng trang trại & Khu vực", inst_proj_tab_ship:"Kế hoạch gửi hàng & nhận hàng", inst_proj_tab_plan:"Kế hoạch lắp đặt chi tiết", inst_proj_tab_material:"Quản lý vật tư", inst_proj_tab_log:"Nhật ký công việc" },
     /* Nhãn ngắn dùng cho màn hình ngang để 6 tab vừa một hàng */
-    nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH", install:"Lắp đặt" },
+    nav_short: { dashboard:"Tổng quan", crm:"Tiềm năng", won:"Thắng", archive:"Lưu trữ", lost:"Thất bại", approvals:"Phê duyệt", users:"Người dùng", commission:"HH", crm_group:"DA CRM", install:"Lắp đặt" },
     empty: { dash_title:"Bảng điều khiển", dash_sub:"Phân tích CRM + Thắng + Thất bại", dash_hint:"Bảng phân tích đang phát triển",
              dash_card_title:"Bảng dữ liệu", dash_refresh:"Làm mới", dash_loading:"Đang tải…", dash_load_failed:"Tải dữ liệu thất bại",
              dash_potential_count:"Tổng số dự án tiềm năng", dash_potential_amt:"Tổng giá trị dự án tiềm năng",
@@ -10097,6 +10362,8 @@ function ensureCrmSaved(cb) {
     quote_version_log: S('c_quote_version_log') || '[]',
     rate_rmb_vnd: String(moneyToNumber(S('c_rate_rmb_vnd'))), rate_usd_vnd: String(moneyToNumber(S('c_rate_usd_vnd'))), incoterm: S('c_incoterm'),
     install_quoted: S('c_install_quoted'), salesperson: S('c_salesperson'),
+    // ★CRM-SALES-PRODUCT-20261125：销售产品（预保存也要带上，避免先传 PDF 时丢值）
+    sales_product: S('c_sales_product'),
     remark: S('c_remark_' + (window.CUR_LANG || 'en')) || S('c_remark'),
     remark_zh: S('c_remark_zh'), remark_en: S('c_remark_en'), remark_vi: S('c_remark_vi'),
     pdf_equip: S('c_pdf_equip'), pdf_install: S('c_pdf_install'), pdf_both: S('c_pdf_both')
@@ -11332,7 +11599,9 @@ function setLangDebug(lang) {
   // ★ V2026.11.04.01 新要求：切语言只刷新【当前激活的表格标签】，
   // 绝不读/重渲染其它标签的数据行（消除切语言时对非当前标签的 loadCrm/loadWon/loadLost fetch）。
   // 其它表格仅打“语言失效”轻标，切过去时由 switchView 用缓存重渲染（无 fetch、不读其它标签的行）。
-  var _activeTable = (window.currentView === 'won' || window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
+  // ★WON-ARCHIVE-I18N-20261125★ 存档页本质复用 WON 表，切语言必须当作 won 激活，否则表头/标题停留旧语言
+  var _activeTable = (window.currentView === 'won' || window.currentView === 'archive') ? 'won'
+    : (window.currentView === 'crm' || window.currentView === 'lost') ? window.currentView : null;
   for (var j = 0; j < heavySteps.length; j++) {
     try {
       var _fn = heavySteps[j];
@@ -11428,7 +11697,7 @@ function applyTopbarLang() {
   // 盒子宽度由 LG.freezeTopbar 按「三语最长文案」算定，所以文案变、盒子不变 → 不闪跳。
   var _langNow = (window.CUR_LANG || CUR_LANG);
   var shortNav = (topbarCompact() && _langNow !== 'zh' && t.nav_short) ? t.nav_short : null;
-  var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', lost:'lost', approvals:'approvals', users:'users', commission:'commission', install:'install' };
+  var menuMap = { dashboard:'dashboard', crm:'crm', won:'won', archive:'archive', lost:'lost', approvals:'approvals', users:'users', commission:'commission', crmgroup:'crm_group', install:'install' };
   for (var k in menuMap) {
     var b = document.querySelector('.tb-item[data-view="'+menuMap[k]+'"]');
     var txt = (shortNav && shortNav[k]) ? shortNav[k] : nav[k];
@@ -11443,6 +11712,8 @@ function applyTopbarLang() {
   if (typeof applyCommissionLang === 'function') applyCommissionLang();
   // ★INSTALL-MGMT-20261124★ 安装管理覆盖层文案（标签/标题/占位/退出按钮/用户信息）随语言刷新
   if (typeof applyInstallLang === 'function') applyInstallLang();
+  // ★CRM-GROUP-20261127★ 项目管理CRM 分组顶栏文案随语言刷新
+  if (typeof applyCrmGroupLang === 'function') applyCrmGroupLang();
   var lbl = document.querySelector('.lang-switch-label');
   if (lbl && nav.lang) lbl.textContent = nav.lang + ':';
   var lg = el('tbLogout');
@@ -13126,6 +13397,7 @@ function canWriteRow(p){
 var VIEW_PERM_MAP = {
   crm: 'CRM-L1',
   won: 'WON-L1',
+  archive: 'WON-L1',   // ★WON-ARCHIVE-20261125★ 存档沿用签约项目列表权限
   lost: 'LOST-L1',
   users: 'USR-L1',
   install: 'INST-L1'   // ★INSTALL-MGMT-20261124★ 安装管理（缺省可见性见 _isInstallDefaultPos）
@@ -16872,7 +17144,7 @@ function confirmCommissionUnlock(){
       '#commAmtReqOverlay','#commissionAddModalOverlay',
       '#beneficiaryModalOverlay','#authModalOverlay','#crmMoveToLostModal',
       '#addmSummaryOverlay','#addendumModal','#addmAlertOverlay',
-      '#delConfirmOverlay','#crmCloseConfirmOverlay','#crmOrangeConfirmOverlay','#copyPwdOverlay','#rptOverlay'].join(',');
+      '#delConfirmOverlay','#crmCloseConfirmOverlay','#crmOrangeConfirmOverlay','#copyPwdOverlay','#delPwdOverlay', '#archPwdOverlay','#rptOverlay'].join(',');
     var any = false, els = document.querySelectorAll(sel);
     for (var i = 0; i < els.length; i++){
       var el = els[i];
@@ -17439,7 +17711,7 @@ function _isObserverPos(u){
 // 版本命名规则：V<年>.<月>.<日>.<当日序号> / build <年>-<月>-<日>-Z<序号>；
 // 跨天日期必须重新起算（当日序号归 1），否则会出现"日期还是昨天"的错误版本号。
 // 当前：2026-09-05 第 104 版
-const PERM_BUILD = "build 2026-11-04-Z284";  // 版本标记：Z284 = 版本号 V2026.11.04.01；潜在项目/签约项目/失败项目三张表加黑色网格线（GRID-BLACK-20261104：单元格四边框 #bbb→#000、固定列分隔线与内阴影同步、表容器外框转黑）
+const PERM_BUILD = "build 2026-11-27-Z333";  // 版本标记：Z333 = 新增项目管理CRM分组领航标签（看板/潜在/签约/失败）；Z332 = 日历假期提示字号缩小 2px
 // 统一身份头：CRM/LOST 等模块的所有请求必须携带，服务端据此写 owner_user_id（记录归属）并按数据范围过滤。
 // 缺失会导致：新建行 owner 为空 → 数据范围匹配退化为 salesperson 文本 → 自己的行（尤其 AGI-GS Internal 符号人行）不可见。
 function authHeaders(extra){
@@ -18643,6 +18915,11 @@ function applyWonLang() {
   el('btnAddWon').innerText = t.btnAddWon; 
   el('btnOverview').innerText = t.btnOverview; 
   el('btnExportWonExcel').innerText = t.btnExportExcel; 
+  // ★WON-ARCHIVE-20261125★ 红色存档入口 + 密码弹窗文案随语言刷新
+  if (typeof archiveBtnSetText === 'function') archiveBtnSetText();
+  try { if (typeof archivePwdSetTexts === 'function') archivePwdSetTexts(); } catch (e) {}
+  try { if (typeof delConfirmSetTexts === 'function') delConfirmSetTexts(); } catch (e) {}
+  if (window.__archiveMode) { var _archTitle = el('wonTitle'); if (_archTitle) _archTitle.innerText = t.archive_title || t.wonTitle; }
   el('wbtnSave').innerText = t.btnSave; 
   el('wbtnCancel').innerText = t.btnCancel; 
   
@@ -18831,85 +19108,86 @@ function updateTheadTextOnly() {
     '3': t.won_province,
     '4': t.signing_date,
     '5': t.parties,
-    '6': t.currency,
-    '7': t.contract_rate,
-    '9': t.incoterms,
-    '10': t.won_doc_equip,
-    '11': t.won_doc_install,
-    '12': t.include_install,
-    '13': t.p1_payment_method,
-    '14': t.p1_equipment_amount,
+    '6': t.sales_product,
+    '7': t.currency,
+    '8': t.contract_rate,
+    '10': t.incoterms,
+    '11': t.won_doc_equip,
+    '12': t.won_doc_install,
+    '13': t.include_install,
+    '14': t.p1_payment_method,
     '15': t.p1_equipment_amount,
     '16': t.p1_equipment_amount,
-    '17': t.p1_guide_install,
+    '17': t.p1_equipment_amount,
     '18': t.p1_guide_install,
     '19': t.p1_guide_install,
-    '20': t.p1_budget_freight_ins,
+    '20': t.p1_guide_install,
     '21': t.p1_budget_freight_ins,
     '22': t.p1_budget_freight_ins,
-    '23': t.p1_actual_freight_ins,
+    '23': t.p1_budget_freight_ins,
     '24': t.p1_actual_freight_ins,
     '25': t.p1_actual_freight_ins,
-    '26': t.p1_budget_customs_inland,
+    '26': t.p1_actual_freight_ins,
     '27': t.p1_budget_customs_inland,
     '28': t.p1_budget_customs_inland,
-    '29': t.p1_actual_customs_inland,
+    '29': t.p1_budget_customs_inland,
     '30': t.p1_actual_customs_inland,
     '31': t.p1_actual_customs_inland,
-    '32': t.p1_equipment_combined,
+    '32': t.p1_actual_customs_inland,
     '33': t.p1_equipment_combined,
     '34': t.p1_equipment_combined,
-    '35': t.p1_budget_install,
+    '35': t.p1_equipment_combined,
     '36': t.p1_budget_install,
     '37': t.p1_budget_install,
-    '38': t.p1_actual_install,
+    '38': t.p1_budget_install,
     '39': t.p1_actual_install,
     '40': t.p1_actual_install,
-    '41': t.p1_equip_install_total,
+    '41': t.p1_actual_install,
     '42': t.p1_equip_install_total,
     '43': t.p1_equip_install_total,
-    '44': t.p2_total_payments,
-    '45': t.p2_total_amount,
+    '44': t.p1_equip_install_total,
+    '45': t.p2_total_payments,
     '46': t.p2_total_amount,
     '47': t.p2_total_amount,
-    '48': t.p2_outstanding,
+    '48': t.p2_total_amount,
     '49': t.p2_outstanding,
     '50': t.p2_outstanding,
-    '51': t.p2_view_payment_detail,
-    '52': t.p2_note1,
-    '53': t.p3_commission_rate,
-    '54': t.p3_commission_amount,
+    '51': t.p2_outstanding,
+    '52': t.p2_view_payment_detail,
+    '53': t.p2_note1,
+    '54': t.p3_commission_rate,
     '55': t.p3_commission_amount,
     '56': t.p3_commission_amount,
-    '57': t.p3_total_payments,
-    '58': t.p3_total_amount,
+    '57': t.p3_commission_amount,
+    '58': t.p3_total_payments,
     '59': t.p3_total_amount,
     '60': t.p3_total_amount,
-    '61': t.p3_outstanding,
+    '61': t.p3_total_amount,
     '62': t.p3_outstanding,
     '63': t.p3_outstanding,
-    '64': t.p3_view_gs_pay_agi,
-    '65': t.p3_note2,
-    '66': t.p4_agi_payable_gs,
+    '64': t.p3_outstanding,
+    '65': t.p3_view_gs_pay_agi,
+    '66': t.p3_note2,
     '67': t.p4_agi_payable_gs,
     '68': t.p4_agi_payable_gs,
-    '69': t.p4_total_payments,
-    '70': t.p4_total_amount,
+    '69': t.p4_agi_payable_gs,
+    '70': t.p4_total_payments,
     '71': t.p4_total_amount,
     '72': t.p4_total_amount,
-    '73': t.p4_outstanding,
+    '73': t.p4_total_amount,
     '74': t.p4_outstanding,
     '75': t.p4_outstanding,
-    '76': t.p4_view_agi_pay_gs,
-    '77': t.p4_note3,
-    '78': t.p5_equipment_contract,
-    '79': t.p5_install_contract,
-    '80': t.p5_equip_install_contract,
-    '81': t.p5_addendum_count,
-    '82': t.p5_view_addendum,
-    '83': t.p5_note4,
-    '84': t.salesperson,
-    '85': t.action,
+    '76': t.p4_outstanding,
+    '77': t.p4_view_agi_pay_gs,
+    '78': t.p4_note3,
+    '79': t.p5_equipment_contract,
+    '80': t.p5_install_contract,
+    '81': t.p5_equip_install_contract,
+    '82': t.p5_addendum_count,
+    '83': t.p5_view_addendum,
+    '84': t.p5_note4,
+    '85': t.salesperson,
+    '86': t.action,
 };
   
   var ths = thead.querySelectorAll('th');
@@ -18971,48 +19249,48 @@ var wonSortState = [];
 var originalWonData = [];
 
 // 列索引 -> 数据字段名映射
-// ★ V45 终版结构（两次插列：V40 省份 +1、V45 设备/安装合同 +2）：
-//   0 No. | 1 合同编号 | 2 客户名称 | 3 省份 | 4 签约日期 | 5 签约双方 | 6 签约货币 |
-//   7-8 汇率 | 9 贸易术语 | 10 设备合同 | 11 安装合同 | 12 含安装 | 13 付款方式 |
-//   14-43 P1 十组三连 | 44-52 P2 | 53-65 P3 | 66-77 P4 | 78-83 P5(78-80 为永久隐藏废弃列) |
-//   84 销售人员 | 85 操作列
-//   ★ 总列 86（数据列 0..84 共 85 个 + 操作列 85）。配套索引（缺一即全表错位）：
-//   renderWonThead / renderFakeSubHeaderRow(cells 86、c<86、c===85 操作) /
-//   WON_GROUPS(销售人员 84、操作 85) / WON_NEVER_HIDE_COLS(0,1,85) /
-//   WON_P345_COLS(53..83) / WON_CUR_TRIPLE_STARTS / syncWonColVisibility(hidden[78,79,80]、c<86) /
-//   buildWonColGroup(86) / sortWonTable 守卫(85) / noDataRow colspan(86) / headerTextMap(0..85)
+// ★ V50 终版结构（三次插列：V40 省份 +1、V45 设备/安装合同 +2、V50 销售产品 +1）：
+//   0 No. | 1 合同编号 | 2 客户名称 | 3 省份 | 4 签约日期 | 5 签约双方 | 6 销售产品 |
+//   7 签约货币 | 8-9 汇率 | 10 贸易术语 | 11 设备合同 | 12 安装合同 | 13 含安装 | 14 付款方式 |
+//   15-44 P1 十组三连 | 45-53 P2 | 54-66 P3 | 67-78 P4 | 79-84 P5(79-81 为永久隐藏废弃列) |
+//   85 销售人员 | 86 操作列
+//   ★ 总列 87（数据列 0..85 共 86 个 + 操作列 86）。配套索引（缺一即全表错位）：
+//   renderWonThead / renderFakeSubHeaderRow(cells 87、c<87、c===86 操作) /
+//   WON_GROUPS(销售人员 85、操作 86) / WON_NEVER_HIDE_COLS(0,1,86) /
+//   WON_P345_COLS(54..84) / WON_CUR_TRIPLE_STARTS / syncWonColVisibility(hidden[79,80,81]、c<87) /
+//   buildWonColGroup(87) / sortWonTable 守卫(86) / noDataRow colspan(87) / headerTextMap(0..86)
 var WON_COL_KEY_MAP = {
-  1: 'contract_no', 2: 'customer', 3: 'province', 4: 'contract_date', 5: 'signing_parties', 6: 'contract_currency',
-  7: 'rate_rmb_vnd', 8: 'rate_usd_vnd',
-  9: 'incoterm', 10: 'doc_equip', 11: 'doc_install', 12: 'include_install', 13: 'payment_terms',
-  14: 'equip_rmb', 15: 'equip_usd', 16: 'equip_vnd',
-  17: 'superv_rmb', 18: 'superv_usd', 19: 'superv_vnd',
-  20: 'fb_budget_rmb', 21: 'fb_budget_usd', 22: 'fb_budget_vnd',
-  23: 'fb_actual_rmb', 24: 'fb_actual_usd', 25: 'fb_actual_vnd',
-  26: 'cc_budget_rmb', 27: 'cc_budget_usd', 28: 'cc_budget_vnd',
-  29: 'cc_actual_rmb', 30: 'cc_actual_usd', 31: 'cc_actual_vnd',
-  32: 'total_equip_rmb', 33: 'total_equip_usd', 34: 'total_equip_vnd',
-  35: 'inst_budget_rmb', 36: 'inst_budget_usd', 37: 'inst_budget_vnd',
-  38: 'inst_actual_rmb', 39: 'inst_actual_usd', 40: 'inst_actual_vnd',
-  41: 'total_ei_rmb', 42: 'total_ei_usd', 43: 'total_ei_vnd',
-  44: 'cust_pay_count',
-  45: 'cust_paid_rmb', 46: 'cust_paid_usd', 47: 'cust_paid_vnd',
-  48: 'cust_unpaid_rmb', 49: 'cust_unpaid_usd', 50: 'cust_unpaid_vnd',
-  51: 'cust_view_detail', 52: 'cust_remark',
-  53: 'gs_comm_pct',
-  54: 'gs_comm_rmb', 55: 'gs_comm_usd', 56: 'gs_comm_vnd',
-  57: 'gs_pay_count',
-  58: 'gs_paid_rmb', 59: 'gs_paid_usd', 60: 'gs_paid_vnd',
-  61: 'gs_unpaid_rmb', 62: 'gs_unpaid_usd', 63: 'gs_unpaid_vnd',
-  64: 'gs_view_detail', 65: 'gs_remark',
-  66: 'agi_payable_rmb', 67: 'agi_payable_usd', 68: 'agi_payable_vnd',
-  69: 'agi_pay_count',
-  70: 'agi_paid_rmb', 71: 'agi_paid_usd', 72: 'agi_paid_vnd',
-  73: 'agi_unpaid_rmb', 74: 'agi_unpaid_usd', 75: 'agi_unpaid_vnd',
-  76: 'agi_view_detail', 77: 'agi_remark',
-  78: 'doc_equip', 79: 'doc_install', 80: 'doc_both',
-  81: 'doc_addendum_cnt', 82: 'doc_view_addendum', 83: 'doc_remark',
-  84: 'salesperson'
+  1: 'contract_no', 2: 'customer', 3: 'province', 4: 'contract_date', 5: 'signing_parties', 6: 'sales_product', 7: 'contract_currency',
+  8: 'rate_rmb_vnd', 9: 'rate_usd_vnd',
+  10: 'incoterm', 11: 'doc_equip', 12: 'doc_install', 13: 'include_install', 14: 'payment_terms',
+  15: 'equip_rmb', 16: 'equip_usd', 17: 'equip_vnd',
+  18: 'superv_rmb', 19: 'superv_usd', 20: 'superv_vnd',
+  21: 'fb_budget_rmb', 22: 'fb_budget_usd', 23: 'fb_budget_vnd',
+  24: 'fb_actual_rmb', 25: 'fb_actual_usd', 26: 'fb_actual_vnd',
+  27: 'cc_budget_rmb', 28: 'cc_budget_usd', 29: 'cc_budget_vnd',
+  30: 'cc_actual_rmb', 31: 'cc_actual_usd', 32: 'cc_actual_vnd',
+  33: 'total_equip_rmb', 34: 'total_equip_usd', 35: 'total_equip_vnd',
+  36: 'inst_budget_rmb', 37: 'inst_budget_usd', 38: 'inst_budget_vnd',
+  39: 'inst_actual_rmb', 40: 'inst_actual_usd', 41: 'inst_actual_vnd',
+  42: 'total_ei_rmb', 43: 'total_ei_usd', 44: 'total_ei_vnd',
+  45: 'cust_pay_count',
+  46: 'cust_paid_rmb', 47: 'cust_paid_usd', 48: 'cust_paid_vnd',
+  49: 'cust_unpaid_rmb', 50: 'cust_unpaid_usd', 51: 'cust_unpaid_vnd',
+  52: 'cust_view_detail', 53: 'cust_remark',
+  54: 'gs_comm_pct',
+  55: 'gs_comm_rmb', 56: 'gs_comm_usd', 57: 'gs_comm_vnd',
+  58: 'gs_pay_count',
+  59: 'gs_paid_rmb', 60: 'gs_paid_usd', 61: 'gs_paid_vnd',
+  62: 'gs_unpaid_rmb', 63: 'gs_unpaid_usd', 64: 'gs_unpaid_vnd',
+  65: 'gs_view_detail', 66: 'gs_remark',
+  67: 'agi_payable_rmb', 68: 'agi_payable_usd', 69: 'agi_payable_vnd',
+  70: 'agi_pay_count',
+  71: 'agi_paid_rmb', 72: 'agi_paid_usd', 73: 'agi_paid_vnd',
+  74: 'agi_unpaid_rmb', 75: 'agi_unpaid_usd', 76: 'agi_unpaid_vnd',
+  77: 'agi_view_detail', 78: 'agi_remark',
+  79: 'doc_equip', 80: 'doc_install', 81: 'doc_both',
+  82: 'doc_addendum_cnt', 83: 'doc_view_addendum', 84: 'doc_remark',
+  85: 'salesperson'
 };
 
 // 按排序列表依次比较两行数据；能分出大小立即返回，否则继续下一优先级
@@ -19049,6 +19327,8 @@ function applyWonSort() {
   if (typeof applyRowPerms === 'function') applyRowPerms('wonTbody', [
     { bid: 'WON-D2', sel: '.icon-edit' },
     { bid: 'WON-D3', sel: '.icon-del' },
+    { bid: 'WON-D3', sel: '.icon-archive' },   // ★WON-ARCHIVE-20261125★ 存档与删除同权限
+    { bid: 'WON-D3', sel: '.icon-restore' },   // ★WON-ARCHIVE-UI-20261125★ 返回至签约项目同权限
     { bid: 'WON-D4', sel: '.icon-report' },
     { bid: 'WON-C1', sel: '.icon-copy' }
   ]);
@@ -19073,7 +19353,7 @@ function updateSortIndicators() {
 // 点击未排序列 = 追加为次级排序（不清除已有排序）
 // 再次点击同一列 = 升序 → 降序 → 移除该列排序
 function sortWonTable(colIndex) {
-  if (colIndex === 0 || colIndex === 85) return;   // V45：操作列 85（插入两合同列后总列 85）
+  if (colIndex === 0 || colIndex === 86) return;   // V50：操作列 86（插入销售产品列后总列 86）
   if (globalWonData.length === 0) return;
 
   var foundIdx = -1;
@@ -19097,6 +19377,8 @@ function sortWonTable(colIndex) {
     if (typeof applyRowPerms === 'function') applyRowPerms('wonTbody', [
       { bid: 'WON-D2', sel: '.icon-edit' },
       { bid: 'WON-D3', sel: '.icon-del' },
+    { bid: 'WON-D3', sel: '.icon-archive' },   // ★WON-ARCHIVE-20261125★ 存档与删除同权限
+    { bid: 'WON-D3', sel: '.icon-restore' },   // ★WON-ARCHIVE-UI-20261125★ 返回至签约项目同权限
       { bid: 'WON-D4', sel: '.icon-report' },
       { bid: 'WON-C1', sel: '.icon-copy' }
     ]);
@@ -19222,7 +19504,35 @@ function bindSumOnHover(){
   });
 }
 
+// ★ V50：销售产品三语显示（PART 零配件 / SYSTEM 系统性设备 / SERVICE 服务）
+function salesProductDisplay(v){
+  var t = T();
+  var k = String(v || '').toUpperCase();
+  if (k === 'PART') return t.sales_part || '';
+  if (k === 'SYSTEM') return t.sales_system || '';
+  if (k === 'SERVICE') return t.sales_service || '';
+  return v || '';
+}
+
 // ==================== 渲染 Won 数据 ====================
+// ★WON-ACTION-I18N-20261125★ 操作列按钮悬停提示统一从当前语言字典取，切语言即时刷新
+function wonActionTitlesSetTexts(){
+  var t = T();
+  var box = document.getElementById('wonTbody');
+  if (!box) return;
+  box.querySelectorAll('.won-actions button').forEach(function(b){
+    var title = '';
+    if (b.classList.contains('icon-report')) title = t.btn_report || '查看报告';
+    else if (b.classList.contains('icon-copy')) title = t.btn_copy || '复制项目';
+    else if (b.classList.contains('icon-archive')) title = t.archive_row_tip || '存档该项目';
+    else if (b.classList.contains('icon-restore')) title = t.archive_restore_tip || '返回至签约项目';
+    else if (b.classList.contains('icon-edit')) title = t.btnEdit || '编辑';
+    else if (b.classList.contains('icon-del')) title = t.btnDelete || '删除';
+    else if (b.classList.contains('icon-move-up')) title = t.btnMoveUp || '上移';
+    else if (b.classList.contains('icon-move-down')) title = t.btnMoveDown || '下移';
+    if (title) { b.title = title; b.setAttribute('aria-label', title); }
+  });
+}
 function renderWonData(list) {
   var t = T();
   var canEdit = true;
@@ -19243,6 +19553,8 @@ function renderWonData(list) {
       _spTxt = '<span style="color:#d32f2f;font-weight:700;">' + _spTxt + '</span>';
     }
     row += wonCell(_spTxt, 'won-data');
+    // ★ V50：销售产品（签约双方之后、签约货币之前）
+    row += wonCell(salesProductDisplay(p.sales_product), 'won-data');
     row += wonCell(p.contract_currency || '', 'won-data');
     var rmbVnd = moneyToNumber(p.rate_rmb_vnd);
     var usdVnd = moneyToNumber(p.rate_usd_vnd);
@@ -19325,18 +19637,28 @@ function renderWonData(list) {
     var copyTitle = _rptDict.btn_copy || '复制项目';
     var reportBtn = '<button type="button" class="icon-btn icon-report" onclick="openProjectReport('+p.id+')" title="'+reportTitle+'">&#128269;</button>';
     var copyBtn = '<button type="button" class="icon-btn icon-copy" onclick="openCopyProject('+p.id+')" title="'+copyTitle+'">&#128203;</button>';
-    var btns = '<div class="won-actions">' + reportBtn + copyBtn + editBtn + delBtn + moveUpBtn + moveDownBtn + '</div>';
+    // ★WON-ARCHIVE-20261125★ 行内金色星星：把该项目转入「项目结束存档」
+    var archiveTitle = _rptDict.archive_row_tip || '存档该项目';
+    var archiveBtn = window.__archiveMode ? '' : '<button type="button" class="icon-btn icon-archive" onclick="archiveWon('+p.id+')" title="'+archiveTitle+'">⭐</button>';
+    // ★WON-ARCHIVE-UI-20261125★ 存档页操作列：查看报告 / 返回至签约项目 / 删除
+    var restoreTitle = _rptDict.archive_restore_tip || '返回至签约项目';
+    var restoreBtn = '<button type="button" class="icon-btn icon-restore" onclick="restoreWonFromArchive(' + p.id + ')" title="'+restoreTitle+'">&#8617;</button>';
+    var btns = window.__archiveMode
+      ? '<div class="won-actions">' + reportBtn + restoreBtn + delBtn + '</div>'
+      : '<div class="won-actions">' + reportBtn + copyBtn + archiveBtn + editBtn + delBtn + moveUpBtn + moveDownBtn + '</div>';
     row += '<td class="won-data">' + btns + '</td>';
     return '<tr class="won-data-row ' + zebraCls + '">' + row + '</tr>';
   }).join('');
 
-  var noDataRow = '<tr class="won-data-row zebra-odd"><td colspan="86" style="text-align:center;padding:20px;color:#999;">' + t.noData + '</td></tr>';
+  var noDataRow = '<tr class="won-data-row zebra-odd"><td colspan="87" style="text-align:center;padding:20px;color:#999;">' + t.noData + '</td></tr>';
   el('wonTbody').innerHTML = fakeRow + (dataRows || noDataRow);
 
   // 按权限隐藏"签约项目"行内按钮（查看详情由单元格点击触发，此处不拦）
   applyRowPerms('wonTbody', [
     { bid: 'WON-D2', sel: '.icon-edit' },
     { bid: 'WON-D3', sel: '.icon-del' },
+    { bid: 'WON-D3', sel: '.icon-archive' },   // ★WON-ARCHIVE-20261125★ 存档与删除同权限
+    { bid: 'WON-D3', sel: '.icon-restore' },   // ★WON-ARCHIVE-UI-20261125★ 返回至签约项目同权限
     { bid: 'WON-D4', sel: '.icon-report' },
     { bid: 'WON-C1', sel: '.icon-copy' }
   ]);
@@ -19351,6 +19673,7 @@ function renderWonData(list) {
   bindSumOnHover();
   // tbody 重新生成后，按单一事实源统一恢复列折叠/权限隐藏（防止表头与数据错位）
   if (typeof syncWonColVisibility === 'function') syncWonColVisibility();
+  if (typeof wonActionTitlesSetTexts === 'function') wonActionTitlesSetTexts();
 }
 
 // ==================== WON 渲染包装器：任何 tbody 再生后自动按权限隐藏行内按钮 ====================
@@ -19365,6 +19688,8 @@ function renderWonData(list) {
       applyRowPerms('wonTbody', [
         { bid: 'WON-D2', sel: '.icon-edit' },
         { bid: 'WON-D3', sel: '.icon-del' },
+    { bid: 'WON-D3', sel: '.icon-archive' },   // ★WON-ARCHIVE-20261125★ 存档与删除同权限
+    { bid: 'WON-D3', sel: '.icon-restore' },   // ★WON-ARCHIVE-UI-20261125★ 返回至签约项目同权限
         { bid: 'WON-D4', sel: '.icon-report' },
         { bid: 'WON-C1', sel: '.icon-copy' }
       ]);
@@ -19421,13 +19746,14 @@ function renderWonThead() {
     '<th class="won-basic hdr">' + t.won_province + ' <span class="sort-indicator" data-col="3" onclick="sortWonTable(3)">↕</span></th>' +
     '<th class="won-basic hdr">' + t.signing_date + ' <span class="sort-indicator" data-col="4" onclick="sortWonTable(4)">↕</span></th>' +
     '<th class="won-basic hdr">' + t.parties + ' <span class="sort-indicator" data-col="5" onclick="sortWonTable(5)">↕</span></th>' +
-    '<th class="won-basic hdr">' + t.currency + ' <span class="sort-indicator" data-col="6" onclick="sortWonTable(6)">↕</span></th>' +
+    '<th class="won-basic hdr">' + t.sales_product + ' <span class="sort-indicator" data-col="6" onclick="sortWonTable(6)">↕</span></th>' +
+    '<th class="won-basic hdr">' + t.currency + ' <span class="sort-indicator" data-col="7" onclick="sortWonTable(7)">↕</span></th>' +
     '<th colspan="2" class="won-basic hdr">' + t.contract_rate + '</th>' +
-    '<th class="won-basic hdr">' + t.incoterms + ' <span class="sort-indicator" data-col="9" onclick="sortWonTable(9)">↕</span></th>' +
-    '<th class="won-basic hdr">' + t.won_doc_equip + ' <span class="sort-indicator" data-col="10" onclick="sortWonTable(10)">↕</span></th>' +
-    '<th class="won-basic hdr">' + t.won_doc_install + ' <span class="sort-indicator" data-col="11" onclick="sortWonTable(11)">↕</span></th>' +
-    '<th class="won-basic hdr">' + t.include_install + ' <span class="sort-indicator" data-col="12" onclick="sortWonTable(12)">↕</span></th>' +
-    '<th class="won-p1 hdr">' + t.p1_payment_method + ' <span class="sort-indicator" data-col="13" onclick="sortWonTable(13)">↕</span></th>' +
+    '<th class="won-basic hdr">' + t.incoterms + ' <span class="sort-indicator" data-col="10" onclick="sortWonTable(10)">↕</span></th>' +
+    '<th class="won-basic hdr">' + t.won_doc_equip + ' <span class="sort-indicator" data-col="11" onclick="sortWonTable(11)">↕</span></th>' +
+    '<th class="won-basic hdr">' + t.won_doc_install + ' <span class="sort-indicator" data-col="12" onclick="sortWonTable(12)">↕</span></th>' +
+    '<th class="won-basic hdr">' + t.include_install + ' <span class="sort-indicator" data-col="13" onclick="sortWonTable(13)">↕</span></th>' +
+    '<th class="won-p1 hdr">' + t.p1_payment_method + ' <span class="sort-indicator" data-col="14" onclick="sortWonTable(14)">↕</span></th>' +
     '<th colspan="3" class="won-p1 hdr">' + t.p1_equipment_amount + '</th>' +
     '<th colspan="3" class="won-p1 hdr">' + t.p1_guide_install + '</th>' +
     '<th colspan="3" class="won-p1 hdr">' + t.p1_budget_freight_ins + '</th>' +
@@ -19438,31 +19764,31 @@ function renderWonThead() {
     '<th colspan="3" class="won-p1 hdr">' + t.p1_budget_install + '</th>' +
     '<th colspan="3" class="won-p1 hdr">' + t.p1_actual_install + '</th>' +
     '<th colspan="3" class="won-p1 hdr">' + t.p1_equip_install_total + '</th>' +
-    '<th class="won-p2 hdr">' + t.p2_total_payments + ' <span class="sort-indicator" data-col="44" onclick="sortWonTable(44)">↕</span></th>' +
+    '<th class="won-p2 hdr">' + t.p2_total_payments + ' <span class="sort-indicator" data-col="45" onclick="sortWonTable(45)">↕</span></th>' +
     '<th colspan="3" class="won-p2 hdr">' + t.p2_total_amount + '</th>' +
     '<th colspan="3" class="won-p2 hdr">' + t.p2_outstanding + '</th>' +
-    '<th class="won-p2 hdr">' + t.p2_view_payment_detail + ' <span class="sort-indicator" data-col="51" onclick="sortWonTable(51)">↕</span></th>' +
-    '<th class="won-p2 hdr">' + t.p2_note1 + ' <span class="sort-indicator" data-col="52" onclick="sortWonTable(52)">↕</span></th>' +
-    '<th class="won-p3 hdr">' + t.p3_commission_rate + ' <span class="sort-indicator" data-col="53" onclick="sortWonTable(53)">↕</span></th>' +
+    '<th class="won-p2 hdr">' + t.p2_view_payment_detail + ' <span class="sort-indicator" data-col="52" onclick="sortWonTable(52)">↕</span></th>' +
+    '<th class="won-p2 hdr">' + t.p2_note1 + ' <span class="sort-indicator" data-col="53" onclick="sortWonTable(53)">↕</span></th>' +
+    '<th class="won-p3 hdr">' + t.p3_commission_rate + ' <span class="sort-indicator" data-col="54" onclick="sortWonTable(54)">↕</span></th>' +
     '<th colspan="3" class="won-p3 hdr">' + t.p3_commission_amount + '</th>' +
-    '<th class="won-p3 hdr">' + t.p3_total_payments + ' <span class="sort-indicator" data-col="57" onclick="sortWonTable(57)">↕</span></th>' +
+    '<th class="won-p3 hdr">' + t.p3_total_payments + ' <span class="sort-indicator" data-col="58" onclick="sortWonTable(58)">↕</span></th>' +
     '<th colspan="3" class="won-p3 hdr">' + t.p3_total_amount + '</th>' +
     '<th colspan="3" class="won-p3 hdr">' + t.p3_outstanding + '</th>' +
-    '<th class="won-p3 hdr">' + t.p3_view_gs_pay_agi + ' <span class="sort-indicator" data-col="64" onclick="sortWonTable(64)">↕</span></th>' +
-    '<th class="won-p3 hdr">' + t.p3_note2 + ' <span class="sort-indicator" data-col="65" onclick="sortWonTable(65)">↕</span></th>' +
+    '<th class="won-p3 hdr">' + t.p3_view_gs_pay_agi + ' <span class="sort-indicator" data-col="65" onclick="sortWonTable(65)">↕</span></th>' +
+    '<th class="won-p3 hdr">' + t.p3_note2 + ' <span class="sort-indicator" data-col="66" onclick="sortWonTable(66)">↕</span></th>' +
     '<th colspan="3" class="won-p4 hdr">' + t.p4_agi_payable_gs + '</th>' +
-    '<th class="won-p4 hdr">' + t.p4_total_payments + ' <span class="sort-indicator" data-col="69" onclick="sortWonTable(69)">↕</span></th>' +
+    '<th class="won-p4 hdr">' + t.p4_total_payments + ' <span class="sort-indicator" data-col="70" onclick="sortWonTable(70)">↕</span></th>' +
     '<th colspan="3" class="won-p4 hdr">' + t.p4_total_amount + '</th>' +
     '<th colspan="3" class="won-p4 hdr">' + t.p4_outstanding + '</th>' +
-    '<th class="won-p4 hdr">' + t.p4_view_agi_pay_gs + ' <span class="sort-indicator" data-col="76" onclick="sortWonTable(76)">↕</span></th>' +
-    '<th class="won-p4 hdr">' + t.p4_note3 + ' <span class="sort-indicator" data-col="77" onclick="sortWonTable(77)">↕</span></th>' +
+    '<th class="won-p4 hdr">' + t.p4_view_agi_pay_gs + ' <span class="sort-indicator" data-col="77" onclick="sortWonTable(77)">↕</span></th>' +
+    '<th class="won-p4 hdr">' + t.p4_note3 + ' <span class="sort-indicator" data-col="78" onclick="sortWonTable(78)">↕</span></th>' +
     '<th class="won-p5 hdr col-hidden" style="display:none;">' + t.p5_equipment_contract + '</th>' +
     '<th class="won-p5 hdr col-hidden" style="display:none;">' + t.p5_install_contract + '</th>' +
     '<th class="won-p5 hdr col-hidden" style="display:none;">' + t.p5_equip_install_contract + '</th>' +
-    '<th class="won-p5 hdr">' + t.p5_addendum_count + ' <span class="sort-indicator" data-col="81" onclick="sortWonTable(81)">↕</span></th>' +
-    '<th class="won-p5 hdr">' + t.p5_view_addendum + ' <span class="sort-indicator" data-col="82" onclick="sortWonTable(82)">↕</span></th>' +
-    '<th class="won-bu hdr">' + t.p5_note4 + ' <span class="sort-indicator" data-col="83" onclick="sortWonTable(83)">↕</span></th>' +
-    '<th class="won-doc hdr">' + t.salesperson + ' <span class="sort-indicator" data-col="84" onclick="sortWonTable(84)">↕</span></th>' +
+    '<th class="won-p5 hdr">' + t.p5_addendum_count + ' <span class="sort-indicator" data-col="82" onclick="sortWonTable(82)">↕</span></th>' +
+    '<th class="won-p5 hdr">' + t.p5_view_addendum + ' <span class="sort-indicator" data-col="83" onclick="sortWonTable(83)">↕</span></th>' +
+    '<th class="won-bu hdr">' + t.p5_note4 + ' <span class="sort-indicator" data-col="84" onclick="sortWonTable(84)">↕</span></th>' +
+    '<th class="won-doc hdr">' + t.salesperson + ' <span class="sort-indicator" data-col="85" onclick="sortWonTable(85)">↕</span></th>' +
     '<th class="won-action won-action-yellow hdr">' + t.action + '</th>' +
   '</tr>';
   thead.innerHTML = html;
@@ -19474,24 +19800,24 @@ function renderWonThead() {
 }
 
 function renderFakeSubHeaderRow() {
-  var cells = new Array(86).fill(null);
+  var cells = new Array(87).fill(null);
   cells[0] = { text:'', cls:'won-basic hdr col-fixed col-never-hide', style:'width:40px;min-width:40px;max-width:40px;' };
   cells[1] = { text:'', cls:'won-basic hdr col-fixed-2 col-never-hide', style:'width:90px;min-width:90px;max-width:90px;' };
 
-  cells[7] = { text:'RMB-VND <span class="sort-indicator" data-col="7" onclick="sortWonTable(7)">↕</span>', cls:'won-basic hdr sortable-cell' };
-  cells[8] = { text:'USD-VND <span class="sort-indicator" data-col="8" onclick="sortWonTable(8)">↕</span>', cls:'won-basic hdr sortable-cell' };
+  cells[8] = { text:'RMB-VND <span class="sort-indicator" data-col="8" onclick="sortWonTable(8)">↕</span>', cls:'won-basic hdr sortable-cell' };
+  cells[9] = { text:'USD-VND <span class="sort-indicator" data-col="9" onclick="sortWonTable(9)">↕</span>', cls:'won-basic hdr sortable-cell' };
 
   var p1Triples = [
-    { start:14, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:17, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:20, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:23, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:26, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:29, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:32, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:35, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:38, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
-    { start:41, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:15, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:18, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:21, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:24, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:27, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:30, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:33, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:36, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:39, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
+    { start:42, cls:['won-rmb hdr','won-usd hdr','won-vnd hdr'] },
   ];
   p1Triples.forEach(function(t) {
     cells[t.start]   = { text:'RMB <span class="sort-indicator" data-col="' + t.start + '" onclick="sortWonTable(' + t.start + ')">↕</span>', cls:t.cls[0] + ' sortable-cell' };
@@ -19499,57 +19825,57 @@ function renderFakeSubHeaderRow() {
     cells[t.start+2] = { text:'VND <span class="sort-indicator" data-col="' + (t.start+2) + '" onclick="sortWonTable(' + (t.start+2) + ')">↕</span>', cls:t.cls[2] + ' sortable-cell' };
   });
 
-  cells[45]={text:'RMB <span class="sort-indicator" data-col="45" onclick="sortWonTable(45)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[46]={text:'USD <span class="sort-indicator" data-col="46" onclick="sortWonTable(46)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[47]={text:'VND <span class="sort-indicator" data-col="47" onclick="sortWonTable(47)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[48]={text:'RMB <span class="sort-indicator" data-col="48" onclick="sortWonTable(48)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[49]={text:'USD <span class="sort-indicator" data-col="49" onclick="sortWonTable(49)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[50]={text:'VND <span class="sort-indicator" data-col="50" onclick="sortWonTable(50)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[54]={text:'RMB <span class="sort-indicator" data-col="54" onclick="sortWonTable(54)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[55]={text:'USD <span class="sort-indicator" data-col="55" onclick="sortWonTable(55)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[56]={text:'VND <span class="sort-indicator" data-col="56" onclick="sortWonTable(56)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[58]={text:'RMB <span class="sort-indicator" data-col="58" onclick="sortWonTable(58)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[59]={text:'USD <span class="sort-indicator" data-col="59" onclick="sortWonTable(59)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[60]={text:'VND <span class="sort-indicator" data-col="60" onclick="sortWonTable(60)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[61]={text:'RMB <span class="sort-indicator" data-col="61" onclick="sortWonTable(61)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[62]={text:'USD <span class="sort-indicator" data-col="62" onclick="sortWonTable(62)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[63]={text:'VND <span class="sort-indicator" data-col="63" onclick="sortWonTable(63)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[66]={text:'RMB <span class="sort-indicator" data-col="66" onclick="sortWonTable(66)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[67]={text:'USD <span class="sort-indicator" data-col="67" onclick="sortWonTable(67)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[68]={text:'VND <span class="sort-indicator" data-col="68" onclick="sortWonTable(68)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[70]={text:'RMB <span class="sort-indicator" data-col="70" onclick="sortWonTable(70)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[71]={text:'USD <span class="sort-indicator" data-col="71" onclick="sortWonTable(71)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[72]={text:'VND <span class="sort-indicator" data-col="72" onclick="sortWonTable(72)">↕</span>',cls:'won-vnd hdr sortable-cell'};
-  cells[73]={text:'RMB <span class="sort-indicator" data-col="73" onclick="sortWonTable(73)">↕</span>',cls:'won-rmb hdr sortable-cell'};
-  cells[74]={text:'USD <span class="sort-indicator" data-col="74" onclick="sortWonTable(74)">↕</span>',cls:'won-usd hdr sortable-cell'};
-  cells[75]={text:'VND <span class="sort-indicator" data-col="75" onclick="sortWonTable(75)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[46]={text:'RMB <span class="sort-indicator" data-col="46" onclick="sortWonTable(46)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[47]={text:'USD <span class="sort-indicator" data-col="47" onclick="sortWonTable(47)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[48]={text:'VND <span class="sort-indicator" data-col="48" onclick="sortWonTable(48)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[49]={text:'RMB <span class="sort-indicator" data-col="49" onclick="sortWonTable(49)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[50]={text:'USD <span class="sort-indicator" data-col="50" onclick="sortWonTable(50)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[51]={text:'VND <span class="sort-indicator" data-col="51" onclick="sortWonTable(51)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[55]={text:'RMB <span class="sort-indicator" data-col="55" onclick="sortWonTable(55)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[56]={text:'USD <span class="sort-indicator" data-col="56" onclick="sortWonTable(56)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[57]={text:'VND <span class="sort-indicator" data-col="57" onclick="sortWonTable(57)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[59]={text:'RMB <span class="sort-indicator" data-col="59" onclick="sortWonTable(59)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[60]={text:'USD <span class="sort-indicator" data-col="60" onclick="sortWonTable(60)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[61]={text:'VND <span class="sort-indicator" data-col="61" onclick="sortWonTable(61)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[62]={text:'RMB <span class="sort-indicator" data-col="62" onclick="sortWonTable(62)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[63]={text:'USD <span class="sort-indicator" data-col="63" onclick="sortWonTable(63)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[64]={text:'VND <span class="sort-indicator" data-col="64" onclick="sortWonTable(64)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[67]={text:'RMB <span class="sort-indicator" data-col="67" onclick="sortWonTable(67)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[68]={text:'USD <span class="sort-indicator" data-col="68" onclick="sortWonTable(68)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[69]={text:'VND <span class="sort-indicator" data-col="69" onclick="sortWonTable(69)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[71]={text:'RMB <span class="sort-indicator" data-col="71" onclick="sortWonTable(71)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[72]={text:'USD <span class="sort-indicator" data-col="72" onclick="sortWonTable(72)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[73]={text:'VND <span class="sort-indicator" data-col="73" onclick="sortWonTable(73)">↕</span>',cls:'won-vnd hdr sortable-cell'};
+  cells[74]={text:'RMB <span class="sort-indicator" data-col="74" onclick="sortWonTable(74)">↕</span>',cls:'won-rmb hdr sortable-cell'};
+  cells[75]={text:'USD <span class="sort-indicator" data-col="75" onclick="sortWonTable(75)">↕</span>',cls:'won-usd hdr sortable-cell'};
+  cells[76]={text:'VND <span class="sort-indicator" data-col="76" onclick="sortWonTable(76)">↕</span>',cls:'won-vnd hdr sortable-cell'};
 
   function catOf(c){
-    if(c===13) return 'won-p1';
-    if(c>=14 && c<=43) return '';
-    if(c===44) return 'won-p2';
-    if(c===51 || c===52) return 'won-p2';
-    if(c===53 || c===57 || c===64 || c===65) return 'won-p3';
-    if(c===69 || c===76 || c===77) return 'won-p4';
-    // ★ V47：83=业务单元（doc_remark，won-bu 浅绿），不得并入 won-p5 粉色系
-    //   （V46 曾误写 c>=78&&c<=83 → 业务单元假表头/列颜色变粉，用户截图指出）
-    if(c>=78 && c<=82) return 'won-p5';
-    if(c===83) return 'won-bu';
-    if(c===84) return 'won-doc';
+    if(c===14) return 'won-p1';
+    if(c>=15 && c<=44) return '';
+    if(c===45) return 'won-p2';
+    if(c===52 || c===53) return 'won-p2';
+    if(c===54 || c===58 || c===65 || c===66) return 'won-p3';
+    if(c===70 || c===77 || c===78) return 'won-p4';
+    // ★ V50：84=业务单元（doc_remark，won-bu 浅绿），不得并入 won-p5 粉色系
+    //   （V46 曾误写 c>=78&&c<=83 → 业务单元假表头/列题色变粉，用户截图指出；V50 整体 +1）
+    if(c>=79 && c<=83) return 'won-p5';
+    if(c===84) return 'won-bu';
+    if(c===85) return 'won-doc';
     return '';
   }
 
-  var hiddenCols = new Set([78, 79, 80]);
+  var hiddenCols = new Set([79, 80, 81]);
 
   var html = '';
-  for (var c = 0; c < 86; c++) {
+  for (var c = 0; c < 87; c++) {
     if (cells[c]) {
       var style = cells[c].style || '';
       var hideCls = hiddenCols.has(c) ? ' col-hidden' : '';
       html += '<td class="' + cells[c].cls + hideCls + '" data-col="' + c + '" style="' + style + '">' + cells[c].text + '</td>';
     } else {
       var cls = catOf(c);
-      if (c===85) {
+      if (c===86) {
         cls = 'won-action won-action-yellow hdr';
       } else if (!cls) {
         cls = 'won-basic hdr';
@@ -19580,67 +19906,67 @@ function assignColDataAttrs(){
 }
 
 var WON_GROUPS = [
- {"l":"合同使用汇率","c":[7,8]},
- {"l":"P1:合同付款方式","c":[13]},
- {"l":"P1:合同设备金额","c":[14,15,16]},
- {"l":"P1:合同指导安装费","c":[17,18,19]},
- {"l":"P1:合同预算运费&保险费","c":[20,21,22]},
- {"l":"P1:合同实际运费&保险费","c":[23,24,25]},
- {"l":"P1:合同预算清关&内陆运输","c":[26,27,28]},
- {"l":"P1:合同实际清关&内陆运输费用","c":[29,30,31]},
- {"l":"P1:合同设备综合价格","c":[32,33,34]},
- {"l":"P1:合同预算安装费","c":[35,36,37]},
- {"l":"P1:合同实际安装费","c":[38,39,40]},
- {"l":"P1:合同设备&安装费的总价格","c":[41,42,43]},
- {"l":"P2:客户总付款次数","c":[44]},
- {"l":"P2:客户总付款金额","c":[45,46,47]},
- {"l":"P2:客户尚未支付总金额","c":[48,49,50]},
- {"l":"P2:查看客户付款明细","c":[51]},
- {"l":"P2:其他备注-1","c":[52]},
- {"l":"P3:GS-AGI佣金比率%","c":[53]},
- {"l":"P3:GS-AGI佣金金额","c":[54,55,56]},
- {"l":"P3:GS-AGI总付款次数","c":[57]},
- {"l":"P3:GS-AGI总付款金额","c":[58,59,60]},
- {"l":"P3:GS-AGI尚未支付总金额","c":[61,62,63]},
- {"l":"P3:查看GS支付AGI佣金明细","c":[64]},
- {"l":"P3:其他备注-2","c":[65]},
- {"l":"P4:AGI-GS需要支付总金额","c":[66,67,68]},
- {"l":"P4:AGI-GS总付款次数","c":[69]},
- {"l":"P4:AGI-GS总付款金额","c":[70,71,72]},
- {"l":"P4:AGI-GS尚未支付总金额","c":[73,74,75]},
- {"l":"P4:查看AGI支付GS付款明细","c":[76]},
- {"l":"P4:其他备注-3","c":[77]},
- {"l":"P5:设备销售合同","c":[78]},
- {"l":"P5:安装合同","c":[79]},
- {"l":"P5:设备销售&安装合同","c":[80]},
- {"l":"P5:合同补充协议几次","c":[81]},
- {"l":"P5:查看合同增补明细","c":[82]},
- {"l":"P5:其他备注-4","c":[83]},
- {"l":"销售人员","c":[84]},
+ {"l":"合同使用汇率","c":[8,9]},
+ {"l":"P1:合同付款方式","c":[14]},
+ {"l":"P1:合同设备金额","c":[15,16,17]},
+ {"l":"P1:合同指导安装费","c":[18,19,20]},
+ {"l":"P1:合同预算运费&保险费","c":[21,22,23]},
+ {"l":"P1:合同实际运费&保险费","c":[24,25,26]},
+ {"l":"P1:合同预算清关&内陆运输","c":[27,28,29]},
+ {"l":"P1:合同实际清关&内陆运输费用","c":[30,31,32]},
+ {"l":"P1:合同设备综合价格","c":[33,34,35]},
+ {"l":"P1:合同预算安装费","c":[36,37,38]},
+ {"l":"P1:合同实际安装费","c":[39,40,41]},
+ {"l":"P1:合同设备&安装费的总价格","c":[42,43,44]},
+ {"l":"P2:客户总付款次数","c":[45]},
+ {"l":"P2:客户总付款金额","c":[46,47,48]},
+ {"l":"P2:客户尚未支付总金额","c":[49,50,51]},
+ {"l":"P2:查看客户付款明细","c":[52]},
+ {"l":"P2:其他备注-1","c":[53]},
+ {"l":"P3:GS-AGI佣金比率%","c":[54]},
+ {"l":"P3:GS-AGI佣金金额","c":[55,56,57]},
+ {"l":"P3:GS-AGI总付款次数","c":[58]},
+ {"l":"P3:GS-AGI总付款金额","c":[59,60,61]},
+ {"l":"P3:GS-AGI尚未支付总金额","c":[62,63,64]},
+ {"l":"P3:查看GS支付AGI佣金明细","c":[65]},
+ {"l":"P3:其他备注-2","c":[66]},
+ {"l":"P4:AGI-GS需要支付总金额","c":[67,68,69]},
+ {"l":"P4:AGI-GS总付款次数","c":[70]},
+ {"l":"P4:AGI-GS总付款金额","c":[71,72,73]},
+ {"l":"P4:AGI-GS尚未支付总金额","c":[74,75,76]},
+ {"l":"P4:查看AGI支付GS付款明细","c":[77]},
+ {"l":"P4:其他备注-3","c":[78]},
+ {"l":"P5:设备销售合同","c":[79]},
+ {"l":"P5:安装合同","c":[80]},
+ {"l":"P5:设备销售&安装合同","c":[81]},
+ {"l":"P5:合同补充协议几次","c":[82]},
+ {"l":"P5:查看合同增补明细","c":[83]},
+ {"l":"P5:其他备注-4","c":[84]},
+ {"l":"销售人员","c":[85]},
  {"l":"No.","c":[0]},
  {"l":"合同编号","c":[1]},
  {"l":"客户名称","c":[2]},
  {"l":"省份","c":[3]},
  {"l":"签约日期","c":[4]},
  {"l":"签约双方","c":[5]},
- {"l":"签约货币","c":[6]},
- {"l":"贸易术语","c":[9]},
- {"l":"设备合同","c":[10]},
- {"l":"安装合同","c":[11]},
- {"l":"含安装吗？","c":[12]},
- {"l":"操作","c":[85]}
+ {"l":"签约货币","c":[7]},
+ {"l":"贸易术语","c":[10]},
+ {"l":"设备合同","c":[11]},
+ {"l":"安装合同","c":[12]},
+ {"l":"含安装吗？","c":[13]},
+ {"l":"操作","c":[86]}
 ];
-var WON_NEVER_HIDE_COLS = new Set([0,1,85]);
+var WON_NEVER_HIDE_COLS = new Set([0,1,86]);
 var wonGroupState = {};
 
 function buildWonColGroup(){
   var tbl=document.getElementById('wonTable'); if(!tbl) return;
   var cg=tbl.querySelector('colgroup'); if(!cg){ cg=document.createElement('colgroup'); tbl.prepend(cg); }
-  var html=''; for(var c=0;c<86;c++) html+='<col data-col="' + c + '">'; cg.innerHTML=html;
+  var html=''; for(var c=0;c<87;c++) html+='<col data-col="' + c + '">'; cg.innerHTML=html;
 }
 
 // ===== WON-P345：签约项目 P3/P4/P5 列（50~80列）按权限隐藏 =====
-var WON_P345_COLS = (function(){ var a=[]; for(var c=53;c<=83;c++) a.push(c); return a; })();
+var WON_P345_COLS = (function(){ var a=[]; for(var c=54;c<=84;c++) a.push(c); return a; })();
 function wonP345Hidden(){
   var raw = curRawDecision('WON-P345');
   if(!raw && typeof _isSalesPos==='function' && _isSalesPos(authUser)) return true;  // 职位缺省：销售/销售总监
@@ -19661,7 +19987,7 @@ function curColSel(){
 // WON 表 18 个 RMB/USD/VND 三连组的起始列（P1 十组 + P2/P3/P4 八组）；kind 'q' = CRM/LOST 的 Q1-Q7（20~40）
 // V45：合同两列插入导致货币三连起始再 +2（在 WON_COL_KEY_MAP 基础上逐项核对：
 // P1 十组 14,17,20,23,26,29,32,35,38,41；P2 45,48；P3 54,58,61；P4 66,70,73）
-var WON_CUR_TRIPLE_STARTS = [14,17,20,23,26,29,32,35,38,41,45,48,54,58,61,66,70,73];
+var WON_CUR_TRIPLE_STARTS = [15,18,21,24,27,30,33,36,39,42,46,49,55,59,62,67,71,74];
 function curHiddenFor(c, kind){
   var sel = curColSel(), off = -1;
   if (kind === 'won') {
@@ -19670,7 +19996,8 @@ function curHiddenFor(c, kind){
       if (c >= s0 && c < s0 + 3) { off = c - s0; break; }
     }
   } else if (kind === 'q') {
-    if (c >= 20 && c <= 40) off = (c - 20) % 3;
+    // ★CRM-SALES-PRODUCT-20261125：CRM/LOST 在 BU(5) 后插入「销售产品」(6)，Q1-Q7 由 20-40 顺移到 21-41
+    if (c >= 21 && c <= 41) off = (c - 21) % 3;
   }
   if (off < 0) return false;
   return !sel[off === 0 ? 'rmb' : (off === 1 ? 'usd' : 'vnd')];
@@ -19717,8 +20044,8 @@ function syncWonColVisibility(){
   // 必须强制保持隐藏，否则权限放行时 sync 会把它们的隐藏类移除，冒出 3 个"幽灵空列"造成错位空洞。
   // ⚠️ V40：省份列插入后由 75-77 变为 76-78（WON_COL_KEY_MAP: 76=doc_equip,77=doc_install,78=doc_both）。
   //    此处仍写旧索引曾导致：76-78 冒出 3 个幽灵空列 + 75(P4备注3) 被误藏 → 全表错位。
-  hidden[78]=1; hidden[79]=1; hidden[80]=1;
-  for (var c=0;c<86;c++){   // ⚠️ V45：总列 86（省份 +1、合同两列 +2；含操作列 85）
+  hidden[79]=1; hidden[80]=1; hidden[81]=1;
+  for (var c=0;c<87;c++){   // ⚠️ V50：总列 87（省份 +1、合同两列 +2、销售产品 +1；含操作列 86）
     if (WON_NEVER_HIDE_COLS.has(c)) continue;
     var want=!!hidden[c] || (typeof curHiddenFor==='function' && curHiddenFor(c,'won'));
     tbl.querySelectorAll('[data-col="'+c+'"]').forEach(function(el){
@@ -21224,6 +21551,14 @@ function renderCrmFormHtml(t) {
       (autoSales
         ? f(t.crm_lbl_salesperson, 'c_salesperson', { readonly: true, req: true })
         : f(t.crm_lbl_salesperson, 'c_salesperson', { select: true, options: getSalespersonList(), req: true })) +
+      // ★CRM-SALES-PRODUCT-20261125★ 销售产品（与签约项目同一套：下拉 + 红星悬停注解），
+      //   插在第一行末尾（客户名称/销售 之后），6 列由 .form-row 的 flex 自动压缩均分。
+      '<div><label>' + (t.lbl_sales_product || '销售产品') + '<span class="req-star crm-sales-req" id="crmSalesReq">*</span></label>' +
+        '<select id="c_sales_product" onchange="crmSalesProductTip()">' +
+          '<option value="PART">' + (t.sales_part || '零配件') + '</option>' +
+          '<option value="SYSTEM">' + (t.sales_system || '系统性设备') + '</option>' +
+          '<option value="SERVICE">' + (t.sales_service || '服务') + '</option>' +
+        '</select></div>' +
     '</div>' +
     '<div class="form-row">' +
       '<div><label>' + t.crm_lbl_bu + '<span class="req-star">*</span></label><select id="c_bu">' + buOptionsHtml(t) + '</select></div>' +
@@ -21404,6 +21739,8 @@ function openCrmModal(id) {
     }
   }
   el('crmModal').classList.add('show');
+  // ★CRM-SALES-PRODUCT-20261125：绑定/刷新销售产品红星悬停注解（与签约项目一致）
+  if (typeof crmSalesProductTip === 'function') crmSalesProductTip();
   // ★SALESP-FRESH-20261031：打开潜在项目弹窗时按需刷新用户名录，确保销售人员下拉即时反映名录改动
   if (typeof ensureUsersFresh === 'function') ensureUsersFresh();
   // 打开后按汇率统一重算一次三币联动，确保数据一致（新/旧记录均生效）
@@ -21454,6 +21791,8 @@ function fillCrmForm(row, t) {
   set('c_project_name', row.project_name);
   set('c_province', row.province);
   set('c_customer', row.customer);
+  // ★CRM-SALES-PRODUCT-20261125：销售产品（旧记录为空时留在下拉默认项，不报错）
+  set('c_sales_product', row.sales_product);
   set('c_bu', row.bu);
   set('c_construction', row.construction);
   set('c_startup_pct', row.startup_pct);
@@ -21544,6 +21883,8 @@ function refreshCrmModalLang(t) {
   var cb = el('cbtnCancel'); if (cb) cb.innerText = t.btnCancel;
   // 预填贸易术语工具提示内容（悬停星星时才会显示）
   if (typeof updateIncotermTooltip === 'function') updateIncotermTooltip();
+  // ★CRM-SALES-PRODUCT-20261125：切换语言后销售产品注解文案同步刷新（弹窗不重建）
+  if (typeof crmSalesProductTip === 'function') crmSalesProductTip();
 }
 
 // 打开编辑/新建时保存的表单快照，用于关闭时检测未保存更改
@@ -21651,7 +21992,7 @@ function crmValidateRequired() {
     'c_initial_quote_date','c_est_purchase_date','c_est_ship_date','c_last_quote_date',
     'c_rate_rmb_vnd','c_rate_usd_vnd','c_salesperson'];
   // 必填下拉（默认占位为空）
-  var reqSel = ['c_province','c_bu','c_construction','c_incoterm','c_install_quoted'];
+  var reqSel = ['c_province','c_bu','c_construction','c_incoterm','c_install_quoted','c_sales_product'];
   for (var i = 0; i < reqText.length; i++) {
     if (S(reqText[i]) === '') return false;
   }
@@ -21684,6 +22025,57 @@ function crmValidateRequired() {
 }
 function crmShowRequiredAlert() { showAlert(T().crm_fill_required || '请完整的填写全部必填选项！'); }
 
+/* ★CRM-SALES-PRODUCT-20261125★ 销售产品红色 * 悬停注解（100% 复用签约项目 wonSales* 的实现）
+   自绘气泡、不依赖原生 title、切语言后立即刷新；鼠标悬停立即出现所选产品的解释 */
+function crmSalesTipText() {
+  var sel = el('c_sales_product');
+  if (!sel) return '';
+  var t = T(), v = String(sel.value || '');
+  return (v === 'PART' ? t.sales_part_tip : (v === 'SYSTEM' ? t.sales_system_tip : (v === 'SERVICE' ? t.sales_service_tip : ''))) || '';
+}
+function crmSalesTipBox() {
+  var box = document.getElementById('crmSalesTip');
+  if (!box) { box = document.createElement('div'); box.id = 'crmSalesTip'; document.body.appendChild(box); }
+  return box;
+}
+function crmSalesTipBind() {
+  if (window.__crmSalesTipBound) return;
+  window.__crmSalesTipBound = true;
+  document.addEventListener('mouseover', function (e) {
+    var tg = e.target;
+    if (!tg || !tg.closest || !tg.closest('#crmSalesReq')) return;
+    var txt = crmSalesTipText(); if (!txt) return;
+    var box = crmSalesTipBox(), badge = tg.closest('#crmSalesReq'), r = badge.getBoundingClientRect();
+    box.textContent = txt;
+    box.style.display = 'block';
+    var w = Math.min(400, window.innerWidth - 24);
+    box.style.maxWidth = w + 'px';
+    box.style.left = Math.max(12, Math.min(r.left - 8, window.innerWidth - w - 12)) + 'px';
+    box.style.top = (r.bottom + 8) + 'px';
+  });
+  document.addEventListener('mouseout', function (e) {
+    var tg = e.target;
+    if (!tg || !tg.closest || !tg.closest('#crmSalesReq')) return;
+    var box = document.getElementById('crmSalesTip'); if (box) box.style.display = 'none';
+  });
+  // 切语言：立即刷新气泡与原生 title
+  document.addEventListener('app:langchange', function () {
+    crmSalesProductTip();
+    var box = document.getElementById('crmSalesTip');
+    if (box && box.style.display === 'block') box.textContent = crmSalesTipText();
+  });
+}
+function crmSalesProductTip() {
+  var txt = crmSalesTipText();
+  var sel = el('c_sales_product');
+  if (sel) sel.title = txt;
+  var badge = el('crmSalesReq');
+  if (badge) badge.title = txt;
+  var box = document.getElementById('crmSalesTip');
+  if (box && box.style.display === 'block') box.textContent = txt;
+  crmSalesTipBind();
+}
+
 function saveCrm() {
   var t = T();
   var N = function(id){ var e = el(id); if (!e) return 0; var n = parseInt(String(e.value || '').replace(/[^0-9-]/g, ''), 10); return isNaN(n) ? 0 : n; };
@@ -21710,6 +22102,8 @@ function saveCrm() {
     quote_version_log: S('c_quote_version_log') || '[]',
     rate_rmb_vnd: String(moneyToNumber(S('c_rate_rmb_vnd'))), rate_usd_vnd: String(moneyToNumber(S('c_rate_usd_vnd'))), incoterm: S('c_incoterm'),
     install_quoted: S('c_install_quoted'), salesperson: S('c_salesperson'),
+    // ★CRM-SALES-PRODUCT-20261125：销售产品（PART 零配件 / SYSTEM 系统性设备 / SERVICE 服务）
+    sales_product: S('c_sales_product'),
     // ★ 保证 base remark 永远同步当前系统语言框的值，避免旧缓存/旧 base 覆盖三语列
     remark: S('c_remark_' + (window.CUR_LANG || 'en')) || S('c_remark'),
     remark_zh: S('c_remark_zh'), remark_en: S('c_remark_en'), remark_vi: S('c_remark_vi'),
@@ -21965,31 +22359,242 @@ function ensureWonSaved(cb){
     .catch(function(){ cb(null, t.won_save_fail || '保存失败：无法连接服务器'); });
 }
 
-function showDelConfirm(msg, onConfirm){
+// ★WON-ARCHIVE-I18N-20261125★ 确认弹窗开着时切语言，标题/正文/按钮原地改写，不重建
+function delConfirmSetTexts(){
   var t=T();
   var ov=document.getElementById('delConfirmOverlay');
+  if(!ov || ov.style.display === 'none') return;
+  var spec = window.__delConfirmI18n;
+  if(spec){
+    var title=document.getElementById('delConfirmTitle'); if(title) title.textContent=t[spec.titleKey]||t.confirmDelTitle||'确认删除';
+    var desc=document.getElementById('delConfirmDesc'); if(desc) desc.textContent=t[spec.msgKey]||'';
+  }
+  var okBtn=document.getElementById('delConfirmOk'); if(okBtn) okBtn.textContent=t.btnConfirm||'确定';
+  var cancelBtn=document.getElementById('delConfirmCancel'); if(cancelBtn) cancelBtn.textContent=t.btnCancel||'取消';
+}
+function showDelConfirm(msg, onConfirm, titleText, i18nKeys, focusCancel){
+  var t=T();
+  window.__delConfirmI18n = i18nKeys || null;
+  var ov=document.getElementById('delConfirmOverlay');
   if(!ov){ if(confirm(msg)){ onConfirm&&onConfirm(); } return; }
-  var title=document.getElementById('delConfirmTitle'); if(title) title.textContent=t.confirmDelTitle||'确认删除';
+  var title=document.getElementById('delConfirmTitle'); if(title) title.textContent=titleText||t.confirmDelTitle||'确认删除';
   var desc=document.getElementById('delConfirmDesc'); if(desc) desc.textContent=msg||'';
   var okBtn=document.getElementById('delConfirmOk'); if(okBtn) okBtn.textContent=t.btnConfirm||'确定';
   var cancelBtn=document.getElementById('delConfirmCancel'); if(cancelBtn) cancelBtn.textContent=t.btnCancel||'取消';
   ov.style.display='flex';
-  okBtn.onclick=function(){ ov.style.display='none'; if(onConfirm) onConfirm(); };
-  cancelBtn.onclick=function(){ ov.style.display='none'; };
-  ov.onclick=function(e){ if(e.target===ov){ ov.style.display='none'; } };
+  if (focusCancel && cancelBtn) cancelBtn.focus();
+  okBtn.onclick=function(){ ov.style.display='none'; window.__delConfirmI18n=null; if(onConfirm) onConfirm(); };
+  cancelBtn.onclick=function(){ ov.style.display='none'; window.__delConfirmI18n=null; };
+  ov.onclick=function(e){ if(e.target===ov){ ov.style.display='none'; window.__delConfirmI18n=null; } };
 }
 
+// ★WON-DEL-PWD-20261125★ 删除签约项目：点击删除 → 先输入密码 can-delete → 再弹询问框 → 删除
+//   密码文案三语，随语言切换实时更新（见 applyWonLang 里的 delPwdSetTexts 调用）
+var _delTargetId = null;
+var _delPwdOnOk = null;
+function delWonPwdText(){
+  var _L = (window.CUR_LANG || (typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'zh'));
+  var tt = (window.I18N && window.I18N[_L]) ? window.I18N[_L] : (typeof T === 'function' ? T() : {});
+  return {
+    title: tt.del_pwd_title || '删除项目',
+    hint: tt.del_pwd_hint || '请输入删除密码',
+    ph: tt.del_pwd_placeholder || 'Password',
+    err: tt.del_pwd_error || '密码错误',
+    cancel: tt.btnCancel || '取消',
+    ok: tt.btnConfirm || '确认'
+  };
+}
+function delPwdSetTexts(){
+  var w = delWonPwdText();
+  var g = function(x){ return document.getElementById(x); };
+  var n;
+  if ((n = g('delPwdTitle'))) n.textContent = w.title;
+  if ((n = g('delPwdHint'))) n.textContent = w.hint;
+  if ((n = g('delPwdInput'))) n.placeholder = w.ph;
+  if ((n = g('delPwdError'))) n.textContent = w.err;
+  if ((n = g('delPwdCancel'))) n.textContent = w.cancel;
+  if ((n = g('delPwdOk'))) n.textContent = w.ok;
+}
+function _delPwdShow(){
+  delPwdSetTexts();
+  var o = document.getElementById('delPwdOverlay');
+  var i = document.getElementById('delPwdInput');
+  var e = document.getElementById('delPwdError');
+  if (e) e.style.display = 'none';
+  if (i) i.value = '';
+  if (o) { o.style.display = 'flex'; o.classList.add('show'); }
+  setTimeout(function(){ try { if (i) i.focus(); } catch (err) {} }, 100);
+}
+function openDelPwd(id){
+  _delTargetId = id;
+  _delPwdOnOk = null;
+  _delPwdShow();
+}
+// ★WON-DEL-PWD-20261125★ 通用密码闸门：潜在项目(deleteCrm) / 失败项目(deleteLost) / 签约项目(delWon)
+//   共用同一个弹窗与三语文案，传回调即可；通过后由 confirmDelPwd 调用回调
+function delPwdAsk(onOk){
+  _delTargetId = null;
+  _delPwdOnOk = (typeof onOk === 'function') ? onOk : null;
+  _delPwdShow();
+}
+function closeDelPwd(){
+  var o = document.getElementById('delPwdOverlay');
+  if (o) { o.style.display = 'none'; o.classList.remove('show'); }
+  var i = document.getElementById('delPwdInput'); if (i) i.value = '';
+  var e = document.getElementById('delPwdError'); if (e) e.style.display = 'none';
+  _delTargetId = null;
+  _delPwdOnOk = null;
+}
+function confirmDelPwd(){
+  var i = document.getElementById('delPwdInput');
+  var pwd = String(i ? i.value : '').trim();
+  if (pwd.toLowerCase() !== 'can-delete') {
+    var e = document.getElementById('delPwdError'); if (e) e.style.display = 'block';
+    if (i) { i.value = ''; i.focus(); }
+    return;
+  }
+  var id = _delTargetId;
+  var cb = _delPwdOnOk;
+  closeDelPwd();
+  if (typeof cb === 'function') { cb(); return; }
+  if (id === null || id === undefined) return;
+  delWonConfirm(id);
+}
 function delWon(id){
+  openDelPwd(id);
+}
+// 原 delWon 主体（密码通过后的询问框 + 删除，逻辑保持不变）
+function delWonConfirm(id){
   var t = T();
   showCrmOrangeConfirm(t.confirmDelTitle || 'Confirm Delete', t.confirmDelMsg || 'Delete this won project?', function() {
     singleUseGuard('WON-D3', String(id), t.won_del_action || '删除成功项目', function() {
       // 注：原 catch 分支在网络失败时仍提示"删除成功"（实际只删了本地 SEED_WON），
       // SEED_WON 已删除，改为如实提示失败。
       fetch('/api/won-projects/'+id,{method:'DELETE', credentials:'include', headers:(typeof authHeaders==='function'?authHeaders({'Content-Type':'application/json'}):{'Content-Type':'application/json'})})
-        .then(function(){ showSaveOk(t.saveOk); loadWon(); })
-        .catch(function(){ showSaveOk(T().won_del_fail || '删除失败：无法连接服务器'); loadWon(); });
+        .then(function(){ showSaveOk(t.saveOk); if (window.__archiveMode) loadArchive(); else loadWon(); })
+        .catch(function(){ showSaveOk(T().won_del_fail || '删除失败：无法连接服务器'); if (window.__archiveMode) loadArchive(); else loadWon(); });
     });
   }, { persist: 'single-use' });
+}
+
+// ★WON-ARCHIVE-20261125★ 项目结束存档：⭐ → 输入密码 can-save → 二次确认 → 100% 转入存档
+var _archiveTargetId = null;
+function archivePwdSetTexts(){
+  var _L = (window.CUR_LANG || (typeof CUR_LANG !== 'undefined' ? CUR_LANG : 'zh'));
+  var tt = (window.I18N && window.I18N[_L]) ? window.I18N[_L] : (typeof T === 'function' ? T() : {});
+  var g = function(x){ return document.getElementById(x); };
+  var n;
+  if ((n = g('archPwdTitle'))) n.textContent = tt.archive_pwd_title || '项目结束存档';
+  if ((n = g('archPwdHint'))) n.textContent = tt.archive_pwd_hint || '请输入存档密码';
+  if ((n = g('archPwdInput'))) n.placeholder = tt.archive_pwd_placeholder || '••••••';
+  if ((n = g('archPwdError'))) n.textContent = tt.archive_pwd_error || '密码错误';
+  if ((n = g('archPwdCancel'))) n.textContent = tt.btnCancel || '取消';
+  if ((n = g('archPwdOk'))) n.textContent = tt.btnConfirm || '确认';
+}
+function openArchivePwd(id){
+  _archiveTargetId = id;
+  archivePwdSetTexts();
+  var o = document.getElementById('archPwdOverlay');
+  var i = document.getElementById('archPwdInput');
+  var e = document.getElementById('archPwdError');
+  if (e) e.style.display = 'none';
+  if (i) i.value = '';
+  if (o) { o.style.display = 'flex'; o.classList.add('show'); }
+  setTimeout(function(){ try { if (i) i.focus(); } catch (err) {} }, 100);
+}
+function closeArchivePwd(){
+  var o = document.getElementById('archPwdOverlay');
+  if (o) { o.style.display = 'none'; o.classList.remove('show'); }
+  var i = document.getElementById('archPwdInput'); if (i) i.value = '';
+  var e = document.getElementById('archPwdError'); if (e) e.style.display = 'none';
+  _archiveTargetId = null;
+}
+function confirmArchivePwd(){
+  var i = document.getElementById('archPwdInput');
+  var pwd = String(i ? i.value : '').trim().toLowerCase();
+  if (pwd !== 'can-save') {
+    var e = document.getElementById('archPwdError'); if (e) e.style.display = 'block';
+    if (i) { i.value = ''; i.focus(); }
+    return;
+  }
+  var id = _archiveTargetId;
+  closeArchivePwd();
+  if (id === null || id === undefined) return;
+  archiveWonConfirm(id);
+}
+// ★WON-ARCHIVE-20261125★ 同一个红按钮：进入 / 退出项目结束存档
+function archiveBtnSetText(){
+  var b = document.getElementById('btnArchiveList');
+  if (!b) return;
+  var t = T();
+  b.textContent = window.__archiveMode
+    ? (t.archive_exit_btn || '退出项目结束存档')
+    : (t.won_archive_btn || '项目结束存档');
+}
+function toggleArchiveView(){
+  if (window.__archiveMode) switchView('won');
+  else switchView('archive');
+}
+function archiveWon(id){
+  if (typeof permGuard === 'function' && !permGuard('WON-D3')) return;
+  openArchivePwd(id);
+}
+function archiveWonConfirm(id){
+  var t = T();
+  showDelConfirm(t.archive_confirm_msg || '确定要存档该项目吗？', function() {
+    var hdr = (typeof authHeaders === 'function')
+      ? authHeaders({'Content-Type':'application/json'})
+      : {'Content-Type':'application/json'};
+    fetch('/api/won-projects/' + id + '/archive', { method:'POST', credentials:'include', headers:hdr })
+      .then(function(r){ if (!r.ok) throw new Error('http-' + r.status); return r.json(); })
+      .then(function(d){
+        if (!d || !d.ok) throw new Error((d && d.error) || 'error');
+        showSaveOk(t.archive_ok || '已存档');
+        if (window.__archiveMode && typeof loadArchive === 'function') loadArchive();
+        else if (typeof loadWon === 'function') loadWon();
+      })
+      .catch(function(){ showSaveOk(T().archive_fail || '存档失败：无法连接服务器'); });
+  }, t.archive_confirm_title || '确认存档', { titleKey:'archive_confirm_title', msgKey:'archive_confirm_msg' });
+}
+// 归档列表（与签约项目同一张表、同一套详情报告）
+async function loadArchive() {
+  var un = (typeof authUser !== 'undefined' && authUser && authUser.username) ? authUser.username : '';
+  var list = [];
+  try {
+    var resp = await fetch('/api/archived-projects', { headers: { 'X-User-Name': un } });
+    var d = await resp.json();
+    if (Array.isArray(d)) list = d;
+  } catch (e) {}
+  globalWonData = list;
+  originalWonData = list.slice();
+  renderWonData(list);
+  if (typeof applyWonColPerm === 'function') applyWonColPerm();
+}
+
+// ★WON-ARCHIVE-UI-20261125★ 从项目结束存档返回签约项目（清除 archive_status）
+function restoreWonFromArchive(id){
+  if (typeof permGuard === 'function' && !permGuard('WON-D3')) return;
+  var t = T();
+  // ★WON-ARCHIVE-I18N-20261125★ 先确认，默认焦点在「取消」，防止误点立即转回
+  showDelConfirm(
+    t.archive_restore_confirm_msg || '确定需要转回至签约项目吗？',
+    function(){
+      var hdr = (typeof authHeaders === 'function')
+        ? authHeaders({'Content-Type':'application/json'})
+        : {'Content-Type':'application/json'};
+      fetch('/api/won-projects/' + id + '/restore', { method:'POST', credentials:'include', headers:hdr })
+        .then(function(r){ if (!r.ok) throw new Error('http-' + r.status); return r.json(); })
+        .then(function(d){
+          if (!d || !d.ok) throw new Error('error');
+          showSaveOk(t.archive_restore_ok || '已返回至签约项目');
+          loadArchive();
+        })
+        .catch(function(){ showSaveOk(T().archive_fail || '操作失败'); });
+    },
+    t.archive_restore_confirm_title || '确认转回',
+    { titleKey:'archive_restore_confirm_title', msgKey:'archive_restore_confirm_msg' },
+    true
+  );
 }
 
 function exportWonToExcel() { var t=T(); if(!permGuard('WON-E1')) return; if(!globalWonData||globalWonData.length===0){ showAlert(t.noData); return; } openExportConfirm(); }
@@ -25635,6 +26240,10 @@ function hideMainContent() {
   var instOv = document.getElementById('installOverlay');
   if (instOv) { instOv.classList.remove('show'); instOv.setAttribute('aria-hidden', 'true'); }
   document.body.classList.remove('install-open');
+  // ★CRM-GROUP-20261127★ 回到登录页时收起项目管理CRM覆盖层（session 记忆保留到显式退出）
+  var crmOv = document.getElementById('crmGroupOverlay');
+  if (crmOv) { crmOv.classList.remove('show'); crmOv.setAttribute('aria-hidden', 'true'); }
+  document.body.classList.remove('crmgroup-open');
 }
 function showMainContent() {
   var top = document.getElementById('topbar');
@@ -25651,6 +26260,8 @@ function showMainContent() {
   if (typeof applyCommissionTabState === 'function') applyCommissionTabState();
   // ★INSTALL-MGMT-20261124★ 刷新/重新登录后若上次停在安装管理，自动恢复（sessionStorage 记忆）
   if (typeof installRestoreOnBoot === 'function') installRestoreOnBoot();
+  // ★CRM-GROUP-20261127★ 刷新/重新登录后若上次停在项目管理CRM，自动恢复
+  if (typeof crmGroupRestoreOnBoot === 'function') crmGroupRestoreOnBoot();
 }
 
 /* ==================== ★INSTALL-MGMT-20261124★ 安装管理（全屏覆盖层） ====================
@@ -25735,11 +26346,145 @@ function instSwitchTab(name) {
       } catch (e) {}
     }, 80);
   }
-  if (name === 'detail') {
+  // ★INST-LIB-MODE-FIX-20261125★ 切换任何领航标签都先复位文件管理器，
+  // 防止「公共共享资料」→「项目专属资料」时残留 public 状态导致项目拖拽上传到公共区
+  if (typeof IB_LIB_MODE !== 'undefined' && IB_LIB_MODE) {
+    try { ibLibBack(); } catch (e) {}
+  }
+  // ★INST-FILES-SAME-20261125★ 详情管理 / 项目专属资料共用同一份项目卡片渲染
+  if (name === 'detail' || name === 'files') {
     setTimeout(function () { try { ibRenderDetailProjects(); } catch (e) {} }, 30);
+  }
+  // ★INST-PUBLIC-LIB-20261125★ 公共共享资料：打开公用资料文件管理器
+  if (name === 'shared') {
+    setTimeout(function () { try { ibOpenSharedLib(); } catch (e) {} }, 30);
   }
   // 记住当前标签，刷新/退出再进时回到同一页
   try { sessionStorage.setItem('won_install_tab', name); } catch (e) {}
+}
+
+/* ===== ★CRM-GROUP-20261127★ 项目管理CRM（分组领航标签） =====
+   行为契约：
+     · 看板/潜在项目/签约项目/失败项目从主顶栏收进本分组，原 #app 视图不搬动；
+     · 覆盖层顶栏接收点击，下方透明穿透，继续显示并操作当前项目视图；
+     · 只有右上角「退出项目管理CRM」收起，收起后回到进入前的标签页；
+     · sessionStorage['won_crm_group_open']='1' → 刷新/重新登录后自动恢复。 */
+var CRM_GROUP_SESSION_KEY = 'won_crm_group_open';
+var CRM_GROUP_TAB_KEY = { dashboard:'dashboard', crm:'crm', won:'won', lost:'lost' };
+var CRM_GROUP_VIEWS = ['dashboard','crm','won','lost'];
+var CRM_GROUP_RETURN_VIEW = null;
+
+function crmGroupOverlayEl() { return document.getElementById('crmGroupOverlay'); }
+function crmGroupIsOpen() {
+  var ov = crmGroupOverlayEl();
+  return !!(ov && ov.classList.contains('show'));
+}
+function crmGroupAllowed() {
+  if (typeof viewAllowed !== 'function') return true;
+  for (var i = 0; i < CRM_GROUP_VIEWS.length; i++) {
+    if (viewAllowed(CRM_GROUP_VIEWS[i])) return true;
+  }
+  return false;
+}
+function openCrmGroup() {
+  if (typeof authUser === 'undefined' || !authUser) return;
+  if (!crmGroupAllowed()) {
+    if (typeof showToast === 'function') {
+      showToast((T().empty && T().empty.user_view_denied) || '无权限：该视图/模块已被限制');
+    }
+    return;
+  }
+  var ov = crmGroupOverlayEl();
+  if (!ov) return;
+  if (typeof installIsOpen === 'function' && installIsOpen()) exitInstallMgmt();
+  if (typeof closeAllModals === 'function') closeAllModals();
+  if (!crmGroupIsOpen()) CRM_GROUP_RETURN_VIEW = window.currentView || 'dashboard';
+  ov.classList.add('show');
+  ov.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('crmgroup-open');
+  try { sessionStorage.setItem(CRM_GROUP_SESSION_KEY, '1'); } catch (e) {}
+  var last = '';
+  try { last = sessionStorage.getItem('won_crm_group_tab') || ''; } catch (e) {}
+  if (!CRM_GROUP_TAB_KEY[last]) {
+    last = (CRM_GROUP_RETURN_VIEW && CRM_GROUP_TAB_KEY[CRM_GROUP_RETURN_VIEW]) ? CRM_GROUP_RETURN_VIEW : 'dashboard';
+  }
+  crmSwitchTab(last);
+  applyCrmGroupLang();
+}
+function exitCrmGroup() {
+  var ov = crmGroupOverlayEl();
+  if (!ov) return;
+  ov.classList.remove('show');
+  ov.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('crmgroup-open');
+  try { sessionStorage.removeItem(CRM_GROUP_SESSION_KEY); } catch (e) {}
+  var back = CRM_GROUP_RETURN_VIEW;
+  if (!back || !CRM_GROUP_TAB_KEY[back] || (typeof viewAllowed === 'function' && !viewAllowed(back))) {
+    back = 'dashboard';
+    if (typeof viewAllowed === 'function' && !viewAllowed(back)) {
+      for (var i = 0; i < CRM_GROUP_VIEWS.length; i++) {
+        if (viewAllowed(CRM_GROUP_VIEWS[i])) { back = CRM_GROUP_VIEWS[i]; break; }
+      }
+    }
+  }
+  CRM_GROUP_RETURN_VIEW = null;
+  if (typeof switchView === 'function') switchView(back);
+}
+function crmGroupRestoreOnBoot() {
+  if (crmGroupIsOpen()) return;
+  if (typeof installIsOpen === 'function' && installIsOpen()) return;
+  var want = false;
+  try { want = sessionStorage.getItem(CRM_GROUP_SESSION_KEY) === '1'; } catch (e) {}
+  if (!want) return;
+  if (typeof authUser === 'undefined' || !authUser) return;
+  if (!crmGroupAllowed()) {
+    try { sessionStorage.removeItem(CRM_GROUP_SESSION_KEY); } catch (e) {}
+    return;
+  }
+  openCrmGroup();
+}
+function crmSwitchTab(name) {
+  if (!name || !CRM_GROUP_TAB_KEY[name]) return;
+  var tabs = document.querySelectorAll('#crmGroupTabs .inst-tab');
+  for (var i = 0; i < tabs.length; i++) {
+    var on = tabs[i].getAttribute('data-itab') === name;
+    tabs[i].classList.toggle('active', on);
+    tabs[i].setAttribute('aria-selected', on ? 'true' : 'false');
+  }
+  if (typeof switchView === 'function') switchView(name);
+  var groupBtn = document.getElementById('tbCrmGroup');
+  if (groupBtn) groupBtn.classList.add('active');
+  try { sessionStorage.setItem('won_crm_group_tab', name); } catch (e) {}
+}
+function applyCrmGroupLang() {
+  var ov = crmGroupOverlayEl();
+  if (!ov) return;
+  var t = (typeof T === 'function') ? (T() || {}) : {};
+  var nav = t.nav || {};
+  function setTxt(id, txt) { var el = document.getElementById(id); if (el && txt) el.textContent = txt; }
+  setTxt('crmGroupTitle', nav.crm_group);
+  setTxt('crmGroupExitBtn', nav.crm_group_exit);
+  for (var k in CRM_GROUP_TAB_KEY) {
+    var lbl = document.querySelector('#crmGroupTabs .inst-tab[data-itab="' + k + '"] .tb-label');
+    if (lbl && nav[k]) lbl.textContent = nav[k];
+  }
+  var u = (typeof authUser !== 'undefined' && authUser) ? authUser : null;
+  var nm = u ? String(u.real_name || u.name || u.username || '') : '';
+  setTxt('crmGroupUserName', nm);
+  setTxt('crmGroupUserAvatar', nm ? nm.charAt(0).toUpperCase() : '');
+  if (nav.role_admin) {
+    var role = document.getElementById('crmGroupUserRole');
+    if (role) {
+      if (u && u.is_admin) role.textContent = nav.role_admin;
+      else if (u && u.role) role.textContent = '(' + u.role + ')';
+      else role.textContent = '';
+    }
+  }
+  var cur = (window.CUR_LANG || CUR_LANG);
+  [['zh','Zh'],['en','En'],['vi','Vi']].forEach(function (p) {
+    var b = document.getElementById('crmGroupLang' + p[1]);
+    if (b) b.classList.toggle('active', cur === p[0]);
+  });
 }
 
 /* ===== ★INSTALL-MAP-PORT-20261124★ 移植 choice-lite 看板地图逻辑 =====
@@ -25977,6 +26722,19 @@ function boardRenderMapEcharts(body, agg) {
   var chart = window.__bdMapChart;
   if (chart) { try { chart.dispose(); } catch(e){} }
   chart = window.__bdMapChart = window.echarts.init(el);
+  // ★MAP-PROV-FOCUS-20261126★ 点击地图涟漪点 → 紫色高亮该点并联动安装进度表对应省份的项目行
+  chart.off('click');
+  chart.on('click', function (params) {
+    if (!params) return;
+    var vi = (params.data && params.data.vi) || '';
+    if (!vi && params.name) {
+      var all = window.__IB_MAP_PTS || [];
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].name === params.name) { vi = all[i].vi; break; }
+      }
+    }
+    if (vi) ibFocusProvince(vi, true);
+  });
 
   // 用 34 省边界自带的 cp（与地图同一坐标空间）定位项目点
   var feats = feats0;
@@ -25988,8 +26746,9 @@ function boardRenderMapEcharts(body, agg) {
     var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(vi) : null;
     if (!pr) return;
     var cp = cpMap[pr.vi];
-    if (cp) pts.push({ name: bdName3(pr), value: [cp[0], cp[1], agg[vi]] });
+    if (cp) pts.push({ name: bdName3(pr), value: [cp[0], cp[1], agg[vi]], vi: vi });
   });
+  window.__IB_MAP_PTS = pts;
   // 34 省各自柔和配色：省界靠颜色区分（不描边，内部旧省界自动消失）
   var palette = ['#39424e','#454f5b','#374049','#48525e','#3e4753','#4b5561','#3a4350','#434d59'];
   var regions = feats.map(function(f, i) {
@@ -26029,7 +26788,14 @@ function boardRenderMapEcharts(body, agg) {
   //    胡志明市红(地图内小圆点标识 · 右+引导线)、广宁省右(额外外移22)、仅显示项目省+河内+胡志明市、水平引线、
   //    同侧防重叠必须基于 canvas 实际文字宽度（bdTextWidth），保证中英越文引导线外移距离一致。
   var LEFT_COLOR = '#ffffff', RIGHT_COLOR = '#ffc46b', HANOI_COLOR = '#ff6b6b';
-  var FONT_SIZE = 10, CW = 190, LBL_H = 240, GAP = 150, MARGIN = 120;
+  var FONT_SIZE = 10, CW = 190, LBL_H = 240, GAP = 220, MARGIN = 120;
+  // ★MAP-LABEL-FIX-20261125★ canvas 量出的是"像素"，而 labelX/GAP 用的是地图坐标单位，
+  //   之前直接相加导致防重叠距离只有实际文字宽度的 1/80 → 北部/南部省份名字叠在一起。
+  //   按当前图表宽度换算 1px 对应的坐标单位，再参与同侧外推。
+  var _coordSpanX = Math.max(1, boundingCoords[1][0] - boundingCoords[0][0]);
+  var _unitsPerPx = _coordSpanX / Math.max(1, el.clientWidth || 600);
+  LBL_H = Math.max(LBL_H, 16 * _unitsPerPx);
+  function bdLabelW(txt){ return (Math.ceil(bdTextWidth(txt)) + 12) * _unitsPerPx * 1.15; }
 
   // 按实际 9px bold 字体像素宽度测量标签，避免中英文/越文字符数差异导致防重叠盒过大，
   // 从而保证不同语言下引导线的外移距离一致。
@@ -26088,7 +26854,7 @@ function boardRenderMapEcharts(body, agg) {
   var rawOut = [], rawIn = [];
   labelEntries.forEach(function(p){
     var labelTxt = p.name + (p.count ? ' · ' + p.count : '');
-    var W = Math.ceil(bdTextWidth(labelTxt)) + 12;
+    var W = bdLabelW(labelTxt);   // ★MAP-LABEL-FIX-20261125★ 已换算为地图坐标单位
     if (p.vi === hanoiVi) {
       rawIn.push({ cp: p.cp, name: p.name, count: p.count, W: W });
       return;
@@ -26106,7 +26872,8 @@ function boardRenderMapEcharts(body, agg) {
     arr.sort(function(a, b){ return sgn < 0 ? (b.labelX - a.labelX) : (a.labelX - b.labelX); });
     for (var i = 1; i < arr.length; i++) {
       if (sgn < 0) {
-        if (arr[i].labelX > arr[i-1].labelX - arr[i].W - GAP) arr[i].labelX = arr[i-1].labelX - arr[i].W - GAP;
+        // ★MAP-LABEL-FIX-20261125★ 左侧要减去【前一个标签】的宽度，原写法误用当前宽度，导致左侧仍重叠
+        if (arr[i].labelX > arr[i-1].labelX - arr[i-1].W - GAP) arr[i].labelX = arr[i-1].labelX - arr[i-1].W - GAP;
       } else {
         if (arr[i].labelX < arr[i-1].labelX + arr[i-1].W + GAP) arr[i].labelX = arr[i-1].labelX + arr[i-1].W + GAP;
       }
@@ -26114,19 +26881,93 @@ function boardRenderMapEcharts(body, agg) {
   }
   declOut(rawOut.filter(function(r){ return r.side === 'left'; }), -1);
   declOut(rawOut.filter(function(r){ return r.side === 'right'; }), 1);
-  // 纵向错位：同侧相邻省份 y 太近时把标签下移，引线改为三段折线，避免北部/南部标签叠字
+  // ★MAP-ROW-ALLOC-20261125★ 方案：以【上下错位为主】——同侧标签按 y 排序后分配独立"行"，
+  //   每个新行与【所有已分配行】都保持 >= yGap，而不是只跟前一个比较（旧写法来回交替会重新撞上第一行）。
+  //   这样北部(谅山/北宁/海防)与南部(胡志明/同奈/永隆)各自错开一行，引线仍为三段折线。
+  //   左右外推仅作为最后兜底，避免把标签推到画布外。
   (function () {
+    var yGap = Math.max(320, LBL_H + GAP);
     ['left', 'right'].forEach(function (side) {
       var arr = rawOut.filter(function (r) { return r.side === side; })
-        .sort(function (a, b) { return b.cp[1] - a.cp[1]; });
-      var lastY = null, dir = -1;
+        .sort(function (a, b) { return a.cp[1] - b.cp[1]; });
+      var used = [];
       arr.forEach(function (r) {
-        var y = r.cp[1];
-        if (lastY != null && Math.abs(lastY - y) < 320) { y = lastY + dir * 320; dir = -dir; }
-        else dir = -1;
-        r.labelY = y; lastY = y;
+        var base = r.cp[1], chosen = base;
+        for (var k = 0; k < 60; k++) {
+          var cand = base + (k === 0 ? 0 : ((k % 2 ? 1 : -1) * Math.ceil(k / 2) * yGap));
+          var ok = true;
+          for (var q = 0; q < used.length; q++) {
+            if (Math.abs(used[q] - cand) < yGap) { ok = false; break; }
+          }
+          if (ok) { chosen = cand; break; }
+        }
+        r.labelY = chosen;
+        used.push(chosen);
       });
     });
+  })();
+
+  // ★MAP-AUTO-Declutter-20261125★ 自动监测 + 逐组向外水平避让：
+  //   两两检测标签盒（含地图内的河内固定标签），发现重叠就把可移动的一侧继续向外侧推，
+  //   直到没有文字重叠（最多 80 轮，避免极端数据死循环）。
+  (function autoDeclutterLabels(){
+    function mkBox(r){
+      if (r.side) {
+        var ly = (r.labelY != null) ? r.labelY : r.cp[1];
+        return { r: r, fixed: false,
+          x0: r.side === 'left' ? r.labelX - r.W : r.labelX,
+          x1: r.side === 'left' ? r.labelX : r.labelX + r.W,
+          y0: ly - LBL_H / 2, y1: ly + LBL_H / 2 };
+      }
+      return { r: r, fixed: true,
+        x0: r.cp[0] - r.W / 2, x1: r.cp[0] + r.W / 2,
+        y0: r.cp[1] - LBL_H, y1: r.cp[1] };
+    }
+    var boxes = rawOut.map(mkBox).concat(rawIn.map(mkBox));
+    var hit = function(a, b){ return !(a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0); };
+    var moved = 0, passes = 0;
+    for (; passes < 80; passes++) {
+      var found = false;
+      for (var i = 0; i < boxes.length; i++) {
+        for (var j = i + 1; j < boxes.length; j++) {
+          var A = boxes[i], B = boxes[j];
+          if (!hit(A, B)) continue;
+          found = true;
+          // ★MAP-AUTO-Declutter-20261125B★ 必须推动【更外侧】的那一个：
+          //   右侧 x0 大的更靠外，左侧 x0 小的更靠外。原写法左侧推了内侧标签，来回抵消修不掉。
+          var m = null;
+          if (!A.fixed && B.fixed) m = A;
+          else if (!B.fixed && A.fixed) m = B;
+          else if (!A.fixed && !B.fixed) {
+            if (A.r.side && B.r.side) {
+              m = (A.r.side === 'left') ? (A.x0 < B.x0 ? A : B) : (A.x0 > B.x0 ? A : B);
+            } else {
+              m = A.r.side ? A : B;
+            }
+          }
+          if (!m) continue;
+          var other = (m === A) ? B : A;
+          var delta;
+          if (m.r.side === 'left') {
+            // 目标：m.x1 <= other.x0 - GAP（向左外侧让开）
+            delta = Math.max(0, m.x1 - other.x0) + GAP;
+            m.r.labelX -= delta;
+          } else {
+            // 目标：m.x0 >= other.x1 + GAP（向右外侧让开）
+            delta = Math.max(0, other.x1 - m.x0) + GAP;
+            m.r.labelX += delta;
+          }
+          m.x0 += (m.r.side === 'left' ? -delta : delta);
+          m.x1 += (m.r.side === 'left' ? -delta : delta);
+          moved++;
+        }
+      }
+      if (!found) break;
+    }
+    // 剩余重叠数（含固定标签），供控制台自检
+    var left = 0;
+    for (var a = 0; a < boxes.length; a++) for (var b = a + 1; b < boxes.length; b++) if (hit(boxes[a], boxes[b])) left++;
+    console.log('[地图标签自动避让] 移动 ' + moved + ' 次 / ' + (passes + 1) + ' 轮，剩余重叠 = ' + left);
   })();
 
   // 生成 series 数据 + 重叠自检盒
@@ -26228,7 +27069,7 @@ function boardRenderMapEcharts(body, agg) {
           var cp = cpMap['Hà Nội'];
           return cp ? [{ name: bdName3({ vi:'Hà Nội', zh:'河内', en:'Hanoi' }), value:[cp[0], cp[1]] }] : [];
         })() },
-      { name:'hcmDot', type:'scatter', coordinateSystem:'geo', geoIndex:0,
+      { name:'hcmDot', type:'scatter', coordinateSystem:'geo', geoIndex:0, silent:true,
         // 胡志明市：红色小圆点标识（与右侧红色标签呼应）
         symbol: 'circle', symbolSize: 6, zlevel: 2,
         itemStyle:{ color:'#ff4757', shadowBlur:8, shadowColor:'#ff4757' },
@@ -26237,32 +27078,39 @@ function boardRenderMapEcharts(body, agg) {
           var cp = hcmVi ? cpMap[hcmVi] : null;
           return cp ? [{ name: (typeof bdName3 === 'function') ? bdName3({ vi:hcmVi, zh:'胡志明市', en:'Ho Chi Minh City' }) : '胡志明市', value:[cp[0], cp[1]] }] : [];
         })() },
-      { name:'projects', type:'effectScatter', coordinateSystem:'geo', geoIndex:0,
+      { id:'ibProjects', name:'projects', type:'effectScatter', coordinateSystem:'geo', geoIndex:0,
         symbolSize: function(v){ return 8 + Math.min((v[2]||1), 6) * 3; },
         rippleEffect:{ scale:3.4, brushType:'stroke' },
         itemStyle:{ color:'#39e6ff', shadowBlur:12, shadowColor:'#39e6ff' },
+        emphasis:{ scale:1.9, itemStyle:{ color:'#b026ff', shadowBlur:26, shadowColor:'#b026ff' },
+                   rippleEffect:{ scale:4.6, brushType:'stroke' } },
         label:{ show:false },
         data: pts },
-      { name:'leaderLines', type:'lines', coordinateSystem:'geo', geoIndex:0, zlevel:3,
+      { name:'leaderLines', type:'lines', coordinateSystem:'geo', geoIndex:0, zlevel:3, silent:true,
+        // ★MAP-LEADER-POLYLINE-20261125★ 三点折线必须开 polyline，
+        //   否则 ECharts 只连首尾 → 上下错位后的引线变成斜线/看起来消失
+        polyline: true, curveness: 0,
         symbol: ['none','none'], lineStyle:{ color:'#9fb3c8', width:1, opacity:0.7 },
         data: linesData },
-      { name:'rightLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4,
+      { name:'rightLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4, silent:true,
         symbolSize:0,
         label:{ show:true, position:'right', align:'left', fontSize:9, fontWeight:'bold',
                 formatter:function(p){ return p.name + (p.value[2] ? ' · '+p.value[2] : ''); } },
         data: rightLabels },
-      { name:'leftLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4,
+      { name:'leftLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4, silent:true,
         symbolSize:0,
         label:{ show:true, position:'left', align:'right', fontSize:9, fontWeight:'bold',
                 formatter:function(p){ return p.name + (p.value[2] ? ' · '+p.value[2] : ''); } },
         data: leftLabels },
-      { name:'inLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4,
+      { name:'inLabels', type:'scatter', coordinateSystem:'geo', geoIndex:0, zlevel:4, silent:true,
         symbolSize:0,
         label:{ show:true, position:'top', align:'center', fontSize:9, fontWeight:'bold',
                 formatter:function(p){ return p.name; } },
         data: inLabels }
     ]
   });
+  // ★MAP-PROV-FOCUS-20261126★ 地图重建后恢复已选省份的紫色高亮
+  try { ibApplyProvinceHighlight(); } catch (e) {}
   if (!window.__bdMapResize) {
     window.__bdMapResize = true;
     window.addEventListener('resize', function(){
@@ -26285,20 +27133,22 @@ function ibMapRender(agg) {
 
 /* ★INSTALL-BOARD-20261124★ 安装项目进度看板（深蓝卡片）数据与三语 */
 var IB_I18N = {
-  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目', wxClear:'晴', wxCloudy:'多云', wxFog:'雾', wxRain:'雨', wxSnow:'雪', wxShower:'阵雨', wxStorm:'暴雨', wxNa:'未知', wxHum:'湿度', wxWind:'风力', wxWindUnit:'级', provText:'省份', wxMorning:'上午', wxAfternoon:'下午', contractNo:'合同号', slabsTotal:'累计片数', housesTotal:'累计房舍', projectList:'项目列表' },
-  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project', wxClear:'Clear', wxCloudy:'Cloudy', wxFog:'Fog', wxRain:'Rain', wxSnow:'Snow', wxShower:'Showers', wxStorm:'Storm', wxNa:'N/A', wxHum:'Humidity', wxWind:'Wind', wxWindUnit:'', provText:'Province', wxMorning:'Morning', wxAfternoon:'Afternoon', contractNo:'Contract', slabsTotal:'Total slabs', housesTotal:'Total houses', projectList:'Project List' },
-  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu', wxClear:'Quang trời', wxCloudy:'Nhiều mây', wxFog:'Sương mù', wxRain:'Mưa', wxSnow:'Tuyết', wxShower:'Mưa rào', wxStorm:'Bão', wxNa:'Không rõ', wxHum:'Độ ẩm', wxWind:'Gió', wxWindUnit:'cấp', provText:'Tỉnh', wxMorning:'Sáng', wxAfternoon:'Chiều', contractNo:'Số hợp đồng', slabsTotal:'Tổng số tấm', housesTotal:'Tổng số chuồng', projectList:'Danh sách dự án' }
+  zh: { title:'安装项目进度看板', projStat:'项目总数 / 建成项目 / 在建项目', total:'项目总数', done:'建成项目', building:'在建项目', prodProgress:'生产进度', instProgress:'安装进度', project:'项目', progress:'进度', dateWeather:'日期 · 时间 · 天气', wx1:'广宁省', wx1txt:'多云，温度 62°F，风力 3级', wx2:'清化省', wx2txt:'小雨，湿度 73%，风力 1级', wx3:'老街省', wx3txt:'雨，湿度 83%，风力 1级', mapTitle:'项目分布地图（越南）', hanoi:'河内 ·1', hcmc:'胡志明市', thanhhoa:'清化省 ·1', tayninh:'西宁省 ·1', photos:'现场图片', noData:'暂无数据', calendar:'日历（中越法定假日）', backToday:'回到当天', spring:'春节8天', tet:'雄王节7天', tomb:'清明3天', victory:'胜利日3天', instWorkers:'安装人数', prodWorkers:'生产人数', workers:'人数', loginDaily:'职位人员登录次数（今日 / 本周 / 本月 / 累计）', startRecord:'开始记录', startDate:'开始记录日', name:'姓名', today:'今日', week:'本周', month:'本月', cum:'累计', lastLogin:'最后登录', loginMonthly:'全员登录次数（月 / 季）', weekdays:['日','一','二','三','四','五','六'], noProject:'暂无项目', demoProject:'示例项目', wxClear:'晴', wxCloudy:'多云', wxFog:'雾', wxRain:'雨', wxSnow:'雪', wxShower:'阵雨', wxStorm:'暴雨', wxNa:'未知', wxHum:'湿度', wxWind:'风力', wxWindUnit:'级', provText:'省份', wxMorning:'上午', wxAfternoon:'下午', contractNo:'合同号', slabsTotal:'累计片数', housesTotal:'累计房舍', projectList:'项目列表', buText:'BU（业务单元）' },
+  en: { title:'Installation Progress Dashboard', projStat:'Total / Completed / In Progress', total:'Total', done:'Completed', building:'In Progress', prodProgress:'Production Progress', instProgress:'Installation Progress', project:'Project', progress:'Progress', dateWeather:'Date · Time · Weather', wx1:'Quang Ninh', wx1txt:'Cloudy, 62°F, wind 3', wx2:'Thanh Hoa', wx2txt:'Light rain, humidity 73%, wind 1', wx3:'Lao Cai', wx3txt:'Rain, humidity 83%, wind 1', mapTitle:'Project Distribution Map (Vietnam)', hanoi:'Hanoi ·1', hcmc:'Ho Chi Minh City', thanhhoa:'Thanh Hoa ·1', tayninh:'Tay Ninh ·1', photos:'Site Photos', noData:'No data', calendar:'Calendar (CN/VN Holidays)', backToday:'Today', spring:'Tet 8d', tet:'Hung Kings 7d', tomb:'Tomb-sweeping 3d', victory:'Victory Day 3d', instWorkers:'Installation Workers', prodWorkers:'Production Workers', workers:'Workers', loginDaily:'Staff Logins (Today / Week / Month / Total)', startRecord:'Start', startDate:'Start date', name:'Name', today:'Today', week:'Week', month:'Month', cum:'Total', lastLogin:'Last login', loginMonthly:'All Staff Logins (Month / Quarter)', weekdays:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], noProject:'No project', demoProject:'Sample project', wxClear:'Clear', wxCloudy:'Cloudy', wxFog:'Fog', wxRain:'Rain', wxSnow:'Snow', wxShower:'Showers', wxStorm:'Storm', wxNa:'N/A', wxHum:'Humidity', wxWind:'Wind', wxWindUnit:'', provText:'Province', wxMorning:'Morning', wxAfternoon:'Afternoon', contractNo:'Contract', slabsTotal:'Total slabs', housesTotal:'Total houses', projectList:'Project List', buText:'BU' },
+  vi: { title:'Bảng tiến độ lắp đặt', projStat:'Tổng / Hoàn thành / Đang làm', total:'Tổng dự án', done:'Đã xong', building:'Đang làm', prodProgress:'Tiến độ sản xuất', instProgress:'Tiến độ lắp đặt', project:'Dự án', progress:'Tiến độ', dateWeather:'Ngày · Giờ · Thời tiết', wx1:'Quảng Ninh', wx1txt:'Nhiều mây, 62°F, gió 3', wx2:'Thanh Hóa', wx2txt:'Mưa nhỏ, ẩm 73%, gió 1', wx3:'Lào Cai', wx3txt:'Mưa, ẩm 83%, gió 1', mapTitle:'Bản đồ phân bố dự án (Việt Nam)', hanoi:'Hà Nội ·1', hcmc:'TP.Hồ Chí Minh', thanhhoa:'Thanh Hóa ·1', tayninh:'Tây Ninh ·1', photos:'Ảnh công trường', noData:'Chưa có dữ liệu', calendar:'Lịch (nghỉ lễ VN/TQ)', backToday:'Hôm nay', spring:'Tết 8 ngày', tet:'Giỗ Tùng 7 ngày', tomb:'Thanh minh 3 ngày', victory:'Chiến thắng 3 ngày', instWorkers:'Số người lắp đặt', prodWorkers:'Số người sản xuất', workers:'Số người', loginDaily:'Số lần đăng nhập (Hôm nay / Tuần / Tháng / Tổng)', startRecord:'Bắt đầu', startDate:'Ngày bắt đầu', name:'Họ tên', today:'Hôm nay', week:'Tuần', month:'Tháng', cum:'Tổng', lastLogin:'Đăng nhập cuối', loginMonthly:'Số lần đăng nhập toàn thể (Tháng / Quý)', weekdays:['CN','T2','T3','T4','T5','T6','T7'], noProject:'Chưa có dự án', demoProject:'Dự án mẫu', wxClear:'Quang trời', wxCloudy:'Nhiều mây', wxFog:'Sương mù', wxRain:'Mưa', wxSnow:'Tuyết', wxShower:'Mưa rào', wxStorm:'Bão', wxNa:'Không rõ', wxHum:'Độ ẩm', wxWind:'Gió', wxWindUnit:'cấp', provText:'Tỉnh', wxMorning:'Sáng', wxAfternoon:'Chiều', contractNo:'Số hợp đồng', slabsTotal:'Tổng số tấm', housesTotal:'Tổng số chuồng', projectList:'Danh sách dự án', buText:'BU (Đơn vị kinh doanh)' }
 };
 var IB_BOOTED = false, IB_CLOCK = null, IB_CAL_Y = 0, IB_CAL_M = 0;
 function ibLang() { try { if (typeof CUR_LANG !== 'undefined' && CUR_LANG) return CUR_LANG; } catch (e) {} return 'zh'; }
 function ibTexts() { return IB_I18N[ibLang()] || IB_I18N.zh; }
 function ibApplyLang() {
   var d = ibTexts();
-  document.querySelectorAll('#ibPage [data-ib], #installOverlay .inst-panel[data-itab="detail"] [data-ib]').forEach(function (el) {
+  document.querySelectorAll('#ibPage [data-ib], #installOverlay .inst-panel [data-ib]').forEach(function (el) {
     if (el.children.length) return;
     var v = d[el.getAttribute('data-ib')];
     if (v) el.textContent = v;
   });
+  // ★INSTALL-PROV-LANG-20261126★ 语言切换必须重画安装进度数据行，否则省份/BU 停留在旧语言
+  try { ibRenderProjects(); } catch (e) {}
   ibTick();
   if (IB_CAL_Y) ibRenderCal();
   ibRenderPhotos();
@@ -26451,26 +27301,71 @@ function ibProvName(p) {
   var raw = String((p && p.province) || '');
   if (!raw) return '—';
   var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(raw) : null;
-  var nm = pr ? bdName3(pr) : raw;
+  var L = (typeof CUR_LANG !== 'undefined') ? CUR_LANG : 'zh';
+  var nm = pr ? (L === 'zh' ? (pr.zh || pr.vi || '') : L === 'en' ? (pr.en || pr.vi || '') : (pr.vi || pr.en || '')) : raw;
   return (typeof escBd === 'function' ? escBd(nm) : String(nm).replace(/[&<>"]/g, ''));
+}
+/* ★MAP-PROV-FOCUS-20261126★ 点击省份列 → 地图对应涟漪点亮眼紫色 */
+window.__IB_HL_PROV = '';
+function ibProvKey(p) {
+  var raw = String((p && p.province) || '');
+  var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(raw) : null;
+  return pr ? pr.vi : raw;
+}
+function ibFocusProvince(prov, fromMap) {
+  var raw = String(prov || '');
+  window.__IB_HL_PROV = (window.__IB_HL_PROV === raw) ? '' : raw;
+  ibApplyProvinceHighlight();
+  if (!fromMap && typeof INST_ACTIVE_TAB !== 'undefined' && INST_ACTIVE_TAB !== 'board' && typeof instSwitchTab === 'function') {
+    instSwitchTab('board');
+  }
+}
+function ibClearProvinceFocus() {
+  window.__IB_HL_PROV = '';
+  ibApplyProvinceHighlight();
+}
+function ibApplyProvinceHighlight() {
+  var chart = window.__bdMapChart;
+  var pts = window.__IB_MAP_PTS || [];
+  if (chart && chart.dispatchAction) {
+    try { chart.dispatchAction({ type:'downplay', seriesId:'ibProjects' }); } catch (e) {}
+    var target = window.__IB_HL_PROV;
+    if (target) {
+      var idx = -1;
+      for (var i = 0; i < pts.length; i++) {
+        if (String(pts[i].vi) === String(target)) { idx = i; break; }
+      }
+      if (idx >= 0) {
+        try { chart.dispatchAction({ type:'highlight', seriesId:'ibProjects', dataIndex:idx }); } catch (e) {}
+      }
+    }
+  }
+  // 同步重画安装进度表：同省的全部项目行一起高亮/取消
+  try { ibRenderProjects(); } catch (e) {}
 }
 function ibRenderProjects() {
   var d = ibTexts(), list = IB_PROJECTS || [];
+  // ★INSTALL-ONLY-SYSTEM-20261126★ 安装进度表只显示「系统性设备」项目
+  var sysList = list.filter(function (p) { return String(p.sales_product || '').toUpperCase() === 'SYSTEM'; });
   var setTxt = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = String(v); };
-  var done = list.filter(function (p) { return ibInstallData(p).rate >= 100; }).length;
-  setTxt('ibTotal', list.length); setTxt('ibDone', done); setTxt('ibBuilding', Math.max(0, list.length - done));
-  var withInst = list.filter(function (p) { return String(p.include_install || '').toUpperCase() === 'YES'; });
+  var done = sysList.filter(function (p) { return ibInstallData(p).rate >= 100; }).length;
+  setTxt('ibTotal', sysList.length); setTxt('ibDone', done); setTxt('ibBuilding', Math.max(0, sysList.length - done));
+  // ★INSTALL-ALL-SYSTEM-20261126★ 不再按 include_install 过滤：全部系统性设备项目都罗列
+  var withInst = sysList.slice();
   withInst.sort(function (a, b) { return ibInstallData(b).rate - ibInstallData(a).rate; });
   var rows = function (arr, kind) {
-    if (!arr.length) return '<tr><td colspan="' + (kind === 'inst' ? 5 : 4) + '">' + d.noProject + '</td></tr>';
+    if (!arr.length) return '<tr><td colspan="' + (kind === 'inst' ? 6 : 4) + '">' + d.noProject + '</td></tr>';
     return arr.map(function (p, i) {
       var raw = String(ibName(p) || ('#' + p.id));
       var nm = (typeof escBd === 'function' ? escBd(raw) : raw.replace(/[&<>"]/g, ''));
       var st = ibInstallData(p);
       var workers = st.workers || '—';
+      var bu = p.bu || p.doc_remark || '';
+      var focusCls = (window.__IB_HL_PROV && ibProvKey(p) === window.__IB_HL_PROV) ? ' class="ib-row-focus"' : '';
       if (kind === 'inst') {
-        return '<tr><td class="ib-num">' + (i + 1) + '</td><td class="ib-proj" title="' + nm + '">' + nm + '</td>' +
-          '<td class="ib-prov">' + ibProvName(p) + '</td>' +
+        return '<tr' + focusCls + '><td class="ib-num">' + (i + 1) + '</td><td class="ib-proj" title="' + nm + '">' + nm + '</td>' +
+          '<td class="ib-bu">' + (typeof buDisplay === 'function' ? escBd(buDisplay(bu)) : escBd(String(bu || '—'))) + '</td>' +
+          '<td class="ib-prov ib-prov-click" data-prov="' + escBd(ibProvKey(p)) + '" title="' + escBd(ibL('点击定位到地图', 'Locate on map', 'Xem trên bản đồ')) + '" onclick="ibFocusProvince(this.getAttribute(\'data-prov\'))">' + ibProvName(p) + '</td>' +
           '<td class="ib-rate">' + st.rate.toFixed(1) + '%<div class="ib-bar"><i style="width:' + st.rate + '%"></i></div></td>' +
           '<td class="ib-workers">' + workers + '</td></tr>';
       }
@@ -26484,21 +27379,643 @@ function ibRenderProjects() {
 function ibRenderDetailProjects() {
   var el = document.getElementById('instProjList'); if (!el) return;
   var d = ibTexts(), list = IB_PROJECTS || [];
-  if (!list.length) { el.innerHTML = '<div class="inst-empty">' + d.noProject + '</div>'; return; }
-  el.innerHTML = list.map(function (p) {
+  // ★INSTALL-CARD-SUMMARY-20261125★ 总计与三类销售产品项目数（三语）
+  // ★INST-FILES-SAME-20261125★ 同一份统计同时写入「安装详情管理」与「项目专属资料」
+  var _cnt = function (code) {
+    return list.filter(function (p) { return String(p.sales_product || '').toUpperCase() === code; }).length;
+  };
+  var _nS = _cnt('SYSTEM'), _nP = _cnt('PART'), _nV = _cnt('SERVICE');
+  var _sumText = ibL(
+    '总计：' + list.length + ' 项目（系统性设备项目：' + _nS + '个、零配件项目：' + _nP + '个、纯服务性项目：' + _nV + '个）',
+    'Total: ' + list.length + ' projects (System equipment: ' + _nS + ', Spare parts: ' + _nP + ', Pure service: ' + _nV + ')',
+    'Tổng: ' + list.length + ' dự án (Thiết bị hệ thống: ' + _nS + ', Phụ tùng: ' + _nP + ', Dịch vụ thuần: ' + _nV + ')'
+  );
+  ['instProjSummary', 'instFilesProjSummary'].forEach(function (id) {
+    var e = document.getElementById(id);
+    if (e) e.textContent = _sumText;
+  });
+  var _emptyHtml = '<div class="inst-empty">' + d.noProject + '</div>';
+  if (!list.length) {
+    el.innerHTML = _emptyHtml;
+    var _f0 = document.getElementById('instFilesProjList');
+    if (_f0) _f0.innerHTML = _emptyHtml;
+    return;
+  }
+  // ★INSTALL-CARD-GROUP-20261125★ 按销售产品分成三个区域：系统性设备 / 服务 / 零配件
+  var cardHtml = function (p, openFn) {
     var nm = String(ibName(p) || ('#' + p.id));
     nm = (typeof escBd === 'function' ? escBd(nm) : nm.replace(/[&<>"]/g, ''));
     var prov = ibProvName(p);
     var cno = String(p.contract_no || p.no || '');
     cno = (typeof escBd === 'function' ? escBd(cno) : cno.replace(/[&<>"]/g, ''));
     var st = ibInstallData(p);
-    return '<div class="inst-proj-card">' +
+    // ★INSTALL-CARD-SALESPRODUCT-20261125★ 卡片信息与签约项目「销售产品」一一对应
+    var sp = (typeof salesProductDisplay === 'function') ? salesProductDisplay(p.sales_product) : (p.sales_product || '');
+    sp = typeof escBd === 'function' ? escBd(sp || '—') : String(sp || '—');
+    // 后期对接安装分区：优先取安装管理接口返回值，其次取签约项目字段；都没有则显示「未分区」
+    var zoneRaw = (p.inst_zone || p.install_zone || p.installZone ||
+      (p.__ibInstall && (p.__ibInstall.zone || p.__ibInstall.install_zone)) || '');
+    var zoneTxt = String(zoneRaw).trim()
+      ? (escBd(String(zoneRaw).trim()) + ' ' + ibL('区', 'zone', 'khu'))
+      : ibL('未分区', 'Unassigned', 'Chưa phân khu');
+    var pid = String(p.id == null ? '' : p.id).replace(/'/g, "\\'");
+    return '<div class="inst-proj-card" role="button" tabindex="0" onclick="' + openFn + '(\'' + pid + '\')">' +
       '<div class="inst-proj-name">' + nm + ' · ' + prov + '</div>' +
       '<span class="inst-proj-contract">' + d.contractNo + ' ' + (cno || '—') + '</span>' +
-      '<div class="inst-proj-stat">' + d.slabsTotal + ' ' + st.slabs + '</div>' +
-      '<div class="inst-proj-stat">' + d.housesTotal + ' ' + st.houses + '</div>' +
+      '<div class="inst-proj-stat">' + ibL('销售产品', 'Sales Product', 'Sản phẩm bán') + '：' + sp + '</div>' +
+      '<div class="inst-proj-stat">' + ibL('房舍数量', 'House count', 'Số chuồng') + '：' + (st.houses || 0) +
+        ' ' + ibL('栋', 'buildings', 'tòa') + '</div>' +
+      '<div class="inst-proj-stat">' + ibL('安装分区', 'Installation zone', 'Khu lắp đặt') + '：' + zoneTxt + '</div>' +
       '</div>';
+  };
+  var groups = [
+    { code: 'SYSTEM', label: salesProductDisplay('SYSTEM') },
+    { code: 'PART', label: salesProductDisplay('PART') },
+    { code: 'SERVICE', label: salesProductDisplay('SERVICE') }
+  ];
+  var htmlDetail = '', htmlFiles = '';
+  groups.forEach(function (g) {
+    var items = list.filter(function (p) {
+      return String(p.sales_product || '').toUpperCase() === g.code;
+    });
+    if (!items.length) return;
+    var head = '<div class="inst-sp-group">' +
+      '<div class="inst-sp-group-title">' + escBd(g.label || g.code) + ' · ' + items.length + '</div>' +
+      '<div class="inst-proj-list">';
+    htmlDetail += head + items.map(function (p) { return cardHtml(p, 'ibOpenProjDetail'); }).join('') + '</div></div>';
+    // ★INST-LIB-PORT-20261125★ 项目专属资料卡片点击进入文件管理器
+    htmlFiles += head + items.map(function (p) { return cardHtml(p, 'ibOpenProjectFiles'); }).join('') + '</div></div>';
+  });
+  el.innerHTML = htmlDetail || _emptyHtml;
+  var _f = document.getElementById('instFilesProjList');
+  if (_f) _f.innerHTML = htmlFiles || _emptyHtml;
+}
+/* ★INST-LIB-PORT-20261125★ 独立项目资料文件管理器（完整模拟 choice-lite，不改 choice-lite） */
+var IB_LIB_PROJECT = null, IB_LIB_MODE = null, IB_LIB_FILES = [], IB_LIB_CWD = '', IB_LIB_VIEW = 'grid', IB_LIB_FILTER = '', IB_LIB_CONFIRM = null;
+function ibLibFindProject(id) {
+  var list = IB_PROJECTS || [];
+  for (var i = 0; i < list.length; i++) { if (String(list[i].id) === String(id)) return list[i]; }
+  return null;
+}
+function ibLibT(zh, en, vi) { return ibL(zh, en, vi); }
+function ibLibToast(msg) { if (typeof showToast === 'function') showToast(msg); }
+function ibLibHeaders() { return (typeof authHeaders === 'function') ? authHeaders() : {}; }
+function ibLibRel(f) { return String((f && (f.original_name || f.filename)) || '').replace(/\\/g, '/'); }
+function ibLibBase(n) { var p = String(n || '').split('/'); return p[p.length - 1] || ''; }
+function ibLibBytes(n) {
+  n = Number(n) || 0;
+  if (!n) return '-';
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1024 / 1024).toFixed(2) + ' MB';
+}
+function ibLibIcon(n) {
+  var e = String(n || '').toLowerCase();
+  var cls = 'file gen', label = '';
+  if (/\.(xlsx?|csv)$/.test(e)) { cls = 'file x'; label = 'X'; }
+  else if (/\.pdf$/.test(e)) { cls = 'file pdf'; label = 'PDF'; }
+  else if (/\.pptx?$/.test(e)) { cls = 'file p'; label = 'P'; }
+  else if (/\.docx?$/.test(e)) { cls = 'file w'; label = 'W'; }
+  else if (/\.(png|jpe?g|gif|webp|bmp)$/.test(e)) { cls = 'file gen'; label = 'IMG'; }
+  else if (/\.(zip|rar|7z)$/.test(e)) { cls = 'file gen'; label = 'ZIP'; }
+  else { cls = 'file gen'; label = 'TXT'; }
+  return '<span class="lib-ico ' + cls + '"><i>' + label + '</i></span>';
+}
+function ibOpenProjectFiles(id) {
+  var p = ibLibFindProject(id);
+  if (!p) return;
+  IB_LIB_PROJECT = p;
+  IB_LIB_MODE = 'project';
+  IB_LIB_CWD = '';
+  IB_LIB_FILTER = '';
+  IB_LIB_VIEW = 'grid';
+  IB_LIB_CONFIRM = null;
+  var wrap = document.getElementById('instFilesListWrap');
+  var view = document.getElementById('ibLibView');
+  var pub = document.getElementById('ibPubLibView');
+  if (pub) pub.style.display = 'none';
+  if (wrap) wrap.style.display = 'none';
+  if (view) view.style.display = 'block';
+  var body = document.getElementById('instBody');
+  if (body) body.scrollTop = 0;
+  ibLibLoad();
+}
+function ibLibBack() {
+  IB_LIB_PROJECT = null;
+  IB_LIB_MODE = null;
+  IB_LIB_FILES = [];
+  IB_LIB_CWD = '';
+  IB_LIB_CONFIRM = null;
+  var wrap = document.getElementById('instFilesListWrap');
+  var view = document.getElementById('ibLibView');
+  var pub = document.getElementById('ibPubLibView');
+  if (wrap) wrap.style.display = '';
+  if (view) view.style.display = 'none';
+  if (pub) pub.style.display = 'none';
+}
+function ibOpenSharedLib() {
+  IB_LIB_PROJECT = null;
+  IB_LIB_MODE = 'public';
+  IB_LIB_FILES = [];
+  IB_LIB_CWD = '';
+  IB_LIB_FILTER = '';
+  IB_LIB_VIEW = 'grid';
+  IB_LIB_CONFIRM = null;
+  var pub = document.getElementById('ibPubLibView');
+  var view = document.getElementById('ibLibView');
+  var wrap = document.getElementById('instFilesListWrap');
+  if (view) view.style.display = 'none';
+  if (wrap) wrap.style.display = '';
+  if (pub) pub.style.display = 'block';
+  var body = document.getElementById('instBody');
+  if (body) body.scrollTop = 0;
+  ibLibLoad();
+}
+function ibLibLoad() {
+  if (!IB_LIB_MODE) return;
+  var pid = (IB_LIB_MODE === 'public') ? 'null' : (IB_LIB_PROJECT ? IB_LIB_PROJECT.id : 'null');
+  var url = '/api/library/files?project_id=' + encodeURIComponent(pid);
+  fetch(url, { credentials: 'include', headers: ibLibHeaders() })
+    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (j) { IB_LIB_FILES = Array.isArray(j) ? j : []; ibLibRender(); })
+    .catch(function () { IB_LIB_FILES = []; ibLibRender(); });
+}
+function ibLibItems() {
+  var pre = IB_LIB_CWD ? (IB_LIB_CWD + '/') : '';
+  var filter = String(IB_LIB_FILTER || '').trim().toLowerCase();
+  var files = (IB_LIB_FILES || []).filter(function (f) {
+    var rel = ibLibRel(f);
+    if (rel.indexOf(pre) !== 0) return false;
+    if (filter && rel.toLowerCase().indexOf(filter) === -1) return false;
+    return true;
+  });
+  var fmap = {}, items = [];
+  files.forEach(function (f) {
+    var rest = ibLibRel(f).slice(pre.length);
+    if (rest.indexOf('/') !== -1) {
+      var d = rest.split('/')[0];
+      if (!fmap[d]) { fmap[d] = { type: 'dir', name: d, count: 0, files: [] }; items.push(fmap[d]); }
+      fmap[d].count++;
+      fmap[d].files.push(f);
+    } else {
+      items.push({ type: 'file', name: rest, file: f });
+    }
+  });
+  items.sort(function (a, b) {
+    if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
+    return String(a.name).localeCompare(String(b.name));
+  });
+  return items;
+}
+function ibLibCrumbHtml() {
+  var parts = IB_LIB_CWD ? IB_LIB_CWD.split('/') : [];
+  var h = '<span class="cb-c">' + escBd(ibLibT('资料库', 'Library', 'Thư viện')) + '</span>';
+  h += '<span class="cb-sep">›</span><span class="cb-i" onclick="ibLibGoDir(\'\')">' +
+    escBd(IB_LIB_MODE === 'public' ? ibLibT('公用资料', 'Shared Files', 'Tài liệu dùng chung') : ibLibT('独立项目资料', 'Project Files', 'Tài liệu dự án')) + '</span>';
+  if (IB_LIB_MODE !== 'public') {
+    h += '<span class="cb-sep">›</span><span class="cb-proj">' + escBd(ibName(IB_LIB_PROJECT) || '') + '</span>';
+  }
+  var acc = '';
+  parts.forEach(function (p, i) {
+    acc = acc ? (acc + '/' + p) : p;
+    h += '<span class="cb-sep">›</span>';
+    h += (i === parts.length - 1)
+      ? '<span class="cb-c">' + escBd(p) + '</span>'
+      : '<span class="cb-i" onclick="ibLibGoDir(\'' + acc.replace(/'/g, "\\'") + '\')">' + escBd(p) + '</span>';
+  });
+  return h;
+}
+function ibLibToolbarHtml() {
+  var isPub = (IB_LIB_MODE === 'public');
+  var inFile = isPub ? 'ibPubLibFileInput' : 'ibLibFileInput';
+  var inDir = isPub ? 'ibPubLibDirInput' : 'ibLibDirInput';
+  var h = isPub ? '' : '<button class="ib-lib-btn back" onclick="ibLibBack()">← ' + escBd(ibLibT('返回项目', 'Back to projects', 'Về dự án')) + '</button>';
+  h += '<button class="ib-lib-btn primary" onclick="document.getElementById(\'' + inFile + '\').click()">＋ ' + escBd(ibLibT('上传文件', 'Upload Files', 'Tải tệp')) + '</button>';
+  h += '<button class="ib-lib-btn" onclick="document.getElementById(\'' + inDir + '\').click()">🗂 ' + escBd(ibLibT('上传文件夹', 'Upload Folder', 'Tải thư mục')) + '</button>';
+  h += '<span class="ib-lib-hint">' + escBd(ibLibT('点击、拖拽或粘贴上传', 'Click, drag or paste to upload', 'Nhấp, kéo hoặc dán để tải lên')) + '</span>';
+  h += '<input class="ib-lib-search" type="text" placeholder="' + escBd(ibLibT('搜索文件…', 'Search files…', 'Tìm tệp…')) + '" value="' + escBd(IB_LIB_FILTER) + '" oninput="ibLibSetFilter(this.value)">';
+  h += '<span class="ib-lib-toggle"><button class="' + (IB_LIB_VIEW === 'grid' ? 'active' : '') + '" onclick="ibLibSetView(\'grid\')" title="Grid">▦</button>' +
+    '<button class="' + (IB_LIB_VIEW === 'list' ? 'active' : '') + '" onclick="ibLibSetView(\'list\')" title="List">☰</button></span>';
+  return h;
+}
+function ibLibItemHtml(it) {
+  var esc = function (s) { return typeof escBd === 'function' ? escBd(String(s)) : String(s); };
+  if (it.type === 'dir') {
+    var dpath = (IB_LIB_CWD ? (IB_LIB_CWD + '/') : '') + it.name;
+    return '<div class="ib-lib-item" data-lib-dir="' + esc(dpath) + '" onclick="ibLibGoDir(this.getAttribute(\'data-lib-dir\'))">' +
+      '<div class="li-icon"><span class="lib-ico folder"></span></div><div class="li-name">' + esc(it.name) + '</div>' +
+      '<div class="li-meta">' + it.count + ' ' + esc(ibLibT('个文件', 'files', 'tệp')) + '</div>' +
+      '<div class="li-acts"><button class="danger" onclick="event.stopPropagation();ibLibAskDeleteDir(this.parentNode.parentNode.getAttribute(\'data-lib-dir\'))">' + esc(ibLibT('删除', 'Delete', 'Xóa')) + '</button></div>' +
+      '</div>';
+  }
+  var f = it.file, id = f.id, nm = it.name;
+  var meta = ibLibBytes(f.size) + ' · ' + String(f.created_at || '').slice(0, 10) + ' · ' + String(f.uploader || '');
+  var acts = '<button onclick="event.stopPropagation();ibLibPreview(' + id + ')">' + esc(ibLibT('预览', 'View', 'Xem')) + '</button>' +
+    '<button onclick="event.stopPropagation();ibLibDownload(' + id + ')">' + esc(ibLibT('下载', 'Download', 'Tải')) + '</button>' +
+    '<button onclick="event.stopPropagation();ibLibRename(' + id + ')">' + esc(ibLibT('重命名', 'Rename', 'Đổi tên')) + '</button>' +
+    '<button class="danger" onclick="event.stopPropagation();ibLibAskDelete(' + id + ')">' + esc(ibLibT('删除', 'Delete', 'Xóa')) + '</button>';
+  return '<div class="ib-lib-item" data-lib-id="' + id + '" onclick="ibLibPreview(' + id + ')">' +
+    '<div class="li-icon">' + ibLibIcon(nm) + '</div><div class="li-name">' + esc(nm) + '</div>' +
+    '<div class="li-meta">' + esc(meta) + '</div><div class="li-acts">' + acts + '</div></div>';
+}
+function ibLibRowHtml(it) {
+  var esc = function (s) { return typeof escBd === 'function' ? escBd(String(s)) : String(s); };
+  if (it.type === 'dir') {
+    var dpath = (IB_LIB_CWD ? (IB_LIB_CWD + '/') : '') + it.name;
+    return '<div class="ll-row" onclick="ibLibGoDir(\'' + dpath.replace(/'/g, "\\'") + '\')"><span><span class="lib-ico folder"></span> ' + esc(it.name) + '</span><span>' + esc(ibLibT('文件夹', 'Folder', 'Thư mục')) + '</span><span>' + it.count + ' ' + esc(ibLibT('个文件', 'files', 'tệp')) + '</span><span></span></div>';
+  }
+  var f = it.file;
+  return '<div class="ll-row" onclick="ibLibPreview(' + f.id + ')"><span>' + ibLibIcon(it.name) + ' ' + esc(it.name) + '</span>' +
+    '<span>' + esc(ibLibBytes(f.size)) + '</span><span>' + esc(String(f.created_at || '').slice(0, 16)) + '</span>' +
+    '<span><button class="ib-lib-btn" onclick="event.stopPropagation();ibLibRename(' + f.id + ')">' + esc(ibLibT('重命名', 'Rename', 'Đổi tên')) + '</button> ' +
+    '<button class="ib-lib-btn" onclick="event.stopPropagation();ibLibAskDelete(' + f.id + ')">' + esc(ibLibT('删除', 'Delete', 'Xóa')) + '</button></span></div>';
+}
+function ibLibRender() {
+  if (!IB_LIB_MODE) return;
+  var isPub = (IB_LIB_MODE === 'public');
+  var crumb = document.getElementById(isPub ? 'ibPubLibCrumb' : 'ibLibCrumb');
+  var tools = document.getElementById(isPub ? 'ibPubLibTools' : 'ibLibTools');
+  var box = document.getElementById(isPub ? 'ibPubLibContent' : 'ibLibContent');
+  if (crumb) crumb.innerHTML = ibLibCrumbHtml();
+  if (tools) tools.innerHTML = ibLibToolbarHtml();
+  if (!box) return;
+  var items = ibLibItems();
+  if (!items.length) {
+    box.innerHTML = '<div class="ib-lib-empty">' + escBd(ibLibT('暂无文件', 'No files', 'Chưa có tệp')) + '</div>';
+    ibLibPaintConfirm();
+    return;
+  }
+  if (IB_LIB_VIEW === 'list') {
+    box.innerHTML = '<div class="ib-lib-list"><div class="ll-row ll-head"><span>' + escBd(ibLibT('名称', 'Name', 'Tên')) + '</span><span>' + escBd(ibLibT('大小', 'Size', 'Kích thước')) + '</span><span>' + escBd(ibLibT('日期', 'Date', 'Ngày')) + '</span><span>' + escBd(ibLibT('操作', 'Actions', 'Thao tác')) + '</span></div>' +
+      items.map(ibLibRowHtml).join('') + '</div>';
+  } else {
+    box.innerHTML = '<div class="ib-lib-grid">' + items.map(ibLibItemHtml).join('') + '</div>';
+  }
+  ibLibPaintConfirm();
+}
+function ibLibGoDir(p) { IB_LIB_CWD = String(p || ''); IB_LIB_CONFIRM = null; ibLibRender(); }
+function ibLibUp() { var a = IB_LIB_CWD.split('/'); a.pop(); IB_LIB_CWD = a.join('/'); ibLibRender(); }
+function ibLibSetFilter(v) { IB_LIB_FILTER = String(v || ''); ibLibRender(); }
+function ibLibSetView(v) { IB_LIB_VIEW = v; ibLibRender(); }
+var IB_LIB_PREVIEW_ID = null;
+function ibLibPreviewName(id) {
+  var list = IB_LIB_FILES || [];
+  for (var i = 0; i < list.length; i++) {
+    if (String(list[i].id) === String(id)) return ibLibRel(list[i]);
+  }
+  return '';
+}
+function ibLibPreviewSrc(id, name) {
+  var url = '/api/library/files/' + id + '/preview';
+  if (/\.(xlsx?|docx?|pptx?)$/i.test(name)) {
+    var proto = (window.location && window.location.protocol) ? window.location.protocol : 'http:';
+    var host = (window.location && window.location.host) ? window.location.host : '124.156.134.135:3000';
+    return 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(proto + '//' + host + url);
+  }
+  return url;
+}
+function ibLibPreview(id) {
+  var name = ibLibPreviewName(id);
+  var src = ibLibPreviewSrc(id, name);
+  var modal = document.getElementById('ibLibPreviewModal');
+  var body = document.getElementById('ibLibPreviewBody');
+  var title = document.getElementById('ibLibPreviewTitle');
+  if (!modal || !body) { window.open('/api/library/files/' + id + '/preview', '_blank'); return; }
+  IB_LIB_PREVIEW_ID = id;
+  if (title) title.textContent = (name || ('#' + id)) + ' · ' + ibLibT('预览', 'Preview', 'Xem trước');
+  body.innerHTML = '<iframe src="' + escBd(src) + '" frameborder="0" scrolling="yes" allowfullscreen></iframe>';
+  modal.style.display = 'flex';
+}
+function ibLibClosePreview() {
+  IB_LIB_PREVIEW_ID = null;
+  var modal = document.getElementById('ibLibPreviewModal');
+  var body = document.getElementById('ibLibPreviewBody');
+  if (body) body.innerHTML = '';
+  if (modal) modal.style.display = 'none';
+}
+function ibLibPreviewRefreshTitle() {
+  if (!IB_LIB_PREVIEW_ID) return;
+  var title = document.getElementById('ibLibPreviewTitle');
+  if (title) title.textContent = (ibLibPreviewName(IB_LIB_PREVIEW_ID) || ('#' + IB_LIB_PREVIEW_ID)) + ' · ' + ibLibT('预览', 'Preview', 'Xem trước');
+}
+function ibLibDownload(id) { window.open('/api/library/files/' + id + '/download?dl=1', '_blank'); }
+function ibLibUpload(input) {
+  if (!input || !input.files || !input.files.length || !IB_LIB_MODE) return;
+  var pid = (IB_LIB_MODE === 'public') ? 'null'
+    : ((IB_LIB_MODE === 'project' && IB_LIB_PROJECT && IB_LIB_PROJECT.id != null && IB_LIB_PROJECT.id !== '') ? IB_LIB_PROJECT.id : null);
+  if (pid === null) { ibLibToast('upload target missing'); input.value = ''; return; }
+  var fd = new FormData();
+  var pre = IB_LIB_CWD ? (IB_LIB_CWD + '/') : '';
+  for (var i = 0; i < input.files.length; i++) {
+    var f = input.files[i];
+    fd.append('file', f);
+    fd.append('paths', pre + String(f.webkitRelativePath || f.name).replace(/\\/g, '/'));
+  }
+  var headers = { 'X-User-Name': (typeof authUser !== 'undefined' && authUser && authUser.username) ? authUser.username : '' };
+  fetch('/api/library/upload?project_id=' + encodeURIComponent(pid), { method: 'POST', credentials: 'include', headers: headers, body: fd })
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (res && res.ok) { ibLibToast(ibLibT('上传完成', 'Uploaded', 'Đã tải lên')); ibLibLoad(); }
+      else ibLibToast((res && res.error) || 'upload failed');
+    })
+    .catch(function () { ibLibToast('upload failed'); });
+  input.value = '';
+}
+function ibLibRename(id) {
+  var item = document.querySelector((IB_LIB_MODE === 'public' ? '#ibPubLibContent ' : '#ibLibContent ') + '[data-lib-id="' + id + '"]');
+  if (!item || item.querySelector('.ib-lib-rename')) return;
+  var nameEl = item.querySelector('.li-name');
+  if (!nameEl) return;
+  var old = nameEl.textContent;
+  var inp = document.createElement('input');
+  inp.className = 'ib-lib-rename';
+  inp.value = old;
+  nameEl.style.display = 'none';
+  nameEl.parentNode.insertBefore(inp, nameEl.nextSibling);
+  inp.focus();
+  var dot = old.lastIndexOf('.');
+  try { inp.setSelectionRange(0, dot > 0 ? dot : old.length); } catch (e) {}
+  var done = false;
+  function cancel() { if (done) return; done = true; if (inp.parentNode) inp.parentNode.removeChild(inp); nameEl.style.display = ''; }
+  function commit() {
+    if (done) return;
+    var name = String(inp.value || '').trim();
+    if (!name || name === old) { cancel(); return; }
+    done = true;
+    fetch('/api/library/files/' + id + '/rename', { method: 'PUT', credentials: 'include', headers: ibLibHeaders(), body: JSON.stringify({ original_name: name }) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) { if (res && res.ok) { ibLibLoad(); ibLibToast(ibLibT('保存成功', 'Saved', 'Đã lưu')); } else { cancel(); ibLibToast((res && res.error) || 'rename failed'); } })
+      .catch(function () { cancel(); ibLibToast('rename failed'); });
+  }
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(); } else if (e.key === 'Escape') { e.preventDefault(); cancel(); } });
+  inp.addEventListener('blur', commit);
+}
+function ibLibPaintConfirm() {
+  var c = IB_LIB_CONFIRM;
+  if (!c) return;
+  var sel = (IB_LIB_MODE === 'public' ? '#ibPubLibContent ' : '#ibLibContent ');
+  var item = null;
+  if (c.type === 'dir') {
+    var all = document.querySelectorAll(sel + '[data-lib-dir]');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].getAttribute('data-lib-dir') === c.dir) { item = all[i]; break; }
+    }
+  } else {
+    item = document.querySelector(sel + '[data-lib-id="' + c.id + '"]');
+  }
+  if (!item || item.querySelector('.ib-lib-confirm')) return;
+  var bar = document.createElement('span');
+  bar.className = 'ib-lib-confirm';
+  var msg = (c.type === 'dir')
+    ? ibLibT('确定删除该文件夹及其中所有文件？', 'Delete this folder and all files?', 'Xóa thư mục và tất cả tệp?')
+    : ibLibT('确定删除？', 'Delete this file?', 'Xóa tệp này?');
+  bar.innerHTML = escBd(msg) +
+    '<button class="ok" onclick="event.stopPropagation();ibLibDoDelete()">' + escBd(ibLibT('确定', 'OK', 'Đồng ý')) + '</button>' +
+    '<button onclick="event.stopPropagation();ibLibCancelDelete()">' + escBd(ibLibT('取消', 'Cancel', 'Hủy')) + '</button>';
+  bar.onclick = function (e) { e.stopPropagation(); };
+  var host = item.querySelector('.li-acts') || item.lastElementChild || item;
+  if (host.classList && host.classList.contains('li-acts')) host.classList.add('has-confirm');
+  host.appendChild(bar);
+}
+function ibLibClearConfirmDom() {
+  var bars = document.querySelectorAll('.ib-lib-confirm');
+  for (var i = 0; i < bars.length; i++) {
+    if (bars[i].parentNode) bars[i].parentNode.removeChild(bars[i]);
+  }
+  var acts = document.querySelectorAll('.li-acts.has-confirm');
+  for (var j = 0; j < acts.length; j++) acts[j].classList.remove('has-confirm');
+}
+function ibLibAskDelete(id) {
+  ibLibClearConfirmDom();
+  IB_LIB_CONFIRM = { type: 'file', id: id };
+  ibLibPaintConfirm();
+}
+function ibLibAskDeleteDir(dir) {
+  ibLibClearConfirmDom();
+  IB_LIB_CONFIRM = { type: 'dir', dir: String(dir || '') };
+  ibLibPaintConfirm();
+}
+function ibLibCancelDelete() {
+  IB_LIB_CONFIRM = null;
+  ibLibClearConfirmDom();
+}
+function ibLibDoDelete() {
+  var c = IB_LIB_CONFIRM;
+  if (!c) return;
+  IB_LIB_CONFIRM = null;
+  if (c.type === 'file') {
+    fetch('/api/library/files/' + c.id, { method: 'DELETE', credentials: 'include', headers: ibLibHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (res) { if (res && res.ok) { ibLibLoad(); ibLibToast(ibLibT('已删除', 'Deleted', 'Đã xóa')); } else ibLibToast((res && res.error) || 'delete failed'); })
+      .catch(function () { ibLibToast('delete failed'); });
+    return;
+  }
+  var pre = c.dir + '/';
+  var targets = (IB_LIB_FILES || []).filter(function (f) { return ibLibRel(f).indexOf(pre) === 0; });
+  var i = 0;
+  (function next() {
+    if (i >= targets.length) { ibLibLoad(); ibLibToast(ibLibT('已删除', 'Deleted', 'Đã xóa')); return; }
+    var id = targets[i++].id;
+    fetch('/api/library/files/' + id, { method: 'DELETE', credentials: 'include', headers: ibLibHeaders() }).then(function () { next(); }).catch(function () { next(); });
+  })();
+}
+(function () {
+  function pid() {
+    if (IB_LIB_MODE === 'public') return 'null';
+    if (IB_LIB_MODE === 'project' && IB_LIB_PROJECT && IB_LIB_PROJECT.id != null && IB_LIB_PROJECT.id !== '') return IB_LIB_PROJECT.id;
+    return null;
+  }
+  function uploadList(list) {
+    if (!IB_LIB_MODE || !list || !list.length) return;
+    var target = pid();
+    if (target === null) { ibLibToast('upload target missing'); return; }
+    var fd = new FormData(), pre = IB_LIB_CWD ? (IB_LIB_CWD + '/') : '';
+    list.forEach(function (pair) {
+      if (!pair || !pair.file) return;
+      fd.append('file', pair.file);
+      fd.append('paths', pre + String(pair.path || pair.file.name).replace(/\\/g, '/'));
+    });
+    var headers = { 'X-User-Name': (typeof authUser !== 'undefined' && authUser && authUser.username) ? authUser.username : '' };
+    fetch('/api/library/upload?project_id=' + encodeURIComponent(target), { method: 'POST', credentials: 'include', headers: headers, body: fd })
+      .then(function (r) { return r.json(); })
+      .then(function (res) { if (res && res.ok) { ibLibToast(ibLibT('上传完成', 'Uploaded', 'Đã tải lên')); ibLibLoad(); } else ibLibToast((res && res.error) || 'upload failed'); })
+      .catch(function () { ibLibToast('upload failed'); });
+  }
+  function readEntries(reader) { return new Promise(function (res) { reader.readEntries(function (e) { res(e); }); }); }
+  function fileOf(entry, p) { return new Promise(function (res) { entry.file(function (f) { res({ file: f, path: p }); }, function () { res(null); }); }); }
+  function walk(entry, prefix, out) {
+    return new Promise(function (resolve) {
+      if (!entry) { resolve(); return; }
+      if (entry.isFile) {
+        fileOf(entry, prefix + entry.name).then(function (pair) { if (pair) out.push(pair); resolve(); });
+        return;
+      }
+      if (entry.isDirectory) {
+        var reader = entry.createReader();
+        (function loop() {
+          readEntries(reader).then(function (entries) {
+            if (!entries.length) { resolve(); return; }
+            Promise.all(entries.map(function (e) { return walk(e, prefix + entry.name + '/', out); })).then(loop);
+          });
+        })();
+        return;
+      }
+      resolve();
+    });
+  }
+  function collect(dt) {
+    return new Promise(function (resolve) {
+      var out = [];
+      var items = (dt && dt.items) ? Array.prototype.slice.call(dt.items) : [];
+      var jobs = [];
+      items.forEach(function (it) {
+        if (!it || it.kind !== 'file') return;
+        var en = null;
+        try { en = it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; } catch (e) {}
+        if (en) jobs.push(walk(en, '', out));
+        else { var f = it.getAsFile(); if (f) out.push({ file: f, path: f.name }); }
+      });
+      Promise.all(jobs).then(function () {
+        if (!out.length && dt && dt.files && dt.files.length) {
+          Array.prototype.forEach.call(dt.files, function (f) { out.push({ file: f, path: f.webkitRelativePath || f.name }); });
+        }
+        resolve(out);
+      });
+    });
+  }
+  ['ibLibView', 'ibPubLibView'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('dragenter', function (e) {
+      if (!IB_LIB_MODE || !e.dataTransfer) return;
+      e.preventDefault();
+      el.classList.add('drop-active');
+    });
+    el.addEventListener('dragover', function (e) {
+      if (!IB_LIB_MODE || !e.dataTransfer) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      el.classList.add('drop-active');
+    });
+    el.addEventListener('dragleave', function (e) {
+      if (!e.relatedTarget || !el.contains(e.relatedTarget)) el.classList.remove('drop-active');
+    });
+    el.addEventListener('drop', function (e) {
+      if (!IB_LIB_MODE || !e.dataTransfer) return;
+      e.preventDefault();
+      e.stopPropagation();
+      el.classList.remove('drop-active');
+      collect(e.dataTransfer).then(uploadList);
+    });
+  });
+  document.addEventListener('dragover', function (e) { if (IB_LIB_MODE) e.preventDefault(); });
+  document.addEventListener('drop', function (e) {
+    if (!IB_LIB_MODE) return;
+    e.preventDefault();
+    var t = e.target;
+    if (t && t.closest && t.closest('.ib-lib')) return;
+    collect(e.dataTransfer).then(uploadList);
+  });
+  document.addEventListener('paste', function (e) {
+    if (!IB_LIB_MODE || !e.clipboardData || !e.clipboardData.files || !e.clipboardData.files.length) return;
+    var list = [];
+    Array.prototype.forEach.call(e.clipboardData.files, function (f) { list.push({ file: f, path: f.name }); });
+    uploadList(list);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && IB_LIB_PREVIEW_ID) ibLibClosePreview();
+  });
+  var pm = document.getElementById('ibLibPreviewModal');
+  if (pm) pm.addEventListener('click', function (e) { if (e.target === pm) ibLibClosePreview(); });
+})();
+/* ★INSTALL-PROJ-DETAIL-20261125★ 项目卡片点击进入的具体安装详情：5 个子标签全部三语 */
+var IB_PROJ_DETAIL_TABS = [
+  { key: 'zone', i18n: 'inst_proj_tab_zone' },
+  { key: 'ship', i18n: 'inst_proj_tab_ship' },
+  { key: 'plan', i18n: 'inst_proj_tab_plan' },
+  { key: 'material', i18n: 'inst_proj_tab_material' },
+  { key: 'log', i18n: 'inst_proj_tab_log' }
+];
+var IB_CUR_DETAIL_PROJ = null, IB_CUR_DETAIL_TAB = 'zone';
+function ibProjNav() { return (typeof T === 'function' ? (T() || {}) : {}).nav || {}; }
+function ibOpenProjDetail(id) {
+  var list = IB_PROJECTS || [], p = null;
+  for (var i = 0; i < list.length; i++) {
+    if (String(list[i].id) === String(id)) { p = list[i]; break; }
+  }
+  if (!p) return;
+  // ★INST-FILES-SAME-20261125★ 从「项目专属资料」点卡片时先切回安装详情管理，再打开项目详情
+  if (typeof INST_ACTIVE_TAB !== 'undefined' && INST_ACTIVE_TAB === 'files' && typeof instSwitchTab === 'function') {
+    instSwitchTab('detail');
+  }
+  IB_CUR_DETAIL_PROJ = p;
+  IB_CUR_DETAIL_TAB = 'zone';
+  var wrap = document.getElementById('instProjListWrap');
+  var det = document.getElementById('ibProjDetail');
+  if (wrap) wrap.style.display = 'none';
+  if (det) det.style.display = 'block';
+  ibRenderProjDetailHead(p);
+  ibRenderProjDetailTabs();
+  ibRenderProjDetailBody();
+  var body = document.getElementById('instBody');
+  if (body) body.scrollTop = 0;
+}
+function ibCloseProjDetail() {
+  IB_CUR_DETAIL_PROJ = null;
+  var wrap = document.getElementById('instProjListWrap');
+  var det = document.getElementById('ibProjDetail');
+  if (wrap) wrap.style.display = '';
+  if (det) det.style.display = 'none';
+  var body = document.getElementById('instBody');
+  if (body) body.scrollTop = 0;
+}
+function ibRenderProjDetailHead(p) {
+  var nav = ibProjNav();
+  var title = document.getElementById('ibProjTitle');
+  if (title) title.textContent = String(ibName(p) || ('#' + p.id)) + ' ' + (nav.inst_proj_install || '安装');
+  var back = document.getElementById('ibProjBackBtn');
+  if (back) back.textContent = nav.inst_proj_back || '返回列表';
+}
+function ibRenderProjDetailTabs() {
+  var el = document.getElementById('ibProjTabs');
+  if (!el) return;
+  var nav = ibProjNav();
+  el.innerHTML = IB_PROJ_DETAIL_TABS.map(function (t) {
+    return '<button class="ib-pd-tab' + (t.key === IB_CUR_DETAIL_TAB ? ' active' : '') +
+      '" onclick="ibSetProjDetailTab(\'' + t.key + '\')">' +
+      (typeof escBd === 'function' ? escBd(nav[t.i18n] || t.key) : String(nav[t.i18n] || t.key)) + '</button>';
   }).join('');
+}
+function ibSetProjDetailTab(key) {
+  var ok = false;
+  IB_PROJ_DETAIL_TABS.forEach(function (t) { if (t.key === key) ok = true; });
+  if (!ok) return;
+  IB_CUR_DETAIL_TAB = key;
+  ibRenderProjDetailTabs();
+  ibRenderProjDetailBody();
+}
+function ibRenderProjDetailBody() {
+  var el = document.getElementById('ibProjBody');
+  if (!el) return;
+  var p = IB_CUR_DETAIL_PROJ;
+  if (!p) { el.innerHTML = ''; return; }
+  var nav = ibProjNav();
+  if (IB_CUR_DETAIL_TAB === 'zone') {
+    var st = ibInstallData(p);
+    var zoneRaw = (p.inst_zone || p.install_zone || p.installZone ||
+      (p.__ibInstall && (p.__ibInstall.zone || p.__ibInstall.install_zone)) || '');
+    var zoneTxt = String(zoneRaw).trim()
+      ? String(zoneRaw).trim()
+      : ibL('未分区', 'Unassigned', 'Chưa phân khu');
+    el.innerHTML = '<div class="ib-pd-info">' +
+      '<div>' + ibL('项目名称', 'Project', 'Tên dự án') + '：' + escBd(String(ibName(p) || '')) + '</div>' +
+      '<div>' + ibL('房舍数量', 'House count', 'Số chuồng') + '：' + (st.houses || 0) +
+        ' ' + ibL('栋', 'buildings', 'tòa') + '</div>' +
+      '<div>' + ibL('安装分区', 'Installation zone', 'Khu lắp đặt') + '：' + escBd(zoneTxt) + '</div>' +
+      '</div>';
+    return;
+  }
+  el.innerHTML = '<div class="ib-pd-ph">' + escBd(nav.inst_proj_ph || '功能开发中，敬请期待') + '</div>';
 }
 function ibLoadInstallData() {
   var list = (IB_PROJECTS || []).slice();
@@ -26692,12 +28209,14 @@ function ibLoadWeather(viKeys, force) {
   }
   function chip(p, c, d) {
     var head = '<b>' + escBd(bdName3(p)) + '</b>';
-    if (!c) return '<div class="ib-wx-chip">' + head + ' · —</div>';
-    var meta = [], txt = d['wx' + ibWxKey(c.code)] || d.wxNa;
-    if (c.temp != null) meta.push(Math.round(c.temp) + '°C');
-    if (c.hum != null) meta.push(d.wxHum + Math.round(c.hum) + '%');
-    if (c.windLv != null) meta.push(d.wxWind + c.windLv + d.wxWindUnit);
-    return '<div class="ib-wx-chip">' + head + ' · ' + txt + ' · <span>' + meta.join(' · ') + '</span></div>';
+    // ★INSTALL-WX-LAYOUT-20261125★ 五列：省 / 天气 / 温度℃ / 湿度 / 风力
+    if (!c) return '<div class="ib-wx-chip">' + head + '<span>—</span><span></span><span></span><span></span></div>';
+    var txt = d['wx' + ibWxKey(c.code)] || d.wxNa;
+    var temp = c.temp != null ? Math.round(c.temp) + '°C' : '—';
+    var hum  = c.hum  != null ? d.wxHum + Math.round(c.hum) + '%' : '—';
+    var wind = c.windLv != null ? d.wxWind + c.windLv + d.wxWindUnit : '—';
+    return '<div class="ib-wx-chip">' + head +
+      '<span>' + txt + '</span><span>' + temp + '</span><span>' + hum + '</span><span>' + wind + '</span></div>';
   }
   function paint() {
     var d = ibTexts(), empty = '<span>' + d.noData + '</span>';
@@ -26737,9 +28256,17 @@ function ibLoadData() {
   if (IB_LOADING) return;
   IB_LOADING = true;
   function render(list) {
-    IB_PROJECTS = (list || []).filter(Boolean);
+    // ★WON-BU-ALIAS-20261126★ 兜底：后端未下发 bu 时，从签约项目前置录入的 doc_remark 补齐
+    IB_PROJECTS = (list || []).filter(Boolean).map(function (p) {
+      if (!p.bu && p.doc_remark) p.bu = p.doc_remark;
+      return p;
+    });
     var agg = {};
-    IB_PROJECTS.forEach(function (p) {
+    // ★MAP-ONLY-SYSTEM-20261126★ 地图只显示系统性设备项目对应的省份
+    var sysProjects = IB_PROJECTS.filter(function (p) {
+      return String(p.sales_product || '').toUpperCase() === 'SYSTEM';
+    });
+    sysProjects.forEach(function (p) {
       var raw = String(p.province || '').trim(); if (!raw) return;
       var pr = (typeof vnProvinceByKey === 'function') ? vnProvinceByKey(raw) : null;
       var key = pr ? pr.vi : raw;
@@ -26831,6 +28358,21 @@ function applyInstallLang() {
     var b = document.getElementById('instLang' + p[1]);
     if (b) b.classList.toggle('active', cur === p[0]);
   });
+  // ★INSTALL-PROJ-DETAIL-20261125★ 若停留在项目详情页，5 个子标签与内容原地三语刷新
+  if (typeof IB_CUR_DETAIL_PROJ !== 'undefined' && IB_CUR_DETAIL_PROJ) {
+    try {
+      ibRenderProjDetailHead(IB_CUR_DETAIL_PROJ);
+      ibRenderProjDetailTabs();
+      ibRenderProjDetailBody();
+    } catch (e) {}
+  }
+  // ★INST-LIB-PORT-20261125★ 若停留在项目资料文件管理器，原地三语刷新
+  if (typeof IB_LIB_MODE !== 'undefined' && IB_LIB_MODE) {
+    try { ibLibRender(); } catch (e) {}
+  }
+  if (typeof IB_LIB_PREVIEW_ID !== 'undefined' && IB_LIB_PREVIEW_ID) {
+    try { ibLibPreviewRefreshTitle(); } catch (e) {}
+  }
   if (typeof ibApplyLang === 'function') ibApplyLang();
 }
 
@@ -27093,18 +28635,30 @@ function switchView(name) {
       name = _fallback;
     }
   }
+  // ★WON-ARCHIVE-20261125★ 存档视图复用签约项目整页（同一张表 → 格式 100% 一致）
+  var _prevArchive = !!window.__archiveMode;
+  if (name !== 'archive' && _prevArchive) {
+    window.__archiveMode = false;
+    var _wsec = document.getElementById('view-won');
+    if (_wsec) _wsec.classList.remove('archive-mode');
+    _viewLoadedAt.won = 0;   // 离开存档后强制重拉签约项目数据，避免界面残留存档行
+    if (typeof archiveBtnSetText === 'function') archiveBtnSetText();
+  }
   window.currentView = name;
   // 切换视图前关闭所有弹窗
   closeAllModals();
   // 切换到新视图，确保导航解锁（理论上此时无弹窗）
   updateNavLock();
   var views = document.querySelectorAll('#app .view');
+  var _targetViewId = (name === 'archive') ? 'view-won' : ('view-' + name);
   for (var i = 0; i < views.length; i++) {
-    views[i].classList.toggle('active', views[i].id === ('view-' + name));
+    views[i].classList.toggle('active', views[i].id === _targetViewId);
   }
   var items = document.querySelectorAll('#tbMenu .tb-item');
+  // ★WON-ARCHIVE-20261125★ 存档页没有独立导航标签，高亮仍留在「签约项目」
+  var _navView = (name === 'archive') ? 'won' : name;
   for (var j = 0; j < items.length; j++) {
-    items[j].classList.toggle('active', items[j].getAttribute('data-view') === name);
+    items[j].classList.toggle('active', items[j].getAttribute('data-view') === _navView);
   }
   // 切到佣金页后表格才可见（此前的测量值全为 0）→ 显示后重测列宽与容器高度
   if (name === 'commission' && typeof autoFitCommissionTable === 'function') {
@@ -27143,6 +28697,19 @@ function switchView(name) {
         markViewLoaded('won');
       } else if (needReloadView('won')) { loadWon(); markViewLoaded('won'); }
     }
+  }
+  // ★WON-ARCHIVE-20261125★ 进入「项目结束存档」：同一张 WON 表、同一套详情报告
+  if (name === 'archive') {
+    window.__archiveMode = true;
+    if (typeof archiveBtnSetText === 'function') archiveBtnSetText();
+    var _aw = document.getElementById('view-won');
+    if (_aw) _aw.classList.add('archive-mode');
+    globalWonData = []; originalWonData = [];   // 先清空缓存，避免闪现签约项目行
+    if (typeof renderWonThead === 'function') renderWonThead();
+    if (typeof applyWonLang === 'function') applyWonLang();
+    if (typeof loadArchive === 'function') loadArchive();
+    var _at = document.getElementById('wonTitle');
+    if (_at && T().archive_title) _at.textContent = T().archive_title;
   }
   // 进入 CRM 潜在项目视图时确保数据已渲染（100% 复刻 WON 分支结构）
   if (name === 'crm') {
@@ -32323,6 +33890,40 @@ window.CommissionModal={open:open,close:close,applyLang:applyLang,addPayRow:addP
   </div>
 </div>
 
+<!-- ===== 删除项目 · 密码验证弹窗（★WON-DEL-PWD-20261125：必须先输入 can-delete，再弹询问框） ===== -->
+<div class="copy-pwd-overlay" id="delPwdOverlay" style="display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:1150;justify-content:center;align-items:flex-start;padding:10px 12px 12px 12px;">
+  <div class="copy-pwd-box" style="background:white;border-radius:14px;padding:28px 26px 22px;width:360px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.28);text-align:center;">
+    <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:13px;background:#e74c3c;margin-bottom:12px;">
+      <span style="font-size:26px;color:white;">🔒</span>
+    </div>
+    <div id="delPwdTitle" style="font-size:17px;font-weight:700;color:#e74c3c;margin-bottom:8px;">删除项目</div>
+    <div id="delPwdHint" style="font-size:12px;color:#888;margin-bottom:16px;">请输入删除密码</div>
+    <input type="password" id="delPwdInput" placeholder="Password" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;box-sizing:border-box;" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmDelPwd();}">
+    <div id="delPwdError" style="display:none;color:#e74c3c;font-size:11.5px;margin-top:8px;">密码错误</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;">
+      <button type="button" id="delPwdCancel" onclick="closeDelPwd()" style="padding:7px 22px;border:1px solid #ddd;background:#f0f0f0;color:#555;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">取消</button>
+      <button type="button" id="delPwdOk" onclick="confirmDelPwd()" style="padding:7px 22px;border:none;background:#e74c3c;color:white;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;box-shadow:0 3px 10px rgba(231,76,60,.35);">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ★WON-ARCHIVE-20261125★ 项目结束存档 · 密码验证弹窗（can-save） ===== -->
+<div class="copy-pwd-overlay" id="archPwdOverlay" style="display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:1151;justify-content:center;align-items:flex-start;padding:10px 12px 12px 12px;">
+  <div class="copy-pwd-box" style="background:white;border-radius:14px;padding:28px 26px 22px;width:360px;max-width:92vw;box-shadow:0 10px 40px rgba(0,0,0,.28);text-align:center;">
+    <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:13px;background:#f5a623;margin-bottom:12px;">
+      <span style="font-size:26px;color:white;">⭐</span>
+    </div>
+    <div id="archPwdTitle" style="font-size:17px;font-weight:700;color:#e74c3c;margin-bottom:8px;">项目结束存档</div>
+    <div id="archPwdHint" style="font-size:12px;color:#888;margin-bottom:16px;">请输入存档密码 can-save</div>
+    <input type="password" id="archPwdInput" placeholder="••••••" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;box-sizing:border-box;" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmArchivePwd();}">
+    <div id="archPwdError" style="display:none;color:#e74c3c;font-size:11.5px;margin-top:8px;">密码错误</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;">
+      <button type="button" id="archPwdCancel" onclick="closeArchivePwd()" style="padding:7px 22px;border:1px solid #ddd;background:#f0f0f0;color:#555;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">取消</button>
+      <button type="button" id="archPwdOk" onclick="confirmArchivePwd()" style="padding:7px 22px;border:none;background:#e74c3c;color:white;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;box-shadow:0 3px 10px rgba(231,76,60,.35);">确定</button>
+    </div>
+  </div>
+</div>
+
 <style>
 .rpt-overlay.show{display:flex;}
 .rpt-overlay{display:none;position:fixed;top:56px;left:0;right:0;bottom:0;background:rgba(30,30,50,.5);z-index:1100;justify-content:center;align-items:flex-start;padding:10px 10px 24px 10px;overflow-y:auto;}
@@ -34835,7 +36436,7 @@ function _doExportOverviewPDF(){
       '#commAmtReqOverlay', '#commissionAddModalOverlay',
       '#beneficiaryModalOverlay', '#authModalOverlay', '#crmMoveToLostModal',
       '#addmSummaryOverlay', '#addendumModal', '#addmAlertOverlay',
-      '#delConfirmOverlay', '#crmCloseConfirmOverlay', '#crmOrangeConfirmOverlay', '#copyPwdOverlay', '#rptOverlay'
+      '#delConfirmOverlay', '#crmCloseConfirmOverlay', '#crmOrangeConfirmOverlay', '#copyPwdOverlay', '#delPwdOverlay', '#archPwdOverlay', '#rptOverlay'
     ];
 
     function isVisible(el) {
@@ -37189,6 +38790,20 @@ window.applyLangRefreshers = function () {
     var cpc2 = g('copyPwdCancel'); if (cpc2 && tt.btnCancel) cpc2.innerText = tt.btnCancel;
     var cpo2 = g('copyPwdOk'); if (cpo2 && tt.btnConfirm) cpo2.innerText = tt.btnConfirm;
   }
+  // 删除项目 密码弹窗（★WON-DEL-PWD-20261125：切语言实时改写标题/提示/按钮，不重建弹窗）
+  var dpw = g('delPwdOverlay');
+  if (dpw && dpw.getBoundingClientRect().height > 0) {
+    if (typeof delPwdSetTexts === 'function') delPwdSetTexts();
+  }
+  // ★WON-ARCHIVE-I18N-20261125★ 存档密码弹窗 + 确认弹窗：开着时切语言原地刷新文案
+  var apw = g('archPwdOverlay');
+  if (apw && apw.getBoundingClientRect().height > 0) {
+    if (typeof archivePwdSetTexts === 'function') archivePwdSetTexts();
+  }
+  if (typeof delConfirmSetTexts === 'function') delConfirmSetTexts();
+  if (typeof wonActionTitlesSetTexts === 'function') wonActionTitlesSetTexts();
+  // ★INSTALL-CARD-SALESPRODUCT-20261125★ 安装详情卡片三语随语言切换刷新
+  if (typeof ibRenderDetailProjects === 'function') ibRenderDetailProjects();
   // ⑥ 明细查看弹窗（开着时刷新 编辑/关闭 按钮）
   var dvBox = g('detailViewModal');
   if (dvBox && dvBox.classList.contains('show')) {
